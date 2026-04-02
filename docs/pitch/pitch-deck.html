@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TradePilot - AI-Powered Trading Intelligence</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #04060e;
+  --bg2: #0a0f1e;
+  --cyan: #00f0ff;
+  --green: #00ff88;
+  --red: #ff3366;
+  --orange: #ff8c00;
+  --purple: #a855f7;
+  --white: #e5e7eb;
+  --dim: #6b7280;
+  --card: rgba(15, 23, 42, 0.7);
+  --card-border: rgba(0, 240, 255, 0.12);
+  --glass: rgba(255, 255, 255, 0.04);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+  background: var(--bg);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- CANVAS GRID BACKGROUND ---- */
+#grid-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---- SLIDE SYSTEM ---- */
+.slide {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  z-index: 1;
+  scroll-snap-align: start;
+  overflow: hidden;
+}
+
+.slide-inner {
+  max-width: 1100px;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide.visible .slide-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* stagger children */
+.slide.visible .stagger { opacity: 0; animation: fadeUp 0.7s forwards; }
+.slide.visible .stagger:nth-child(1) { animation-delay: 0.1s; }
+.slide.visible .stagger:nth-child(2) { animation-delay: 0.2s; }
+.slide.visible .stagger:nth-child(3) { animation-delay: 0.3s; }
+.slide.visible .stagger:nth-child(4) { animation-delay: 0.4s; }
+.slide.visible .stagger:nth-child(5) { animation-delay: 0.5s; }
+.slide.visible .stagger:nth-child(6) { animation-delay: 0.6s; }
+.slide.visible .stagger:nth-child(7) { animation-delay: 0.7s; }
+.slide.visible .stagger:nth-child(8) { animation-delay: 0.8s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- TYPOGRAPHY ---- */
+.mega { font-size: clamp(3rem, 8vw, 6rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
+.big { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.mid { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 600; line-height: 1.3; }
+.body { font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.6; color: var(--dim); }
+.mono { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; }
+.label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cyan); font-weight: 700; }
+.text-cyan { color: var(--cyan); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-purple { color: var(--purple); }
+.text-center { text-align: center; }
+.text-dim { color: var(--dim); }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+.mt-6 { margin-top: 3rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+/* ---- GLOW TEXT ---- */
+.glow {
+  text-shadow: 0 0 40px rgba(0, 240, 255, 0.3), 0 0 80px rgba(0, 240, 255, 0.1);
+}
+.glow-green {
+  text-shadow: 0 0 40px rgba(0, 255, 136, 0.3), 0 0 80px rgba(0, 255, 136, 0.1);
+}
+
+/* ---- CARDS ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 8px 40px rgba(0, 240, 255, 0.08);
+}
+
+/* ---- GRID LAYOUT ---- */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .slide { padding: 40px 20px; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- ANIMATED COUNTER ---- */
+.counter-value {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 900;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ---- GAUGE ---- */
+.gauge-container {
+  width: 200px; height: 200px;
+  position: relative; margin: 0 auto;
+}
+.gauge-bg {
+  fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12;
+}
+.gauge-fill {
+  fill: none; stroke: var(--cyan); stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+}
+.gauge-text {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+/* ---- PROGRESS BAR ---- */
+.progress-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px; height: 10px; width: 100%; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 999px;
+  width: 0%; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.progress-fill.cyan { background: linear-gradient(90deg, var(--cyan), #00b8d4); }
+.progress-fill.green { background: linear-gradient(90deg, var(--green), #00cc6a); }
+.progress-fill.red { background: linear-gradient(90deg, var(--red), #ff1a53); }
+.progress-fill.purple { background: linear-gradient(90deg, var(--purple), #7c3aed); }
+
+/* ---- COMPARISON TABLE ---- */
+.comp-row {
+  display: grid; grid-template-columns: 2fr repeat(4, 1fr);
+  gap: 12px; align-items: center; padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.comp-row.header { font-weight: 700; color: var(--cyan); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgba(0,240,255,0.15); }
+.check { color: var(--green); font-size: 1.3rem; opacity: 0; transition: opacity 0.4s; }
+.cross { color: #ff3366; font-size: 1.3rem; opacity: 0; transition: opacity 0.4s; }
+.slide.visible .check, .slide.visible .cross { opacity: 1; }
+
+@media (max-width: 600px) {
+  .comp-row { grid-template-columns: 1.5fr repeat(4, 1fr); gap: 6px; font-size: 0.85rem; }
+}
+
+/* ---- PRICING CARDS ---- */
+.pricing-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.pricing-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 48px rgba(0, 240, 255, 0.12);
+}
+.pricing-card.featured {
+  border-color: var(--cyan);
+  background: linear-gradient(180deg, rgba(0,240,255,0.06), rgba(0,240,255,0.02));
+}
+.price-tag {
+  font-size: 2.5rem; font-weight: 900; margin: 16px 0 4px;
+}
+.price-period { color: var(--dim); font-size: 0.9rem; }
+.pricing-feature { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.95rem; }
+
+/* ---- TIMELINE ---- */
+.timeline { position: relative; padding-left: 40px; }
+.timeline::before {
+  content: ''; position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, var(--cyan), var(--green));
+}
+.timeline-item {
+  position: relative; padding-bottom: 32px;
+  opacity: 0; transform: translateX(-20px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+.slide.visible .timeline-item { opacity: 1; transform: translateX(0); }
+.slide.visible .timeline-item:nth-child(1) { transition-delay: 0.1s; }
+.slide.visible .timeline-item:nth-child(2) { transition-delay: 0.2s; }
+.slide.visible .timeline-item:nth-child(3) { transition-delay: 0.3s; }
+.slide.visible .timeline-item:nth-child(4) { transition-delay: 0.4s; }
+.slide.visible .timeline-item:nth-child(5) { transition-delay: 0.5s; }
+.slide.visible .timeline-item:nth-child(6) { transition-delay: 0.6s; }
+.slide.visible .timeline-item:nth-child(7) { transition-delay: 0.7s; }
+.timeline-dot {
+  position: absolute; left: -33px; top: 4px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+/* ---- SCROLL ARROW ---- */
+.scroll-arrow {
+  position: absolute; bottom: 40px; left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 2s infinite;
+  color: var(--cyan); font-size: 1.5rem; opacity: 0.7;
+  cursor: pointer;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(12px); }
+}
+
+/* ---- CTA BUTTON ---- */
+.cta-btn {
+  display: inline-block;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--cyan), #00b8d4);
+  color: #000; font-weight: 800; font-size: 1.1rem;
+  border: none; border-radius: 999px; cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
+}
+
+/* ---- TRADE SCORER MOCKUP ---- */
+.scorer-card {
+  max-width: 420px; margin: 0 auto;
+  background: linear-gradient(145deg, rgba(0,240,255,0.05), rgba(0,255,136,0.03));
+  border: 1px solid rgba(0,240,255,0.2);
+  border-radius: 20px; padding: 32px;
+  box-shadow: 0 0 60px rgba(0,240,255,0.06);
+}
+.scorer-ticker { font-size: 0.85rem; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; }
+.scorer-stock { font-size: 1.6rem; font-weight: 800; margin: 4px 0; }
+.scorer-price { font-size: 1.1rem; color: var(--green); font-weight: 700; }
+.scorer-bar-track { background: rgba(255,255,255,0.06); border-radius: 999px; height: 14px; margin: 16px 0 8px; overflow: hidden; }
+.scorer-bar-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  width: 0%; transition: width 2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px rgba(0,255,136,0.4);
+}
+.scorer-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.95rem; }
+.scorer-signal {
+  display: inline-block; margin-top: 16px;
+  padding: 8px 20px; border-radius: 999px;
+  background: rgba(0,255,136,0.12); color: var(--green);
+  font-weight: 700; font-size: 0.95rem;
+  border: 1px solid rgba(0,255,136,0.25);
+}
+
+/* ---- FEATURE EXPAND CARDS ---- */
+.feature-card {
+  cursor: pointer;
+  overflow: hidden;
+}
+.feature-card .feature-expand {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s;
+  padding: 0;
+}
+.feature-card.open .feature-expand {
+  max-height: 200px; padding-top: 16px;
+}
+.feature-icon {
+  font-size: 2rem; margin-bottom: 12px;
+}
+
+/* ---- NAV DOTS ---- */
+.nav-dots {
+  position: fixed; right: 20px; top: 50%;
+  transform: translateY(-50%); z-index: 100;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.nav-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none; cursor: pointer;
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.nav-dot.active {
+  background: var(--cyan);
+  transform: scale(1.4);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+@media (max-width: 768px) {
+  .nav-dots { right: 10px; gap: 8px; }
+  .nav-dot { width: 7px; height: 7px; }
+}
+
+/* ---- STEP INDICATORS ---- */
+.step-number {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--cyan), #00b8d4);
+  color: #000; margin-bottom: 16px;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+/* ---- MONEY COUNTER ---- */
+.money-counter {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--red);
+  text-shadow: 0 0 30px rgba(255, 51, 102, 0.4);
+}
+
+/* ---- FLIP CARDS ---- */
+.pain-card {
+  opacity: 0;
+  transform: rotateX(-15deg) translateY(30px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+.slide.visible .pain-card { opacity: 1; transform: rotateX(0) translateY(0); }
+.slide.visible .pain-card:nth-child(1) { transition-delay: 0.6s; }
+.slide.visible .pain-card:nth-child(2) { transition-delay: 0.8s; }
+.slide.visible .pain-card:nth-child(3) { transition-delay: 1.0s; }
+
+/* ---- STAT PILL ---- */
+.stat-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(0,240,255,0.08);
+  border: 1px solid rgba(0,240,255,0.15);
+  font-size: 0.85rem; color: var(--cyan);
+}
+
+/* ---- TECH DIAGRAM ---- */
+.tech-node {
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  text-align: center;
+  font-weight: 600;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.tech-node:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+.tech-connector {
+  text-align: center; color: var(--cyan); font-size: 1.5rem; padding: 8px 0;
+}
+
+/* ---- ROADMAP HORIZONTAL ---- */
+.roadmap-track {
+  display: flex; gap: 0; overflow-x: auto;
+  padding-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,240,255,0.2) transparent;
+}
+.roadmap-track::-webkit-scrollbar { height: 4px; }
+.roadmap-track::-webkit-scrollbar-track { background: transparent; }
+.roadmap-track::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.2); border-radius: 4px; }
+.roadmap-phase {
+  min-width: 260px; flex-shrink: 0;
+  padding: 24px 20px;
+  border-left: 2px solid rgba(0,240,255,0.2);
+  position: relative;
+}
+.roadmap-phase::before {
+  content: ''; position: absolute; left: -6px; top: 24px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(0,240,255,0.4);
+}
+
+/* ---- TEAM ---- */
+.team-member {
+  text-align: center; padding: 40px 24px;
+}
+.team-avatar {
+  width: 100px; height: 100px; border-radius: 50%;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; font-weight: 900; color: #000;
+}
+
+/* ---- SLIDE NUMBER ---- */
+.slide-num {
+  position: absolute; top: 24px; right: 24px;
+  font-size: 0.75rem; color: rgba(255,255,255,0.1);
+  font-weight: 700; letter-spacing: 0.08em;
+}
+
+/* ---- PIE CHART (CSS) ---- */
+.pie-chart {
+  width: 180px; height: 180px; border-radius: 50%;
+  margin: 0 auto;
+  background: conic-gradient(
+    var(--cyan) 0deg 10deg,
+    var(--green) 10deg 50deg,
+    rgba(255,255,255,0.06) 50deg 360deg
+  );
+  position: relative;
+}
+.pie-chart::after {
+  content: ''; position: absolute;
+  top: 30%; left: 30%; width: 40%; height: 40%;
+  background: var(--bg); border-radius: 50%;
+}
+
+/* ---- ANIMATED BADGE ---- */
+.badge {
+  display: inline-block;
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.badge-cyan { background: rgba(0,240,255,0.12); color: var(--cyan); border: 1px solid rgba(0,240,255,0.2); }
+.badge-green { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+.badge-red { background: rgba(255,51,102,0.12); color: var(--red); border: 1px solid rgba(255,51,102,0.2); }
+
+/* ---- SAFE AREA ---- */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .slide:first-child { padding-top: calc(60px + env(safe-area-inset-top)); }
+  .slide:last-child { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+}
+
+/* ---- PULSE ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.pulse { animation: pulse 2s infinite; }
+
+/* ---- INDICATOR TAGS ---- */
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag {
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 0.8rem; font-weight: 600;
+  background: rgba(0,240,255,0.08);
+  border: 1px solid rgba(0,240,255,0.15);
+  color: var(--cyan);
+  opacity: 0; transform: scale(0.8);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.slide.visible .tag { opacity: 1; transform: scale(1); }
+.slide.visible .tag:nth-child(1) { transition-delay: 0.3s; }
+.slide.visible .tag:nth-child(2) { transition-delay: 0.4s; }
+.slide.visible .tag:nth-child(3) { transition-delay: 0.5s; }
+.slide.visible .tag:nth-child(4) { transition-delay: 0.6s; }
+.slide.visible .tag:nth-child(5) { transition-delay: 0.7s; }
+.slide.visible .tag:nth-child(6) { transition-delay: 0.8s; }
+.slide.visible .tag:nth-child(7) { transition-delay: 0.9s; }
+
+/* ---- ASK CARDS ---- */
+.ask-card {
+  background: linear-gradient(145deg, rgba(0,240,255,0.04), rgba(168,85,247,0.04));
+  border: 1px solid rgba(0,240,255,0.15);
+  border-radius: 20px; padding: 36px;
+}
+.ask-amount {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- FINAL CTA ---- */
+.final-glow {
+  position: relative;
+}
+.final-glow::before {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; width: 400px; height: 400px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0,240,255,0.08) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND GRID -->
+<canvas id="grid-canvas"></canvas>
+
+<!-- NAV DOTS -->
+<nav class="nav-dots" id="navDots"></nav>
+
+<!-- ============== SLIDE 1: HERO ============== -->
+<section class="slide" id="slide-1">
+  <span class="slide-num">01 / 15</span>
+  <div class="slide-inner text-center">
+    <div class="stagger">
+      <div class="badge badge-cyan mb-2">AI-Powered Trading Intelligence</div>
+    </div>
+    <h1 class="mega glow stagger" style="background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      TradePilot
+    </h1>
+    <p class="mid stagger mt-2" style="color: var(--white);">
+      The AI That Tells You <span class="text-cyan">BEFORE</span> You Trade<br>If It'll Make Money
+    </p>
+    <div class="stagger mt-4">
+      <p class="body" style="font-size: 1.2rem;">
+        <span class="counter-value text-red" data-target="93" data-suffix="%">0%</span>
+        <span style="color: var(--dim);"> of Indian traders lose money.</span>
+      </p>
+      <p class="body mt-1" style="color: var(--white); font-weight: 600;">We're here to change that.</p>
+    </div>
+    <div class="stagger mt-6">
+      <a href="#slide-2" class="cta-btn">Explore the Vision</a>
+    </div>
+  </div>
+  <div class="scroll-arrow" onclick="document.getElementById('slide-2').scrollIntoView({behavior:'smooth'})">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+    <div style="font-size:0.7rem; margin-top:4px; letter-spacing:0.1em; text-transform:uppercase;">Scroll</div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 2: THE PROBLEM ============== -->
+<section class="slide" id="slide-2">
+  <span class="slide-num">02 / 15</span>
+  <div class="slide-inner text-center">
+    <p class="label stagger">The Problem</p>
+    <h2 class="big stagger mt-2">The Market is <span class="text-red">Broken</span></h2>
+    <div class="stagger mt-4">
+      <p class="body" style="font-size:1.1rem;">
+        <span class="badge badge-red" style="font-size:0.7rem; margin-right:8px;">SEBI 2024</span>
+        Retail traders lost
+      </p>
+      <div class="money-counter mt-2" id="money-counter">Rs 0</div>
+      <p class="body mt-1">in just 3 years</p>
+    </div>
+    <div class="stagger mt-3">
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <div class="stat-pill"><strong>212M</strong> demat accounts</div>
+        <div class="stat-pill"><strong>33%</strong> YoY growth</div>
+        <div class="stat-pill" style="border-color:rgba(255,51,102,0.2); color:var(--red);"><strong>93%</strong> lose in F&O</div>
+      </div>
+    </div>
+    <div class="mt-6" style="max-width:700px; margin-left:auto; margin-right:auto;">
+      <div class="card pain-card mb-2" style="text-align:left;">
+        <span style="font-size:1.3rem;">&#x1f6ab;</span>
+        <span style="margin-left:8px;">"Zerodha lets you trade. It doesn't help you <strong class="text-cyan">WIN</strong>."</span>
+      </div>
+      <div class="card pain-card mb-2" style="text-align:left;">
+        <span style="font-size:1.3rem;">&#x1f4f1;</span>
+        <span style="margin-left:8px;">"5 apps to make one trade: Broker + TradingView + Sensibull + Excel + Cleartax"</span>
+      </div>
+      <div class="card pain-card" style="text-align:left;">
+        <span style="font-size:1.3rem;">&#x2753;</span>
+        <span style="margin-left:8px;">"No platform tells you: <strong class="text-green">'This trade has 72% chance of profit'</strong>"</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 3: THE SOLUTION ============== -->
+<section class="slide" id="slide-3">
+  <span class="slide-num">03 / 15</span>
+  <div class="slide-inner text-center">
+    <p class="label stagger">The Solution</p>
+    <h2 class="big stagger mt-2">Know Your Odds <span class="text-green">Before</span> You Trade</h2>
+    <p class="body stagger mt-2" style="max-width:600px; margin:1rem auto 0;">
+      What if your trading app told you the probability of profit... <strong style="color:#fff;">BEFORE</strong> you place the trade?
+    </p>
+    <div class="stagger mt-4">
+      <div class="scorer-card" id="scorer-card">
+        <div class="scorer-ticker">NSE | Equity</div>
+        <div class="scorer-stock">RELIANCE</div>
+        <div class="scorer-price">Rs 2,845.60 <span style="font-size:0.8rem; opacity:0.7;">+1.2%</span></div>
+        <div style="margin-top:20px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--dim);">Profit Probability</span>
+            <span class="text-green mono" style="font-weight:800;" id="scorer-pct">0%</span>
+          </div>
+          <div class="scorer-bar-track">
+            <div class="scorer-bar-fill" id="scorer-bar"></div>
+          </div>
+        </div>
+        <div class="scorer-row"><span style="color:var(--dim);">Risk / Reward</span><span style="font-weight:700;">1 : 2.4</span></div>
+        <div class="scorer-row"><span style="color:var(--dim);">Strategy Votes</span><span style="font-weight:700;">4 / 5 <span class="text-green">BUY</span></span></div>
+        <div class="scorer-row"><span style="color:var(--dim);">Max Loss (10% Rule)</span><span style="font-weight:700;">Rs 284.56</span></div>
+        <div style="text-align:center; margin-top:8px;">
+          <span class="scorer-signal" id="scorer-signal" style="opacity:0;">AI SIGNAL: BUY</span>
+        </div>
+        <div style="margin-top:12px; font-size:0.8rem; color:var(--dim); text-align:center;">
+          RSI oversold &middot; FII buying &middot; Sector momentum positive
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 4: HOW IT WORKS ============== -->
+<section class="slide" id="slide-4">
+  <span class="slide-num">04 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">How It Works</p>
+      <h2 class="big stagger mt-2">AI Scores Every Stock in <span class="text-cyan">Real Time</span></h2>
+    </div>
+    <div class="grid-3 mt-6">
+      <div class="card stagger text-center">
+        <div class="step-number" style="margin:0 auto 16px;">1</div>
+        <h3 style="font-weight:700; margin-bottom:8px;">Analyze</h3>
+        <p class="body">AI processes 25+ indicators across 380 stocks every 5 minutes</p>
+        <div class="tag-row" style="justify-content:center; margin-top:16px;">
+          <span class="tag">RSI</span>
+          <span class="tag">MACD</span>
+          <span class="tag">Volume</span>
+          <span class="tag">FII/DII</span>
+          <span class="tag">Bollinger</span>
+          <span class="tag">ATR</span>
+          <span class="tag">OBV</span>
+        </div>
+      </div>
+      <div class="card stagger text-center">
+        <div class="step-number" style="margin:0 auto 16px;">2</div>
+        <h3 style="font-weight:700; margin-bottom:8px;">Vote</h3>
+        <p class="body">5 proven strategies independently evaluate each stock</p>
+        <div class="mt-3" id="strategy-votes">
+          <div class="strategy-vote" style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.9rem;">
+            <span class="vote-check" style="color:var(--green); opacity:0; transition:opacity 0.3s;">&#10003;</span>
+            <span>Momentum Burst</span>
+          </div>
+          <div class="strategy-vote" style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.9rem;">
+            <span class="vote-check" style="color:var(--green); opacity:0; transition:opacity 0.3s;">&#10003;</span>
+            <span>Mean Reversion</span>
+          </div>
+          <div class="strategy-vote" style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.9rem;">
+            <span class="vote-check" style="color:var(--green); opacity:0; transition:opacity 0.3s;">&#10003;</span>
+            <span>Breakout Scanner</span>
+          </div>
+          <div class="strategy-vote" style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.9rem;">
+            <span class="vote-check" style="color:var(--green); opacity:0; transition:opacity 0.3s;">&#10003;</span>
+            <span>Volume Surge</span>
+          </div>
+          <div class="strategy-vote" style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.9rem;">
+            <span class="vote-check" style="color:var(--red); opacity:0; transition:opacity 0.3s;">&#10007;</span>
+            <span style="color:var(--dim);">Trend Following</span>
+          </div>
+        </div>
+      </div>
+      <div class="card stagger text-center">
+        <div class="step-number" style="margin:0 auto 16px;">3</div>
+        <h3 style="font-weight:700; margin-bottom:8px;">Decide</h3>
+        <p class="body">You see the probability score. You make the call.</p>
+        <div class="gauge-container mt-3">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <circle cx="50" cy="50" r="45" class="gauge-bg"/>
+            <circle cx="50" cy="50" r="45" class="gauge-fill" id="gauge-fill"
+              transform="rotate(-90, 50, 50)"/>
+          </svg>
+          <div class="gauge-text">
+            <div class="counter-value text-green" style="font-size:2rem;" id="gauge-num">0%</div>
+            <div style="font-size:0.75rem; color:var(--dim);">Profit Score</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 5: KEY FEATURES ============== -->
+<section class="slide" id="slide-5">
+  <span class="slide-num">05 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Key Features</p>
+      <h2 class="big stagger mt-2">Six Features <span class="text-cyan">Nobody Else</span> Offers</h2>
+    </div>
+    <div class="grid-3 mt-6">
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f3af;</div>
+        <h3 style="font-weight:700;">AI Profit Scoring</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">72% probability before every trade</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Machine learning ensemble analyzes technical, fundamental, and sentiment data to score profit probability on a 0-100 scale.</p>
+        </div>
+      </div>
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f6e1;</div>
+        <h3 style="font-weight:700;">10% Risk Guardrail</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">BUY button disables if loss > 10%</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Automatic stop-loss enforcement. If a trade could lose more than 10% of your position, the system blocks execution and warns you.</p>
+        </div>
+      </div>
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f4a8;</div>
+        <h3 style="font-weight:700;">Tinder Swipe</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">Swipe right to buy. As easy as dating.</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Browse AI-scored opportunities in a card stack. Swipe right to buy, left to skip. Each card shows profit probability, risk/reward, and AI reasoning.</p>
+        </div>
+      </div>
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f9d9;</div>
+        <h3 style="font-weight:700;">Investment Wizard</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">Enter Rs 5K. We find your stocks.</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Tell us your budget. The wizard builds an AI-optimized portfolio across sectors and risk levels. One tap to invest.</p>
+        </div>
+      </div>
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f399;</div>
+        <h3 style="font-weight:700;">Voice Trading</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">"Buy 5 shares of Reliance"</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Natural language voice commands for hands-free trading. AI confirms the order, shows risk score, and executes on your confirmation.</p>
+        </div>
+      </div>
+      <div class="card feature-card stagger" onclick="this.classList.toggle('open')">
+        <div class="feature-icon">&#x1f3ae;</div>
+        <h3 style="font-weight:700;">Paper Trading</h3>
+        <p class="body mt-1" style="font-size:0.9rem;">Rs 10 Lakh virtual cash to practice</p>
+        <div class="feature-expand">
+          <p class="body" style="font-size:0.85rem;">Full trading simulator with real market data. Build confidence and test strategies risk-free before committing real money.</p>
+        </div>
+      </div>
+    </div>
+    <p class="text-center body mt-4 stagger" style="font-size:0.85rem;">Tap any card to learn more</p>
+  </div>
+</section>
+
+<!-- ============== SLIDE 6: THE NUMBERS ============== -->
+<section class="slide" id="slide-6">
+  <span class="slide-num">06 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">By The Numbers</p>
+      <h2 class="big stagger mt-2">AI Performance <span class="text-green">Validated</span></h2>
+    </div>
+    <div class="grid-4 mt-6">
+      <div class="card stagger text-center">
+        <div class="counter-value text-cyan" data-target="380" data-suffix="+">0</div>
+        <p class="body mt-1">Stocks Scored</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-green" data-target="67.1" data-suffix="%" data-decimals="1">0</div>
+        <p class="body mt-1">AI Accuracy</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-green" data-target="75.9" data-suffix="%" data-decimals="1">0</div>
+        <p class="body mt-1">Win Rate</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-cyan" data-target="8.21" data-suffix="x" data-decimals="2">0</div>
+        <p class="body mt-1">Profit Factor</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-red" data-target="10" data-suffix="%">0</div>
+        <p class="body mt-1">Max Loss Guardrail</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-green" data-target="10" data-suffix="L" data-prefix="Rs ">0</div>
+        <p class="body mt-1">Virtual Trading Cash</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-purple" data-target="14" data-suffix="">0</div>
+        <p class="body mt-1">Stock Categories</p>
+      </div>
+      <div class="card stagger text-center">
+        <div class="counter-value text-cyan" data-target="5" data-suffix="">0</div>
+        <p class="body mt-1">AI Strategies</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 7: COMPETITIVE EDGE ============== -->
+<section class="slide" id="slide-7">
+  <span class="slide-num">07 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Competitive Edge</p>
+      <h2 class="big stagger mt-2"><span class="text-cyan">6 Features</span> No Competitor Offers</h2>
+    </div>
+    <div class="stagger mt-6" style="max-width:900px; margin:2rem auto 0; overflow-x:auto;">
+      <div class="comp-row header">
+        <span>Feature</span>
+        <span style="text-align:center;">TradePilot</span>
+        <span style="text-align:center;">Zerodha</span>
+        <span style="text-align:center;">Groww</span>
+        <span style="text-align:center;">Angel One</span>
+      </div>
+      <div class="comp-row">
+        <span>AI Profit Scoring</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>10% Risk Guardrail</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>Swipe Trading</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>Investment Wizard</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>Voice Trading</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>Paper Trading (Virtual)</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="check" style="color:var(--dim);">&#10003;</span>
+      </div>
+      <div class="comp-row">
+        <span>Unified Platform</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+      </div>
+      <div class="comp-row">
+        <span>Strategy Backtesting</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+        <span style="text-align:center;" class="cross">&#10007;</span>
+        <span style="text-align:center;" class="check">&#10003;</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 8: MARKET OPPORTUNITY ============== -->
+<section class="slide" id="slide-8">
+  <span class="slide-num">08 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Market Opportunity</p>
+      <h2 class="big stagger mt-2">India's Trading Market is <span class="text-green">Exploding</span></h2>
+    </div>
+    <div class="grid-3 mt-6">
+      <div class="card stagger text-center">
+        <p class="label">Total Addressable Market</p>
+        <div class="counter-value text-cyan mt-2" data-target="2.2" data-suffix="B" data-prefix="$" data-decimals="1">0</div>
+        <p class="body mt-1">Indian brokerage market</p>
+      </div>
+      <div class="card stagger text-center">
+        <p class="label">Serviceable Market</p>
+        <div class="counter-value text-green mt-2" data-target="45" data-suffix="M">0</div>
+        <p class="body mt-1">Active traders</p>
+      </div>
+      <div class="card stagger text-center">
+        <p class="label">Year 1 Target</p>
+        <div class="counter-value text-purple mt-2" data-target="10" data-suffix="K">0</div>
+        <p class="body mt-1">Paying users = Rs 6Cr ARR</p>
+      </div>
+    </div>
+    <div class="stagger mt-6 text-center">
+      <h3 style="font-weight:700; margin-bottom:20px;">Demat Account Growth (India)</h3>
+      <div style="max-width:700px; margin:0 auto;">
+        <div style="display:flex; align-items:flex-end; gap:12px; justify-content:center; height:200px;">
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--cyan), rgba(0,240,255,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="30"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2019</div>
+            <div style="font-size:0.7rem; color:var(--cyan);">40M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--cyan), rgba(0,240,255,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="52"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2020</div>
+            <div style="font-size:0.7rem; color:var(--cyan);">55M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--cyan), rgba(0,240,255,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="82"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2021</div>
+            <div style="font-size:0.7rem; color:var(--cyan);">90M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--cyan), rgba(0,240,255,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="100"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2022</div>
+            <div style="font-size:0.7rem; color:var(--cyan);">110M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--cyan), rgba(0,240,255,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="128"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2023</div>
+            <div style="font-size:0.7rem; color:var(--cyan);">140M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--green), rgba(0,255,136,0.3)); border-radius:6px 6px 0 0; transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="160"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2024</div>
+            <div style="font-size:0.7rem; color:var(--green); font-weight:700;">175M</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="bar-anim" style="width:40px; height:0; background:linear-gradient(180deg, var(--green), rgba(0,255,136,0.3)); border-radius:6px 6px 0 0; border:1px dashed rgba(0,255,136,0.4); transition:height 1.5s cubic-bezier(0.16,1,0.3,1);" data-bar-height="190"></div>
+            <div style="font-size:0.7rem; color:var(--dim); margin-top:6px;">2026E</div>
+            <div style="font-size:0.7rem; color:var(--green); font-weight:700;">212M</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 9: BUSINESS MODEL ============== -->
+<section class="slide" id="slide-9">
+  <span class="slide-num">09 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Business Model</p>
+      <h2 class="big stagger mt-2">Freemium + <span class="text-green">SaaS</span></h2>
+    </div>
+    <div class="grid-3 mt-6">
+      <div class="pricing-card stagger">
+        <div class="badge badge-cyan">Free</div>
+        <div class="price-tag" style="color:var(--white);">Rs 0</div>
+        <div class="price-period">forever</div>
+        <div style="margin-top:20px; text-align:left;">
+          <div class="pricing-feature">Basic AI scores</div>
+          <div class="pricing-feature">10 stocks tracked</div>
+          <div class="pricing-feature">Daily updates</div>
+          <div class="pricing-feature">Paper trading (limited)</div>
+        </div>
+      </div>
+      <div class="pricing-card featured stagger">
+        <div class="badge badge-green">Pro</div>
+        <div class="price-tag text-cyan">Rs 499<span style="font-size:1rem; color:var(--dim);">/mo</span></div>
+        <div class="price-period">Most Popular</div>
+        <div style="margin-top:20px; text-align:left;">
+          <div class="pricing-feature"><strong>Full AI scoring</strong> (380 stocks)</div>
+          <div class="pricing-feature">5-min refresh cycle</div>
+          <div class="pricing-feature">Paper trading (Rs 10L)</div>
+          <div class="pricing-feature">Voice trading</div>
+          <div class="pricing-feature">Investment Wizard</div>
+          <div class="pricing-feature">Swipe trading</div>
+        </div>
+      </div>
+      <div class="pricing-card stagger">
+        <div class="badge badge-cyan">Premium</div>
+        <div class="price-tag" style="color:var(--purple);">Rs 999<span style="font-size:1rem; color:var(--dim);">/mo</span></div>
+        <div class="price-period">Power Traders</div>
+        <div style="margin-top:20px; text-align:left;">
+          <div class="pricing-feature">Everything in Pro</div>
+          <div class="pricing-feature">Algo strategy builder</div>
+          <div class="pricing-feature">F&O scoring</div>
+          <div class="pricing-feature">Priority support</div>
+          <div class="pricing-feature">API access</div>
+          <div class="pricing-feature">WhatsApp alerts</div>
+        </div>
+      </div>
+    </div>
+    <div class="stagger mt-6 text-center">
+      <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap;">
+        <div class="stat-pill"><strong>Rs 5,988</strong> ARPU</div>
+        <div class="stat-pill" style="border-color:rgba(0,255,136,0.2); color:var(--green);"><strong>70%</strong> SaaS margin</div>
+        <div class="stat-pill"><strong>&lt; Rs 500</strong> CAC</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 10: TRACTION ============== -->
+<section class="slide" id="slide-10">
+  <span class="slide-num">10 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Traction</p>
+      <h2 class="big stagger mt-2">Built in <span class="text-cyan">ONE</span> Session</h2>
+      <p class="body stagger mt-2">From zero to working prototype with AI-powered engineering</p>
+    </div>
+    <div class="stagger mt-6" style="max-width:650px; margin:0 auto;">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="badge badge-cyan" style="margin-bottom:6px;">Hour 1</div>
+          <h4 style="font-weight:700;">Deep Market Research</h4>
+          <p class="body" style="font-size:0.9rem;">5 parallel AI agents analyzed competitors, market, tech, regulation, community</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="badge badge-cyan" style="margin-bottom:6px;">Hour 2</div>
+          <h4 style="font-weight:700;">12 Architecture Decisions</h4>
+          <p class="body" style="font-size:0.9rem;">Strategy survey: pricing model, tech stack, AI approach, risk framework</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="badge badge-cyan" style="margin-bottom:6px;">Hour 3</div>
+          <h4 style="font-weight:700;">Product Brief + Sprint Plan</h4>
+          <p class="body" style="font-size:0.9rem;">Complete product specification with 25+ sprint tasks</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="badge badge-green" style="margin-bottom:6px;">Hour 4-6</div>
+          <h4 style="font-weight:700;">Working Prototype</h4>
+          <p class="body" style="font-size:0.9rem;">380 stocks, AI scoring engine, 5 strategies, paper trading</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="badge badge-green" style="margin-bottom:6px;">Hour 7-8</div>
+          <h4 style="font-weight:700;">Full Feature Suite</h4>
+          <p class="body" style="font-size:0.9rem;">Swipe trading, voice commands, investment wizard, WhatsApp</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:var(--green);"></div>
+          <div class="badge badge-green" style="margin-bottom:6px;">Deployed</div>
+          <h4 style="font-weight:700;">Mobile PWA Live</h4>
+          <p class="body" style="font-size:0.9rem;">Accessible on any device for testing and validation</p>
+        </div>
+      </div>
+    </div>
+    <div class="stagger mt-4 text-center">
+      <p class="mid" style="color: var(--cyan);">Imagine what we build in 6 months.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 11: TECHNOLOGY ============== -->
+<section class="slide" id="slide-11">
+  <span class="slide-num">11 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Technology</p>
+      <h2 class="big stagger mt-2">Engineered for <span class="text-cyan">Speed</span></h2>
+      <p class="body stagger mt-2">Sub-second AI scoring across 380 stocks</p>
+    </div>
+    <div class="stagger mt-6" style="max-width:600px; margin:0 auto;">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="tech-node" style="border-color:rgba(0,240,255,0.25);">
+          <div class="label" style="margin-bottom:4px;">Frontend</div>
+          <div style="font-weight:700;">Flutter (Mobile) + React (Web PWA)</div>
+        </div>
+        <div class="tech-connector">&#x2193;</div>
+        <div class="tech-node" style="border-color:rgba(0,255,136,0.25);">
+          <div class="label" style="color:var(--green); margin-bottom:4px;">AI Engine</div>
+          <div style="font-weight:700;">XGBoost + LightGBM Ensemble</div>
+          <div style="font-size:0.85rem; color:var(--dim); margin-top:4px;">15+ indicators &middot; 5 strategy models &middot; 5-min refresh</div>
+        </div>
+        <div class="tech-connector">&#x2193;</div>
+        <div class="tech-node" style="border-color:rgba(168,85,247,0.25);">
+          <div class="label" style="color:var(--purple); margin-bottom:4px;">Backend</div>
+          <div style="font-weight:700;">Rust (Actix-Web) + WebSocket</div>
+          <div style="font-size:0.85rem; color:var(--dim); margin-top:4px;">Concurrent, memory-safe, blazing fast</div>
+        </div>
+        <div class="tech-connector">&#x2193;</div>
+        <div class="tech-node">
+          <div class="label" style="margin-bottom:4px;">Data Layer</div>
+          <div style="font-weight:700;">QuestDB (Time-series) + PostgreSQL</div>
+          <div style="font-size:0.85rem; color:var(--dim); margin-top:4px;">380+ NSE stocks &middot; Historical + real-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 12: ROADMAP ============== -->
+<section class="slide" id="slide-12">
+  <span class="slide-num">12 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">Roadmap</p>
+      <h2 class="big stagger mt-2">The Path to <span class="text-green">10,000 Users</span></h2>
+    </div>
+    <div class="stagger mt-6">
+      <div class="roadmap-track">
+        <div class="roadmap-phase">
+          <div class="badge badge-cyan" style="margin-bottom:8px;">Month 1-2</div>
+          <h4 style="font-weight:700; margin-bottom:8px;">Validate</h4>
+          <p class="body" style="font-size:0.85rem;">Paper trading validation<br>Zerodha API integration<br>100 beta testers</p>
+        </div>
+        <div class="roadmap-phase">
+          <div class="badge badge-cyan" style="margin-bottom:8px;">Month 3-4</div>
+          <h4 style="font-weight:700; margin-bottom:8px;">Build</h4>
+          <p class="body" style="font-size:0.85rem;">Flutter mobile app<br>Multi-broker support<br>1,000 users target</p>
+        </div>
+        <div class="roadmap-phase">
+          <div class="badge badge-green" style="margin-bottom:8px;">Month 5-6</div>
+          <h4 style="font-weight:700; margin-bottom:8px;">Launch</h4>
+          <p class="body" style="font-size:0.85rem;">Real trading goes live<br>SEBI RA registration<br>Rs 60L ARR target</p>
+        </div>
+        <div class="roadmap-phase">
+          <div class="badge badge-green" style="margin-bottom:8px;">Month 7-12</div>
+          <h4 style="font-weight:700; margin-bottom:8px;">Scale</h4>
+          <p class="body" style="font-size:0.85rem;">Community features<br>Tax integration<br>5,000+ users</p>
+        </div>
+        <div class="roadmap-phase">
+          <div class="badge" style="background:rgba(168,85,247,0.12); color:var(--purple); border:1px solid rgba(168,85,247,0.2); margin-bottom:8px;">Year 2</div>
+          <h4 style="font-weight:700; margin-bottom:8px;">Dominate</h4>
+          <p class="body" style="font-size:0.85rem;">Full broker license<br>F&O + commodities<br>10,000+ paying users</p>
+        </div>
+      </div>
+      <p class="text-center body mt-2" style="font-size:0.75rem;">Scroll horizontally on mobile &rarr;</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 13: TEAM ============== -->
+<section class="slide" id="slide-13">
+  <span class="slide-num">13 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">The Team</p>
+      <h2 class="big stagger mt-2">Built by <span class="text-cyan">Obsessed</span> Founders</h2>
+    </div>
+    <div class="grid-3 mt-6">
+      <div class="card team-member stagger">
+        <div class="team-avatar">SS</div>
+        <h3 style="font-weight:700;">Soumya Swain</h3>
+        <p class="text-cyan" style="font-size:0.9rem;">Co-founder</p>
+        <p class="body mt-2" style="font-size:0.85rem;">IIM MBA &middot; Fintech<br>Strategy & Growth</p>
+      </div>
+      <div class="card team-member stagger">
+        <div class="team-avatar" style="background:linear-gradient(135deg, var(--green), var(--cyan));">KR</div>
+        <h3 style="font-weight:700;">Kishore R</h3>
+        <p class="text-green" style="font-size:0.9rem;">Co-founder &middot; Tech</p>
+        <p class="body mt-2" style="font-size:0.85rem;">Full-stack &middot; AI/ML<br>Architecture & Engineering</p>
+      </div>
+      <div class="card team-member stagger">
+        <div class="team-avatar" style="background:linear-gradient(135deg, var(--purple), var(--cyan));">DP</div>
+        <h3 style="font-weight:700;">DevPilot AI</h3>
+        <p class="text-purple" style="font-size:0.9rem;">Engineering Multiplier</p>
+        <p class="body mt-2" style="font-size:0.85rem;">AI-orchestrated dev pipeline<br>10x engineering velocity</p>
+      </div>
+    </div>
+    <div class="stagger mt-4 text-center">
+      <p class="body" style="font-size:0.95rem; color:var(--white);">"Built a full trading platform prototype in <strong class="text-cyan">ONE session</strong>"</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 14: THE ASK ============== -->
+<section class="slide" id="slide-14">
+  <span class="slide-num">14 / 15</span>
+  <div class="slide-inner">
+    <div class="text-center">
+      <p class="label stagger">The Ask</p>
+      <h2 class="big stagger mt-2">Two Ways to <span class="text-green">Partner</span></h2>
+    </div>
+    <div class="grid-2 mt-6">
+      <div class="ask-card stagger">
+        <div class="badge badge-green mb-2">For Investors</div>
+        <div class="ask-amount">Rs 25 Lakh</div>
+        <p class="body mt-1" style="font-weight:600; color:var(--white);">Seed Round -- 6 Month Runway</p>
+        <div style="margin-top:20px; text-align:left;">
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--dim);">Flutter App Development</span>
+          </div>
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--dim);">Cloud Infrastructure</span>
+          </div>
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--dim);">Zerodha API Integration</span>
+          </div>
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--dim);">SEBI RA Registration</span>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <p style="font-weight:700; color:var(--green);">Target: 1,000 paying users</p>
+          <p style="font-weight:700; color:var(--green);">Rs 60L ARR by Month 6</p>
+        </div>
+      </div>
+      <div class="ask-card stagger">
+        <div class="badge badge-cyan mb-2">For Brokers</div>
+        <div class="ask-amount">Partnership</div>
+        <p class="body mt-1" style="font-weight:600; color:var(--white);">Authorized Person Model</p>
+        <div style="margin-top:20px; text-align:left;">
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--white); font-weight:600;">We bring:</span> <span style="color:var(--dim);">AI intelligence layer</span>
+          </div>
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--white); font-weight:600;">You provide:</span> <span style="color:var(--dim);">Trade execution</span>
+          </div>
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.95rem;">
+            <span style="color:var(--white); font-weight:600;">Model:</span> <span style="color:var(--dim);">Revenue share</span>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <p style="font-weight:700; color:var(--cyan);">Win-win: More engaged traders</p>
+          <p style="font-weight:700; color:var(--cyan);">Higher retention for brokers</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SLIDE 15: CTA ============== -->
+<section class="slide" id="slide-15">
+  <span class="slide-num">15 / 15</span>
+  <div class="slide-inner text-center final-glow">
+    <div class="stagger">
+      <div class="badge badge-red mb-4">93% of traders lose. Don't be one of them.</div>
+    </div>
+    <h1 class="mega glow stagger" style="background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      TradePilot
+    </h1>
+    <p class="mid stagger mt-2" style="color:var(--white);">
+      Trade Smarter. Win More. Lose Less.
+    </p>
+    <div class="stagger mt-6">
+      <a href="#" class="cta-btn" style="font-size:1.2rem; padding:18px 48px;">Try TradePilot Now</a>
+    </div>
+    <div class="stagger mt-4">
+      <p class="body" style="font-size:0.95rem;">
+        <a href="mailto:support@devpilot.co.in" style="color:var(--cyan); text-decoration:none;">support@devpilot.co.in</a>
+      </p>
+    </div>
+    <div class="stagger mt-6" style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap;">
+      <a href="https://www.linkedin.com/in/kishorer747" style="color:var(--dim); text-decoration:none; font-size:0.85rem;">LinkedIn</a>
+      <a href="https://github.com/kishorer747" style="color:var(--dim); text-decoration:none; font-size:0.85rem;">GitHub</a>
+      <a href="https://devpilot.co.in/privacy" style="color:var(--dim); text-decoration:none; font-size:0.85rem;">Privacy</a>
+      <a href="https://devpilot.co.in/terms" style="color:var(--dim); text-decoration:none; font-size:0.85rem;">Terms</a>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---- GRID CANVAS ----
+  var canvas = document.getElementById('grid-canvas');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  var connections = [];
+  var mouse = { x: -1000, y: -1000 };
+  var scrollY = 0;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Create particles
+  var particleCount = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 15000));
+  for (var i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5
+    });
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw grid lines
+    var gridSize = 60;
+    var offsetY = (scrollY * 0.1) % gridSize;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.03)';
+    ctx.lineWidth = 0.5;
+
+    for (var x = 0; x < canvas.width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (var y = -gridSize + offsetY; y < canvas.height + gridSize; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    // Update and draw particles
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+
+      var dx = mouse.x - p.x;
+      var dy = mouse.y - p.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+
+      var alpha = dist < 200 ? 0.6 : 0.2;
+      var radius = dist < 200 ? p.r * 1.5 : p.r;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 240, 255, ' + alpha + ')';
+      ctx.fill();
+
+      // Draw connections
+      for (var j = i + 1; j < particles.length; j++) {
+        var p2 = particles[j];
+        var dx2 = p.x - p2.x;
+        var dy2 = p.y - p2.y;
+        var d = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = 'rgba(0, 240, 255, ' + (0.08 * (1 - d / 120)) + ')';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(drawGrid);
+  }
+  requestAnimationFrame(drawGrid);
+
+  window.addEventListener('scroll', function() {
+    scrollY = window.pageYOffset;
+  });
+
+  // ---- INTERSECTION OBSERVER ----
+  var slideObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        triggerSlideAnimations(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.slide').forEach(function(el) {
+    slideObserver.observe(el);
+  });
+
+  // ---- ANIMATED NUMBER COUNTERS ----
+  var counterObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !entry.target.dataset.animated) {
+        entry.target.dataset.animated = 'true';
+        var target = parseFloat(entry.target.dataset.target);
+        var suffix = entry.target.dataset.suffix || '';
+        var prefix = entry.target.dataset.prefix || '';
+        var decimals = parseInt(entry.target.dataset.decimals) || 0;
+        animateNumber(entry.target, target, suffix, prefix, decimals);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.counter-value[data-target]').forEach(function(el) {
+    counterObserver.observe(el);
+  });
+
+  function animateNumber(el, target, suffix, prefix, decimals) {
+    var duration = 1500;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      // easeOutExpo
+      var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      var current = eased * target;
+      if (decimals > 0) {
+        el.textContent = prefix + current.toFixed(decimals) + suffix;
+      } else {
+        el.textContent = prefix + Math.round(current) + suffix;
+      }
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---- SLIDE-SPECIFIC ANIMATIONS ----
+  function triggerSlideAnimations(slide) {
+    var id = slide.id;
+
+    // Slide 2: Money counter
+    if (id === 'slide-2') {
+      var moneyEl = document.getElementById('money-counter');
+      if (!moneyEl.dataset.animated) {
+        moneyEl.dataset.animated = 'true';
+        animateMoney(moneyEl, 1800000000000);
+      }
+    }
+
+    // Slide 3: Scorer bar
+    if (id === 'slide-3') {
+      setTimeout(function() {
+        var bar = document.getElementById('scorer-bar');
+        var pct = document.getElementById('scorer-pct');
+        var signal = document.getElementById('scorer-signal');
+        if (bar) bar.style.width = '72%';
+        if (pct) animateNumber(pct, 72, '%', '', 0);
+        setTimeout(function() {
+          if (signal) signal.style.opacity = '1';
+        }, 1500);
+      }, 400);
+    }
+
+    // Slide 4: Gauge + strategy votes
+    if (id === 'slide-4') {
+      setTimeout(function() {
+        var gaugeFill = document.getElementById('gauge-fill');
+        var gaugeNum = document.getElementById('gauge-num');
+        if (gaugeFill) {
+          // 72% of circumference (283)
+          gaugeFill.style.strokeDashoffset = 283 - (283 * 0.72);
+        }
+        if (gaugeNum && !gaugeNum.dataset.animated) {
+          gaugeNum.dataset.animated = 'true';
+          animateNumber(gaugeNum, 72, '%', '', 0);
+        }
+      }, 500);
+
+      // Animate strategy votes
+      var checks = document.querySelectorAll('.vote-check');
+      checks.forEach(function(check, i) {
+        setTimeout(function() {
+          check.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    }
+
+    // Slide 8: Bar chart
+    if (id === 'slide-8') {
+      setTimeout(function() {
+        document.querySelectorAll('.bar-anim').forEach(function(bar) {
+          bar.style.height = bar.dataset.barHeight + 'px';
+        });
+      }, 400);
+    }
+  }
+
+  function animateMoney(el, target) {
+    var duration = 2000;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      var current = Math.round(eased * target);
+      el.textContent = 'Rs ' + formatIndian(current);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function formatIndian(num) {
+    if (num >= 10000000000000) return (num / 10000000000000).toFixed(1) + ' Trillion';
+    if (num >= 1000000000000) return (num / 1000000000000).toFixed(1) + ' Trillion';
+    if (num >= 10000000) return (num / 10000000).toFixed(0) + ' Crore';
+    if (num >= 100000) return (num / 100000).toFixed(0) + ' Lakh';
+    return num.toLocaleString('en-IN');
+  }
+
+  // ---- NAV DOTS ----
+  var slides = document.querySelectorAll('.slide');
+  var dotsContainer = document.getElementById('navDots');
+
+  slides.forEach(function(slide, i) {
+    var dot = document.createElement('button');
+    dot.className = 'nav-dot';
+    dot.title = 'Slide ' + (i + 1);
+    dot.addEventListener('click', function() {
+      slide.scrollIntoView({ behavior: 'smooth' });
+    });
+    dotsContainer.appendChild(dot);
+  });
+
+  var dots = document.querySelectorAll('.nav-dot');
+  var dotObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var index = Array.from(slides).indexOf(entry.target);
+        dots.forEach(function(d, i) {
+          d.classList.toggle('active', i === index);
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+
+  slides.forEach(function(s) { dotObserver.observe(s); });
+
+  // ---- KEYBOARD NAV ----
+  var currentSlide = 0;
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      currentSlide = Math.min(currentSlide + 1, slides.length - 1);
+      slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      currentSlide = Math.max(currentSlide - 1, 0);
+      slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  // Track current slide on scroll
+  var scrollObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        currentSlide = Array.from(slides).indexOf(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  slides.forEach(function(s) { scrollObserver.observe(s); });
+
+})();
+</script>
+</body>
+</html>

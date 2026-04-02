@@ -52,6 +52,13 @@ def get_backtest_results():
 def index():
     return render_template("index.html")
 
+@app.route("/pitch")
+def pitch():
+    """Serve the interactive pitch deck."""
+    pitch_path = os.path.join(os.path.dirname(__file__), "..", "docs", "pitch", "pitch-deck.html")
+    with open(pitch_path, "r") as f:
+        return f.read()
+
 
 _score_cache = {"data": None, "time": 0}
 

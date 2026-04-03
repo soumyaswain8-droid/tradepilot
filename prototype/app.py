@@ -14,6 +14,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from data_engine import get_market_indices, NIFTY_STOCKS
 from ai_scorer import score_stocks, train_model
+from analytics import (track_visit, track_page_view, track_stock_view,
+                       track_swipe, track_paper_trade, track_wizard_search,
+                       track_feedback, get_dashboard_stats)
 
 # Try to use v2 engine, fallback to v1
 try:
@@ -956,6 +959,41 @@ def api_paper_swipe():
     if status == 200:
         result["auto_invest_amount"] = round(invest_amount, 2)
     return jsonify(result), status
+
+
+@app.route("/api/analytics/track", methods=["POST"])
+def api_track():
+    """Track user events."""
+    try:
+        data = request.get_json() or {}
+        event = data.get("event", "")
+        user_id = data.get("user_id", "anon")
+
+        if event == "visit":
+            track_visit(user_id, data.get("device"), data.get("user_agent"))
+        elif event == "page_view":
+            track_page_view(user_id, data.get("page", "/"))
+        elif event == "stock_view":
+            track_stock_view(user_id, data.get("symbol"), data.get("score"), data.get("direction"))
+        elif event == "swipe":
+            track_swipe(user_id, data.get("symbol"), data.get("action"), data.get("score"), data.get("price"), data.get("quantity"))
+        elif event == "paper_trade":
+            track_paper_trade(user_id, data.get("symbol"), data.get("action"), data.get("quantity", 0), data.get("price", 0), data.get("pnl"), data.get("source", "manual"))
+        elif event == "wizard_search":
+            track_wizard_search(user_id, data.get("budget", 0), data.get("category", ""), data.get("results_count", 0), data.get("recommended_count", 0))
+        elif event == "feedback":
+            track_feedback(user_id, data.get("type", "general"), data.get("message", ""), data.get("page"))
+
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/admin")
+def admin_dashboard():
+    """Analytics dashboard for founders."""
+    stats = get_dashboard_stats()
+    return jsonify(stats)
 
 
 if __name__ == "__main__":

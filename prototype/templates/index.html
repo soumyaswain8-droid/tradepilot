@@ -2492,10 +2492,21 @@ function loadModel() {
 
 /* ═══ LOAD STOCKS ═══ */
 function loadStocks() {
-  api('/api/scores', function(data) {
-    allStocks = data || [];
-    renderPicks();
-    renderStockGrid();
+  // Load preloaded scores FIRST (instant, static file)
+  api('/api/preloaded-scores', function(data) {
+    if (data && data.length > 0) {
+      allStocks = data;
+      renderPicks();
+      renderStockGrid();
+    }
+    // Then try live scores in background (may take longer on Render free tier)
+    api('/api/scores', function(liveData) {
+      if (liveData && liveData.length > 0) {
+        allStocks = liveData;
+        renderPicks();
+        renderStockGrid();
+      }
+    });
   });
 }
 

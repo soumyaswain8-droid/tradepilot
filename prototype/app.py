@@ -55,6 +55,15 @@ def get_backtest_results():
 def index():
     return render_template("index.html")
 
+@app.route("/api/preloaded-scores")
+def api_preloaded():
+    """Serve pre-computed scores (instant, no API delay)."""
+    scores_path = os.path.join(os.path.dirname(__file__), "static", "preloaded-scores.json")
+    if os.path.exists(scores_path):
+        with open(scores_path) as f:
+            return f.read(), 200, {'Content-Type': 'application/json'}
+    return jsonify([])
+
 @app.route("/pitch")
 def pitch():
     """Serve the interactive pitch deck."""

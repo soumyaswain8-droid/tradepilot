@@ -406,7 +406,7 @@ body::after {
     rgba(255,0,170,0.03) 100%);
 }
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0.01; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
@@ -1173,10 +1173,19 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
   /* Disable particles */
   #particles { display: none !important; }
 
-  /* Disable card hover 3D effects */
-  .stock-card { perspective: none; transform-style: flat; }
-  .stock-card:hover { transform: none !important; box-shadow: none !important; }
-  .pick-card:hover { transform: none !important; }
+  /* Disable ALL card animations on mobile -- cards must be visible immediately */
+  .stock-card, .wiz-card, .pick-card, .fno-idx-card, .pulse-pick, .geo-event {
+    animation: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    perspective: none;
+    transform-style: flat;
+  }
+  .stock-card:hover, .pick-card:hover { transform: none !important; box-shadow: none !important; }
+  /* Only hide swipe stack cards 2+ */
+  .swipe-card { animation: none !important; opacity: 1 !important; visibility: visible !important; }
+  .swipe-card:nth-child(n+2) { opacity: 0 !important; visibility: hidden !important; }
 
   /* Disable holographic shimmer animations */
   .pick-card::before,
@@ -2527,7 +2536,7 @@ function renderStockGrid() {
     card.className = 'stock-card';
     card.style.setProperty('--score-color', scoreColor(s.score));
     card.style.setProperty('--score-glow', scoreGlow(s.score));
-    card.style.animationDelay = (idx * 0.03) + 's';
+    if (window.innerWidth > 768) card.style.animationDelay = (idx * 0.03) + 's';
     card.innerHTML =
       '<div class="card-top"><div><div class="card-sym">' + s.symbol + '</div><div class="card-name">' + (s.name || s.symbol) + '</div></div>' +
       '<span class="card-dir ' + dirClass(s.direction) + '">' + s.direction + '</span></div>' +
@@ -3095,7 +3104,7 @@ function loadWizardResults() {
         var safeClass = s.recommended ? 'card-safe' : s.safe ? 'card-risky' : 'card-danger';
         card.className = 'wiz-card ' + safeClass + (s.recommended ? '' : ' not-recommended');
         card.style.animationDelay = (idx * 0.04) + 's';
-        card.style.animation = 'cardIn 0.5s ease both';
+        if (window.innerWidth > 768) card.style.animation = 'cardIn 0.5s ease both';
 
         var scoreColor = s.score >= 65 ? 'var(--green)' : s.score >= 40 ? 'var(--amber)' : 'var(--red)';
         var reason = s.reasons && s.reasons[0] ? s.reasons[0].text : '';

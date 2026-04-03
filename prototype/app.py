@@ -64,6 +64,73 @@ def pitch():
 
 
 _score_cache = {"data": None, "time": 0}
+_data_ready = {"status": False, "loading": False}
+
+def ensure_data():
+    """Download stock data and train model if not present (runs once on Render)."""
+    if _data_ready["status"] or _data_ready["loading"]:
+        return _data_ready["status"]
+
+    from data_engine import load_all_stock_data, download_stock_data, NIFTY_50
+    data = load_all_stock_data()
+    if len(data) >= 10:
+        _data_ready["status"] = True
+        return True
+
+    # Need to download data (first run on Render)
+    _data_ready["loading"] = True
+    try:
+        print("[INIT] Downloading NIFTY 50 stock data (first run)...")
+        download_stock_data(NIFTY_50[:20], period="1y")  # Start with top 20 for speed
+        print("[INIT] Training AI model...")
+        train_model(load_all_stock_data())
+        if HAS_V2:
+            try:
+                train_ensemble(load_all_stock_data())
+            except Exception:
+                pass
+        _data_ready["status"] = True
+        print("[INIT] Ready!")
+    except Exception as e:
+        print(f"[INIT] Error: {e}")
+    finally:
+        _data_ready["loading"] = False
+    return _data_ready["status"]
+
+
+def get_live_scores_fallback(symbols):
+    """Fallback: get basic scores from live yfinance data when no trained model exists."""
+    import yfinance as yf
+    stocks = []
+    for sym in symbols[:30]:  # Limit to 30 for speed
+        try:
+            name = sym.replace(".NS", "").replace(".BO", "")
+            ticker = yf.Ticker(sym)
+            hist = ticker.history(period="5d")
+            if len(hist) < 2:
+                continue
+            price = round(float(hist.iloc[-1]["Close"]), 2)
+            prev = float(hist.iloc[-2]["Close"])
+            change = round((price - prev) / prev * 100, 2)
+
+            # Simple score based on recent momentum
+            returns_5d = (price / float(hist.iloc[0]["Close"]) - 1) * 100
+            score = round(max(10, min(90, 50 + returns_5d * 5)), 1)
+            direction = "BUY" if score >= 55 else "HOLD" if score >= 40 else "AVOID"
+
+            stocks.append({
+                "symbol": name, "name": name, "price": price,
+                "change": change, "score": score, "direction": direction,
+                "rsi": 50, "trend": "Sideways", "volatility": "Medium",
+                "macd": "Neutral", "stopLoss": 3.0, "target": 6.0,
+                "riskReward": 2.0,
+                "reasons": [{"text": f"{'Positive' if change > 0 else 'Negative'} momentum ({change:+.1f}%)", "type": "positive" if change > 0 else "negative"}],
+            })
+        except Exception:
+            pass
+    stocks.sort(key=lambda x: x["score"], reverse=True)
+    return stocks
+
 
 @app.route("/api/scores")
 def api_scores():
@@ -71,16 +138,33 @@ def api_scores():
     import time
     category = request.args.get('category', 'nifty50')
 
-    # Cache for 60 seconds
+    # Cache for 5 minutes on Render (reduce API calls)
     cache_key = category
     now = time.time()
-    if _score_cache["data"] and (now - _score_cache["time"]) < 60 and _score_cache.get("key") == cache_key:
+    if _score_cache["data"] and (now - _score_cache["time"]) < 300 and _score_cache.get("key") == cache_key:
         return jsonify(_score_cache["data"])
 
     try:
         from data_engine import STOCK_CATEGORIES, NIFTY_50
         cat_stocks = STOCK_CATEGORIES.get(category, {}).get('stocks', NIFTY_50)
-        raw_scores = score_stocks_v2(cat_stocks) if HAS_V2 else score_stocks()
+
+        # Try trained model first
+        raw_scores = None
+        if ensure_data():
+            try:
+                raw_scores = score_stocks_v2(cat_stocks) if HAS_V2 else score_stocks()
+            except Exception:
+                pass
+
+        # Fallback to live yfinance if no model
+        if not raw_scores:
+            stocks = get_live_scores_fallback(cat_stocks)
+            _score_cache["data"] = stocks
+            _score_cache["time"] = now
+            _score_cache["key"] = cache_key
+            return jsonify(stocks)
+
+        raw_scores = raw_scores  # Use model scores
         # Transform to frontend format
         stocks = []
         for s in raw_scores:

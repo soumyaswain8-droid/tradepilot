@@ -233,6 +233,137 @@ NIFTY_INFRA = [
 ]
 
 # ---------------------------------------------------------------------------
+# NSE ETFs (Exchange Traded Funds — track indices, gold, bonds)
+# ---------------------------------------------------------------------------
+NSE_ETFS = [
+    # Index ETFs
+    "NIFTYBEES.NS", "BANKBEES.NS", "JUNIORBEES.NS", "SETFNIFTY.NS",
+    "SETFNIF50.NS", "ICICIN100.NS", "MON100.NS", "SETFNN50.NS",
+    # Sectoral ETFs
+    "SETFNIFBK.NS", "ITBEES.NS", "PHARMABEES.NS", "INFRABEES.NS",
+    "PSUBNKBEES.NS", "CONSUMBEES.NS", "DIVOPPBEES.NS", "MIDCPBEES.NS",
+    # Commodity ETFs
+    "GOLDBEES.NS", "GOLDCASE.NS", "GOLD1.NS", "SILVERBEES.NS", "SILVERETF.NS",
+    # International ETFs
+    "NASDAQ100.NS", "MAFANG.NS", "MON100.NS", "HANGSENG.NS",
+    # Debt / Liquid ETFs
+    "LIQUIDBEES.NS", "LIQUIDCASE.NS", "LIQUIDADD.NS",
+    "CPSEETF.NS", "BHARAT22.NS", "NETFGILT5Y.NS",
+    # Thematic ETFs
+    "MOMENTUM.NS", "LOWVOLIETF.NS", "ALPHAETF.NS", "EQUAL50.NS",
+    "HABORETF.NS",
+]
+
+# ---------------------------------------------------------------------------
+# Market Indices (for tracking, not scoring)
+# ---------------------------------------------------------------------------
+MARKET_INDICES = {
+    "NIFTY 50": "^NSEI",
+    "NIFTY Bank": "^NSEBANK",
+    "NIFTY IT": "^CNXIT",
+    "NIFTY Pharma": "^CNXPHARMA",
+    "NIFTY Auto": "^CNXAUTO",
+    "NIFTY Metal": "^CNXMETAL",
+    "NIFTY FMCG": "^CNXFMCG",
+    "NIFTY Energy": "^CNXENERGY",
+    "NIFTY Realty": "^CNXREALTY",
+    "NIFTY Infra": "^CNXINFRA",
+    "NIFTY Midcap 100": "NIFTY_MIDCAP_100.NS",
+    "NIFTY Smallcap 100": "NIFTY_SMLCAP_100.NS",
+    "BSE SENSEX": "^BSESN",
+    "BSE Midcap": "BSE-MIDCAP.BO",
+    "BSE Smallcap": "BSE-SMLCAP.BO",
+    "India VIX": "^INDIAVIX",
+}
+
+# ---------------------------------------------------------------------------
+# Commodities (Global + MCX proxies via yfinance)
+# ---------------------------------------------------------------------------
+COMMODITIES = {
+    # Precious Metals
+    "Gold": "GC=F",
+    "Silver": "SI=F",
+    "Platinum": "PL=F",
+    # Energy
+    "Crude Oil (WTI)": "CL=F",
+    "Crude Oil (Brent)": "BZ=F",
+    "Natural Gas": "NG=F",
+    # Agriculture
+    "Cotton": "CT=F",
+    "Sugar": "SB=F",
+    "Wheat": "ZW=F",
+    "Corn": "ZC=F",
+    "Soybean": "ZS=F",
+    # Metals
+    "Copper": "HG=F",
+    "Aluminium": "ALI=F",
+    "Zinc": "ZN=F",
+    "Nickel": "NI=F",
+    # MCX proxies (Indian commodity-linked stocks)
+    "MCX (exchange)": "MCX.NS",
+    "ONGC (crude proxy)": "ONGC.NS",
+    "Hindalco (aluminium)": "HINDALCO.NS",
+    "Vedanta (metals)": "VEDL.NS",
+    "NMDC (iron ore)": "NMDC.NS",
+    "Coal India (coal)": "COALINDIA.NS",
+}
+
+# ---------------------------------------------------------------------------
+# Mutual Fund Proxies (AMC stocks + popular MF ETFs)
+# AMC stocks move with AUM growth — proxy for MF industry health
+# ---------------------------------------------------------------------------
+MF_PROXIES = [
+    # AMC stocks (Asset Management Companies)
+    "HDFCAMC.NS",     # HDFC AMC — India's largest AMC
+    "NAM-INDIA.NS",   # Nippon India AMC
+    "UTIAMC.NS",      # UTI AMC
+    "ABSLAMC.NS",     # Aditya Birla Sun Life AMC
+    # Wealth managers & distributors
+    "MOTILALOFS.NS",  # Motilal Oswal Financial
+    "IIFLWAM.NS",     # IIFL Wealth Management
+    "KFINTECH.NS",    # KFin Technologies (MF registrar)
+    # Popular Index Fund ETFs (track MF performance)
+    "NIFTYBEES.NS",   # Nifty 50 Index Fund proxy
+    "JUNIORBEES.NS",  # Nifty Next 50 proxy
+    "MIDCPBEES.NS",   # Midcap Index Fund proxy
+    "GOLDBEES.NS",    # Gold Fund proxy
+]
+
+# ---------------------------------------------------------------------------
+# F&O Active Stocks (most traded in Futures & Options)
+# These are the stocks with highest F&O volume on NSE
+# ---------------------------------------------------------------------------
+FNO_ACTIVE = [
+    # Heavy F&O volume — these drive most option premium
+    "RELIANCE.NS", "HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "INFY.NS",
+    "TCS.NS", "BAJFINANCE.NS", "AXISBANK.NS", "KOTAKBANK.NS", "LT.NS",
+    "TATAMOTORS.NS", "ITC.NS", "BHARTIARTL.NS", "HCLTECH.NS", "MARUTI.NS",
+    "TATASTEEL.NS", "HINDALCO.NS", "M&M.NS", "SUNPHARMA.NS", "WIPRO.NS",
+    "ADANIENT.NS", "ADANIPORTS.NS", "TECHM.NS", "TITAN.NS", "POWERGRID.NS",
+    "NTPC.NS", "ONGC.NS", "COALINDIA.NS", "JSWSTEEL.NS", "GRASIM.NS",
+    "INDUSINDBK.NS", "BAJAJFINSV.NS", "ASIANPAINT.NS", "NESTLEIND.NS",
+    "BRITANNIA.NS", "DRREDDY.NS", "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS",
+    "EICHERMOT.NS", "HEROMOTOCO.NS", "BAJAJ-AUTO.NS", "BPCL.NS", "UPL.NS",
+    "SHRIRAMFIN.NS", "DLF.NS", "TATAPOWER.NS", "BANKBARODA.NS", "PNB.NS",
+    "BEL.NS", "HAL.NS", "JINDALSTEL.NS", "TRENT.NS", "ZOMATO.NS",
+    "IRCTC.NS", "VEDL.NS", "SAIL.NS", "CHOLAFIN.NS", "MUTHOOTFIN.NS",
+]
+
+# ---------------------------------------------------------------------------
+# Currency Pairs (via yfinance)
+# ---------------------------------------------------------------------------
+CURRENCY_PAIRS = {
+    "USD/INR": "USDINR=X",
+    "EUR/INR": "EURINR=X",
+    "GBP/INR": "GBPINR=X",
+    "JPY/INR": "JPYINR=X",
+    "USD/EUR": "EURUSD=X",
+    "Gold/USD": "GC=F",
+    "BTC/USD": "BTC-USD",
+    "ETH/USD": "ETH-USD",
+}
+
+# ---------------------------------------------------------------------------
 # Composite Lists (deduplicated)
 # ---------------------------------------------------------------------------
 NIFTY_100 = sorted(set(NIFTY_50 + NIFTY_NEXT_50))
@@ -247,6 +378,15 @@ ALL_NSE = sorted(set(
 
 # All unique BSE symbols
 ALL_BSE = sorted(set(BSE_SENSEX_30))
+
+# BSE popular stocks with NSE suffix (for unified download)
+BSE_POPULAR_NSE = [
+    "ADANIGREEN.NS", "ADANITRANS.NS", "JSWENERGY.NS", "JINDALSTEL.NS",
+    "MAZAGON.NS", "COCHINSHIP.NS",
+]
+
+# Full tradeable universe (stocks + ETFs)
+FULL_UNIVERSE = sorted(set(ALL_NSE + NSE_ETFS + MF_PROXIES + BSE_POPULAR_NSE))
 
 
 # ---------------------------------------------------------------------------
@@ -281,8 +421,12 @@ def get_stocks_by_tier(tier: str) -> list[str]:
         "energy": NIFTY_ENERGY,
         "realty": NIFTY_REALTY,
         "infra": NIFTY_INFRA,
+        "etfs": NSE_ETFS,
+        "mf_proxies": MF_PROXIES,
+        "fno": FNO_ACTIVE,
         "all_nse": ALL_NSE,
         "all_bse": ALL_BSE,
+        "full_universe": FULL_UNIVERSE,
     }
     key = tier.lower().replace(" ", "_").replace("-", "_")
     if key not in tiers:
@@ -349,14 +493,21 @@ def fetch_nse_equity_list():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("TradePilot Stock Universe")
-    print("=" * 40)
-    print(f"NIFTY 50:       {len(NIFTY_50)} stocks")
-    print(f"NIFTY Next 50:  {len(NIFTY_NEXT_50)} stocks")
-    print(f"NIFTY 100:      {len(NIFTY_100)} stocks (deduplicated)")
-    print(f"NIFTY 200:      {len(NIFTY_200)} stocks (deduplicated)")
-    print(f"NIFTY 500:      {len(NIFTY_500)} stocks (deduplicated)")
-    print(f"BSE SENSEX 30:  {len(BSE_SENSEX_30)} stocks")
-    print(f"ALL NSE unique: {len(ALL_NSE)} stocks")
+    print("=" * 50)
+    print(f"NIFTY 50:          {len(NIFTY_50)} stocks")
+    print(f"NIFTY Next 50:     {len(NIFTY_NEXT_50)} stocks")
+    print(f"NIFTY 100:         {len(NIFTY_100)} stocks")
+    print(f"NIFTY 200:         {len(NIFTY_200)} stocks")
+    print(f"NIFTY 500:         {len(NIFTY_500)} stocks")
+    print(f"BSE SENSEX 30:     {len(BSE_SENSEX_30)} stocks")
+    print(f"NSE ETFs:          {len(NSE_ETFS)} ETFs")
+    print(f"MF Proxies:        {len(MF_PROXIES)} AMCs/ETFs")
+    print(f"F&O Active:        {len(FNO_ACTIVE)} stocks")
+    print(f"Commodities:       {len(COMMODITIES)} futures/proxies")
+    print(f"Currency Pairs:    {len(CURRENCY_PAIRS)} pairs")
+    print(f"Market Indices:    {len(MARKET_INDICES)} indices")
+    print(f"ALL NSE unique:    {len(ALL_NSE)} stocks")
+    print(f"FULL UNIVERSE:     {len(FULL_UNIVERSE)} scoreable assets")
     print()
     print("Sectoral indices:")
     for name in ["bank", "it", "pharma", "auto", "fmcg", "metal", "energy", "realty", "infra"]:

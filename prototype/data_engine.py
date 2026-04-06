@@ -20,6 +20,8 @@ from stock_universe import (
     NIFTY_50, NIFTY_NEXT_50, NIFTY_100, NIFTY_200, NIFTY_500,
     BSE_SENSEX_30, NIFTY_BANK, NIFTY_IT, NIFTY_PHARMA, NIFTY_AUTO,
     NIFTY_FMCG, NIFTY_METAL, NIFTY_ENERGY, NIFTY_REALTY, NIFTY_INFRA,
+    NSE_ETFS, MF_PROXIES, FNO_ACTIVE, COMMODITIES, CURRENCY_PAIRS,
+    MARKET_INDICES, FULL_UNIVERSE, BSE_POPULAR_NSE,
     ALL_NSE, get_stocks_by_tier,
 )
 
@@ -64,12 +66,14 @@ NIFTY_STOCKS = ALL_STOCKS
 
 # Stock categories for the UI
 STOCK_CATEGORIES = {
+    # Core indices
     "nifty50": {"name": "NIFTY 50", "desc": "Top 50 large-cap", "stocks": NIFTY_50},
     "nifty100": {"name": "NIFTY 100", "desc": "Top 100 stocks", "stocks": NIFTY_100},
     "nifty200": {"name": "NIFTY 200", "desc": "Top 200 stocks", "stocks": NIFTY_200},
     "nifty500": {"name": "NIFTY 500", "desc": "Top 500 (94% market cap)", "stocks": NIFTY_500},
     "midcap": {"name": "Mid Cap", "desc": "Popular mid-caps", "stocks": MIDCAP_POPULAR},
     "beginner": {"name": "Beginner Picks", "desc": "Affordable stocks under Rs 500", "stocks": BEGINNER_FRIENDLY},
+    # Sectors
     "bank": {"name": "NIFTY Bank", "desc": "Banking sector", "stocks": NIFTY_BANK},
     "it": {"name": "NIFTY IT", "desc": "IT sector", "stocks": NIFTY_IT},
     "pharma": {"name": "NIFTY Pharma", "desc": "Pharma sector", "stocks": NIFTY_PHARMA},
@@ -78,6 +82,13 @@ STOCK_CATEGORIES = {
     "metal": {"name": "NIFTY Metal", "desc": "Metal sector", "stocks": NIFTY_METAL},
     "fmcg": {"name": "NIFTY FMCG", "desc": "FMCG sector", "stocks": NIFTY_FMCG},
     "realty": {"name": "NIFTY Realty", "desc": "Real estate", "stocks": NIFTY_REALTY},
+    # New categories
+    "etf": {"name": "ETFs", "desc": "Index, Gold, Sectoral ETFs", "stocks": NSE_ETFS},
+    "fno": {"name": "F&O Active", "desc": "Most traded in Futures & Options", "stocks": FNO_ACTIVE},
+    "mf": {"name": "Mutual Funds", "desc": "AMC stocks + MF index ETFs", "stocks": MF_PROXIES},
+    "commodity": {"name": "Commodities", "desc": "Gold, Silver, Crude, Metals", "stocks": list(COMMODITIES.values())},
+    "currency": {"name": "Currencies", "desc": "USD/INR, EUR/INR, Crypto", "stocks": list(CURRENCY_PAIRS.values())},
+    # Full universe
     "all": {"name": "All Stocks", "desc": "Full universe (~500+ stocks)", "stocks": ALL_STOCKS},
 }
 

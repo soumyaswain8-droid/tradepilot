@@ -381,6 +381,45 @@ def score_stocks_v2(symbols=None):
             ])
             score = min(99, score + signals_active * 3)
 
+            # ═══ MOMENTUM BOOST ═══
+            # The base ML model has mean-reversion bias (penalizes stocks
+            # that already moved up). This boost corrects for that by
+            # rewarding stocks with strong, confirmed momentum.
+            ret_1d = float(latest.get("return_1d", 0))
+            ret_5d = float(latest.get("return_5d", 0))
+            vol_ratio = float(latest.get("volume_ratio", 1))
+            rsi = float(latest.get("rsi_14", 50))
+            adx = float(latest.get("adx", 0))
+            macd_h = float(latest.get("macd_hist", 0))
+
+            momentum_boost = 0
+
+            # Strong 1-day gain with volume confirmation = momentum is real
+            if ret_1d > 0.03 and vol_ratio > 1.5:
+                momentum_boost += 8
+            elif ret_1d > 0.02 and vol_ratio > 1.2:
+                momentum_boost += 5
+            elif ret_1d > 0.01 and vol_ratio > 1.0:
+                momentum_boost += 2
+
+            # 5-day positive streak with trend confirmation
+            if ret_5d > 0.05 and adx > 25:
+                momentum_boost += 6
+            elif ret_5d > 0.03 and adx > 20:
+                momentum_boost += 3
+
+            # RSI between 55-75 with bullish MACD = sweet spot (not overbought yet)
+            if 55 <= rsi <= 75 and macd_h > 0:
+                momentum_boost += 4
+
+            # Golden cross: EMA9 > EMA21 > SMA50 (strong uptrend)
+            if float(latest.get("signal_ma_trend", 0)) > 0:
+                momentum_boost += 3
+
+            # Cap the boost and apply
+            momentum_boost = min(momentum_boost, 20)
+            score = min(99, score + momentum_boost)
+
             direction = "BUY" if score >= 55 else "HOLD" if score >= 40 else "AVOID"
 
             price = float(latest["Close"])

@@ -4,6 +4,7 @@ Serves the HTML dashboard and API endpoints.
 Transforms backend data to match frontend's expected format.
 """
 from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
 from datetime import datetime
 import json
 import os
@@ -30,6 +31,7 @@ except ImportError:
 app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
             static_folder=os.path.join(os.path.dirname(__file__), "static"))
+CORS(app)  # Allow Flutter web app to call API from different port
 
 
 def get_model_meta():
@@ -173,31 +175,54 @@ def api_scores():
             _score_cache["key"] = cache_key
             return jsonify(stocks)
 
+        import math
         raw_scores = raw_scores  # Use model scores
+
+        def safe(v, default=0):
+            """Sanitize NaN/Inf values for JSON serialization."""
+            if v is None:
+                return default
+            try:
+                if math.isnan(v) or math.isinf(v):
+                    return default
+            except (TypeError, ValueError):
+                pass
+            return v
+
         # Transform to frontend format
         stocks = []
         for s in raw_scores:
+            price = safe(s.get("price"), 0)
+            score = safe(s.get("score"), 0)
+            change = safe(s.get("change_pct"), 0)
+            rsi = safe(s.get("rsi"), 50)
+            vol = safe(s.get("volatility"), 20)
+
+            # Skip entries with no valid price
+            if price == 0:
+                continue
+
             reasons = []
             for r in s.get("reasons", []):
                 reasons.append({
                     "text": r.get("text", ""),
-                    "type": r.get("impact", "neutral"),  # backend uses 'impact', frontend uses 'type'
+                    "type": r.get("impact", "neutral"),
                 })
 
             stocks.append({
                 "symbol": s.get("name", s.get("symbol", "").replace(".NS", "")),
                 "name": s.get("name", s.get("symbol", "")),
-                "price": s.get("price", 0),
-                "change": s.get("change_pct", 0),
-                "score": s.get("score", 50),
+                "price": round(price, 2),
+                "change": round(change, 2),
+                "score": round(score, 1),
                 "direction": s.get("direction", "HOLD"),
-                "rsi": s.get("rsi", 50),
+                "rsi": round(rsi, 1),
                 "trend": s.get("trend", "Sideways"),
-                "volatility": "High" if s.get("volatility", 0) > 25 else "Low" if s.get("volatility", 0) < 15 else "Medium",
+                "volatility": "High" if vol > 25 else "Low" if vol < 15 else "Medium",
                 "macd": s.get("macd_signal", "Neutral"),
-                "stopLoss": s.get("stop_loss_pct", 2.0),
-                "target": s.get("target_pct", 4.0),
-                "riskReward": s.get("risk_reward", 2.0),
+                "stopLoss": round(safe(s.get("stop_loss_pct"), 2.0), 1),
+                "target": round(safe(s.get("target_pct"), 4.0), 1),
+                "riskReward": round(safe(s.get("risk_reward"), 2.0), 1),
                 "reasons": reasons,
             })
 
@@ -748,6 +773,75 @@ def api_wizard_recommend():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e), "stocks": []}), 500
+
+
+_movers_cache = {"data": None, "time": 0}
+
+@app.route("/api/gainers-losers")
+def api_gainers_losers():
+    """Get top 50 gainers and top 50 losers from the full universe."""
+    import math, time as _time
+    now = _time.time()
+
+    # Cache for 10 minutes (heavy endpoint)
+    if _movers_cache["data"] and (now - _movers_cache["time"]) < 600:
+        return jsonify(_movers_cache["data"])
+
+    try:
+        from data_engine import STOCK_CATEGORIES
+        all_stocks = STOCK_CATEGORIES.get('all', {}).get('stocks', [])
+
+        raw_scores = None
+        if ensure_data():
+            try:
+                raw_scores = score_stocks_v2(all_stocks) if HAS_V2 else score_stocks()
+            except Exception:
+                pass
+
+        if not raw_scores:
+            return jsonify({"gainers": [], "losers": []})
+
+        def safe(v, default=0):
+            if v is None:
+                return default
+            try:
+                if math.isnan(v) or math.isinf(v):
+                    return default
+            except (TypeError, ValueError):
+                pass
+            return v
+
+        # Build clean list
+        clean = []
+        for s in raw_scores:
+            price = safe(s.get("price"), 0)
+            change = safe(s.get("change_pct"), 0)
+            score = safe(s.get("score"), 0)
+            if price == 0:
+                continue
+            clean.append({
+                "symbol": s.get("name", s.get("symbol", "").replace(".NS", "")),
+                "name": s.get("name", s.get("symbol", "")),
+                "price": round(price, 2),
+                "change": round(change, 2),
+                "score": round(score, 1),
+                "direction": s.get("direction", "HOLD"),
+                "rsi": round(safe(s.get("rsi"), 50), 1),
+                "trend": s.get("trend", "Sideways"),
+                "volatility": "High" if safe(s.get("volatility"), 20) > 25 else "Low" if safe(s.get("volatility"), 20) < 15 else "Medium",
+                "macd": s.get("macd_signal", "Neutral"),
+            })
+
+        gainers = sorted(clean, key=lambda x: x["change"], reverse=True)[:50]
+        losers = sorted(clean, key=lambda x: x["change"])[:50]
+
+        result = {"gainers": gainers, "losers": losers}
+        _movers_cache["data"] = result
+        _movers_cache["time"] = now
+        return jsonify(result)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"gainers": [], "losers": []}), 500
 
 
 @app.route("/api/categories")

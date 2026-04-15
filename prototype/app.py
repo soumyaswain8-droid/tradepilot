@@ -98,6 +98,27 @@ def api_preloaded():
             return f.read(), 200, {'Content-Type': 'application/json'}
     return jsonify([])
 
+@app.route("/api/rust-status")
+def api_rust_status():
+    """Proxy to Rust execution engine status."""
+    import requests as _req
+    rust_url = os.environ.get("RUST_ENGINE_URL", "http://localhost:8080")
+    result = {"engine": "offline", "risk": None, "positions": None}
+    try:
+        health = _req.get(f"{rust_url}/health", timeout=2)
+        if health.status_code == 200:
+            result["engine"] = "online"
+            risk = _req.get(f"{rust_url}/api/risk", timeout=2)
+            if risk.status_code == 200:
+                result["risk"] = risk.json()
+            pos = _req.get(f"{rust_url}/api/positions", timeout=2)
+            if pos.status_code == 200:
+                result["positions"] = pos.json()
+    except Exception:
+        pass
+    return jsonify(result)
+
+
 @app.route("/pitch")
 def pitch():
     """Serve the interactive pitch deck."""

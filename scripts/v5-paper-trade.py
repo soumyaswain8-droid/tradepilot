@@ -331,6 +331,15 @@ def deploy_signals(state, pm, rm, signals):
     if not pm or not signals: return 0
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
+    rust_validated = 0
+
+    # Try to connect to Rust engine for validation
+    try:
+        from prototype.v5.rust_bridge import validate_signal_via_rust
+        rust_available = True
+    except ImportError:
+        rust_available = False
+
     for sig in [s for s in signals if s["direction"] in ("BUY", "SELL")]:
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
         if sym in held or pool_name not in state["pools"] or pool_name == "NONE": continue
@@ -350,6 +359,23 @@ def deploy_signals(state, pm, rm, signals):
         sl = sig.get("sl_price", price * (0.985 if sig["direction"] == "BUY" else 1.015))
         tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
         pos_type = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
+
+        # ═══ RUST ENGINE VALIDATION ═══
+        # If Rust engine is running, validate through it first.
+        # Rust catches: missing SL, SL direction errors, daily loss limits,
+        # order size limits, position limits, time restrictions.
+        # If Rust is offline, fall back to Python-only (current behavior).
+        if rust_available:
+            rust_sig = {**sig, "qty": qty, "sl_price": sl, "target_price": tgt,
+                        "entry_price": price, "pool": pool_name}
+            rust_ok, rust_msg = validate_signal_via_rust(rust_sig)
+            if rust_ok is False:
+                log(f"  {sym}: RUST REJECTED ({rust_msg})")
+                continue
+            elif rust_ok is True:
+                rust_validated += 1
+            # rust_ok is None = Rust offline, proceed with Python-only
+
         if not pm.deploy(pool_name, sym, qty, price, sl, tgt): continue
         state["pools"][pool_name]["positions"].append({
             "symbol": sym, "entry_price": round(price, 2), "qty": qty,
@@ -367,7 +393,9 @@ def deploy_signals(state, pm, rm, signals):
                     "entry_price": price, "sl_price": sl, "target_price": tgt,
                     "qty": qty, "pool": pool_name, "score": sig.get("score", 0),
                     "regime": state.get("regime", "?")})
-    if count: log(f"  Deployed {count} positions")
+    if count:
+        rust_note = f" ({rust_validated} Rust-validated)" if rust_validated else " (Python-only mode)"
+        log(f"  Deployed {count} positions{rust_note}")
     return count
 
 
@@ -543,6 +571,18 @@ def print_status(state):
         w = sum(1 for t in all_cl if t["pnl"] > 0)
         print(f"\n  CLOSED: {len(all_cl)} trades ({w}W/{len(all_cl)-w}L) | {_fmt(s.get('total_pnl',0))}")
     elif not total_open: print("\n  No trades yet")
+    # Rust engine status
+    try:
+        from prototype.v5.rust_bridge import check_rust_risk
+        rust = check_rust_risk()
+        if rust:
+            killed = " ** KILLED **" if rust.get("killed") else ""
+            print(f"\n  RUST ENGINE: Online | Daily P&L: Rs {rust.get('daily_pnl','0')} | "
+                  f"Positions: {rust.get('positions_count',0)} | Deploy: {rust.get('deployment_pct','0')}%{killed}")
+        else:
+            print(f"\n  RUST ENGINE: Offline (Python-only mode)")
+    except Exception:
+        print(f"\n  RUST ENGINE: Not configured")
     print(f"{'='*65}")
 
 def print_summary(state):

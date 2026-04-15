@@ -1,0 +1,55 @@
+[package]
+name = "tradepilot-engine"
+version = "0.1.0"
+edition = "2024"
+description = "TradePilot Rust Execution Engine — type-safe order execution, risk management, and Kite API integration"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Web framework (API server)
+actix-web = "4"
+actix-cors = "0.7"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Financial precision — no floating point for money
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+rust_decimal_macros = "1"
+
+# HTTP client (for Kite API)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment variables
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# UUID for order/trade IDs
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Database (trade state — replaces JSON files)
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "uuid", "rust_decimal"] }
+
+# Crypto (for Kite API checksum)
+sha2 = "0.10"
+hex = "0.4"
+
+[features]
+default = []
+
+[[bin]]
+name = "tradepilot-engine"
+path = "src/main.rs"

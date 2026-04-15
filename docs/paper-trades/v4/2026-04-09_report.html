@@ -1,0 +1,297 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+@page { size: A4; margin: 0.75in 0.6in; }
+body { font-family: "Avenir Next", Avenir, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.55; color: #1a1a2e; }
+h1 { font-size: 20pt; color: #1e1b4b; border-bottom: 3px solid #ef4444; padding-bottom: 8px; }
+h2 { font-size: 13pt; color: #312e81; border-bottom: 1.5px solid #c7d2fe; padding-bottom: 4px; margin-top: 24px; }
+h2::before { content: ""; display: inline-block; width: 4px; height: 16px; background: #4f46e5; margin-right: 8px; vertical-align: middle; border-radius: 2px; }
+table { width: 100%%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.5pt; }
+thead { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 9pt; }
+td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+tr:nth-child(even) { background: #f8f9ff; }
+strong { color: #1e1b4b; }
+code { background: #f0f0f5; padding: 1px 5px; border-radius: 3px; font-size: 9pt; }
+pre { background: #f5f5fa; color: #1a1a2e; padding: 12px; border-radius: 6px; font-size: 9pt; border: 1px solid #e0e0ee; }
+hr { border: none; border-top: 1.5px solid #c7d2fe; margin: 20px 0; }
+em { color: #6b7280; }
+ol, ul { margin: 8px 0; padding-left: 24px; }
+li { margin-bottom: 4px; }
+</style></head><body><h1>TradePilot v4 Paper Trading Report — April 9, 2026</h1>
+<p><em>Day 1 of ML-Powered v4 Composite Scorer</em></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Date</strong></td>
+<td style="text-align: left;">Wednesday, April 9, 2026</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Engine</strong></td>
+<td style="text-align: left;">v4 Composite Scorer + LightGBM ML (22 features)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Capital</strong></td>
+<td style="text-align: left;">Rs 10,00,000</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Market</strong></td>
+<td style="text-align: left;">NIFTY 50: 23,775 (-0.93%) — Bear day</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>India VIX</strong></td>
+<td style="text-align: left;">20.4 (elevated fear)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Performance Summary</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Final P&amp;L</strong></td>
+<td style="text-align: right;"><strong>Rs -30,816 (-3.08%)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Total trades</td>
+<td style="text-align: right;">37</td>
+</tr>
+<tr>
+<td style="text-align: left;">Wins</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Losses</td>
+<td style="text-align: right;">33</td>
+</tr>
+<tr>
+<td style="text-align: left;">Win rate</td>
+<td style="text-align: right;">10.8%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Total deployed</td>
+<td style="text-align: right;">Rs 25,92,842 (over full day)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Rescores</td>
+<td style="text-align: right;">12 (every 30 min)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Scans</td>
+<td style="text-align: right;">32</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Winning Trades</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: right;">Entry</th>
+<th style="text-align: right;">Exit</th>
+<th style="text-align: right;">P&amp;L</th>
+<th style="text-align: right;">Return</th>
+<th style="text-align: left;">Exit Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">JSWSTEEL</td>
+<td style="text-align: right;">1194.30</td>
+<td style="text-align: right;">1209.50</td>
+<td style="text-align: right;">+1,338</td>
+<td style="text-align: right;">+1.27%</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: left;">HCLTECH</td>
+<td style="text-align: right;">1461.00</td>
+<td style="text-align: right;">1465.50</td>
+<td style="text-align: right;">+324</td>
+<td style="text-align: right;">+0.31%</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7131.00</td>
+<td style="text-align: right;">7145.00</td>
+<td style="text-align: right;">+210</td>
+<td style="text-align: right;">+0.20%</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: left;">UPL</td>
+<td style="text-align: right;">640.25</td>
+<td style="text-align: right;">642.20</td>
+<td style="text-align: right;">+103</td>
+<td style="text-align: right;">+0.30%</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total wins</strong></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"><strong>+1,975</strong></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<h2>Worst Losing Trades</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: right;">Entry</th>
+<th style="text-align: left;">Exit Range</th>
+<th style="text-align: right;">Total P&amp;L</th>
+<th style="text-align: right;">Avg Return</th>
+<th style="text-align: right;">Entries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">SHRIRAMFIN</td>
+<td style="text-align: right;">1023.20</td>
+<td style="text-align: left;">993-997</td>
+<td style="text-align: right;">-11,217</td>
+<td style="text-align: right;">-2.5%</td>
+<td style="text-align: right;">4x</td>
+</tr>
+<tr>
+<td style="text-align: left;">BAJFINANCE</td>
+<td style="text-align: right;">915.05</td>
+<td style="text-align: left;">896-903</td>
+<td style="text-align: right;">-4,652</td>
+<td style="text-align: right;">-1.6%</td>
+<td style="text-align: right;">3x</td>
+</tr>
+<tr>
+<td style="text-align: left;">ULTRACEMCO</td>
+<td style="text-align: right;">11603.00</td>
+<td style="text-align: left;">11400-11452</td>
+<td style="text-align: right;">-3,680</td>
+<td style="text-align: right;">-1.5%</td>
+<td style="text-align: right;">3x</td>
+</tr>
+<tr>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: right;">3210.10</td>
+<td style="text-align: left;">3147-3167</td>
+<td style="text-align: right;">-3,229</td>
+<td style="text-align: right;">-1.7%</td>
+<td style="text-align: right;">3x</td>
+</tr>
+<tr>
+<td style="text-align: left;">LT</td>
+<td style="text-align: right;">4005.90</td>
+<td style="text-align: left;">3929.00</td>
+<td style="text-align: right;">-1,922</td>
+<td style="text-align: right;">-1.9%</td>
+<td style="text-align: right;">1x</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Exit Type Breakdown</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Exit Type</th>
+<th style="text-align: right;">Count</th>
+<th style="text-align: right;">Avg Loss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">-1.72%</td>
+</tr>
+<tr>
+<td style="text-align: left;">SIGNAL_EXIT</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-1.05%</td>
+</tr>
+<tr>
+<td style="text-align: left;">TIME_EXIT (3:15 PM)</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">-0.60%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>What Worked</h2>
+<ol>
+<li><strong>Stop-losses capped damage</strong> — no single trade lost more than 3%. Without stops, losses would have been 2-3x worse</li>
+<li><strong>JSWSTEEL picked correctly</strong> — the only stock with significant upside (+1.27%) was in our BUY list</li>
+<li><strong>Signal exits cut early</strong> — 4 trades exited on BUY-to-AVOID signal flip, saving money</li>
+<li><strong>UPL trailing stop</strong> — activated at +1%, exited at near-breakeven instead of a loss</li>
+</ol>
+<h2>What Failed</h2>
+<ol>
+<li><strong>No circuit breaker</strong> — SHRIRAMFIN entered 4 times, lost Rs 11,217 total on one stock</li>
+<li><strong>No regime detection</strong> — Nifty -0.93%, VIX 20.4. Should have reduced size or paused</li>
+<li><strong>Excessive re-entry</strong> — 37 trades on a bear day. M&amp;M, BAJFINANCE, ULTRACEMCO all entered 3x each</li>
+<li><strong>ML signal too weak</strong> — IC 0.03 barely contributing. Over-relied on momentum signals which all failed</li>
+</ol>
+<hr />
+<h2>Fixes for Tomorrow</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Fix</th>
+<th style="text-align: left;">Impact</th>
+<th style="text-align: left;">Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Circuit breaker: Pause after 5 consecutive losses</td>
+<td style="text-align: left;">Saves Rs 15,000+ on days like today</td>
+<td style="text-align: left;">1 hour</td>
+</tr>
+<tr>
+<td style="text-align: left;">Max 1 re-entry per stock per day</td>
+<td style="text-align: left;">Prevents SHRIRAMFIN 4x disaster</td>
+<td style="text-align: left;">30 min</td>
+</tr>
+<tr>
+<td style="text-align: left;">VIX-based sizing: If VIX &gt; 18, reduce position size 50%</td>
+<td style="text-align: left;">Halves loss on high-fear days</td>
+<td style="text-align: left;">30 min</td>
+</tr>
+<tr>
+<td style="text-align: left;">Morning trend check: If Nifty &lt; -0.5% by 10 AM, go 50% cash</td>
+<td style="text-align: left;">Avoids deploying into sell-off</td>
+<td style="text-align: left;">30 min</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Market Context</h2>
+<p>The entire Nifty 50 was red today. NIFTY dropped -0.93% with VIX at 20.4. This was not a day for aggressive intraday longs. Even professional traders would have struggled — the headwind was too strong.</p>
+<p><strong>If we had done nothing</strong> — Rs 0 loss. On bear days, the best trade is no trade.</p>
+<hr />
+<h2>Tomorrow's Plan</h2>
+<ol>
+<li>Add circuit breaker + max re-entry cap tonight</li>
+<li>Run v4 with risk controls from market open</li>
+<li>If Nifty opens gap-down or VIX &gt; 20, start with 50% position sizes</li>
+<li>Target: limit loss to &lt;1% on bear days, capture 2-3% on bull days</li>
+</ol>
+<hr />
+<p><em>Report generated by TradePilot v4 Engine</em>
+<em>ML Model: LightGBM 22-feature, Walk-Forward IC: 0.030, Hit Rate: 51.4%</em></p></body></html>

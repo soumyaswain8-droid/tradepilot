@@ -1,0 +1,96 @@
+{
+  "version": "v3.0-regime-aware",
+  "xgb_accuracy": 0.638,
+  "lgb_accuracy": 0.636,
+  "xgb_precision": 0.4461,
+  "lgb_precision": 0.4452,
+  "ensemble_accuracy": 0.6391,
+  "ensemble_precision": 0.4479,
+  "ensemble_recall": 0.5646,
+  "optimal_threshold": 0.5,
+  "weights": {
+    "xgb": 0.501,
+    "lgb": 0.499
+  },
+  "train_samples": 11456,
+  "test_samples": 2865,
+  "forward_days": 5,
+  "features": [
+    "rsi_14",
+    "macd_hist",
+    "sma_20_rel",
+    "sma_50_rel",
+    "atr_14_pct",
+    "volatility_20d",
+    "volume_ratio",
+    "obv_slope",
+    "return_1d",
+    "return_5d",
+    "return_20d",
+    "momentum_12m",
+    "pct_from_high",
+    "pct_from_low",
+    "adx",
+    "rs_5d",
+    "rs_20d",
+    "signal_momentum",
+    "signal_ma_trend",
+    "signal_volume_breakout"
+  ],
+  "feature_importance": {
+    "atr_14_pct": 0.1325,
+    "macd_hist": 0.0756,
+    "volatility_20d": 0.0669,
+    "pct_from_low": 0.0621,
+    "rs_20d": 0.0578,
+    "pct_from_high": 0.0566,
+    "momentum_12m": 0.0551,
+    "sma_50_rel": 0.051,
+    "return_20d": 0.0505,
+    "adx": 0.0474,
+    "rsi_14": 0.0433,
+    "obv_slope": 0.043,
+    "return_5d": 0.041,
+    "rs_5d": 0.041,
+    "volume_ratio": 0.0392,
+    "return_1d": 0.0387,
+    "sma_20_rel": 0.0363,
+    "signal_volume_breakout": 0.0248,
+    "signal_ma_trend": 0.0199,
+    "signal_momentum": 0.0174
+  },
+  "trained_at": "2026-04-07T13:14:39.026188",
+  "backtest": {
+    "initial_capital": 1000000,
+    "final_capital": 2348908.03,
+    "total_return_pct": 134.89,
+    "total_trades": 1152,
+    "wins": 636,
+    "losses": 516,
+    "win_rate_pct": 55.2,
+    "avg_win": 5733.01,
+    "avg_loss": -4452.11,
+    "profit_factor": 1.59,
+    "max_drawdown_pct": 0.0,
+    "sharpe_ratio": 2.76,
+    "total_pnl": 1348908.03,
+    "prob_threshold": 0.5,
+    "regime_breakdown": {
+      "BULL": {
+        "trades": 13,
+        "wins": 9,
+        "win_rate": 69.2
+      },
+      "SIDEWAYS": {
+        "trades": 1137,
+        "wins": 627,
+        "win_rate": 55.1
+      },
+      "BEAR": {
+        "trades": 2,
+        "wins": 0,
+        "win_rate": 0.0
+      }
+    }
+  }
+}

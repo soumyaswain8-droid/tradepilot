@@ -10,6 +10,8 @@ Coverage:
 - NIFTY 200       : Top 200
 - NIFTY 500       : Top 500 (covers ~94% of NSE market cap)
 - BSE SENSEX 30   : Bombay Stock Exchange top 30
+- BSE 200         : Top 200 BSE stocks (large + mid cap)
+- BSE Sectoral    : Banks, IT, Defence, Infra, Power, Realty, Chemicals
 - Sectoral indices: Bank, IT, Pharma, Auto, FMCG, Metal, Energy, Realty, Infra
 
 Stats (as of 2026):
@@ -179,6 +181,88 @@ BSE_SENSEX_30 = [
 ]
 
 # ---------------------------------------------------------------------------
+# BSE 200 (top large/mid caps by market cap — .BO suffix)
+# ---------------------------------------------------------------------------
+BSE_200 = [
+    # Sensex 30 overlap (large caps)
+    "RELIANCE.BO", "TCS.BO", "HDFCBANK.BO", "INFY.BO", "ICICIBANK.BO",
+    "HINDUNILVR.BO", "SBIN.BO", "BHARTIARTL.BO", "LT.BO", "ITC.BO",
+    "AXISBANK.BO", "BAJFINANCE.BO", "KOTAKBANK.BO", "MARUTI.BO", "HCLTECH.BO",
+    "ASIANPAINT.BO", "SUNPHARMA.BO", "TITAN.BO", "WIPRO.BO", "ULTRACEMCO.BO",
+    "M&M.BO", "NTPC.BO", "POWERGRID.BO", "TATAMOTORS.BO", "NESTLEIND.BO",
+    "TATASTEEL.BO", "ADANIENT.BO", "TECHM.BO", "BAJAJFINSV.BO", "INDUSINDBK.BO",
+    # Adani group
+    "ADANIPORTS.BO", "ADANIPOWER.BO", "ADANIGREEN.BO", "ADANIENSOL.BO", "ATGL.BO", "AWL.BO",
+    # Banks (public + private)
+    "BANKBARODA.BO", "CANBK.BO", "MAHABANK.BO", "INDIANB.BO", "CENTRALBK.BO",
+    "UCOBANK.BO", "BANKINDIA.BO", "UNIONBANK.BO", "PSB.BO", "J&KBANK.BO",
+    # Defence & shipbuilding
+    "GRSE.BO", "BDL.BO", "BEML.BO", "MAZDOCK.BO", "COCHINSHIP.BO",
+    # Infrastructure & metals
+    "JSWENERGY.BO", "JINDALSTEL.BO", "LLOYDSME.BO", "IRCON.BO", "RVNL.BO",
+    "NBCC.BO", "NCC.BO", "HCC.BO", "WELCORP.BO",
+    # Media
+    "NDTV.BO",
+    # FMCG & consumer
+    "PGHL.BO", "VENKEYS.BO", "RELAXO.BO", "VBL.BO", "ZYDUSWELL.BO",
+    # IT & tech (mid-cap)
+    "HAPPSTMNDS.BO", "NEWGEN.BO", "MASTEK.BO", "CYIENT.BO",
+    # Pharma
+    "SUVEN.BO", "WINDLAS.BO",
+    # Financial services
+    "MOTILALOFS.BO", "ANGEL.BO", "IIFL.BO", "PAISALO.BO", "M&MFIN.BO", "NSDL.BO",
+    # Power & utilities
+    "TATAPOWER.BO", "CESC.BO", "TORNTPOWER.BO", "NHPC.BO", "SJVN.BO",
+    # Real estate
+    "SOBHA.BO", "BRIGADE.BO", "KOLTEPATIL.BO",
+    # TV & media
+    "SUNTV.BO",
+    # Auto & engineering
+    "FORCEMOT.BO", "ESCORTS.BO", "TIINDIA.BO",
+    # Chemicals
+    "DEEPAKNTR.BO", "NAVINFLUOR.BO", "ATUL.BO", "CLEAN.BO",
+    # Specialty
+    "ARE&M.BO", "GVTD.BO",
+]
+
+# ---------------------------------------------------------------------------
+# BSE Sectoral Lists
+# ---------------------------------------------------------------------------
+BSE_BANKS = [
+    "SBIN.BO", "HDFCBANK.BO", "ICICIBANK.BO", "AXISBANK.BO", "KOTAKBANK.BO",
+    "BANKBARODA.BO", "CANBK.BO", "MAHABANK.BO", "INDIANB.BO", "CENTRALBK.BO",
+    "UCOBANK.BO", "BANKINDIA.BO", "UNIONBANK.BO", "PSB.BO", "INDUSINDBK.BO",
+    "J&KBANK.BO",
+]
+
+BSE_IT = [
+    "TCS.BO", "INFY.BO", "HCLTECH.BO", "WIPRO.BO", "TECHM.BO",
+    "HAPPSTMNDS.BO", "NEWGEN.BO", "MASTEK.BO", "CYIENT.BO",
+]
+
+BSE_DEFENCE = [
+    "BDL.BO", "BEML.BO", "GRSE.BO", "MAZDOCK.BO", "COCHINSHIP.BO",
+]
+
+BSE_INFRA = [
+    "LT.BO", "ADANIENT.BO", "ADANIPORTS.BO", "IRCON.BO", "RVNL.BO",
+    "NBCC.BO", "NCC.BO", "HCC.BO", "JSWENERGY.BO", "JINDALSTEL.BO",
+]
+
+BSE_POWER = [
+    "NTPC.BO", "POWERGRID.BO", "TATAPOWER.BO", "CESC.BO", "TORNTPOWER.BO",
+    "NHPC.BO", "SJVN.BO", "ADANIGREEN.BO", "ADANIENSOL.BO", "JSWENERGY.BO",
+]
+
+BSE_REALTY = [
+    "SOBHA.BO", "BRIGADE.BO", "KOLTEPATIL.BO",
+]
+
+BSE_CHEMICALS = [
+    "DEEPAKNTR.BO", "NAVINFLUOR.BO", "ATUL.BO", "CLEAN.BO",
+]
+
+# ---------------------------------------------------------------------------
 # Sectoral Indices (NSE)
 # ---------------------------------------------------------------------------
 NIFTY_BANK = [
@@ -236,29 +320,62 @@ NIFTY_INFRA = [
 # NSE ETFs (Exchange Traded Funds — track indices, gold, bonds)
 # ---------------------------------------------------------------------------
 NSE_ETFS = [
-    # Index ETFs
+    # Equity / Index ETFs
     "NIFTYBEES.NS", "BANKBEES.NS", "JUNIORBEES.NS", "SETFNIFTY.NS",
-    "SETFNIF50.NS", "ICICIN100.NS", "MON100.NS", "SETFNN50.NS",
+    "SETFNIF50.NS", "MON100.NS", "SETFNN50.NS",
     # Sectoral ETFs
     "SETFNIFBK.NS", "ITBEES.NS", "PHARMABEES.NS", "INFRABEES.NS",
-    "PSUBNKBEES.NS", "CONSUMBEES.NS", "DIVOPPBEES.NS", "MIDCPBEES.NS",
+    "PSUBNKBEES.NS", "CONSUMBEES.NS", "DIVOPPBEES.NS",
+    "HABORETF.NS", "HEALTHIETF.NS", "DEFENCEETF.NS",
+    # Midcap / Smallcap ETFs
+    "MOM100.NS", "MIDSELIETF.NS", "MIDCAPIETF.NS",
+    # Gold ETFs
+    "GOLDBEES.NS", "GOLDCASE.NS", "GOLD1.NS", "GOLDIETF.NS",
+    # Silver ETFs
+    "SILVERBEES.NS", "SILVERIETF.NS",
     # Commodity ETFs
-    "GOLDBEES.NS", "GOLDCASE.NS", "GOLD1.NS", "SILVERBEES.NS", "SILVERETF.NS",
+    "CPSEETF.NS",
     # International ETFs
-    "NASDAQ100.NS", "MAFANG.NS", "MON100.NS", "HANGSENG.NS",
+    "MAFANG.NS", "N100.NS", "USIGETF.NS",
     # Debt / Liquid ETFs
     "LIQUIDBEES.NS", "LIQUIDCASE.NS", "LIQUIDADD.NS",
-    "CPSEETF.NS", "BHARAT22.NS", "NETFGILT5Y.NS",
+    "NETFGILT5Y.NS", "NETFSDL26.NS",
     # Thematic ETFs
     "MOMENTUM.NS", "LOWVOLIETF.NS", "ALPHAETF.NS", "EQUAL50.NS",
-    "HABORETF.NS",
+    "BHARAT22.NS", "SENSEXETF.NS",
 ]
+
+# ETF Categories (for Groww-style ETF sub-tabs)
+ETF_CATEGORIES = {
+    "equity": ["NIFTYBEES.NS", "BANKBEES.NS", "JUNIORBEES.NS", "SETFNIFTY.NS", "SETFNIF50.NS"],
+    "index": ["NIFTYBEES.NS", "BANKBEES.NS", "JUNIORBEES.NS", "MON100.NS", "SENSEXETF.NS"],
+    "gold": ["GOLDBEES.NS", "GOLDCASE.NS", "GOLD1.NS", "GOLDIETF.NS"],
+    "silver": ["SILVERBEES.NS", "SILVERIETF.NS"],
+    "commodity": ["GOLDBEES.NS", "SILVERBEES.NS", "CPSEETF.NS"],
+    "debt": ["LIQUIDBEES.NS", "LIQUIDCASE.NS", "LIQUIDADD.NS", "NETFGILT5Y.NS"],
+    "international": ["MAFANG.NS", "N100.NS", "USIGETF.NS"],
+    "sectoral": ["ITBEES.NS", "PHARMABEES.NS", "INFRABEES.NS", "PSUBNKBEES.NS", "CONSUMBEES.NS"],
+    "midcap": ["MOM100.NS", "MIDSELIETF.NS", "MIDCAPIETF.NS"],
+    "defence": ["DEFENCEETF.NS"],
+    "healthcare": ["HEALTHIETF.NS"],
+    "liquid": ["LIQUIDBEES.NS", "LIQUIDCASE.NS", "LIQUIDADD.NS"],
+}
 
 # ---------------------------------------------------------------------------
 # Market Indices (for tracking, not scoring)
 # ---------------------------------------------------------------------------
 MARKET_INDICES = {
+    # NSE Broad Market
     "NIFTY 50": "^NSEI",
+    "NIFTY Next 50": "^NSEI",  # tracked via constituent stocks
+    "NIFTY 100": "^CNX100",
+    "NIFTY 200": "^CNX200",
+    "NIFTY 500": "^CNX500",
+    "NIFTY Midcap 100": "^CNXMIDCAP",
+    "NIFTY Midcap 150": "NIFTYMIDCAP150.NS",
+    "NIFTY Smallcap 100": "^CNXSMALLCAP",
+    "India VIX": "^INDIAVIX",
+    # NSE Sectoral
     "NIFTY Bank": "^NSEBANK",
     "NIFTY IT": "^CNXIT",
     "NIFTY Pharma": "^CNXPHARMA",
@@ -268,12 +385,34 @@ MARKET_INDICES = {
     "NIFTY Energy": "^CNXENERGY",
     "NIFTY Realty": "^CNXREALTY",
     "NIFTY Infra": "^CNXINFRA",
-    "NIFTY Midcap 100": "NIFTY_MIDCAP_100.NS",
-    "NIFTY Smallcap 100": "NIFTY_SMLCAP_100.NS",
+    "NIFTY PSU Bank": "^CNXPSUBANK",
+    "NIFTY Fin Service": "NIFTY_FIN_SERVICE.NS",
+    "NIFTY Pvt Bank": "NIFTYPVTBANK.NS",
+    "NIFTY Healthcare": "NIFTY_HEALTHCARE.NS",
+    "NIFTY Consumer": "NIFTY_CONSUMPTION.NS",
+    "NIFTY Media": "^CNXMEDIA",
+    "NIFTY Defence": "NIFTY_DEF.NS",
+    # BSE
     "BSE SENSEX": "^BSESN",
+    "BSE 100": "BSE-100.BO",
+    "BSE BANKEX": "BSE-BANK.BO",
     "BSE Midcap": "BSE-MIDCAP.BO",
     "BSE Smallcap": "BSE-SMLCAP.BO",
-    "India VIX": "^INDIAVIX",
+    # Global Indices
+    "S&P 500": "^GSPC",
+    "Dow Jones": "^DJI",
+    "NASDAQ": "^IXIC",
+    "FTSE 100": "^FTSE",
+    "Nikkei 225": "^N225",
+    "Hang Seng": "^HSI",
+    "KOSPI": "^KS11",
+    "DAX": "^GDAXI",
+    "CAC 40": "^FCHI",
+    "Shanghai": "000001.SS",
+    # Futures
+    "Dow Jones Futures": "YM=F",
+    "S&P 500 Futures": "ES=F",
+    "NASDAQ Futures": "NQ=F",
 }
 
 # ---------------------------------------------------------------------------
@@ -377,7 +516,7 @@ ALL_NSE = sorted(set(
 ))
 
 # All unique BSE symbols
-ALL_BSE = sorted(set(BSE_SENSEX_30))
+ALL_BSE = sorted(set(BSE_SENSEX_30 + BSE_200))
 
 # BSE popular stocks with NSE suffix (for unified download)
 BSE_POPULAR_NSE = [
@@ -386,7 +525,7 @@ BSE_POPULAR_NSE = [
 ]
 
 # Full tradeable universe (stocks + ETFs)
-FULL_UNIVERSE = sorted(set(ALL_NSE + NSE_ETFS + MF_PROXIES + BSE_POPULAR_NSE))
+FULL_UNIVERSE = sorted(set(ALL_NSE + ALL_BSE + NSE_ETFS + MF_PROXIES + BSE_POPULAR_NSE))
 
 
 # ---------------------------------------------------------------------------
@@ -399,7 +538,9 @@ def get_stocks_by_tier(tier: str) -> list[str]:
 
     Args:
         tier: One of 'nifty50', 'nifty_next50', 'nifty100', 'nifty200',
-              'nifty500', 'sensex30', 'bank', 'it', 'pharma', 'auto',
+              'nifty500', 'sensex30', 'bse200', 'bse_banks', 'bse_it',
+              'bse_defence', 'bse_infra', 'bse_power', 'bse_realty',
+              'bse_chemicals', 'bank', 'it', 'pharma', 'auto',
               'fmcg', 'metal', 'energy', 'realty', 'infra', 'all_nse', 'all_bse'
 
     Returns:
@@ -412,6 +553,14 @@ def get_stocks_by_tier(tier: str) -> list[str]:
         "nifty200": NIFTY_200,
         "nifty500": NIFTY_500,
         "sensex30": BSE_SENSEX_30,
+        "bse200": BSE_200,
+        "bse_banks": BSE_BANKS,
+        "bse_it": BSE_IT,
+        "bse_defence": BSE_DEFENCE,
+        "bse_infra": BSE_INFRA,
+        "bse_power": BSE_POWER,
+        "bse_realty": BSE_REALTY,
+        "bse_chemicals": BSE_CHEMICALS,
         "bank": NIFTY_BANK,
         "it": NIFTY_IT,
         "pharma": NIFTY_PHARMA,
@@ -500,6 +649,8 @@ if __name__ == "__main__":
     print(f"NIFTY 200:         {len(NIFTY_200)} stocks")
     print(f"NIFTY 500:         {len(NIFTY_500)} stocks")
     print(f"BSE SENSEX 30:     {len(BSE_SENSEX_30)} stocks")
+    print(f"BSE 200:           {len(BSE_200)} stocks")
+    print(f"ALL BSE unique:    {len(ALL_BSE)} stocks")
     print(f"NSE ETFs:          {len(NSE_ETFS)} ETFs")
     print(f"MF Proxies:        {len(MF_PROXIES)} AMCs/ETFs")
     print(f"F&O Active:        {len(FNO_ACTIVE)} stocks")
@@ -509,9 +660,15 @@ if __name__ == "__main__":
     print(f"ALL NSE unique:    {len(ALL_NSE)} stocks")
     print(f"FULL UNIVERSE:     {len(FULL_UNIVERSE)} scoreable assets")
     print()
-    print("Sectoral indices:")
+    print("NSE Sectoral indices:")
     for name in ["bank", "it", "pharma", "auto", "fmcg", "metal", "energy", "realty", "infra"]:
         print(f"  NIFTY {name.upper():8s}: {len(get_stocks_by_tier(name))} stocks")
+    print()
+    print("BSE Sectoral indices:")
+    for name, label in [("bse_banks", "Banks"), ("bse_it", "IT"), ("bse_defence", "Defence"),
+                         ("bse_infra", "Infra"), ("bse_power", "Power"), ("bse_realty", "Realty"),
+                         ("bse_chemicals", "Chemicals")]:
+        print(f"  BSE {label:10s}: {len(get_stocks_by_tier(name))} stocks")
     print()
     print("To fetch live NIFTY 500 list: pip install niftystocks")
     print("To fetch ALL NSE equities (~2700+): fetch_nse_equity_list()")

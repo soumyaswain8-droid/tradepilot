@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 1in 0.75in; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.6; color: #1a1a2e; max-width: 100%; }
+  h1 { font-size: 22pt; color: #0f172a; border-bottom: 3px solid #00d4e0; padding-bottom: 8px; margin-top: 0; }
+  h2 { font-size: 16pt; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 28px; page-break-after: avoid; }
+  h3 { font-size: 13pt; color: #334155; margin-top: 20px; }
+  h4 { font-size: 11pt; color: #475569; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9.5pt; page-break-inside: avoid; }
+  th { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 9.5pt; color: #0f172a; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 8px; font-size: 9pt; overflow-x: auto; page-break-inside: avoid; }
+  pre code { background: none; color: inherit; padding: 0; }
+  strong { color: #0f172a; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+  blockquote { border-left: 3px solid #00d4e0; padding-left: 16px; color: #475569; margin: 16px 0; }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .toc { background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0; }
+</style>
+</head><body><h1 id="tradepilot-session-report-april-6-2026">TradePilot — Session Report: April 6, 2026</h1>
+<p>::: {.report-meta}</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Project</strong></td>
+<td style="text-align: left;">TradePilot — AI-Powered Trading Platform</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Version</strong></td>
+<td style="text-align: left;"><code>v0.3</code> (Web) / <code>v0.1</code> (Flutter App)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Session</strong></td>
+<td style="text-align: left;">April 6, 2026 (Afternoon — Late Night)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Status</strong></td>
+<td style="text-align: left;">Active Development</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p>::: {.doc-author}</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Author</strong></td>
+<td style="text-align: left;">Soumya Swain</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Email</strong></td>
+<td style="text-align: left;">support@devpilot.co.in</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<hr />
+<h2 id="1-session-objectives">1. Session Objectives</h2>
+<ul>
+<li>Examine AI stock predictions and validate them against market data</li>
+<li>Expand from NIFTY 50 to full Indian market coverage (451+ assets)</li>
+<li>Build intraday validation system for weekly prediction tracking</li>
+<li>Add new market tabs: ETFs, Mutual Funds, Commodities, Forex/Crypto</li>
+<li>Add Top 50 Gainers/Losers with ranked AI scoring</li>
+<li>Build Paper Trading terminal for demo trading</li>
+<li>Fix AI model's mean-reversion bias (missing momentum gainers)</li>
+<li>Build Flutter mobile app with Groww-inspired UI</li>
+<li>Make web app mobile-responsive</li>
+</ul>
+<hr />
+<h2 id="2-what-was-built">2. What Was Built</h2>
+<h3 id="21-full-market-data-download-451-assets">2.1 Full Market Data Download (451+ Assets)</h3>
+<p><strong>Before:</strong> Only NIFTY 50 (49 stocks) had data downloaded.
+<strong>After:</strong> 451 assets across all categories.</p>
+<p>::: {.metrics-table}</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th style="text-align: right;">Count</th>
+<th style="text-align: right;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NIFTY 50</td>
+<td style="text-align: right;">49/50</td>
+<td style="text-align: right;">98%</td>
+</tr>
+<tr>
+<td>NIFTY 100</td>
+<td style="text-align: right;">97/100</td>
+<td style="text-align: right;">97%</td>
+</tr>
+<tr>
+<td>NIFTY 200</td>
+<td style="text-align: right;">193/200</td>
+<td style="text-align: right;">96%</td>
+</tr>
+<tr>
+<td>NIFTY 500</td>
+<td style="text-align: right;">376/405</td>
+<td style="text-align: right;">93%</td>
+</tr>
+<tr>
+<td>NSE ETFs</td>
+<td style="text-align: right;">27/36</td>
+<td style="text-align: right;">75%</td>
+</tr>
+<tr>
+<td>MF Proxies</td>
+<td style="text-align: right;">9/11</td>
+<td style="text-align: right;">82%</td>
+</tr>
+<tr>
+<td>F&amp;O Active</td>
+<td style="text-align: right;">56/59</td>
+<td style="text-align: right;">95%</td>
+</tr>
+<tr>
+<td>Commodities</td>
+<td style="text-align: right;">20/21</td>
+<td style="text-align: right;">95%</td>
+</tr>
+<tr>
+<td>Currencies</td>
+<td style="text-align: right;">8/8</td>
+<td style="text-align: right;">100%</td>
+</tr>
+<tr>
+<td>Market Indices</td>
+<td style="text-align: right;">13/16</td>
+<td style="text-align: right;">81%</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p>New universe file: <code>prototype/stock_universe.py</code> — added NSE_ETFS (36), COMMODITIES (21 futures), CURRENCY_PAIRS (8 including BTC/ETH), MARKET_INDICES (16), MF_PROXIES (11 AMC stocks), FNO_ACTIVE (59), FULL_UNIVERSE (441 scoreable).</p>
+<h3 id="22-new-web-app-tabs-6-new-sections">2.2 New Web App Tabs (6 New Sections)</h3>
+<p><strong>Before:</strong> 5 tabs (Stocks, F&amp;O, Intraday, Wizard, Swipe)
+<strong>After:</strong> 11 tabs covering the entire market</p>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th style="text-align: right;">Assets</th>
+<th>What It Shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stocks</td>
+<td style="text-align: right;">49</td>
+<td>NIFTY 50 with AI scores, category filters</td>
+</tr>
+<tr>
+<td><strong>Gainers/Losers</strong> (NEW)</td>
+<td style="text-align: right;">100</td>
+<td>Top 50 gainers + Top 50 losers with toggle, ranked cards, summary stats</td>
+</tr>
+<tr>
+<td>F&amp;O</td>
+<td style="text-align: right;">59</td>
+<td>Options chain for NIFTY/BANKNIFTY</td>
+</tr>
+<tr>
+<td><strong>ETFs</strong> (NEW)</td>
+<td style="text-align: right;">27</td>
+<td>Index, Gold, Sectoral ETFs with sub-tabs</td>
+</tr>
+<tr>
+<td><strong>MF</strong> (NEW)</td>
+<td style="text-align: right;">8</td>
+<td>AMC stocks + MF index proxies with explainer</td>
+</tr>
+<tr>
+<td><strong>Commodities</strong> (NEW)</td>
+<td style="text-align: right;">6</td>
+<td>Gold, Silver, Crude Oil, Metals futures</td>
+</tr>
+<tr>
+<td><strong>Forex</strong> (NEW)</td>
+<td style="text-align: right;">8</td>
+<td>USD/INR, EUR/INR, BTC, ETH with AI signals</td>
+</tr>
+<tr>
+<td>Intraday</td>
+<td style="text-align: right;">2</td>
+<td>Live NIFTY/BANKNIFTY charts</td>
+</tr>
+<tr>
+<td><strong>Paper Trade</strong> (NEW)</td>
+<td style="text-align: right;">All</td>
+<td>Full trading terminal — BUY/SELL, holdings, history</td>
+</tr>
+<tr>
+<td>Wizard</td>
+<td style="text-align: right;">All</td>
+<td>Budget-based stock picker</td>
+</tr>
+<tr>
+<td>Swipe</td>
+<td style="text-align: right;">All</td>
+<td>Tinder-style paper trading</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<h3 id="23-paper-trading-terminal">2.3 Paper Trading Terminal</h3>
+<p>Complete demo trading system with:</p>
+<ul>
+<li>Portfolio summary (total value, cash, P&amp;L, win/loss ratio)</li>
+<li>Stock search with autocomplete (pulls from AI-scored stocks)</li>
+<li>Live price display from backend</li>
+<li>AI Signal warning (BUY/HOLD/AVOID with score, RSI, trend)</li>
+<li>Quantity input with total cost calculator</li>
+<li>BUY and SELL execution buttons</li>
+<li>Holdings table with live P&amp;L per position</li>
+<li>Trade History with timestamps</li>
+<li>Account reset functionality</li>
+<li>10% risk guardrail (blocks trades with stop-loss &gt; 10%)</li>
+</ul>
+<h3 id="24-intraday-validation-system">2.4 Intraday Validation System</h3>
+<p>Two scripts for weekly prediction tracking:</p>
+<p><strong>scripts/intraday-capture.py:</strong></p>
+<ul>
+<li>Captures AI scores every 2 hours during market hours (9:30, 11:30, 13:30, 15:30)</li>
+<li>Compares each snapshot with previous — tracks accuracy, signal changes, biggest movers</li>
+<li>Auto-generates day summary at market close</li>
+<li>Daemon mode for hands-free operation</li>
+</ul>
+<p><strong>scripts/daily-capture.py:</strong></p>
+<ul>
+<li>End-of-day capture with comparison to previous day</li>
+<li>Weekly report generator aggregating all daily data</li>
+<li>CSV + JSON dual format for each capture</li>
+</ul>
+<p><strong>Validation scoring rules:</strong></p>
+<ul>
+<li>BUY = Correct if stock goes up (&gt; 0%)</li>
+<li>HOLD = Correct if stock stays flat (-1.5% to +2%)</li>
+<li>AVOID = Correct if stock doesn't rise much (&lt; +0.5%)</li>
+</ul>
+<h3 id="25-mobile-responsiveness">2.5 Mobile Responsiveness</h3>
+<p><strong>Before:</strong> New tabs were invisible on mobile (11 tabs crammed in bottom bar)
+<strong>After:</strong></p>
+<ul>
+<li>Mobile shows 5 core tabs: Stocks, Gainers/Losers, F&amp;O, Paper Trade, More</li>
+<li>"More" bottom sheet has all other tabs in a 2-column grid</li>
+<li>All new sections (Gainers, Paper Trading, Market sections) have mobile CSS</li>
+<li>Market section headers, sub-tabs, forms all responsive</li>
+</ul>
+<h3 id="26-flutter-mobile-app">2.6 Flutter Mobile App</h3>
+<p>21 Dart files built from scratch:</p>
+<p>::: {.spec-table}</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th style="text-align: right;">Files</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Screens</td>
+<td style="text-align: right;">8</td>
+<td>Splash, Onboarding, Login, Home, Markets, Trade, Profile, Stock Detail</td>
+</tr>
+<tr>
+<td>Widgets</td>
+<td style="text-align: right;">3</td>
+<td>StockCard (Groww-style row), ScoreRing, DirectionBadge</td>
+</tr>
+<tr>
+<td>Services</td>
+<td style="text-align: right;">2</td>
+<td>API (connects to Flask backend), Auth (demo phone+OTP)</td>
+</tr>
+<tr>
+<td>Providers</td>
+<td style="text-align: right;">2</td>
+<td>AuthProvider, StockProvider (state management)</td>
+</tr>
+<tr>
+<td>Models</td>
+<td style="text-align: right;">4</td>
+<td>Stock, User, Trade, Position</td>
+</tr>
+<tr>
+<td>Theme</td>
+<td style="text-align: right;">1</td>
+<td>Dark theme matching web prototype</td>
+</tr>
+<tr>
+<td>Main</td>
+<td style="text-align: right;">1</td>
+<td>App entry with routes</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p><strong>Key features:</strong></p>
+<ul>
+<li>Demo auth: phone number + OTP "1234" (no real verification)</li>
+<li>Groww-inspired UI: vertical stock list, colored circle avatars, category chips</li>
+<li>Connected to same Python backend via /api/* endpoints</li>
+<li>CORS enabled on Flask for cross-origin access</li>
+<li>System fonts (removed Google Fonts — was causing 5s white screen)</li>
+</ul>
+<hr />
+<h2 id="3-ai-model-changes">3. AI Model Changes</h2>
+<h3 id="31-the-problem-mean-reversion-bias">3.1 The Problem: Mean-Reversion Bias</h3>
+<p>The AI model was trained on "will stock go up &gt;1% in 5 days?" as a binary classifier. This created a fundamental bias:</p>
+<p><strong>Stocks that already went up → High RSI → Model predicts "won't go up more" → AVOID</strong></p>
+<p>Result: Top 50 gainers ALL showed AVOID. The AI was saying "don't buy" on stocks gaining 5-15%.</p>
+<p>Example from Gainers/Losers tab:</p>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Stock</th>
+<th style="text-align: right;">Daily Gain</th>
+<th style="text-align: right;">AI Score</th>
+<th>Signal</th>
+<th style="text-align: right;">RSI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZYDUSWELL</td>
+<td style="text-align: right;">+14.96%</td>
+<td style="text-align: right;">23</td>
+<td>AVOID</td>
+<td style="text-align: right;">75</td>
+</tr>
+<tr>
+<td>VENKEYS</td>
+<td style="text-align: right;">+10.69%</td>
+<td style="text-align: right;">14</td>
+<td>AVOID</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr>
+<td>TRENT</td>
+<td style="text-align: right;">+7.97%</td>
+<td style="text-align: right;">33</td>
+<td>AVOID</td>
+<td style="text-align: right;">60</td>
+</tr>
+<tr>
+<td>RBLBANK</td>
+<td style="text-align: right;">+5.7%</td>
+<td style="text-align: right;">50</td>
+<td>HOLD</td>
+<td style="text-align: right;">60</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<h3 id="32-the-fix-momentum-boost">3.2 The Fix: Momentum Boost</h3>
+<p>Added a momentum correction layer in <code>trading_engine.py</code> (score_stocks_v2 function).</p>
+<p><strong>Boost conditions (each adds points, max +20 total):</strong></p>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th style="text-align: right;">Points</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-day gain &gt; 3% + volume 1.5x avg</td>
+<td style="text-align: right;">+8</td>
+<td>Strong confirmed breakout</td>
+</tr>
+<tr>
+<td>1-day gain &gt; 2% + volume 1.2x avg</td>
+<td style="text-align: right;">+5</td>
+<td>Moderate breakout</td>
+</tr>
+<tr>
+<td>1-day gain &gt; 1% + volume 1x avg</td>
+<td style="text-align: right;">+2</td>
+<td>Mild positive momentum</td>
+</tr>
+<tr>
+<td>5-day gain &gt; 5% + ADX &gt; 25</td>
+<td style="text-align: right;">+6</td>
+<td>Strong trend confirmed</td>
+</tr>
+<tr>
+<td>5-day gain &gt; 3% + ADX &gt; 20</td>
+<td style="text-align: right;">+3</td>
+<td>Moderate trend</td>
+</tr>
+<tr>
+<td>RSI 55-75 + bullish MACD</td>
+<td style="text-align: right;">+4</td>
+<td>Sweet spot (not overbought yet)</td>
+</tr>
+<tr>
+<td>Golden cross (EMA9 &gt; EMA21 &gt; SMA50)</td>
+<td style="text-align: right;">+3</td>
+<td>Classic uptrend signal</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p><strong>Key design decisions:</strong></p>
+<ul>
+<li>Max boost is +20 points — the base ML model still has veto power</li>
+<li>Volume confirmation required — eliminates fake breakouts on low volume</li>
+<li>ADX filter — only boosts when trend strength is confirmed</li>
+<li>RSI capped at 75 — doesn't boost truly overbought stocks</li>
+</ul>
+<h3 id="33-results-after-momentum-boost">3.3 Results After Momentum Boost</h3>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Stock</th>
+<th>Before</th>
+<th>After</th>
+<th style="text-align: right;">Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZYDUSWELL (+14.96%)</td>
+<td>23 AVOID</td>
+<td><strong>43 HOLD</strong></td>
+<td style="text-align: right;">+20</td>
+</tr>
+<tr>
+<td>TRENT (+7.97%)</td>
+<td>33 AVOID</td>
+<td><strong>51 HOLD</strong></td>
+<td style="text-align: right;">+18</td>
+</tr>
+<tr>
+<td>ADANIGREEN (+7.61%)</td>
+<td>33 AVOID</td>
+<td><strong>51 HOLD</strong></td>
+<td style="text-align: right;">+18</td>
+</tr>
+<tr>
+<td>RBLBANK (+5.7%)</td>
+<td>50 HOLD</td>
+<td><strong>65 BUY</strong></td>
+<td style="text-align: right;">+15</td>
+</tr>
+<tr>
+<td>IEX (+5.64%)</td>
+<td>49 HOLD</td>
+<td><strong>57 BUY</strong></td>
+<td style="text-align: right;">+8</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p><strong>Summary bar improvement:</strong></p>
+<ul>
+<li>Before: 0 BUY, 5 HOLD among top 50 gainers</li>
+<li>After: <strong>5 BUY, 8 HOLD</strong> among top 50 gainers</li>
+</ul>
+<h3 id="34-nan-sanitization">3.4 NaN Sanitization</h3>
+<p>Added <code>safe()</code> function in <code>/api/scores</code> endpoint to handle NaN/Inf values from cross-asset scoring (ETFs, commodities have different data patterns). Prevents JSON serialization errors that were breaking the frontend.</p>
+<h3 id="35-server-side-caching">3.5 Server-Side Caching</h3>
+<ul>
+<li>Added 10-minute cache for <code>/api/gainers-losers</code> (scores 400+ stocks, takes 15-30 seconds)</li>
+<li>Existing 5-minute cache for <code>/api/scores</code> per category</li>
+</ul>
+<hr />
+<h2 id="4-baseline-data-captured-validation-study">4. Baseline Data Captured (Validation Study)</h2>
+<p><strong>Date:</strong> April 6, 2026 (Friday close prices)
+<strong>Market Sentiment:</strong> Very Bearish (0 BUY, 3 HOLD, 46 AVOID in NIFTY 50)</p>
+<h3 id="nifty-50-signal-distribution-before-momentum-boost">NIFTY 50 Signal Distribution (Before Momentum Boost)</h3>
+<p>::: {.metrics-table}</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th style="text-align: right;">Count</th>
+<th>Top Stock</th>
+<th style="text-align: right;">Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BUY</td>
+<td style="text-align: right;">0</td>
+<td>—</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td>HOLD</td>
+<td style="text-align: right;">3</td>
+<td>COALINDIA</td>
+<td style="text-align: right;">43.8</td>
+</tr>
+<tr>
+<td>AVOID</td>
+<td style="text-align: right;">46</td>
+<td>BAJFINANCE (lowest)</td>
+<td style="text-align: right;">4.0</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<h3 id="after-momentum-boost-full-data-retrain">After Momentum Boost + Full Data Retrain</h3>
+<p>::: {.metrics-table}</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th style="text-align: right;">Count</th>
+<th>Top Stock</th>
+<th style="text-align: right;">Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BUY</td>
+<td style="text-align: right;">1 (F&amp;O)</td>
+<td>TATA POWER</td>
+<td style="text-align: right;">77.1</td>
+</tr>
+<tr>
+<td>HOLD</td>
+<td style="text-align: right;">8</td>
+<td>TITAN</td>
+<td style="text-align: right;">49.3</td>
+</tr>
+<tr>
+<td>AVOID</td>
+<td style="text-align: right;">40</td>
+<td>BAJFINANCE</td>
+<td style="text-align: right;">4.0</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<h3 id="cross-market-signals">Cross-Market Signals</h3>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Market</th>
+<th style="text-align: right;">BUY</th>
+<th style="text-align: right;">HOLD</th>
+<th style="text-align: right;">AVOID</th>
+<th>Top Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F&amp;O Active</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">45</td>
+<td>TATA POWER (77.1)</td>
+</tr>
+<tr>
+<td>NIFTY 50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">41</td>
+<td>TITAN (49.3)</td>
+</tr>
+<tr>
+<td>Forex/Crypto</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td>ETH/USD (72.5)</td>
+</tr>
+<tr>
+<td>Commodities</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td>NMDC (53)</td>
+</tr>
+<tr>
+<td>ETFs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">23</td>
+<td>MON100 (52)</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<hr />
+<h2 id="5-technical-architecture">5. Technical Architecture</h2>
+<h3 id="current-stack">Current Stack</h3>
+<pre><code>[Web Frontend]     [Flutter App]
+  localhost:5050     localhost:5051
+       |                 |
+       +--------+--------+
+                |
+         [Flask API Server]
+         CORS-enabled, cached
+                |
+    +-----------+-----------+
+    |           |           |
+[AI Engine] [Paper Trading] [Data Engine]
+XGBoost +    In-memory      yfinance +
+LightGBM    portfolio       451 CSVs
+ensemble
+</code></pre>
+<h3 id="api-endpoints">API Endpoints</h3>
+<p>::: {.spec-table}</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/scores?category=X</td>
+<td>GET</td>
+<td>AI-scored stocks by category</td>
+</tr>
+<tr>
+<td>/api/gainers-losers</td>
+<td>GET</td>
+<td>Top 50 gainers + losers</td>
+</tr>
+<tr>
+<td>/api/categories</td>
+<td>GET</td>
+<td>Available categories</td>
+</tr>
+<tr>
+<td>/api/stock/{symbol}</td>
+<td>GET</td>
+<td>Stock detail + history</td>
+</tr>
+<tr>
+<td>/api/paper/portfolio</td>
+<td>GET</td>
+<td>Paper trading portfolio</td>
+</tr>
+<tr>
+<td>/api/paper/buy</td>
+<td>POST</td>
+<td>Execute paper buy</td>
+</tr>
+<tr>
+<td>/api/paper/sell</td>
+<td>POST</td>
+<td>Execute paper sell</td>
+</tr>
+<tr>
+<td>/api/paper/history</td>
+<td>GET</td>
+<td>Trade history</td>
+</tr>
+<tr>
+<td>/api/paper/reset</td>
+<td>POST</td>
+<td>Reset account</td>
+</tr>
+<tr>
+<td>/api/indices</td>
+<td>GET</td>
+<td>NIFTY + SENSEX values</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<hr />
+<h2 id="6-git-commit">6. Git Commit</h2>
+<p><strong>Commit message:</strong> v0.3: Full market coverage, Flutter app, paper trading, momentum boost</p>
+<p><strong>Files changed:</strong> 50+ files across web prototype, Flutter app, scripts, and validation data</p>
+<hr />
+<h2 id="7-future-roadmap-building-the-worlds-best-prediction-engine">7. Future Roadmap — Building the World's Best Prediction Engine</h2>
+<h3 id="71-the-vision">7.1 The Vision</h3>
+<p>Build an AI system that achieves <strong>80%+ profitable trade ratio</strong> with a <strong>Sharpe ratio &gt; 2.0</strong>, making it one of the most reliable retail trading assistants in India.</p>
+<h3 id="72-algorithm-improvements-priority-1">7.2 Algorithm Improvements (Priority 1)</h3>
+<h4 id="a-multi-timeframe-prediction">A. Multi-Timeframe Prediction</h4>
+<p>Instead of one "5-day forward" label, train 3 models:</p>
+<ul>
+<li><strong>Intraday model</strong> (1-day horizon): For day traders</li>
+<li><strong>Swing model</strong> (5-10 day horizon): For swing traders</li>
+<li><strong>Position model</strong> (20-60 day horizon): For investors</li>
+</ul>
+<p>Each model has different optimal features. Intraday cares about volume and momentum. Position cares about fundamentals and sector rotation.</p>
+<h4 id="b-return-prediction-instead-of-classification">B. Return Prediction Instead of Classification</h4>
+<p><strong>Current:</strong> Binary — "will it go up 1%?" (yes/no)
+<strong>Target:</strong> Regression — "it will go up 3.2% ± 1.5% with 72% confidence"</p>
+<p>This gives us:</p>
+<ul>
+<li>Expected return per trade</li>
+<li>Confidence interval for position sizing</li>
+<li>Risk-adjusted ranking (score = expected return / expected risk)</li>
+</ul>
+<h4 id="c-ensemble-of-strategies-not-just-ml">C. Ensemble of Strategies (Not Just ML)</h4>
+<p>Combine 5 independent strategies, each voting:</p>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Type</th>
+<th>Best Market</th>
+<th style="text-align: right;">Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Momentum (12-month)</td>
+<td>Trend-following</td>
+<td>Bull/trending</td>
+<td style="text-align: right;">25%</td>
+</tr>
+<tr>
+<td>RSI Mean Reversion</td>
+<td>Counter-trend</td>
+<td>Sideways/range</td>
+<td style="text-align: right;">20%</td>
+</tr>
+<tr>
+<td>Volume Breakout</td>
+<td>Event-driven</td>
+<td>Any</td>
+<td style="text-align: right;">20%</td>
+</tr>
+<tr>
+<td>Bollinger Squeeze</td>
+<td>Volatility</td>
+<td>Low-vol → breakout</td>
+<td style="text-align: right;">15%</td>
+</tr>
+<tr>
+<td>Sector Rotation</td>
+<td>Macro</td>
+<td>Any</td>
+<td style="text-align: right;">20%</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p>When 4/5 strategies agree → high conviction trade (larger position).
+When strategies disagree → no trade (stay in cash).</p>
+<h4 id="d-market-regime-detection">D. Market Regime Detection</h4>
+<p>The same signal means different things in different markets:</p>
+<ul>
+<li><strong>Bull regime</strong>: High RSI is continuation (ride the trend)</li>
+<li><strong>Bear regime</strong>: High RSI is overbought (take profit)</li>
+<li><strong>Sideways</strong>: RSI extremes are mean-reversion opportunities</li>
+</ul>
+<p>Use a regime classifier (based on 50-day vs 200-day MA, VIX, breadth indicators) to dynamically weight strategies.</p>
+<h4 id="e-sector-rotation-model">E. Sector Rotation Model</h4>
+<p>Money flows between sectors in predictable patterns:</p>
+<ul>
+<li>Rate cuts → Banking + Real Estate rally</li>
+<li>Oil spike → Energy up, Auto/Airlines down</li>
+<li>Global risk-off → IT (dollar earners) + Pharma (defensive) up</li>
+</ul>
+<p>Track sector relative strength and rotate into strengthening sectors.</p>
+<h3 id="73-risk-management-priority-2">7.3 Risk Management (Priority 2)</h3>
+<h4 id="a-kelly-criterion-position-sizing">A. Kelly Criterion Position Sizing</h4>
+<p>Don't bet the same amount on every trade. The Kelly formula:</p>
+<pre><code>Optimal bet = (win_probability * avg_win - loss_probability * avg_loss) / avg_win
+</code></pre>
+<ul>
+<li>High confidence BUY → allocate 5-10% of portfolio</li>
+<li>Medium confidence → allocate 2-3%</li>
+<li>Low confidence → skip or 1% max</li>
+</ul>
+<h4 id="b-dynamic-stop-loss">B. Dynamic Stop-Loss</h4>
+<p>Instead of fixed 5% stop-loss:</p>
+<ul>
+<li>Use 1.5x ATR (Average True Range) — adapts to stock volatility</li>
+<li>Trailing stop: moves up with profit, never down</li>
+<li>Time-based stop: exit if trade doesn't move in 5 days (dead money)</li>
+</ul>
+<h4 id="c-portfolio-level-risk">C. Portfolio-Level Risk</h4>
+<ul>
+<li>Max 20% in any single sector</li>
+<li>Max 5% in any single stock</li>
+<li>Cash reserve: always keep 20% in cash for opportunities</li>
+<li>Daily loss limit: 3% of portfolio → stop trading for the day</li>
+<li>Drawdown limit: 10% → switch to cash-only mode</li>
+</ul>
+<h4 id="d-correlation-analysis">D. Correlation Analysis</h4>
+<p>Don't hold 5 banking stocks thinking you're diversified. They all move together. Track correlation matrix and ensure portfolio positions are actually diversified.</p>
+<h3 id="74-advanced-techniques-priority-3">7.4 Advanced Techniques (Priority 3)</h3>
+<h4 id="a-transformer-based-model">A. Transformer-Based Model</h4>
+<p>Use attention mechanisms (like GPT but for time series) to capture long-range dependencies in price action. Academic research shows transformers beat LSTMs on financial data.</p>
+<h4 id="b-alternative-data">B. Alternative Data</h4>
+<ul>
+<li><strong>Satellite imagery</strong>: Parking lot occupancy → retail sales proxy</li>
+<li><strong>Google Trends</strong>: Search volume for "Reliance stock" → retail sentiment</li>
+<li><strong>News sentiment</strong>: NLP on financial news → event-driven signals</li>
+<li><strong>Options flow</strong>: Unusual options activity → smart money detection</li>
+<li><strong>FII/DII data</strong>: Foreign investor flows → macro direction</li>
+</ul>
+<h4 id="c-reinforcement-learning">C. Reinforcement Learning</h4>
+<p>Train an agent that learns to maximize cumulative portfolio returns, not just per-trade accuracy. The agent learns:</p>
+<ul>
+<li>When to enter (buy signal)</li>
+<li>How much to buy (position sizing)</li>
+<li>When to exit (take profit or stop loss)</li>
+<li>When to do nothing (no good setup)</li>
+</ul>
+<h4 id="d-backtesting-framework">D. Backtesting Framework</h4>
+<p>Before any strategy goes live:</p>
+<ol>
+<li>Backtest on 5 years of historical data</li>
+<li>Include slippage (0.1% per trade)</li>
+<li>Include brokerage fees (Rs 20 per trade for Zerodha)</li>
+<li>Include impact cost (large orders move price)</li>
+<li>Walk-forward optimization (train on year 1-3, test on year 4, retrain, test on year 5)</li>
+<li>Monte Carlo simulation (1000 random variations to test robustness)</li>
+</ol>
+<h3 id="75-the-80-profit-target-is-it-realistic">7.5 The 80% Profit Target — Is It Realistic?</h3>
+<p><strong>Current benchmarks in algorithmic trading:</strong></p>
+<p>::: {.changes-table}</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th style="text-align: right;">Win Rate</th>
+<th style="text-align: right;">Sharpe</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Renaissance Medallion</td>
+<td style="text-align: right;">~66%</td>
+<td style="text-align: right;">&gt;5.0</td>
+<td>Quant hedge fund</td>
+</tr>
+<tr>
+<td>Two Sigma</td>
+<td style="text-align: right;">~55%</td>
+<td style="text-align: right;">~2.5</td>
+<td>ML-based</td>
+</tr>
+<tr>
+<td>Retail algo traders</td>
+<td style="text-align: right;">40-55%</td>
+<td style="text-align: right;">0.5-1.5</td>
+<td>Individual</td>
+</tr>
+<tr>
+<td>TradePilot current</td>
+<td style="text-align: right;">67%</td>
+<td style="text-align: right;">~0.8</td>
+<td>Prototype</td>
+</tr>
+<tr>
+<td><strong>TradePilot target</strong></td>
+<td style="text-align: right;"><strong>70-75%</strong></td>
+<td style="text-align: right;"><strong>&gt;2.0</strong></td>
+<td><strong>With improvements</strong></td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<p><strong>Key insight:</strong> 80% win rate is achievable IF we're selective. Instead of trading 50 stocks, trade only the top 5-10 highest-conviction signals. Quality over quantity.</p>
+<p>The path to 80%:</p>
+<ol>
+<li>Only trade when 4/5 strategies agree (reduces trades, increases accuracy)</li>
+<li>Only trade in the direction of the market regime</li>
+<li>Use tight stop-losses (small losses on wrong trades)</li>
+<li>Let winners run (trailing stops, not fixed targets)</li>
+<li>Compound: even 70% win rate with 2:1 reward-risk = massive returns</li>
+</ol>
+<h3 id="76-execution-timeline">7.6 Execution Timeline</h3>
+<p>::: {.phase-table}</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Timeline</th>
+<th>Focus</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1</td>
+<td>Week 1-2</td>
+<td>Multi-timeframe model + proper backtesting</td>
+<td>Sharpe &gt; 1.0</td>
+</tr>
+<tr>
+<td>Phase 2</td>
+<td>Week 3-4</td>
+<td>Ensemble strategies + regime detection</td>
+<td>Win rate &gt; 70%</td>
+</tr>
+<tr>
+<td>Phase 3</td>
+<td>Week 5-6</td>
+<td>Risk management + position sizing</td>
+<td>Max drawdown &lt; 15%</td>
+</tr>
+<tr>
+<td>Phase 4</td>
+<td>Week 7-8</td>
+<td>Alternative data + advanced ML</td>
+<td>Sharpe &gt; 1.5</td>
+</tr>
+<tr>
+<td>Phase 5</td>
+<td>Month 3</td>
+<td>Paper trading validation (1 month live)</td>
+<td>Consistent daily P&amp;L</td>
+</tr>
+<tr>
+<td>Phase 6</td>
+<td>Month 4</td>
+<td>Zerodha API integration + real money</td>
+<td>Start with Rs 1L</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<hr />
+<h2 id="8-files-changed-in-this-session">8. Files Changed in This Session</h2>
+<h3 id="new-files-created">New Files Created</h3>
+<p>::: {.spec-table}</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scripts/intraday-capture.py</td>
+<td>Intraday validation capture (2-hour intervals)</td>
+</tr>
+<tr>
+<td>scripts/daily-capture.py</td>
+<td>Daily capture + weekly report generator</td>
+</tr>
+<tr>
+<td>scripts/download-all-data.py</td>
+<td>Bulk data download for all 451+ assets</td>
+</tr>
+<tr>
+<td>docs/validation/week-2026-04-07/</td>
+<td>Validation study folder with baseline data</td>
+</tr>
+<tr>
+<td>app/ (21 Dart files)</td>
+<td>Complete Flutter mobile app</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<h3 id="modified-files">Modified Files</h3>
+<p>::: {.spec-table}</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prototype/stock_universe.py</td>
+<td>Added ETFs, commodities, currencies, MF proxies, F&amp;O, indices</td>
+</tr>
+<tr>
+<td>prototype/data_engine.py</td>
+<td>New imports, expanded STOCK_CATEGORIES with 6 new categories</td>
+</tr>
+<tr>
+<td>prototype/trading_engine.py</td>
+<td>Momentum boost (+20 max) in score_stocks_v2</td>
+</tr>
+<tr>
+<td>prototype/app.py</td>
+<td>CORS, NaN sanitization, gainers-losers endpoint, movers cache, flask-cors</td>
+</tr>
+<tr>
+<td>prototype/templates/index.html</td>
+<td>6 new tabs, paper trading UI, mobile responsiveness, Gainers/Losers toggle</td>
+</tr>
+</tbody>
+</table>
+<p>:::</p>
+<hr />
+<h2 id="9-key-learnings">9. Key Learnings</h2>
+<ol>
+<li>
+<p><strong>Accuracy is not profitability</strong> — A 67% accurate model can lose money if wrong trades lose more than right trades make. Optimize for Sharpe ratio, not accuracy.</p>
+</li>
+<li>
+<p><strong>Mean reversion vs momentum</strong> — Both are valid but in different market conditions. The model needs to know WHEN to apply which strategy.</p>
+</li>
+<li>
+<p><strong>Volume confirms everything</strong> — A breakout without volume is a fake breakout. The momentum boost requires volume confirmation (1.5x avg) before boosting scores.</p>
+</li>
+<li>
+<p><strong>Cross-asset context improves scoring</strong> — Training on 451 assets vs 49 changed score distributions. The model learned sector correlations (crude oil up = ONGC up).</p>
+</li>
+<li>
+<p><strong>Mobile-first design matters</strong> — 11 tabs crammed in a bottom bar is unusable. Progressive disclosure (4 core tabs + More sheet) is the pattern used by Zerodha and Groww.</p>
+</li>
+<li>
+<p><strong>Flutter web is slow for first load</strong> — Google Fonts adds 3-5 seconds of white screen. System fonts render instantly. Always test perceived performance, not just functionality.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated: April 7, 2026</em>
+<em>TradePilot v0.3 — Building India's smartest trading platform</em></p></body></html>

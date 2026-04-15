@@ -18,7 +18,9 @@ INDEX_SYMBOLS = {
 # ═══ STOCK UNIVERSE — imported from stock_universe.py ═══
 from stock_universe import (
     NIFTY_50, NIFTY_NEXT_50, NIFTY_100, NIFTY_200, NIFTY_500,
-    BSE_SENSEX_30, NIFTY_BANK, NIFTY_IT, NIFTY_PHARMA, NIFTY_AUTO,
+    BSE_SENSEX_30, BSE_200, BSE_BANKS, BSE_DEFENCE, BSE_POWER,
+    BSE_INFRA, BSE_IT, BSE_CHEMICALS, BSE_REALTY,
+    NIFTY_BANK, NIFTY_IT, NIFTY_PHARMA, NIFTY_AUTO,
     NIFTY_FMCG, NIFTY_METAL, NIFTY_ENERGY, NIFTY_REALTY, NIFTY_INFRA,
     NSE_ETFS, MF_PROXIES, FNO_ACTIVE, COMMODITIES, CURRENCY_PAIRS,
     MARKET_INDICES, FULL_UNIVERSE, BSE_POPULAR_NSE,
@@ -88,6 +90,16 @@ STOCK_CATEGORIES = {
     "mf": {"name": "Mutual Funds", "desc": "AMC stocks + MF index ETFs", "stocks": MF_PROXIES},
     "commodity": {"name": "Commodities", "desc": "Gold, Silver, Crude, Metals", "stocks": list(COMMODITIES.values())},
     "currency": {"name": "Currencies", "desc": "USD/INR, EUR/INR, Crypto", "stocks": list(CURRENCY_PAIRS.values())},
+    # BSE categories
+    "bse_sensex": {"name": "BSE SENSEX 30", "desc": "Top 30 BSE large-cap", "stocks": BSE_SENSEX_30, "exchange": "BSE"},
+    "bse200": {"name": "BSE 200", "desc": "Top 200 BSE stocks", "stocks": BSE_200, "exchange": "BSE"},
+    "bse_banks": {"name": "BSE Banks", "desc": "BSE banking stocks", "stocks": BSE_BANKS, "exchange": "BSE"},
+    "bse_defence": {"name": "BSE Defence", "desc": "BSE defence & shipbuilding", "stocks": BSE_DEFENCE, "exchange": "BSE"},
+    "bse_power": {"name": "BSE Power", "desc": "BSE power & energy", "stocks": BSE_POWER, "exchange": "BSE"},
+    "bse_infra": {"name": "BSE Infra", "desc": "BSE infrastructure", "stocks": BSE_INFRA, "exchange": "BSE"},
+    "bse_it": {"name": "BSE IT", "desc": "BSE IT sector", "stocks": BSE_IT, "exchange": "BSE"},
+    "bse_chemicals": {"name": "BSE Chemicals", "desc": "BSE chemicals sector", "stocks": BSE_CHEMICALS, "exchange": "BSE"},
+    "bse_realty": {"name": "BSE Realty", "desc": "BSE real estate", "stocks": BSE_REALTY, "exchange": "BSE"},
     # Full universe
     "all": {"name": "All Stocks", "desc": "Full universe (~500+ stocks)", "stocks": ALL_STOCKS},
 }

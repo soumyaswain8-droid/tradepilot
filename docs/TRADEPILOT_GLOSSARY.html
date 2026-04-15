@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@page {
+    size: A4;
+    margin: 0.75in 0.6in 0.75in 0.7in;
+}
+body {
+    font-family: 'Avenir Next', 'Avenir', Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1a1a2e;
+    max-width: 100%;
+}
+h1 {
+    font-size: 22pt;
+    color: #1e1b4b;
+    border-bottom: 3px solid #4f46e5;
+    padding-bottom: 8px;
+    margin-top: 0;
+}
+h2 {
+    font-size: 14pt;
+    color: #312e81;
+    border-bottom: 1.5px solid #c7d2fe;
+    padding-bottom: 4px;
+    margin-top: 28px;
+    page-break-after: avoid;
+}
+h3 {
+    font-size: 12pt;
+    color: #4338ca;
+    margin-top: 18px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px 0;
+    font-size: 9.5pt;
+    page-break-inside: auto;
+}
+thead {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+}
+th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9pt;
+}
+td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+}
+tr:nth-child(even) {
+    background-color: #f8f9ff;
+}
+tr:hover {
+    background-color: #eef2ff;
+}
+strong {
+    color: #1e1b4b;
+}
+code {
+    background: #f0f0f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9pt;
+    font-family: 'Courier New', monospace;
+}
+pre {
+    background: #1e1b4b;
+    color: #e0e7ff;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 9pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+hr {
+    border: none;
+    border-top: 1.5px solid #c7d2fe;
+    margin: 20px 0;
+}
+em {
+    color: #6b7280;
+}
+/* Cover styling for first section */
+body > h1:first-of-type {
+    text-align: center;
+    font-size: 26pt;
+    margin-top: 40px;
+    margin-bottom: 5px;
+}
+body > h1:first-of-type + p {
+    text-align: center;
+    font-style: italic;
+    color: #6b7280;
+}
+/* Badge for section headers */
+h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: #4f46e5;
+    margin-right: 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+}
+</style>
+</head>
+<body>
+<h1 id="tradepilot-v4-complete-glossary-of-trading-ml-terms">TradePilot v4 -- Complete Glossary of Trading &amp; ML Terms</h1>
+<p><em>A plain-English reference for every concept used in the TradePilot platform.</em>
+<em>Written for smart people who are new to technical trading -- no jargon to explain jargon.</em></p>
+<hr />
+<h2 id="section-1-market-trading-basics">Section 1: Market &amp; Trading Basics</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nifty 50</strong></td>
+<td>An index of the 50 largest companies listed on NSE (National Stock Exchange). It represents the overall health of the Indian stock market.</td>
+<td>Think of it as the "temperature" of the Indian economy -- if Nifty is up, most big companies are doing well.</td>
+<td>TradePilot scans all 50 Nifty stocks every day to find the best ones to buy. Our entire universe is these 50 stocks.</td>
+</tr>
+<tr>
+<td><strong>NSE</strong></td>
+<td>National Stock Exchange of India -- the primary stock exchange where Nifty 50 stocks trade. Based in Mumbai.</td>
+<td>Like a supermarket for stocks -- buyers and sellers meet here to trade.</td>
+<td>All our data comes from NSE -- prices, volumes, options data, FII/DII flows.</td>
+</tr>
+<tr>
+<td><strong>BSE</strong></td>
+<td>Bombay Stock Exchange -- the older Indian exchange. Same stocks trade on both NSE and BSE.</td>
+<td>Like having two supermarkets in the same city selling the same products at nearly the same prices.</td>
+<td>We primarily use NSE data (<code>.NS</code> suffix in code), but some stocks also have <code>.BO</code> (BSE) data.</td>
+</tr>
+<tr>
+<td><strong>Intraday Trading</strong></td>
+<td>Buying and selling a stock on the same day. You start the day with cash, buy stocks, sell them before market close (3:30 PM), and end the day with cash again.</td>
+<td>Like buying vegetables in the morning market and selling them the same evening -- you don't hold inventory overnight.</td>
+<td>TradePilot v4 is designed for intraday signals. We scan at 9:30 AM and suggest stocks to buy and sell within the same day.</td>
+</tr>
+<tr>
+<td><strong>Swing Trading</strong></td>
+<td>Holding stocks for 2-10 days. You buy today and sell after a few days when the price moves in your favour.</td>
+<td>Like buying a product on sale and waiting a week for the price to go back up before reselling.</td>
+<td>v3 predicted 5-day returns (swing trading). v4 shifted to intraday because our users want same-day results.</td>
+</tr>
+<tr>
+<td><strong>Bull Market</strong></td>
+<td>When the market is going up consistently. Prices rise, optimism is high.</td>
+<td>Like a rising tide that lifts all boats -- most stocks go up in a bull market.</td>
+<td>TradePilot detects "BULL" regime when Nifty is up more than +0.5% for the day. In bull markets, we are more aggressive with BUY signals.</td>
+</tr>
+<tr>
+<td><strong>Bear Market</strong></td>
+<td>When the market is falling consistently. Prices drop, fear is high.</td>
+<td>Like a winter sale that never ends -- everything keeps getting cheaper.</td>
+<td>Detected as "BEAR" when Nifty is down more than -0.5%. We become cautious and reduce BUY signals.</td>
+</tr>
+<tr>
+<td><strong>Sideways Market</strong></td>
+<td>Market is flat -- not clearly going up or down. Prices bounce in a narrow range.</td>
+<td>Like a car stuck in traffic -- moving a little forward, a little back, but not really going anywhere.</td>
+<td>Labelled "NEUTRAL" in our code. Nifty change is between -0.5% and +0.5%.</td>
+</tr>
+<tr>
+<td><strong>Market Regime</strong></td>
+<td>The current "mood" of the market -- bull, bear, or sideways. It changes the rules of what works.</td>
+<td>Like weather -- you dress differently for rain vs sunshine. Trading strategies that work in bull markets can fail in bear markets.</td>
+<td>v4 detects regime from Nifty's daily change and adjusts scoring. In v3, different BUY thresholds were used for different regimes (50-60 range).</td>
+</tr>
+<tr>
+<td><strong>Stop-Loss (SL)</strong></td>
+<td>A pre-decided price at which you exit a losing trade to limit your loss. If you buy at Rs 100 with a 2% SL, you sell at Rs 98.</td>
+<td>Like setting an alarm -- "If the temperature drops below 15 degrees, I'm wearing a jacket." You decide in advance when to cut your losses.</td>
+<td>TradePilot calculates SL% for every stock based on its score and volatility. Higher-score stocks get tighter SL (1%), lower-score stocks get wider SL (2%).</td>
+</tr>
+<tr>
+<td><strong>Target</strong></td>
+<td>The price at which you plan to sell for a profit. If you buy at Rs 100 with a 2.5% target, you sell at Rs 102.50.</td>
+<td>Like setting a goal -- "I'll sell my second-hand phone when someone offers Rs 15,000." You know when to take your profit.</td>
+<td>Computed per stock. High-score stocks get wider targets (2.5%) because we're more confident. Calculated in <code>composite_scorer.py</code>.</td>
+</tr>
+<tr>
+<td><strong>Trailing Stop</strong></td>
+<td>A stop-loss that moves up as the price goes up. If the stock rises from 100 to 110, your SL moves from 98 to 108. It locks in profits.</td>
+<td>Like a ratchet -- it only moves in one direction. Your safety net keeps rising as the stock climbs.</td>
+<td>Referenced in our strategy research. Not yet implemented in v4 but planned for the paper trading pool.</td>
+</tr>
+<tr>
+<td><strong>Paper Trading</strong></td>
+<td>Simulated trading with fake money to test strategies without risking real capital. Everything works like real trading except no actual money changes hands.</td>
+<td>Like a flight simulator -- pilots practice before flying real planes. We test our algorithm before putting real money on the line.</td>
+<td>TradePilot runs a paper trading pool (Rs 10,00,000 simulated capital) to track how our BUY signals would have performed.</td>
+</tr>
+<tr>
+<td><strong>Position</strong></td>
+<td>A single stock holding in your portfolio. If you bought 10 shares of Reliance, that's one position.</td>
+<td>Like one item in your shopping cart.</td>
+<td>Each BUY signal becomes a position with a specific quantity, entry price, SL, and target.</td>
+</tr>
+<tr>
+<td><strong>Portfolio</strong></td>
+<td>All your positions combined. If you hold Reliance, TCS, and HDFC Bank -- that's your portfolio.</td>
+<td>Your entire collection of investments -- like all the items in your shopping cart together.</td>
+<td>TradePilot manages a portfolio of 5-10 BUY positions per day, tracked in <code>position_sizer.py</code>.</td>
+</tr>
+<tr>
+<td><strong>Capital Deployment</strong></td>
+<td>How much of your total money you've actually invested in stocks (vs keeping as cash).</td>
+<td>If you have Rs 10 lakh but only invested Rs 7 lakh, your deployment is 70%. The remaining 30% is cash "on the bench."</td>
+<td>v4 tracks <code>total_deployed_pct</code> -- typically 70-90% of capital is deployed across BUY signals.</td>
+</tr>
+<tr>
+<td><strong>Risk-Reward Ratio (R:R)</strong></td>
+<td>How much you could gain vs how much you could lose. A 1:2 ratio means for every Rs 1 you risk, you could gain Rs 2.</td>
+<td>Like a bet -- "I'll risk Rs 100 to potentially win Rs 200." Good bets have R:R of 1:2 or better.</td>
+<td>Calculated for every position: <code>riskReward = target / stopLoss</code>. We aim for R:R above 1.5.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-2-technical-indicators-what-our-algorithm-uses">Section 2: Technical Indicators (What Our Algorithm Uses)</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+<th>Example (Apr 8, 2026)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RSI (Relative Strength Index)</strong></td>
+<td>A 0-100 score measuring if a stock has gone up "too much" (overbought, &gt;70) or down "too much" (oversold, &lt;30). Uses last 14 days of price data.</td>
+<td>Like a thermometer for stocks. Above 70 means "fever" (overheated, may cool down). Below 30 means "hypothermia" (oversold, may bounce back).</td>
+<td>One of our Tier 1 features. RSI(14) was the top SHAP feature in ML research. v4 uses it as a mean-reversion signal.</td>
+<td>RSI 50 = neutral. If TITAN's RSI was 72 after its 3.97% rally, it might be overheated.</td>
+</tr>
+<tr>
+<td><strong>MACD (Moving Average Convergence Divergence)</strong></td>
+<td>Shows the relationship between two moving averages (12-day and 26-day). When the fast line crosses above the slow line, it's a buy signal.</td>
+<td>Like comparing your recent exam score to your yearly average. If recent scores are rising faster than your average, you're on an upward trend.</td>
+<td>Tier 2 feature. Was 7.56% feature importance in v3. v4 uses MACD histogram for trend strength estimation.</td>
+<td>If MACD says "Bullish" for RELIANCE, it means recent momentum is accelerating upward.</td>
+</tr>
+<tr>
+<td><strong>MACD Histogram</strong></td>
+<td>The visual difference between the MACD line and its signal line. Positive bars = bullish momentum growing. Negative bars = bearish.</td>
+<td>Like the speedometer needle -- not just "are you moving?" but "are you accelerating or slowing down?"</td>
+<td>Used as a Tier 2 feature in v4. Positive histogram + positive price change = "Bullish" MACD label.</td>
+<td>A growing positive histogram means the bullish trend is strengthening.</td>
+</tr>
+<tr>
+<td><strong>SMA (Simple Moving Average)</strong></td>
+<td>The average closing price over N days. SMA(20) = average of last 20 days. Smooths out daily noise to show the trend.</td>
+<td>Like your running average marks in school -- one bad test doesn't change it much, but a string of bad tests pulls it down.</td>
+<td>Used in Golden Cross / Death Cross detection. Also used to calculate volume ratio (today's volume vs 20-day average).</td>
+<td>If Nifty's 50-day SMA is 22,100 and current level is 22,400 -- market is above its average (bullish).</td>
+</tr>
+<tr>
+<td><strong>EMA (Exponential Moving Average)</strong></td>
+<td>Like SMA but gives MORE weight to recent prices. Reacts faster to new information. EMA(12) moves quicker than SMA(12).</td>
+<td>Like a weighted GPA where your most recent semester counts more than older ones.</td>
+<td>MACD is built using EMAs (12-day and 26-day). EMA reacts faster to price changes than SMA.</td>
+<td>EMA catches trend changes 1-2 days before SMA does.</td>
+</tr>
+<tr>
+<td><strong>Bollinger Bands</strong></td>
+<td>Three lines around price: middle = 20-day SMA, upper band = SMA + 2 standard deviations, lower band = SMA - 2 standard deviations. Price usually stays within the bands.</td>
+<td>Like a highway with guardrails. When the car (price) hits the guardrail, it usually bounces back toward the centre. Occasionally it crashes through (breakout).</td>
+<td>Used via Bollinger %B in Tier 2 features. Helps identify when a stock is at extreme levels.</td>
+<td>If SBIN price touches the lower Bollinger Band, it might be oversold and due for a bounce.</td>
+</tr>
+<tr>
+<td><strong>Bollinger %B</strong></td>
+<td>A 0-1 score showing where price sits within Bollinger Bands. 0 = at lower band, 0.5 = at middle, 1 = at upper band. Above 1 or below 0 = outside bands.</td>
+<td>Like a floor indicator in an elevator. 0 = ground floor, 0.5 = middle floor, 1 = top floor. Going above 1 = you're on the roof.</td>
+<td>Tier 2 feature. Values near 0 suggest mean-reversion buy opportunity. Values near 1 suggest the stock may be overextended.</td>
+<td>%B of 0.15 for INDUSINDBK means it's near the lower band -- potential bounce candidate.</td>
+</tr>
+<tr>
+<td><strong>ATR (Average True Range)</strong></td>
+<td>Measures how much a stock typically moves in a day (in rupees). A stock with ATR of Rs 50 moves about Rs 50 per day on average.</td>
+<td>Like knowing a child's energy level -- some kids run around a lot (high ATR), others sit quietly (low ATR). ATR tells you how "wild" a stock is.</td>
+<td>Was the TOP feature in v3 (13.25% importance). v4 uses ATR(14)/close as normalized volatility. Used to set stop-loss distances.</td>
+<td>If TITAN has ATR of Rs 45 and price is Rs 3200, normalized ATR = 1.4%. This helps set a proportional SL.</td>
+</tr>
+<tr>
+<td><strong>ADX (Average Directional Index)</strong></td>
+<td>Measures trend strength on a 0-100 scale. Above 25 = strong trend. Below 20 = no clear trend (ranging/sideways). Does NOT tell direction, just strength.</td>
+<td>Like a wind speed meter -- it tells you how strong the wind is, but not which direction it's blowing.</td>
+<td>Tier 2 feature. ADX(14) helps distinguish trending markets (where momentum works) from ranging markets (where mean-reversion works).</td>
+<td>ADX of 30 for BAJFINANCE means it's in a strong trend. ADX of 12 means it's going sideways.</td>
+</tr>
+<tr>
+<td><strong>OBV (On Balance Volume)</strong></td>
+<td>A running total that adds volume on up-days and subtracts volume on down-days. Rising OBV = more volume behind upward moves.</td>
+<td>Like counting votes -- if more people "vote" (trade volume) on up days than down days, the stock has popular support for going higher.</td>
+<td>Referenced in research as a top feature. Volume-based confirmation of price trends.</td>
+<td>If MARUTI's price is flat but OBV is rising, smart money may be quietly accumulating.</td>
+</tr>
+<tr>
+<td><strong>Volume Ratio</strong></td>
+<td>Today's trading volume divided by the 20-day average volume. Ratio of 2.0 means twice the normal volume.</td>
+<td>Like footfall at a shop -- if usually 100 customers come per day but today 200 showed up, something special is happening.</td>
+<td>Key v4 feature (<code>stock_volume_ratio</code>). Volume surge often precedes big price moves. Ratio &gt; 1.5 is flagged as "Volume surge."</td>
+<td>SHRIRAMFIN with volume ratio 2.3x means 130% more trading than usual -- something is driving interest.</td>
+</tr>
+<tr>
+<td><strong>Golden Cross</strong></td>
+<td>When the 50-day SMA crosses ABOVE the 200-day SMA. Considered a major bullish signal.</td>
+<td>Like a student whose recent performance just overtook their long-term average -- they're improving and gaining momentum.</td>
+<td>Referenced in research. Signals potential start of a long-term uptrend.</td>
+<td>If RELIANCE's 50-day average crosses above its 200-day average, traders see it as a strong buy signal.</td>
+</tr>
+<tr>
+<td><strong>Death Cross</strong></td>
+<td>Opposite of Golden Cross. The 50-day SMA crosses BELOW the 200-day SMA. Bearish signal.</td>
+<td>Recent performance dropping below long-term average -- like a company whose quarterly results keep getting worse than their annual trend.</td>
+<td>Referenced in research. Signals potential start of a long-term downtrend.</td>
+<td>A Death Cross on HDFC Bank would cause many traders to sell or avoid the stock.</td>
+</tr>
+<tr>
+<td><strong>52-Week High/Low</strong></td>
+<td>The highest and lowest price a stock reached in the past 1 year. Stocks near 52-week high are often in strong uptrends.</td>
+<td>Like checking if your salary is at its highest-ever level. Being near your all-time high suggests strong career momentum.</td>
+<td>v3 used <code>pct_from_high</code> and <code>pct_from_low</code> as features (6.21% importance). Stocks near 52-week high have momentum.</td>
+<td>If TITAN at Rs 3200 has a 52-week high of Rs 3250, it's 1.5% away -- very close, suggesting strong momentum.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-3-intraday-signals-v4-new-features">Section 3: Intraday Signals (v4 New Features)</h2>
+<p>These are the features that make v4 different from v3. They focus on what happens DURING the trading day.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VWAP (Volume Weighted Average Price)</strong></td>
+<td>The average price of a stock weighted by volume. If more shares traded at Rs 100 than at Rs 95, VWAP will be closer to Rs 100. Calculated from market open.</td>
+<td>Like the "true average" price everyone paid today. If 90% of customers bought a shirt at Rs 500 and 10% at Rs 400, the VWAP is closer to Rs 500, not the simple average of Rs 450.</td>
+<td>The #1 institutional indicator. v4 computes VWAP from intraday OHLCV candles. Price above VWAP = bullish (+score), below = bearish (-score). Gets 10% weight in composite score.</td>
+</tr>
+<tr>
+<td><strong>ORB (Opening Range Breakout)</strong></td>
+<td>The high and low of the first 15 minutes of trading (9:15-9:30 AM). If the stock breaks above this high, it's a bullish breakout. Below the low = bearish breakdown.</td>
+<td>Like the first 15 minutes of a cricket match -- if the opening batsmen score fast, the team usually has a strong innings. The early pace sets the tone.</td>
+<td>Core v4 signal (15% weight in composite). Computed in <code>features_intraday.py</code>. Breakout direction (+1, -1, or 0) and strength are calculated. Research shows ORB has 60-89% win rate on NSE.</td>
+</tr>
+<tr>
+<td><strong>Gap Up / Gap Down</strong></td>
+<td>When a stock opens at a significantly different price than yesterday's close. Gap Up = opens higher. Gap Down = opens lower.</td>
+<td>Like waking up to find your house value jumped overnight due to a new metro station announcement. The price "jumped" without any trading in between.</td>
+<td>v4 computes gap% = (open - prev_close) / prev_close. Classified as small (&lt;0.5%), medium (0.5-1.5%), or large (&gt;1.5%). Gaps are predictive of the day's direction.</td>
+</tr>
+<tr>
+<td><strong>Gap Analysis</strong></td>
+<td>Classifying the gap's size and likely behaviour. Large gaps often partially fill (gap fill). Small gaps often continue in the gap direction.</td>
+<td>Like a rubber band -- stretch it a lot (large gap) and it snaps back. Stretch it a little (small gap) and it stays.</td>
+<td>Computed in <code>compute_gap_analysis()</code>. Gap type (up/down/flat) and magnitude (small/medium/large) feed into the momentum score.</td>
+</tr>
+<tr>
+<td><strong>First Hour Return</strong></td>
+<td>How much a stock moved in the first hour of trading (9:15-10:15 AM). A positive first hour often predicts a positive day.</td>
+<td>Like the first chapter of a book -- if it hooks you, the whole book is usually good. A strong start often leads to a strong finish.</td>
+<td>Computed in <code>compute_intraday_momentum()</code>. First hour return is a momentum indicator that captures early institutional activity.</td>
+</tr>
+<tr>
+<td><strong>Volume Acceleration</strong></td>
+<td>How the first 30 minutes of trading volume compares to the average volume per period. High acceleration = institutions are active early.</td>
+<td>Like a restaurant that's packed at opening time vs one that fills up slowly. Early rush suggests high demand (maybe a positive review just came out).</td>
+<td>Computed as first_30_min_vol / avg_candle_vol. Values above 1.5 mean "Volume surge (1.5x average)" -- a positive signal.</td>
+</tr>
+<tr>
+<td><strong>Relative Strength (vs Market)</strong></td>
+<td>How much a stock outperforms or underperforms the Nifty 50 index TODAY. If Nifty is +0.5% and a stock is +2%, its RS = +1.5%.</td>
+<td>Like comparing your exam marks to the class average. Scoring 85% when the class average is 70% means you have strong relative performance (+15 points).</td>
+<td>Core v4 signal (20% weight -- the highest!). Stocks are ranked by RS among all 50 Nifty stocks. Top performers get higher scores. This is the #1 fix from v3's diagnosis.</td>
+</tr>
+<tr>
+<td><strong>Relative Strength Ranking</strong></td>
+<td>After computing RS for all 50 stocks, ranking them from best to worst. The top-ranked stock gets a percentile score near 1.0, the bottom gets near 0.0.</td>
+<td>Like class rank -- not just your marks, but your position in the class. Being #3 out of 50 is better than being #25, even if both scored well.</td>
+<td>Percentile ranking is used directly in composite scoring. <code>rs_score = rank / total_stocks</code>. This ensures we always pick the STRONGEST stocks, not just "good enough" ones.</td>
+</tr>
+<tr>
+<td><strong>Intraday Range</strong></td>
+<td>The difference between the day's highest and lowest price, as a percentage. High range = volatile day. Low range = calm day.</td>
+<td>Like measuring how much temperature varied during the day. A range of 5-35 degrees (high) vs 22-28 degrees (low).</td>
+<td>Computed as <code>(day_high - day_low) / day_low * 100</code>. Used to estimate volatility: &gt;3% = High, &gt;1.5% = Medium, &lt;1.5% = Low. Affects SL/target sizing.</td>
+</tr>
+<tr>
+<td><strong>Pre-market Session</strong></td>
+<td>A 15-minute window (9:00-9:15 AM) before the market opens where orders are collected but not executed. The "equilibrium price" discovered here becomes the opening price.</td>
+<td>Like an auction preview -- people submit their bids before the auction starts. The auctioneer figures out the starting price based on all the bids.</td>
+<td>v4 architecture plans to use pre-market data (via nsefin library) at 9:00 AM as Layer 1 -- before the market even opens. This gives a head start on the day's direction.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-4-institutional-options-data">Section 4: Institutional &amp; Options Data</h2>
+<p>This is the "smart money" layer -- what the big players (FIIs, DIIs) and the options market are telling us.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FII (Foreign Institutional Investors)</strong></td>
+<td>Foreign funds (like Goldman Sachs, BlackRock) that invest in Indian stocks. They control a huge chunk of Nifty 50 ownership.</td>
+<td>Like a whale in a swimming pool -- when FIIs move, the whole market feels it. Their buying or selling creates waves.</td>
+<td>v4 tracks FII net flow daily (in crores). FII buying = bullish signal. FII data gets 10% weight in composite score.</td>
+</tr>
+<tr>
+<td><strong>DII (Domestic Institutional Investors)</strong></td>
+<td>Indian funds like LIC, SBI Mutual Fund, HDFC AMC. They often buy when FIIs sell (providing "support").</td>
+<td>Like local businessmen in a town -- when outsiders leave, locals keep things running. DIIs often stabilize the market during FII selling.</td>
+<td>Tracked alongside FII. Both FII+DII buying = strongest bullish signal (score +1.0). DII buying alone = weaker signal (+0.1) because DIIs are often reactive.</td>
+</tr>
+<tr>
+<td><strong>FII/DII Net Flow</strong></td>
+<td>The difference between buying and selling by FIIs or DIIs. Net positive = they bought more than they sold. Net negative = they sold more. Measured in crores.</td>
+<td>Like tracking whether a store had more customers coming in or going out. Net positive footfall = the store is popular today.</td>
+<td>Combined into <code>compute_fii_dii_score()</code> which produces a -1 to +1 score. Both buying = +1.0 (strong bull). Both selling = -1.0 (bear). The magnitude (size of flow) also matters.</td>
+</tr>
+<tr>
+<td><strong>Options</strong></td>
+<td>Contracts that give you the RIGHT (but not obligation) to buy or sell a stock at a specific price by a specific date. They're like insurance policies on stocks.</td>
+<td>Like booking a hotel room with free cancellation. You pay a small fee (premium) to lock in the price. If you don't want it later, you just lose the booking fee.</td>
+<td>TradePilot reads options data to understand what "smart money" expects. Options data is often a LEADING indicator -- it moves before the stock price.</td>
+</tr>
+<tr>
+<td><strong>Put Option</strong></td>
+<td>The right to SELL a stock at a specific price. You buy puts when you think the stock will go DOWN. More puts being bought = bearish sentiment.</td>
+<td>Like buying insurance on your car. You pay a premium, and if something bad happens (stock falls), you get compensated.</td>
+<td>Put volume and Open Interest feed into PCR calculation. High put buying can mean fear (bearish) or hedging (neutral).</td>
+</tr>
+<tr>
+<td><strong>Call Option</strong></td>
+<td>The right to BUY a stock at a specific price. You buy calls when you think the stock will go UP. More calls being bought = bullish sentiment.</td>
+<td>Like booking a flat at today's price before the price rises. If prices go up, you win. If they don't, you lose only the booking amount.</td>
+<td>Call OI and volume are the other half of PCR. Heavy call buying at higher strikes = bullish expectations.</td>
+</tr>
+<tr>
+<td><strong>Open Interest (OI)</strong></td>
+<td>The total number of active (unsettled) options contracts. Rising OI = new money entering. Falling OI = positions being closed.</td>
+<td>Like the total number of active hotel bookings. Rising bookings = more people committing. Falling bookings = people cancelling.</td>
+<td>Core to our OI buildup detection. OI change + price direction = 4 possible patterns (long buildup, short buildup, short covering, long unwinding). Gets 10% composite weight.</td>
+</tr>
+<tr>
+<td><strong>PCR (Put-Call Ratio)</strong></td>
+<td>Total Put OI divided by total Call OI. PCR &gt; 1.2 = more puts than calls (contrarian bullish). PCR &lt; 0.7 = more calls (contrarian bearish).</td>
+<td>Like a sentiment survey: "Are more people buying umbrellas (puts/insurance) or sunglasses (calls/optimism)?" If everyone is buying umbrellas, the storm might be over (contrarian).</td>
+<td>Computed from options chain. PCR &gt; 1.2 = "bullish" signal, PCR &lt; 0.7 = "bearish". Used in <code>compute_oi_buildup()</code>.</td>
+</tr>
+<tr>
+<td><strong>Long Buildup</strong></td>
+<td>Price UP + OI UP. New buyers are entering the market with conviction. The strongest bullish signal from options data.</td>
+<td>Like a restaurant getting busier (more bookings) AND raising prices -- demand is genuinely strong.</td>
+<td>OI score = +1.0 (maximum bullish). TradePilot flags this as "Long buildup in options" (positive reason).</td>
+</tr>
+<tr>
+<td><strong>Short Buildup</strong></td>
+<td>Price DOWN + OI UP. New sellers (shorts) are entering the market. Bearish signal.</td>
+<td>Like a restaurant getting more cancellations (short interest) while prices drop -- people are betting against the business.</td>
+<td>OI score = -1.0 (maximum bearish). Flagged as "Short buildup in options" (negative reason).</td>
+</tr>
+<tr>
+<td><strong>Short Covering</strong></td>
+<td>Price UP + OI DOWN. Previous short-sellers are buying back (covering) their positions. Moderately bullish.</td>
+<td>Like people who bet against a sports team now scrambling to change their bets because the team is winning.</td>
+<td>OI score = +0.3. Flagged as "Short covering rally" (positive reason). The rally may be temporary since it's driven by covering, not new buying.</td>
+</tr>
+<tr>
+<td><strong>Long Unwinding</strong></td>
+<td>Price DOWN + OI DOWN. Previous buyers are exiting. Moderately bearish -- selling pressure from disappointed longs.</td>
+<td>Like early investors in a startup selling their shares because they've lost confidence.</td>
+<td>OI score = -0.3. The weakest bearish signal -- existing positions are closing, not new shorts entering.</td>
+</tr>
+<tr>
+<td><strong>Max Pain</strong></td>
+<td>The price at which the maximum number of options contracts expire worthless. The stock often gravitates toward max pain near expiry.</td>
+<td>Like a casino where the house always wins -- max pain is the price where options writers (who are the "house") lose the least money.</td>
+<td>v4 computes <code>max_pain_distance_pct</code> = how far the current price is from max pain. If price is far from max pain, it may gravitate back.</td>
+</tr>
+<tr>
+<td><strong>F&amp;O (Futures &amp; Options)</strong></td>
+<td>The derivatives segment of NSE where futures and options contracts trade. Not all stocks have F&amp;O -- only about 200 liquid ones. All Nifty 50 stocks have F&amp;O.</td>
+<td>Like the VIP section of the stock market -- only the biggest, most liquid stocks get in. F&amp;O lets you trade with leverage and hedging.</td>
+<td>All Nifty 50 stocks are in F&amp;O, so we can get options data for our entire universe. Days to F&amp;O expiry is a Tier 3 feature.</td>
+</tr>
+<tr>
+<td><strong>Expiry</strong></td>
+<td>The date when an options/futures contract expires. Weekly (every Thursday) and monthly (last Thursday). Markets are often volatile on expiry days.</td>
+<td>Like the deadline for a sale -- as the deadline approaches, people rush to act. Expiry creates urgency and volatility.</td>
+<td>Days to expiry is a Tier 3 feature. Expiry weeks show different trading patterns.</td>
+</tr>
+<tr>
+<td><strong>Options Chain</strong></td>
+<td>A table showing all available options for a stock -- every strike price, with call and put prices, volumes, and OI.</td>
+<td>Like a menu at a restaurant -- all the different "meals" (strike prices) you can order, with their prices and popularity.</td>
+<td>TradePilot fetches the full options chain via NSE API to compute PCR, max pain, and OI buildup signals.</td>
+</tr>
+<tr>
+<td><strong>Delivery Percentage</strong></td>
+<td>The percentage of traded volume that resulted in actual delivery (shares changing hands) vs speculative (intraday) trading. High delivery % = genuine interest.</td>
+<td>Like the difference between window shoppers and actual buyers. If 40% of people who entered the shop actually bought something, that's a good conversion rate.</td>
+<td>Tier 3 feature. High delivery % (&gt;50%) = conviction buying. Low delivery % (&lt;20%) = mostly speculative trading.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-5-machine-learning-concepts">Section 5: Machine Learning Concepts</h2>
+<p>How TradePilot's "brain" works -- the AI/ML engine that processes all these signals.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ML (Machine Learning)</strong></td>
+<td>Teaching computers to find patterns in data without being explicitly programmed. Give it 3 years of stock data, and it learns which patterns lead to stocks going up.</td>
+<td>Like teaching a child by showing examples. Show them 1000 photos of cats and dogs, and they learn to tell them apart without you explaining "cats have whiskers."</td>
+<td>TradePilot's core engine. v4 uses ML as one of 7 signals in the composite score (25% weight). ML predicts expected intraday return.</td>
+</tr>
+<tr>
+<td><strong>LightGBM</strong></td>
+<td>A fast, efficient ML algorithm that builds hundreds of small decision trees and combines them. Made by Microsoft. Best for tabular data (spreadsheet-like data with rows and columns).</td>
+<td>Like asking 500 different experts a question, and taking a weighted vote. Each expert is simple, but together they're very accurate.</td>
+<td>Our primary ML model. LightGBM regressor with 5,000 trees, learning rate 0.01, max depth 6. Research shows LightGBM &gt; LSTM for stock prediction.</td>
+</tr>
+<tr>
+<td><strong>XGBoost</strong></td>
+<td>Another tree-based ML algorithm, similar to LightGBM but slightly slower. Made by University of Washington. Very popular in competitions.</td>
+<td>Like LightGBM's older sibling -- equally smart but takes a bit longer to think.</td>
+<td>Referenced in our research as an alternative. LightGBM is preferred because it's faster for our daily 50-stock scan.</td>
+</tr>
+<tr>
+<td><strong>Ensemble</strong></td>
+<td>Combining multiple ML models to get better predictions. Like getting a second opinion from multiple doctors.</td>
+<td>Like asking 3 financial advisors and going with the majority recommendation. Each might miss something, but together they cover more ground.</td>
+<td>v4's composite scorer IS an ensemble -- it combines ML score, VWAP, ORB, RS, FII, OI, and volume signals. Not just one model, but 7 complementary signals.</td>
+</tr>
+<tr>
+<td><strong>Classification vs Regression</strong></td>
+<td>Classification = predicting a category ("BUY or AVOID"). Regression = predicting a number ("stock will go up 2.3%").</td>
+<td>Classification is like sorting mail into "urgent" and "not urgent" boxes. Regression is like predicting exactly how many minutes each letter will take to read.</td>
+<td>v3 used classification (BUY/AVOID) -- this was a MISTAKE. A 5% gain and a 0.6% gain both became "BUY." v4 uses regression (predicts actual return magnitude) to preserve this information.</td>
+</tr>
+<tr>
+<td><strong>Binary Classification</strong></td>
+<td>Classification with only 2 possible outcomes (yes/no, BUY/AVOID, 1/0). Simpler than multi-class but loses nuance.</td>
+<td>Like a thumbs up / thumbs down review -- you lose the nuance of a 1-5 star rating.</td>
+<td>What v3 did: <code>label = 1 if 5-day return &gt; 0.5%, else 0</code>. This destroyed magnitude info and caused 96% AVOID signals. v4 moved away from this.</td>
+</tr>
+<tr>
+<td><strong>Target Variable</strong></td>
+<td>What the ML model is trying to predict. The "answer key" that the model learns from.</td>
+<td>Like the answer column in a practice test. The model sees the questions (features) and tries to match the answers (target).</td>
+<td>v4 target: intraday return = (close at 3PM - open at 9:30AM) / open. This tells the model "learn to predict how much a stock will move today."</td>
+</tr>
+<tr>
+<td><strong>Feature</strong></td>
+<td>A piece of information (input variable) that the model uses to make predictions. Like "RSI", "volume ratio", "VWAP deviation" -- each is a feature.</td>
+<td>Like the ingredients in a recipe. Each ingredient contributes to the final dish. Features are the ingredients that produce the prediction.</td>
+<td>v4 has 19 features: 9 daily context + 5 intraday + 3 institutional + 2 relative strength. Listed in <code>config.py</code>.</td>
+</tr>
+<tr>
+<td><strong>Feature Engineering</strong></td>
+<td>The art of creating useful features from raw data. Raw data: "price was Rs 100, 101, 103, 102." Engineered feature: "stock is in an uptrend with 0.8% daily momentum."</td>
+<td>Like a chef turning raw ingredients into a prepared dish. Raw onions are not useful in a recipe, but caramelized onions add flavour. Feature engineering transforms raw data into something the model can use.</td>
+<td>What <code>features_intraday.py</code> and <code>features_institutional.py</code> do. They transform raw price/volume/options data into meaningful features like VWAP deviation, ORB signal, and OI buildup.</td>
+</tr>
+<tr>
+<td><strong>Feature Importance</strong></td>
+<td>How much each feature contributes to the model's predictions. Higher importance = that feature is more useful.</td>
+<td>Like finding out which ingredient makes or breaks a dish. If removing salt ruins everything but removing oregano makes no difference, salt has higher "feature importance."</td>
+<td>v3 diagnosis showed ATR was 13.25% importance, MACD 7.56%, pct_from_low 6.21%. This revealed v3 was mean-reversion-heavy and missing momentum features.</td>
+</tr>
+<tr>
+<td><strong>SHAP Values</strong></td>
+<td>A method to explain WHY the model made a specific prediction. For each stock, SHAP tells you which features pushed the score up or down.</td>
+<td>Like a judge explaining their verdict -- "I gave you a high score because of strong VWAP position (+5 points), good ORB breakout (+3 points), but penalized for low volume (-2 points)."</td>
+<td>Used in our ML research to identify the 20 most predictive features (Tier 1, 2, 3). SHAP revealed RSI and VWAP deviation as top features.</td>
+</tr>
+<tr>
+<td><strong>Permutation Importance</strong></td>
+<td>Another way to measure feature importance. Shuffle one feature's values randomly and see how much worse the model gets. Bigger drop = more important feature.</td>
+<td>Like removing one player from a cricket team and seeing how much worse the team performs. If removing Virat Kohli causes a 50% drop in performance, his importance is very high.</td>
+<td>Used alongside SHAP for feature selection. Helps decide which of the 19 features to keep.</td>
+</tr>
+<tr>
+<td><strong>Training Data</strong></td>
+<td>Historical data the model learns from. Like textbooks for a student. TradePilot uses 1-3 years of past Nifty 50 daily data as training data.</td>
+<td>The practice exams a student studies before the real exam. More and diverse practice data = better prepared student.</td>
+<td>1-year rolling window of daily data for all 50 Nifty stocks. Model trains on 12,000+ data points (50 stocks x 250 trading days).</td>
+</tr>
+<tr>
+<td><strong>Test Data</strong></td>
+<td>Data the model has NEVER seen, used to check if it actually learned useful patterns. If it works on test data, it will likely work on real trades.</td>
+<td>The actual exam (not the practice one). If you only did well on practice but failed the real exam, you memorized instead of learning.</td>
+<td>1-month forward window. Walk-forward validation uses each month as a test set while training on the preceding year.</td>
+</tr>
+<tr>
+<td><strong>Overfitting</strong></td>
+<td>When the model memorizes training data patterns (including noise) instead of learning general rules. It scores perfectly on old data but fails on new data.</td>
+<td>Like a student who memorizes exact exam answers instead of understanding concepts. They ace the old papers but fail when questions are rephrased.</td>
+<td>v3's 44.79% precision on training data suggested it wasn't even fitting well. But overfitting is why we use walk-forward validation -- to catch it early.</td>
+</tr>
+<tr>
+<td><strong>Underfitting</strong></td>
+<td>When the model is too simple to capture the real patterns. It performs poorly on both training AND test data.</td>
+<td>Like a student who barely studied -- they can't even answer the practice questions, let alone the exam.</td>
+<td>v3 was actually underfitting (poor training precision) because it used the wrong features and wrong target variable. v4 fixes this.</td>
+</tr>
+<tr>
+<td><strong>Walk-Forward Validation</strong></td>
+<td>The CORRECT way to test ML models on time-series data. Train on the past, test on the future, slide the window forward. Never let the model "peek" at future data.</td>
+<td>Like predicting tomorrow's weather using ONLY data from today and before. You can't use Thursday's weather to predict Wednesday's. Time moves forward.</td>
+<td>Mandatory in v4. Train on 1 year, skip 5-day embargo, test on 1 month. Slide forward and repeat. This is why k-fold is wrong for stocks.</td>
+</tr>
+<tr>
+<td><strong>K-Fold Cross-Validation</strong></td>
+<td>A standard ML testing method where data is randomly split into K parts (folds). The model trains on K-1 parts and tests on 1 part, rotating through all K parts.</td>
+<td>Like shuffling exam papers and randomly picking some for practice and some for testing.</td>
+<td>THIS IS WRONG FOR STOCKS because random shuffling mixes future data with past data. A 2025 data point could end up in training while 2024 is in testing -- that's time travel! v4 uses walk-forward instead.</td>
+</tr>
+<tr>
+<td><strong>Purged Cross-Validation</strong></td>
+<td>A modified version of k-fold that respects time order AND removes data near the train/test boundary to prevent information leakage.</td>
+<td>Like leaving a gap between the practice exam and the real exam to make sure no questions from the real exam leaked into practice.</td>
+<td>What we should use if we ever need cross-validation. The "purge" removes overlapping data, and the "embargo" adds a time gap.</td>
+</tr>
+<tr>
+<td><strong>Embargo Period</strong></td>
+<td>A gap (typically 5 days) between training data end and test data start. Prevents the model from learning from data that's "too close" to the test period.</td>
+<td>Like a quarantine period between exposure and testing -- making sure no "contaminated" information leaks through.</td>
+<td>v4 uses a 5-day embargo: <code>[===train 1yr===]--5d embargo--[test 1mo]</code>. This prevents the model from learning patterns that only work because of temporal proximity.</td>
+</tr>
+<tr>
+<td><strong>Information Coefficient (IC)</strong></td>
+<td>The correlation between what the model predicted and what actually happened. IC &gt; 0.05 consistently = the model has a tradeable edge.</td>
+<td>Like checking if a weather forecaster is actually accurate. If they say "70% chance of rain" and it rains 70% of the time, their IC is high.</td>
+<td>THE key metric for v4. IC &gt; 0.05 = usable. IC &gt; 0.10 = strong. IC positive in &gt; 60% of walk-forward folds = stable model.</td>
+</tr>
+<tr>
+<td><strong>R-squared</strong></td>
+<td>How much of the actual price movement the model explains. R-squared of 0.02 means the model explains 2% of price variance. Sounds low, but even 2% is profitable in trading!</td>
+<td>Like how much of your exam score is explained by hours studied. Even if studying explains only 20% (other factors: mood, difficulty, luck), it's still worth studying.</td>
+<td>LightGBM research showed R-squared of 2.13% monthly (2x better than simple linear regression). In trading, even small edges compound into big returns.</td>
+</tr>
+<tr>
+<td><strong>MAE (Mean Absolute Error)</strong></td>
+<td>The average size of prediction errors, ignoring direction. If the model predicts +2% but actual was +3%, the error is 1%. Average this across all predictions.</td>
+<td>Like measuring how far off your estimated travel time is from actual. If you're usually off by 5 minutes, your MAE is 5 minutes.</td>
+<td>Used as the loss metric for LightGBM training: <code>'metric': 'mae'</code>. Lower MAE = more accurate predictions.</td>
+</tr>
+<tr>
+<td><strong>Early Stopping</strong></td>
+<td>Stop training when the model starts getting worse on validation data, even if you planned more training rounds. Prevents overfitting.</td>
+<td>Like a student who has studied enough and should stop. More studying after this point actually hurts because they start memorizing instead of understanding.</td>
+<td>v4 uses 5,000 potential trees with early stopping. The model might stop at 2,000 trees if that's where performance peaked.</td>
+</tr>
+<tr>
+<td><strong>Hyperparameters</strong></td>
+<td>Settings that control HOW the model learns (not WHAT it learns). Like the volume, bass, and treble knobs on a speaker.</td>
+<td>Like adjusting a recipe -- how much salt (learning rate), how long to cook (n_estimators), how big the pot (max_depth). You tune these before cooking.</td>
+<td>v4 hyperparameters: <code>num_leaves=31, max_depth=6, learning_rate=0.01, min_child_samples=100, subsample=0.7</code>. Each was chosen based on ML research.</td>
+</tr>
+<tr>
+<td><strong>Learning Rate</strong></td>
+<td>How fast the model updates its knowledge with each new tree. Too high = overshoots. Too low = learns too slowly.</td>
+<td>Like the speed of a car approaching a parking spot. Too fast and you overshoot. Too slow and you never get there. 0.01 is a careful approach.</td>
+<td>Set to 0.01 (very conservative) with 5,000 trees. The model takes tiny steps and uses many iterations, which produces more robust predictions.</td>
+</tr>
+<tr>
+<td><strong>Winsorization</strong></td>
+<td>Capping extreme values to reduce the impact of outliers. If a stock gained 15% in a day (rare), cap it at the 99th percentile (maybe 5%).</td>
+<td>Like grading on a curve -- if one student scored 100% and everyone else scored 40-60%, you might cap the 100% at 80% so it doesn't distort the average.</td>
+<td>Applied to target variable: <code>np.clip(target, target.quantile(0.01), target.quantile(0.99))</code>. Extreme one-day moves (circuit limits, news shocks) are capped to prevent the model from being distorted by rare events.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-6-portfolio-position-sizing">Section 6: Portfolio &amp; Position Sizing</h2>
+<p>How TradePilot decides how MUCH money to put into each stock.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real-World Analogy</th>
+<th>How TradePilot Uses It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kelly Criterion</strong></td>
+<td>A mathematical formula that calculates the optimal bet size based on your edge (win rate and payoff ratio). Invented by a Bell Labs scientist for information theory.</td>
+<td>Like a professional poker player who calculates exactly how much to bet based on their odds. They never go "all in" on a mediocre hand.</td>
+<td>Implemented in <code>position_sizer.py</code>. Formula: <code>f = p - q/b</code> where p = win rate, q = loss rate, b = payoff ratio. Used as a reference for maximum position sizing.</td>
+</tr>
+<tr>
+<td><strong>Half-Kelly</strong></td>
+<td>Using HALF of what Kelly Criterion suggests. Full Kelly is mathematically optimal but emotionally brutal (high volatility). Half-Kelly is smoother.</td>
+<td>Like driving at 60% of the speed limit instead of 100%. You arrive slightly slower but MUCH safer.</td>
+<td>v4 uses Half-Kelly: <code>half_kelly = full_kelly / 2.0</code>, capped at 25% of capital. With 55% win rate and 2:1 payoff, Half-Kelly = ~5% per trade.</td>
+</tr>
+<tr>
+<td><strong>Position Sizing</strong></td>
+<td>Deciding how many rupees (and shares) to invest in each stock. Higher-confidence signals get larger positions.</td>
+<td>Like allocating your monthly budget -- rent gets the most (high priority), entertainment gets less. You spend more on things you're more confident about.</td>
+<td>Score-weighted allocation: <code>alloc_i = (score_i / total_scores) * capital</code>. Higher composite scores get proportionally larger positions. Max 20% in any single stock.</td>
+</tr>
+<tr>
+<td><strong>Score-Weighted Allocation</strong></td>
+<td>Distributing capital proportionally based on composite scores. A stock scoring 74 gets more capital than one scoring 64.</td>
+<td>Like a teacher distributing prizes based on marks. The top scorer gets the biggest prize, second gets slightly less, and so on.</td>
+<td>Core allocation logic: if 10 BUY stocks have total score of 700, a stock with score 74 gets 74/700 = 10.6% of capital.</td>
+</tr>
+<tr>
+<td><strong>Risk Per Trade</strong></td>
+<td>The maximum amount you're willing to lose on a single trade. Usually 1-2% of total capital.</td>
+<td>Like the maximum you'd bet in a poker hand. Even with good cards, you never risk more than you can afford to lose.</td>
+<td>Calculated as <code>risk_rs = qty * price * (sl_pct / 100)</code>. If you buy 100 shares at Rs 1,000 with 1% SL, your risk is Rs 1,000.</td>
+</tr>
+<tr>
+<td><strong>Maximum Drawdown</strong></td>
+<td>The largest peak-to-trough decline in your portfolio value. If your portfolio went from Rs 10L to Rs 8L at worst, max drawdown is 20%.</td>
+<td>Like the worst dip in a roller coaster. Your stomach drops the most at the biggest fall. Max drawdown measures the scariest moment in your investment journey.</td>
+<td>Tracked in portfolio risk metrics. The VWAP strategy in our research had only 16% max drawdown (very good). Pairs trading had 2.57% (excellent).</td>
+</tr>
+<tr>
+<td><strong>Sharpe Ratio</strong></td>
+<td>A measure of risk-adjusted returns. Higher = better. It asks: "How much return am I getting for each unit of risk I'm taking?" Sharpe &gt; 1 = good, &gt; 2 = excellent.</td>
+<td>Like measuring a restaurant's value: not just "is the food good?" but "is the food good FOR THE PRICE?" A Rs 200 thali that's 8/10 quality has a better Sharpe than a Rs 2,000 dinner that's 9/10.</td>
+<td>Used to evaluate strategies. ORB strategy: Sharpe 2.396 (excellent). VWAP strategy: Sharpe 3.57 (outstanding). Our target is Sharpe &gt; 1.5.</td>
+</tr>
+<tr>
+<td><strong>Profit Factor</strong></td>
+<td>Total profits divided by total losses. If you made Rs 50,000 in winning trades and lost Rs 25,000 in losing trades, profit factor = 2.0. Above 1.5 = good.</td>
+<td>Like a business's revenue-to-cost ratio. If you earn Rs 2 for every Rs 1 you spend, your profit factor is 2.0.</td>
+<td>Tracked across paper trading results. Our target is profit factor &gt; 1.5.</td>
+</tr>
+<tr>
+<td><strong>Win Rate (Hit Rate)</strong></td>
+<td>The percentage of trades that made money. 55% win rate = 55 out of 100 trades were profitable.</td>
+<td>Like a cricket batsman's strike rate -- not every ball is a boundary, but you need to score often enough to win.</td>
+<td>With 55% win rate and good risk-reward (1:2), you're profitable even though you lose 45% of trades. Our target is &gt;53% win rate. v4 combines high win rate signals (ORB at 60-89%) with good sizing.</td>
+</tr>
+<tr>
+<td><strong>Capital Allocation</strong></td>
+<td>How you split your total capital across different stocks and cash. Not putting all eggs in one basket.</td>
+<td>Like dividing your savings: 60% in stocks, 20% in fixed deposits, 20% in cash. Within stocks, further splitting across sectors.</td>
+<td>v4 sizes positions so no single stock gets &gt;20% of capital (<code>max_per_stock_pct = 0.20</code>). Minimum Rs 20,000 per position. Rest stays as cash (10-30% cash buffer).</td>
+</tr>
+<tr>
+<td><strong>Diversification</strong></td>
+<td>Spreading investments across multiple stocks/sectors to reduce risk. If one stock crashes, others may hold up.</td>
+<td>Like not putting all your eggs in one basket. If you carry 3 baskets and drop one, you only lose 1/3 of your eggs.</td>
+<td>v4 recommends 5-10 positions per day. Position sizer automatically distributes across BUY signals to avoid concentration.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-7-trading-strategies">Section 7: Trading Strategies</h2>
+<p>The proven strategies that TradePilot's v4 engine draws from.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Real TradePilot Connection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Momentum Trading</strong></td>
+<td>Buying stocks that have been going UP, betting they'll continue going up. "Trend is your friend." Stocks in motion tend to stay in motion.</td>
+<td>v4's relative strength ranking IS momentum trading. We buy the top performers among 50 stocks, betting they'll keep outperforming. The NSE Momentum 50 Index consistently beats Nifty 50.</td>
+</tr>
+<tr>
+<td><strong>Mean Reversion</strong></td>
+<td>Buying stocks that have fallen "too much," betting they'll bounce back to their average. The opposite of momentum.</td>
+<td>v3 was accidentally a mean-reversion system (ATR + pct_from_low were top features). v4 uses RSI and Bollinger %B for mean-reversion, but combines them with momentum signals.</td>
+</tr>
+<tr>
+<td><strong>Trend Following</strong></td>
+<td>Identifying the direction of the market (up/down/sideways) and trading in that direction. Don't fight the trend.</td>
+<td>v4's market regime detection (BULL/BEAR/NEUTRAL) IS trend following. In a bull market, we're more aggressive with buys. In bear, we're cautious. MACD and ADX help identify trends.</td>
+</tr>
+<tr>
+<td><strong>Pairs Trading (Statistical Arbitrage)</strong></td>
+<td>Finding two stocks that move together (like HDFC Bank and ICICI Bank) and trading the spread between them. When one diverges, bet on convergence.</td>
+<td>Referenced in our research. Nifty 50 pairs trading showed 4.97% annual return with only 2.57% max drawdown. Market-neutral strategy (works in bull and bear markets). Not implemented in v4 yet.</td>
+</tr>
+<tr>
+<td><strong>Cointegration</strong></td>
+<td>A statistical property where two stocks are "tied" together long-term even if they diverge short-term. Required for pairs trading.</td>
+<td>Like two dogs on a leash -- they can wander apart, but the leash always pulls them back together. HDFC Bank and ICICI Bank are cointegrated.</td>
+</tr>
+<tr>
+<td><strong>Factor Investing</strong></td>
+<td>Ranking stocks by specific "factors" (momentum, value, quality, volatility) and buying the top-ranked ones. Used by Smallcase in India.</td>
+<td>Like hiring employees based on specific traits (experience, education, references) rather than gut feeling. Each factor is a measurable trait.</td>
+</tr>
+<tr>
+<td><strong>Opening Range Breakout Strategy</strong></td>
+<td>Trade the breakout of the first 15-minute high/low. If price breaks above the high, buy. If below the low, sell/avoid.</td>
+<td>Our #2 priority signal (15% weight). Research shows 60-89% win rate on NSE with Sharpe 2.396. Computed in <code>compute_orb()</code>. Filter with VWAP confirmation and ATR-based stop-loss.</td>
+</tr>
+<tr>
+<td><strong>VWAP Strategy</strong></td>
+<td>Buy when price is above VWAP (institutions are buying). Sell/avoid when below VWAP. Close all positions by end of day.</td>
+<td>Research shows Sharpe 3.57 and 501% return over 5 years. v4 uses VWAP position as a 10% weighted signal. Deviation from VWAP is also an ML feature.</td>
+</tr>
+<tr>
+<td><strong>Sector Rotation</strong></td>
+<td>Moving money from weak sectors to strong sectors as the economic cycle changes. IT does well in some phases, banking in others.</td>
+<td>Like a farmer rotating crops -- different crops do well in different seasons. Similarly, different sectors lead in different market phases.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-8-tradepilot-specific-terms">Section 8: TradePilot-Specific Terms</h2>
+<p>Terms unique to our platform that you'll see in the codebase and dashboard.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Is</th>
+<th>Where In Code</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Composite Score</strong></td>
+<td>The final 0-100 score for each stock, combining all 7 signals. This is the "verdict" -- higher score = stronger buy signal.</td>
+<td><code>composite_scorer.py</code> -- weighted sum of ml_score, rs_score, orb_score, vwap_score, fii_score, oi_score, vol_score. Scaled to 0-100.</td>
+<td>TITAN composite score: 74.2 (BUY). INDUSINDBK: 38.5 (AVOID).</td>
+</tr>
+<tr>
+<td><strong>Composite Weights</strong></td>
+<td>How much each signal contributes to the final score. Total = 100%.</td>
+<td><code>config.py</code>: ML=25%, RS=20%, ORB=15%, VWAP=10%, FII=10%, OI=10%, Volume=10%.</td>
+<td>If ORB is strong (+0.9) but FII is negative (-0.5), ORB contributes 0.15<em>0.9 = 0.135 and FII contributes 0.10</em>(-0.5) = -0.05 to the score.</td>
+</tr>
+<tr>
+<td><strong>v2/v3/v4 Engine</strong></td>
+<td>TradePilot's algorithm versions. v2 = basic scoring with fixed thresholds. v3 = ML-based with binary classification (broken). v4 = composite scoring with regression (current).</td>
+<td>v2 in <code>app.py</code>, v3 in <code>trading_engine_v3.py</code>, v4 in <code>prototype/v4/</code>.</td>
+<td>v2 needed score &gt;= 55 for BUY. v3 needed 50-60 (regime-dependent). v4 uses percentile ranking (top 20% = BUY).</td>
+</tr>
+<tr>
+<td><strong>Score Distribution</strong></td>
+<td>How scores are spread across all 50 stocks. A good distribution has scores spread from 30-80. A broken one (v3) had 96% of stocks scoring below 20.</td>
+<td>v3 had range 0.5-69 with mean 17, median 12.6. v4 targets a more uniform distribution by using percentile ranking.</td>
+<td>v3 problem: only 2 of 50 stocks scored above BUY threshold (55+). v4 fix: top 20% are ALWAYS BUY regardless of absolute score.</td>
+</tr>
+<tr>
+<td><strong>BUY / HOLD / AVOID</strong></td>
+<td>The three classification buckets for stocks. BUY = take a position. HOLD = already holding? keep it. AVOID = don't touch.</td>
+<td><code>config.py</code>: BUY = top 20% by percentile (always 10 stocks). HOLD = next 30% (15 stocks). AVOID = bottom 50% (25 stocks).</td>
+<td>With 50 stocks: always 10 BUY, 15 HOLD, 25 AVOID. This fixes v3's problem of having only 2 BUY signals.</td>
+</tr>
+<tr>
+<td><strong>Relative Ranking (Percentile)</strong></td>
+<td>Ranking each stock's score as a percentile among all 50 stocks. Rank 1/50 = percentile ~1.0. Rank 25/50 = percentile ~0.5.</td>
+<td><code>composite_scorer.py</code>: <code>rank = np.searchsorted(sorted_rs, rs_today) / len(sorted_rs)</code>.</td>
+<td>If TITAN is ranked #2 out of 50, its percentile = 0.96. If NESTLEIND is #40/50, its percentile = 0.20.</td>
+</tr>
+<tr>
+<td><strong>Signal</strong></td>
+<td>Any piece of evidence pointing toward BUY or AVOID. A stock might have 5 positive signals and 2 negative signals.</td>
+<td>The <code>reasons</code> list in each stock's output. Each reason has a <code>type</code> (positive, negative, neutral) and <code>text</code>.</td>
+<td>TITAN signals: "ORB breakout above 3210" (positive), "Price +0.40% above VWAP" (positive), "FII buying (+1500 Cr)" (positive), "Volume surge (2.1x)" (positive).</td>
+</tr>
+<tr>
+<td><strong>Consensus Signal</strong></td>
+<td>When BOTH the v3 engine and v4 engine agree on a BUY or AVOID signal. Double confirmation = higher confidence.</td>
+<td>When v4 is fully operational, the dashboard can show consensus between engines. Currently only v4 runs.</td>
+<td>If v3 says BUY and v4 says BUY for TITAN, it's a consensus BUY -- very high confidence.</td>
+</tr>
+<tr>
+<td><strong>Market-Wide Signal</strong></td>
+<td>Signals that apply to ALL stocks equally (not stock-specific). FII/DII flow, Nifty change, India VIX, advance-decline ratio.</td>
+<td><code>nifty_change_pct</code>, <code>fii_net_crores</code>, <code>dii_net_crores</code>, <code>india_vix</code>, <code>advance_decline_ratio</code> in config.py.</td>
+<td>FII buying +1,500 Cr is a market-wide positive signal -- it boosts ALL 50 stocks' FII sub-score equally.</td>
+</tr>
+<tr>
+<td><strong>Per-Stock Signal</strong></td>
+<td>Signals specific to one stock -- its VWAP position, ORB breakout, options OI, relative strength. Different for each stock.</td>
+<td><code>vwap_deviation_pct</code>, <code>orb_signal</code>, <code>oi_buildup_signal</code>, <code>rs_vs_nifty_5d</code> in config.py.</td>
+<td>TITAN's ORB breakout is a per-stock signal. RELIANCE might still be inside its ORB range (no breakout).</td>
+</tr>
+<tr>
+<td><strong>Scan Cycle</strong></td>
+<td>One complete run of the v4 engine -- fetching data for all 50 stocks, computing all features, scoring, ranking, and generating signals. Takes 30-60 seconds.</td>
+<td><code>score_all_stocks()</code> in <code>composite_scorer.py</code>. Fetches market data, batch quotes, per-stock intraday candles, options chains.</td>
+<td>A typical scan cycle: "Scoring 50 stocks... Got quotes for 48... BUY=10 HOLD=15 AVOID=23... 42.3s elapsed."</td>
+</tr>
+<tr>
+<td><strong>Force Exit</strong></td>
+<td>Mandatory closure of all positions at a specific time (3:15 PM for intraday). No exceptions -- even if a stock is mid-rally, you exit.</td>
+<td>Not yet coded in v4, but referenced in VWAP strategy research: "Close all EOD." Essential for intraday risk management.</td>
+<td>At 3:15 PM, if SBIN is up 1.8% and still rising, you still sell. Overnight risk is not worth the potential extra gain.</td>
+</tr>
+<tr>
+<td><strong>Paper Trading Pool</strong></td>
+<td>A simulated portfolio with Rs 10,00,000 that tracks all BUY signals as if we had actually traded them. Measures real-world performance without real money.</td>
+<td><code>position_sizer.py</code>: <code>capital = 1_000_000.0</code>. Positions are sized, tracked, and P&amp;L is calculated as if real.</td>
+<td>Today's paper portfolio: 10 positions, Rs 9.2L deployed, Rs 80K cash. Expected P&amp;L: +Rs 5,200 (if 55% win rate holds).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-reference-card">Quick Reference Card</h2>
+<h3 id="the-v4-composite-score-formula">The v4 Composite Score Formula</h3>
+<pre><code>Composite Score = 0.25 x ML Prediction
+               + 0.20 x Relative Strength Rank
+               + 0.15 x ORB Breakout Score
+               + 0.10 x VWAP Position Score
+               + 0.10 x FII/DII Flow Score
+               + 0.10 x Options OI Score
+               + 0.10 x Volume Score
+</code></pre>
+<h3 id="what-changed-from-v3-to-v4">What Changed from v3 to v4</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>v3 (Broken)</th>
+<th>v4 (Fixed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prediction type</td>
+<td>Binary classification (UP/DOWN)</td>
+<td>Regression (predict actual % return)</td>
+</tr>
+<tr>
+<td>Features</td>
+<td>10 mean-reversion features</td>
+<td>19 features across 4 categories</td>
+</tr>
+<tr>
+<td>BUY signal method</td>
+<td>Fixed threshold (score &gt; 55)</td>
+<td>Percentile ranking (top 20%)</td>
+</tr>
+<tr>
+<td>Typical BUY count</td>
+<td>2 out of 50 (96% AVOID)</td>
+<td>10 out of 50 (always)</td>
+</tr>
+<tr>
+<td>Intraday signals</td>
+<td>None</td>
+<td>VWAP, ORB, gap analysis, momentum</td>
+</tr>
+<tr>
+<td>Institutional data</td>
+<td>None</td>
+<td>FII/DII flow, options OI, PCR</td>
+</tr>
+<tr>
+<td>Position sizing</td>
+<td>Equal weight</td>
+<td>Score-weighted with Kelly reference</td>
+</tr>
+</tbody>
+</table>
+<h3 id="numbers-to-remember">Numbers to Remember</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Good</th>
+<th>Great</th>
+<th>TradePilot Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Win Rate</td>
+<td>&gt;53%</td>
+<td>&gt;60%</td>
+<td>55-60%</td>
+</tr>
+<tr>
+<td>Sharpe Ratio</td>
+<td>&gt;1.0</td>
+<td>&gt;2.0</td>
+<td>&gt;1.5</td>
+</tr>
+<tr>
+<td>Profit Factor</td>
+<td>&gt;1.2</td>
+<td>&gt;2.0</td>
+<td>&gt;1.5</td>
+</tr>
+<tr>
+<td>Max Drawdown</td>
+<td>&lt;20%</td>
+<td>&lt;10%</td>
+<td>&lt;15%</td>
+</tr>
+<tr>
+<td>Information Coefficient</td>
+<td>&gt;0.05</td>
+<td>&gt;0.10</td>
+<td>&gt;0.05 consistently</td>
+</tr>
+<tr>
+<td>Risk-Reward Ratio</td>
+<td>&gt;1.0</td>
+<td>&gt;2.0</td>
+<td>&gt;1.5</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: April 8, 2026</em>
+<em>Source files: algorithm_diagnosis.md, ml_training_pipeline.md, opensource_trading_algos.md, config.py, composite_scorer.py, features_intraday.py, features_institutional.py, position_sizer.py</em></p>
+</body>
+</html>

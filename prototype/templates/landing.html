@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePilot — Smart Trading for India</title>
+<meta name="description" content="See your profit probability before every trade. 4 algo engines, 200+ stocks, 86% win rate. ML + human-in-the-loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   TRADEPILOT LANDING — "Neural Command Center"
+   Aesthetic: Bloomberg meets Stripe for Gen Z India
+   ═══════════════════════════════════════════════ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --void: #060A13;
+  --surface: #0C1121;
+  --surface-2: #111827;
+  --surface-3: #1A2332;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-hover: rgba(255,255,255,0.07);
+  --accent-1: #6366F1;
+  --accent-2: #8B5CF6;
+  --accent-3: #C026D3;
+  --gradient: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+  --cyan: #06B6D4;
+  --emerald: #10B981;
+  --rose: #F43F5E;
+  --amber: #F59E0B;
+  --sky: #38BDF8;
+  --text-1: #F1F5F9;
+  --text-2: #94A3B8;
+  --text-3: #64748B;
+  --text-4: #475569;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --section-pad: clamp(4rem, 8vw, 7rem);
+  --content-max: 1200px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+}
+
+/* ─── Light Theme ─── */
+[data-theme="light"] {
+  --void: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --surface-3: #E2E8F0;
+  --glass: rgba(0,0,0,0.03);
+  --glass-border: rgba(0,0,0,0.08);
+  --glass-hover: rgba(0,0,0,0.05);
+  --text-1: #0F172A;
+  --text-2: #475569;
+  --text-3: #64748B;
+  --text-4: #94A3B8;
+}
+[data-theme="light"] body::before {
+  background:
+    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+}
+[data-theme="light"] .navbar.scrolled {
+  background: rgba(248,250,252,0.9);
+}
+[data-theme="light"] .hero-glow-1 { background: radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%); }
+[data-theme="light"] .hero-glow-2 { background: radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%); }
+[data-theme="light"] .hero-glow-3 { background: radial-gradient(circle, rgba(192,38,211,0.08), transparent 70%); }
+[data-theme="light"] .dashboard-mockup {
+  box-shadow: 0 25px 60px rgba(0,0,0,0.1), 0 0 80px rgba(99,102,241,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.1);
+}
+[data-theme="light"] .mock-card { background: var(--surface-2); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .mock-chart { background: var(--surface-2); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .engine-card { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+[data-theme="light"] .engine-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+[data-theme="light"] .engine-card.winner { background: linear-gradient(135deg, #FFFFFF, rgba(99,102,241,0.04)); }
+[data-theme="light"] .feature-card { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+[data-theme="light"] .feature-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+[data-theme="light"] .pricing-card { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+[data-theme="light"] .pricing-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+[data-theme="light"] .pricing-card.featured { background: linear-gradient(180deg, rgba(99,102,241,0.04), #FFFFFF); }
+[data-theme="light"] .mock-signal { color: #FFFFFF; }
+[data-theme="light"] .ticker-section { background: rgba(0,0,0,0.02); }
+[data-theme="light"] .perf-stat-row { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+[data-theme="light"] .gami-card { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+[data-theme="light"] .perf-chart { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--text-2);
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent-1);
+  color: var(--text-1);
+  transform: rotate(30deg);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--font-body); background: var(--void); color: var(--text-1); line-height: 1.6; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; }
+
+.container { max-width: var(--content-max); margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 2rem); }
+.gradient-text { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.section-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 1rem; }
+.section-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 1.25rem; }
+.section-desc { font-size: 1.1rem; color: var(--text-2); max-width: 600px; line-height: 1.7; }
+
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+body::before { content: ''; position: fixed; inset: 0; background: linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+
+/* ─── NAVBAR ─── */
+.navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 0; transition: background 0.3s, backdrop-filter 0.3s; }
+.navbar.scrolled { background: rgba(6,10,19,0.85); backdrop-filter: blur(20px) saturate(1.5); border-bottom: 1px solid var(--glass-border); }
+.navbar .container { display: flex; align-items: center; justify-content: space-between; }
+.nav-logo { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; }
+.nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+.nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+.nav-links a { font-size: 0.9rem; font-weight: 500; color: var(--text-2); transition: color 0.2s; }
+.nav-links a:hover { color: var(--text-1); }
+.nav-cta { padding: 0.6rem 1.5rem; border-radius: 50px; background: var(--gradient); color: white; font-weight: 600; font-size: 0.9rem; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 0 20px rgba(99,102,241,0.3); display: inline-block; }
+.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(99,102,241,0.5); }
+.nav-mobile-toggle { display: none; background: none; color: var(--text-1); font-size: 1.5rem; padding: 0.25rem; }
+
+/* ─── HERO ─── */
+.hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding-top: 6rem; overflow: hidden; }
+.hero-glow { position: absolute; border-radius: 50%; filter: blur(120px); pointer-events: none; will-change: transform; }
+.hero-glow-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(99,102,241,0.25), transparent 70%); top: -10%; right: -5%; animation: float-glow 12s ease-in-out infinite; }
+.hero-glow-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(139,92,246,0.2), transparent 70%); bottom: -15%; left: -10%; animation: float-glow 15s ease-in-out infinite reverse; }
+.hero-glow-3 { width: 350px; height: 350px; background: radial-gradient(circle, rgba(192,38,211,0.15), transparent 70%); top: 30%; left: 40%; animation: float-glow 10s ease-in-out infinite 2s; }
+@keyframes float-glow { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -20px) scale(1.1); } 66% { transform: translate(-20px, 15px) scale(0.95); } }
+
+.hero .container { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.hero-content { max-width: 560px; }
+.hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem 0.4rem 0.5rem; border-radius: 50px; background: var(--glass); border: 1px solid var(--glass-border); font-size: 0.8rem; font-weight: 500; color: var(--text-2); margin-bottom: 1.5rem; animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px rgba(16,185,129,0.6); animation: pulse-dot 2s ease-in-out infinite; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.8); } }
+
+.hero-title { font-family: var(--font-display); font-size: clamp(2.8rem, 6vw, 4.2rem); font-weight: 800; line-height: 1.08; margin-bottom: 1.5rem; animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.hero-subtitle { font-size: 1.15rem; color: var(--text-2); line-height: 1.7; margin-bottom: 2.5rem; animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.hero-actions { display: flex; gap: 1rem; align-items: center; animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+
+.btn-primary { padding: 0.9rem 2rem; border-radius: 50px; background: var(--gradient); color: white; font-weight: 700; font-size: 1rem; transition: all 0.3s; box-shadow: 0 4px 25px rgba(99,102,241,0.35); position: relative; overflow: hidden; display: inline-block; }
+.btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent); opacity: 0; transition: opacity 0.3s; }
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(99,102,241,0.5); }
+.btn-primary:hover::after { opacity: 1; }
+.btn-ghost { padding: 0.9rem 2rem; border-radius: 50px; background: transparent; border: 1px solid var(--glass-border); color: var(--text-2); font-weight: 600; font-size: 1rem; transition: all 0.3s; display: inline-block; }
+.btn-ghost:hover { border-color: var(--accent-1); color: var(--text-1); background: rgba(99,102,241,0.08); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── Dashboard Mockup ─── */
+.hero-visual { perspective: 1200px; animation: fadeUp 1s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.dashboard-mockup { width: 100%; max-width: 520px; margin-left: auto; background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 1.25rem; transform: rotateY(-8deg) rotateX(4deg); transform-style: preserve-3d; box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.05); transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); animation: mockup-float 6s ease-in-out infinite; }
+.dashboard-mockup:hover { transform: rotateY(-2deg) rotateX(1deg); }
+@keyframes mockup-float { 0%, 100% { transform: rotateY(-8deg) rotateX(4deg) translateY(0); } 50% { transform: rotateY(-8deg) rotateX(4deg) translateY(-12px); } }
+
+.mock-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.mock-logo { font-family: var(--font-display); font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; }
+.mock-logo span { width: 20px; height: 20px; border-radius: 5px; background: var(--gradient); display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem; }
+.mock-indices { display: flex; gap: 0.75rem; font-size: 0.65rem; color: var(--text-3); }
+.mock-idx { display: flex; align-items: center; gap: 0.25rem; }
+.mock-idx .up { color: var(--emerald); }
+
+.mock-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+.mock-card { background: var(--surface-2); border-radius: var(--r-sm); padding: 0.65rem; border: 1px solid rgba(255,255,255,0.04); }
+.mock-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+.mock-card-sym { font-family: var(--font-display); font-weight: 700; font-size: 0.7rem; }
+.mock-card-score { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; position: relative; }
+.mock-card-score::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2.5px solid transparent; }
+.mock-card-score.high { color: var(--emerald); }
+.mock-card-score.high::before { border-color: var(--emerald); border-right-color: transparent; }
+.mock-card-score.mid { color: var(--amber); }
+.mock-card-score.mid::before { border-color: var(--amber); border-right-color: transparent; border-bottom-color: transparent; }
+.mock-card-price { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.15rem; }
+.mock-card-change { font-size: 0.65rem; font-weight: 600; }
+.mock-card-change.up { color: var(--emerald); }
+.mock-card-change.down { color: var(--rose); }
+
+.mock-chart { height: 80px; background: var(--surface-2); border-radius: var(--r-sm); position: relative; overflow: hidden; margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.04); }
+.mock-chart svg { width: 100%; height: 100%; }
+
+.mock-ai-bar { display: flex; align-items: center; gap: 0.6rem; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--r-sm); padding: 0.6rem 0.75rem; }
+.mock-ai-label { font-size: 0.65rem; color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+.mock-ai-progress { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.mock-ai-fill { height: 100%; width: 86%; background: var(--gradient); border-radius: 3px; animation: fill-pulse 3s ease-in-out infinite; }
+@keyframes fill-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+.mock-ai-value { font-size: 0.75rem; font-weight: 700; color: var(--emerald); }
+.mock-signal { font-size: 0.6rem; font-weight: 700; color: var(--void); background: var(--emerald); padding: 0.15rem 0.45rem; border-radius: 3px; }
+
+/* ─── TICKER ─── */
+.ticker-section { border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); background: rgba(255,255,255,0.01); padding: 0.85rem 0; overflow: hidden; position: relative; }
+.ticker-track { display: flex; gap: 3rem; animation: ticker-scroll 40s linear infinite; width: max-content; }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-item { display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; font-size: 0.85rem; }
+.ticker-sym { font-weight: 700; color: var(--text-1); font-family: var(--font-display); }
+.ticker-price { color: var(--text-2); font-weight: 500; }
+.ticker-change { font-weight: 600; font-size: 0.8rem; }
+.ticker-change.up { color: var(--emerald); }
+.ticker-change.down { color: var(--rose); }
+
+/* ─── TRUST BAR ─── */
+.trust-section { padding: 4rem 0; border-bottom: 1px solid var(--glass-border); }
+.trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; }
+.trust-item { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.trust-number { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1; }
+.trust-label { font-size: 0.85rem; color: var(--text-3); font-weight: 500; }
+
+/* ─── AI ENGINES ─── */
+.engines-section { padding: var(--section-pad) 0; }
+.engines-header { text-align: center; margin-bottom: 3.5rem; }
+.engines-header .section-desc { margin: 0 auto; }
+.engines-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.engine-card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 1.75rem; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+.engine-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.12); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.engine-card.winner { border-color: rgba(99,102,241,0.3); background: linear-gradient(135deg, var(--surface), rgba(99,102,241,0.06)); }
+.engine-card.winner::before { content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 3px; background: var(--gradient); border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.engine-card.winner::after { content: ''; position: absolute; top: -80px; right: -80px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%); pointer-events: none; }
+.engine-version { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; margin-bottom: 0.25rem; }
+.engine-name { font-size: 0.8rem; color: var(--text-3); font-weight: 500; margin-bottom: 1.25rem; }
+.engine-winner-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.6rem; border-radius: 50px; background: rgba(16,185,129,0.12); color: var(--emerald); font-size: 0.7rem; font-weight: 700; margin-bottom: 1.25rem; animation: pulse-badge 2s ease-in-out infinite; }
+@keyframes pulse-badge { 0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.2); } 50% { box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
+.engine-stats { display: flex; flex-direction: column; gap: 0.75rem; }
+.engine-stat { display: flex; justify-content: space-between; align-items: center; }
+.engine-stat-label { font-size: 0.8rem; color: var(--text-3); }
+.engine-stat-value { font-weight: 700; font-size: 0.9rem; }
+.engine-stat-value.profit { color: var(--emerald); }
+.engine-stat-value.loss { color: var(--rose); }
+.engine-stat-value.neutral { color: var(--text-3); }
+.engine-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 1rem; overflow: hidden; }
+.engine-bar-fill { height: 100%; border-radius: 2px; transition: width 1.5s cubic-bezier(0.16,1,0.3,1); width: 0; }
+.engine-bar-fill.high { background: var(--gradient); }
+.engine-bar-fill.low { background: var(--rose); }
+.engine-bar-fill.zero { background: var(--text-4); }
+
+/* ─── FEATURES ─── */
+.features-section { padding: var(--section-pad) 0; }
+.features-header { text-align: center; margin-bottom: 3.5rem; }
+.features-header .section-desc { margin: 0 auto; }
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.feature-card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 2rem 1.75rem; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); position: relative; overflow: hidden; }
+.feature-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.feature-card.span-2 { grid-column: span 2; }
+
+.feature-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.25rem; position: relative; transform: perspective(600px) rotateX(5deg) rotateY(-5deg); transition: transform 0.3s; }
+.feature-card:hover .feature-icon { transform: perspective(600px) rotateX(0) rotateY(0) scale(1.1); }
+.icon-indigo { background: linear-gradient(135deg, #818CF8, #6366F1); box-shadow: 0 8px 20px rgba(99,102,241,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+.icon-cyan { background: linear-gradient(135deg, #22D3EE, #06B6D4); box-shadow: 0 8px 20px rgba(6,182,212,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+.icon-emerald { background: linear-gradient(135deg, #34D399, #10B981); box-shadow: 0 8px 20px rgba(16,185,129,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+.icon-amber { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 8px 20px rgba(245,158,11,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+.icon-rose { background: linear-gradient(135deg, #FB7185, #F43F5E); box-shadow: 0 8px 20px rgba(244,63,94,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+.icon-violet { background: linear-gradient(135deg, #A78BFA, #8B5CF6); box-shadow: 0 8px 20px rgba(139,92,246,0.35), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2); }
+
+.feature-title { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; }
+.feature-desc { font-size: 0.9rem; color: var(--text-3); line-height: 1.6; }
+
+/* ─── GAMIFICATION ─── */
+.gamification-section { padding: var(--section-pad) 0; position: relative; overflow: hidden; }
+.gamification-section::before { content: ''; position: absolute; top: 50%; left: 50%; width: 800px; height: 800px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%); pointer-events: none; }
+.gamification-header { text-align: center; margin-bottom: 3.5rem; }
+.gamification-header .section-desc { margin: 0 auto; }
+.gamification-content { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+
+.gami-card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 2rem; text-align: center; }
+.gami-card-title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-2); }
+
+.levels-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+.level-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; border-radius: var(--r-sm); background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: all 0.3s; }
+.level-row:hover { background: var(--glass); border-color: var(--glass-border); }
+.level-row.active { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.2); }
+.level-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.level-icon.novice { background: linear-gradient(135deg, #6B7280, #4B5563); }
+.level-icon.apprentice { background: linear-gradient(135deg, #60A5FA, #3B82F6); }
+.level-icon.trader { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
+.level-icon.pro { background: linear-gradient(135deg, #FBBF24, #D97706); }
+.level-icon.elite { background: linear-gradient(135deg, #F472B6, #EC4899); box-shadow: 0 0 15px rgba(236,72,153,0.3); }
+.level-name { font-weight: 600; font-size: 0.85rem; text-align: left; }
+.level-xp { margin-left: auto; font-size: 0.7rem; color: var(--text-3); font-weight: 500; }
+
+.streak-display { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.streak-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; position: relative; }
+.streak-ring::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid rgba(255,255,255,0.06); }
+.streak-ring::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid transparent; border-top-color: var(--amber); border-right-color: var(--amber); border-bottom-color: var(--amber); animation: streak-spin 3s linear infinite; }
+@keyframes streak-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.streak-fire { font-size: 2rem; }
+.streak-count { font-family: var(--font-display); font-weight: 800; font-size: 2.2rem; line-height: 1; }
+.streak-label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+.streak-days { display: flex; gap: 0.4rem; }
+.streak-dot { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+.streak-dot.done { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+.streak-dot.today { background: var(--amber); color: var(--void); box-shadow: 0 0 10px rgba(245,158,11,0.4); }
+.streak-dot.future { background: rgba(255,255,255,0.03); color: var(--text-4); border: 1px solid rgba(255,255,255,0.06); }
+
+.badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.badge-item { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 0.75rem; border-radius: var(--r-md); background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); transition: all 0.3s; }
+.badge-item:hover { background: var(--glass); transform: translateY(-2px); }
+.badge-item.locked { opacity: 0.4; }
+.badge-icon { font-size: 1.6rem; }
+.badge-name { font-size: 0.65rem; font-weight: 600; color: var(--text-3); text-align: center; line-height: 1.3; }
+
+/* ─── ENGINE PIPELINE ANIMATION ─── */
+.pipeline-section { padding: var(--section-pad) 0; overflow: hidden; position: relative; }
+.pipeline-header { text-align: center; margin-bottom: 3rem; }
+.pipeline-header .section-desc { margin: 0 auto; }
+
+/* Pipeline container */
+.pipeline-wrap { position: relative; max-width: 1000px; margin: 0 auto; }
+
+/* The animated flow line behind stages */
+.pipeline-flow-line {
+  position: absolute;
+  top: 64px;
+  left: 60px;
+  right: 60px;
+  height: 3px;
+  background: var(--glass-border);
+  border-radius: 2px;
+  z-index: 0;
+}
+.pipeline-flow-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--gradient);
+  transition: width 2s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
+}
+.pipeline-flow-fill.active { width: 100%; }
+
+/* Animated dots traveling the line */
+.pipeline-dot-track {
+  position: absolute;
+  top: 57px;
+  left: 60px;
+  right: 60px;
+  height: 16px;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.pipeline-dot-track.active { opacity: 1; }
+
+.flow-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 8px rgba(139,92,246,0.6);
+  top: 4px;
+  animation: flow-travel 3s linear infinite;
+  opacity: 0;
+}
+.flow-dot:nth-child(1) { animation-delay: 0s; }
+.flow-dot:nth-child(2) { animation-delay: 0.6s; }
+.flow-dot:nth-child(3) { animation-delay: 1.2s; }
+.flow-dot:nth-child(4) { animation-delay: 1.8s; }
+.flow-dot:nth-child(5) { animation-delay: 2.4s; }
+
+@keyframes flow-travel {
+  0% { left: 0; opacity: 0; }
+  5% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* Pipeline stages */
+.pipeline-stages {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.pipeline-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0.3;
+  transform: translateY(10px);
+  transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+  cursor: default;
+}
+.pipeline-stage.lit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stage-node {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+  transition: all 0.4s;
+  background: var(--surface-2);
+  border: 2px solid var(--glass-border);
+}
+.pipeline-stage.lit .stage-node {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 20px rgba(99,102,241,0.2);
+}
+
+/* Color-coded nodes when lit */
+.pipeline-stage.lit .stage-node.node-data { background: linear-gradient(135deg, #818CF8, #6366F1); border-color: #6366F1; }
+.pipeline-stage.lit .stage-node.node-features { background: linear-gradient(135deg, #22D3EE, #06B6D4); border-color: #06B6D4; }
+.pipeline-stage.lit .stage-node.node-ml { background: linear-gradient(135deg, #A78BFA, #8B5CF6); border-color: #8B5CF6; }
+.pipeline-stage.lit .stage-node.node-regime { background: linear-gradient(135deg, #FCD34D, #F59E0B); border-color: #F59E0B; }
+.pipeline-stage.lit .stage-node.node-human { background: linear-gradient(135deg, #34D399, #10B981); border-color: #10B981; }
+.pipeline-stage.lit .stage-node.node-output { background: linear-gradient(135deg, #FB7185, #F43F5E); border-color: #F43F5E; }
+
+.stage-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-1);
+}
+.stage-sub {
+  font-size: 0.7rem;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+/* Detail card that appears below active stage */
+.pipeline-detail {
+  margin-top: 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+.pipeline-detail::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: var(--gradient);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.detail-content {
+  display: none;
+  animation: detailFadeIn 0.5s ease both;
+}
+.detail-content.active { display: block; }
+@keyframes detailFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.detail-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+.detail-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.detail-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+.detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.detail-visual {
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: 1.25rem;
+  min-height: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mini animated visualizations inside detail cards */
+.mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+.mini-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  min-height: 4px;
+  animation: mini-bar-grow 1s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes mini-bar-grow {
+  from { height: 4px; }
+}
+
+.mini-flow-items { display: flex; flex-direction: column; gap: 0.4rem; }
+.mini-flow-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--glass);
+  border-radius: var(--r-sm);
+  font-size: 0.75rem;
+  color: var(--text-2);
+  animation: slideInRight 0.4s ease both;
+}
+.mini-flow-item:nth-child(1) { animation-delay: 0.1s; }
+.mini-flow-item:nth-child(2) { animation-delay: 0.2s; }
+.mini-flow-item:nth-child(3) { animation-delay: 0.3s; }
+.mini-flow-item:nth-child(4) { animation-delay: 0.4s; }
+.mini-flow-item:nth-child(5) { animation-delay: 0.5s; }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.mini-flow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.detail-text-items { display: flex; flex-direction: column; gap: 0.6rem; }
+.detail-text-item {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  line-height: 1.5;
+  padding-left: 1rem;
+  position: relative;
+}
+.detail-text-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+/* Score output animation */
+.score-anim-ring {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 0.75rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.score-anim-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.score-anim-ring .ring-bg { fill: none; stroke: var(--glass-border); stroke-width: 6; }
+.score-anim-ring .ring-fill { fill: none; stroke: var(--emerald); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1); }
+.score-anim-ring .ring-fill.animate { stroke-dashoffset: 40; }
+.score-anim-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: var(--emerald);
+  position: relative;
+  z-index: 1;
+}
+.score-signal {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  display: inline-block;
+}
+.score-signal.buy { background: rgba(16,185,129,0.12); color: var(--emerald); }
+
+/* Pipeline nav dots (clickable) */
+.pipeline-nav {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.pipeline-nav-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--glass-border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+.pipeline-nav-dot.active {
+  background: var(--accent-2);
+  box-shadow: 0 0 8px rgba(139,92,246,0.4);
+  transform: scale(1.2);
+}
+
+/* HOW IT WORKS (simple 3-step below pipeline) */
+.how-section { padding: var(--section-pad) 0; }
+.how-header { text-align: center; margin-bottom: 3.5rem; }
+.how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; position: relative; }
+.how-steps::before { content: ''; position: absolute; top: 40px; left: 15%; right: 15%; height: 2px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3)); opacity: 0.3; }
+.how-step { text-align: center; position: relative; z-index: 1; }
+.how-step-num { width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent-1); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; margin: 0 auto 1.25rem; color: var(--accent-2); box-shadow: 0 0 25px rgba(99,102,241,0.15); }
+.how-step-title { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; }
+.how-step-desc { font-size: 0.9rem; color: var(--text-3); line-height: 1.6; }
+
+/* Pipeline responsive */
+@media (max-width: 768px) {
+  .pipeline-stages { grid-template-columns: repeat(3, 1fr); gap: 1rem; row-gap: 1.5rem; }
+  .pipeline-flow-line { display: none; }
+  .pipeline-dot-track { display: none; }
+  .detail-body { grid-template-columns: 1fr; }
+  .stage-node { width: 48px; height: 48px; font-size: 1.2rem; }
+  .stage-label { font-size: 0.7rem; }
+  .stage-sub { font-size: 0.6rem; }
+}
+
+/* ─── PERFORMANCE ─── */
+.performance-section { padding: var(--section-pad) 0; }
+.performance-content { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+.perf-stats { display: flex; flex-direction: column; gap: 1.5rem; }
+.perf-stat-row { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-md); transition: all 0.3s; }
+.perf-stat-row:hover { border-color: rgba(255,255,255,0.1); background: var(--surface-2); }
+.perf-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.perf-stat-text { flex: 1; }
+.perf-stat-value { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; line-height: 1.2; }
+.perf-stat-label { font-size: 0.8rem; color: var(--text-3); }
+
+.perf-chart { background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 1.75rem; height: 320px; position: relative; overflow: hidden; }
+.perf-chart-title { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-2); }
+.perf-chart-bars { display: flex; align-items: flex-end; gap: 0.5rem; height: 200px; padding-top: 1rem; }
+.perf-bar { flex: 1; border-radius: 4px 4px 0 0; position: relative; transition: height 1.5s cubic-bezier(0.16,1,0.3,1); min-height: 4px; }
+.perf-bar.positive { background: linear-gradient(180deg, var(--emerald), rgba(16,185,129,0.3)); }
+.perf-bar-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: var(--text-4); white-space: nowrap; }
+.perf-bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; font-weight: 700; white-space: nowrap; color: var(--emerald); }
+
+/* ─── PRICING ─── */
+.pricing-section { padding: var(--section-pad) 0; }
+.pricing-header { text-align: center; margin-bottom: 3.5rem; }
+.pricing-header .section-desc { margin: 0 auto; }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 960px; margin: 0 auto; }
+.pricing-card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r-xl); padding: 2.5rem 2rem; text-align: center; position: relative; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+.pricing-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.pricing-card.featured { border-color: rgba(99,102,241,0.3); background: linear-gradient(180deg, rgba(99,102,241,0.08), var(--surface)); transform: scale(1.05); }
+.pricing-card.featured:hover { transform: scale(1.05) translateY(-6px); }
+.pricing-card.featured::before { content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 3px; background: var(--gradient); border-radius: var(--r-xl) var(--r-xl) 0 0; }
+.pricing-popular { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 0.3rem 1rem; border-radius: 50px; background: var(--gradient); color: white; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+.pricing-name { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 0.5rem; }
+.pricing-price { font-family: var(--font-display); font-weight: 800; font-size: 2.8rem; line-height: 1; margin-bottom: 0.25rem; }
+.pricing-price span { font-size: 1rem; font-weight: 500; color: var(--text-3); }
+.pricing-period { font-size: 0.85rem; color: var(--text-3); margin-bottom: 2rem; }
+.pricing-features { list-style: none; text-align: left; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+.pricing-features li { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; color: var(--text-2); }
+.pricing-features li::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(16,185,129,0.12); flex-shrink: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310B981'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E"); background-size: 12px; background-repeat: no-repeat; background-position: center; }
+.pricing-btn { width: 100%; padding: 0.85rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; transition: all 0.3s; }
+.pricing-btn-primary { background: var(--gradient); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+.pricing-btn-primary:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.5); transform: translateY(-2px); }
+.pricing-btn-outline { background: transparent; border: 1px solid var(--glass-border); color: var(--text-2); }
+.pricing-btn-outline:hover { border-color: var(--accent-1); color: var(--text-1); }
+
+/* ─── CTA ─── */
+.cta-section { padding: var(--section-pad) 0; text-align: center; position: relative; }
+.cta-section::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(99,102,241,0.08), transparent 70%); pointer-events: none; }
+.cta-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 1rem; }
+.cta-desc { font-size: 1.1rem; color: var(--text-2); margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+/* ─── FOOTER ─── */
+.footer { border-top: 1px solid var(--glass-border); padding: 3rem 0 2rem; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; }
+.footer-brand { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; margin-bottom: 1rem; }
+.footer-brand-icon { width: 28px; height: 28px; border-radius: 7px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+.footer-tagline { font-size: 0.85rem; color: var(--text-3); line-height: 1.6; max-width: 280px; }
+.footer-col-title { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; margin-bottom: 1rem; color: var(--text-2); }
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+.footer-links a { font-size: 0.85rem; color: var(--text-3); transition: color 0.2s; }
+.footer-links a:hover { color: var(--text-1); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid var(--glass-border); font-size: 0.8rem; color: var(--text-4); }
+.footer-disclaimer { font-size: 0.75rem; color: var(--text-4); max-width: 600px; line-height: 1.5; margin-top: 1rem; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .hero .container { grid-template-columns: 1fr; text-align: center; }
+  .hero-content { max-width: 100%; }
+  .hero-visual { display: flex; justify-content: center; }
+  .dashboard-mockup { max-width: 440px; margin: 0 auto; transform: rotateY(0) rotateX(6deg); }
+  .engines-grid { grid-template-columns: repeat(2, 1fr); }
+  .performance-content { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-mobile-toggle { display: block; }
+  .hero { min-height: auto; padding: 8rem 0 4rem; }
+  .hero-actions { flex-direction: column; }
+  .hero-actions .btn-primary, .hero-actions .btn-ghost { width: 100%; text-align: center; }
+  .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+  .features-grid { grid-template-columns: 1fr; }
+  .feature-card.span-2 { grid-column: span 1; }
+  .gamification-content { grid-template-columns: 1fr; }
+  .how-steps { grid-template-columns: 1fr; gap: 2rem; }
+  .how-steps::before { display: none; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .pricing-card.featured { transform: none; }
+  .pricing-card.featured:hover { transform: translateY(-6px); }
+  .engines-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+@media (max-width: 480px) {
+  .mock-cards { grid-template-columns: repeat(2, 1fr); }
+  .mock-cards .mock-card:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">T</div>
+      TradePilot
+    </a>
+    <ul class="nav-links">
+      <li><a href="#pipeline">How It Works</a></li>
+      <li><a href="#engines">Algo Engines</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#performance">Performance</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <a href="/" class="nav-cta">Launch App</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Switch to light mode">&#9728;</button>
+    <button class="nav-mobile-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+  <div class="hero-glow hero-glow-3"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        v5 Engine Live — 86% Win Rate — ML + Human-in-the-Loop
+      </div>
+      <h1 class="hero-title">See Your <span class="gradient-text">Profit Probability</span> Before Every Trade</h1>
+      <p class="hero-subtitle">4 algo engines — powered by ML models and human expertise — compete in real-time across 200+ Indian stocks. No guesswork. No FOMO. Just data-driven confidence.</p>
+      <div class="hero-actions">
+        <a href="/" class="btn-primary">Start Paper Trading Free</a>
+        <a href="#engines" class="btn-ghost">See How It Works</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="dashboard-mockup">
+        <div class="mock-topbar">
+          <div class="mock-logo"><span>T</span> TradePilot</div>
+          <div class="mock-indices">
+            <div class="mock-idx">NIFTY <span class="up">22,456 +0.8%</span></div>
+            <div class="mock-idx">SENSEX <span class="up">73,890 +0.6%</span></div>
+          </div>
+        </div>
+        <div class="mock-cards">
+          <div class="mock-card">
+            <div class="mock-card-head">
+              <span class="mock-card-sym">RELIANCE</span>
+              <div class="mock-card-score high">87</div>
+            </div>
+            <div class="mock-card-price">&#8377;2,891</div>
+            <div class="mock-card-change up">+2.3%</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-head">
+              <span class="mock-card-sym">TCS</span>
+              <div class="mock-card-score high">72</div>
+            </div>
+            <div class="mock-card-price">&#8377;3,456</div>
+            <div class="mock-card-change up">+1.1%</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-head">
+              <span class="mock-card-sym">INFY</span>
+              <div class="mock-card-score mid">45</div>
+            </div>
+            <div class="mock-card-price">&#8377;1,823</div>
+            <div class="mock-card-change down">-0.5%</div>
+          </div>
+        </div>
+        <div class="mock-chart">
+          <svg viewBox="0 0 520 80" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(99,102,241,0.3)"/>
+                <stop offset="100%" stop-color="rgba(99,102,241,0)"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,60 C40,55 80,40 130,45 C180,50 210,25 260,20 C310,15 340,30 390,22 C430,16 470,10 520,8 L520,80 L0,80 Z" fill="url(#chartGrad)"/>
+            <path d="M0,60 C40,55 80,40 130,45 C180,50 210,25 260,20 C310,15 340,30 390,22 C430,16 470,10 520,8" fill="none" stroke="#6366F1" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="mock-ai-bar">
+          <span class="mock-ai-label">ML Score</span>
+          <div class="mock-ai-progress"><div class="mock-ai-fill"></div></div>
+          <span class="mock-ai-value">86</span>
+          <span class="mock-signal">BUY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-section">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- TRUST BAR -->
+<section class="trust-section">
+  <div class="container">
+    <div class="trust-grid">
+      <div class="trust-item reveal">
+        <div class="trust-number gradient-text" data-count="19">0</div>
+        <div class="trust-label">ML Features Powering Every Score</div>
+      </div>
+      <div class="trust-item reveal reveal-delay-1">
+        <div class="trust-number gradient-text" data-count="200" data-suffix="+">0</div>
+        <div class="trust-label">Stocks Tracked in Real-Time</div>
+      </div>
+      <div class="trust-item reveal reveal-delay-2">
+        <div class="trust-number" style="color:var(--emerald)" data-count="86" data-suffix="%">0</div>
+        <div class="trust-label">Win Rate (v5 Engine, 3-Day)</div>
+      </div>
+      <div class="trust-item reveal reveal-delay-3">
+        <div class="trust-number gradient-text" data-count="4">0</div>
+        <div class="trust-label">Competing Algo Engines</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI ENGINES -->
+<section class="engines-section" id="engines">
+  <div class="container">
+    <div class="engines-header reveal">
+      <div class="section-label">The Brain</div>
+      <h2 class="section-title">4 Algo Engines.<br><span class="gradient-text">1 Clear Winner.</span></h2>
+      <p class="section-desc">We don't guess which algorithm works best. We run all four simultaneously — ML models validated by human analysts — and let the market decide.</p>
+    </div>
+    <div class="engines-grid">
+      <div class="engine-card reveal reveal-delay-1">
+        <div class="engine-version">v4</div>
+        <div class="engine-name">Composite Scorer</div>
+        <div class="engine-stats">
+          <div class="engine-stat"><span class="engine-stat-label">3-Day P&L</span><span class="engine-stat-value loss">-&#8377;19,279</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Trades</span><span class="engine-stat-value neutral">3</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Strategy</span><span class="engine-stat-value" style="font-size:0.8rem">Long-only baseline</span></div>
+        </div>
+        <div class="engine-bar"><div class="engine-bar-fill low" data-width="15%"></div></div>
+      </div>
+      <div class="engine-card winner reveal reveal-delay-2">
+        <div class="engine-version gradient-text">v5</div>
+        <div class="engine-name">Multi-Pool Regime-Aware</div>
+        <div class="engine-winner-badge">Leading Engine</div>
+        <div class="engine-stats">
+          <div class="engine-stat"><span class="engine-stat-label">3-Day P&L</span><span class="engine-stat-value profit">+&#8377;54,783</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Win Rate</span><span class="engine-stat-value profit">86%</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Trades</span><span class="engine-stat-value">93</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Strategy</span><span class="engine-stat-value" style="font-size:0.8rem">4-pool sector rotation</span></div>
+        </div>
+        <div class="engine-bar"><div class="engine-bar-fill high" data-width="86%"></div></div>
+      </div>
+      <div class="engine-card reveal reveal-delay-3">
+        <div class="engine-version">v5.2</div>
+        <div class="engine-name">F&O Options Engine</div>
+        <div class="engine-stats">
+          <div class="engine-stat"><span class="engine-stat-label">3-Day P&L</span><span class="engine-stat-value loss">-&#8377;56,180</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Trades</span><span class="engine-stat-value neutral">2</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Strategy</span><span class="engine-stat-value" style="font-size:0.8rem">Derivatives hedging</span></div>
+        </div>
+        <div class="engine-bar"><div class="engine-bar-fill low" data-width="8%"></div></div>
+      </div>
+      <div class="engine-card reveal reveal-delay-4">
+        <div class="engine-version">v5.3</div>
+        <div class="engine-name">Staged Entry System</div>
+        <div class="engine-stats">
+          <div class="engine-stat"><span class="engine-stat-label">3-Day P&L</span><span class="engine-stat-value neutral">&#8377;0</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Trades</span><span class="engine-stat-value neutral">0</span></div>
+          <div class="engine-stat"><span class="engine-stat-label">Strategy</span><span class="engine-stat-value" style="font-size:0.8rem">3-stage conviction tiers</span></div>
+        </div>
+        <div class="engine-bar"><div class="engine-bar-fill zero" data-width="2%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="features-header reveal">
+      <div class="section-label">Capabilities</div>
+      <h2 class="section-title">Everything You Need.<br><span class="gradient-text">Nothing You Don't.</span></h2>
+      <p class="section-desc">Built for Indian markets. Powered by ML algorithms + human expertise. Designed for clarity.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card span-2 reveal reveal-delay-1">
+        <div class="feature-icon icon-indigo">&#129504;</div>
+        <div class="feature-title">ML Scoring Engine (0-100)</div>
+        <div class="feature-desc">Every stock gets a real-time score from 19 ML features — momentum, VWAP, RSI, FII flows, open interest, sector strength, and more. Human-curated weights, transparent scoring. No black box.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon icon-emerald">&#127918;</div>
+        <div class="feature-title">Paper Trading</div>
+        <div class="feature-desc">&#8377;10L virtual account. Practice with real market data, zero risk.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon icon-cyan">&#128202;</div>
+        <div class="feature-title">Live Intraday Charts</div>
+        <div class="feature-desc">NIFTY and BANKNIFTY with line/candle toggle. Real-time OHLCV data.</div>
+      </div>
+      <div class="feature-card span-2 reveal reveal-delay-2">
+        <div class="feature-icon icon-violet">&#128301;</div>
+        <div class="feature-title">Multi-Horizon Intelligence</div>
+        <div class="feature-desc">Not just day trading. Our v5 engine runs 4 pools — intraday (30%), swing 3-7 days (25%), positional 2-4 weeks (25%), and long-term investment (15%). Each with its own capital allocation and risk rules.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon icon-amber">&#10024;</div>
+        <div class="feature-title">Investment Wizard</div>
+        <div class="feature-desc">Enter your budget. Get algo-ranked picks with profit targets and risk scores.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon icon-rose">&#128200;</div>
+        <div class="feature-title">Options Chain + Greeks</div>
+        <div class="feature-desc">NIFTY, BANKNIFTY, SENSEX F&O with OI, volume, delta, theta, gamma.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon icon-indigo">&#128225;</div>
+        <div class="feature-title">Telegram Alerts</div>
+        <div class="feature-desc">Real-time entry/exit signals, circuit breaker warnings, and daily summaries.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon icon-cyan">&#129517;</div>
+        <div class="feature-title">Regime Detection</div>
+        <div class="feature-desc">Bull, bear, or sideways — the engine adapts strategy and sizes automatically.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon icon-emerald">&#128176;</div>
+        <div class="feature-title">451+ Assets</div>
+        <div class="feature-desc">Stocks, ETFs, mutual funds, commodities, and forex — all scored and ranked.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon icon-violet">&#128172;</div>
+        <div class="feature-title">Smart Chat Assistant</div>
+        <div class="feature-desc">Ask about any stock, market trend, or strategy. Get instant, context-aware answers.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon icon-amber">&#127757;</div>
+        <div class="feature-title">Market Intel</div>
+        <div class="feature-desc">Global events, India news, and market pulse — all in one panel.</div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon icon-rose">&#128736;</div>
+        <div class="feature-title">Trade Lab</div>
+        <div class="feature-desc">Head-to-head engine comparison with daily P&L charts and trade drilldowns.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GAMIFICATION -->
+<section class="gamification-section" id="gamification">
+  <div class="container">
+    <div class="gamification-header reveal">
+      <div class="section-label">Level Up</div>
+      <h2 class="section-title">Trading Should Be <span class="gradient-text">Rewarding</span></h2>
+      <p class="section-desc">Earn XP, maintain streaks, unlock badges. Get better at trading while having fun. Coming soon in Pro.</p>
+    </div>
+    <div class="gamification-content">
+      <div class="gami-card reveal reveal-delay-1">
+        <div class="gami-card-title">Trader Levels</div>
+        <div class="levels-stack">
+          <div class="level-row"><div class="level-icon novice">&#9899;</div><div class="level-name">Novice</div><div class="level-xp">0 XP</div></div>
+          <div class="level-row"><div class="level-icon apprentice">&#128998;</div><div class="level-name">Apprentice</div><div class="level-xp">500 XP</div></div>
+          <div class="level-row active"><div class="level-icon trader">&#128995;</div><div class="level-name">Trader</div><div class="level-xp">2,000 XP</div></div>
+          <div class="level-row"><div class="level-icon pro">&#128993;</div><div class="level-name">Pro</div><div class="level-xp">10,000 XP</div></div>
+          <div class="level-row"><div class="level-icon elite">&#128999;</div><div class="level-name">Elite</div><div class="level-xp">50,000 XP</div></div>
+        </div>
+      </div>
+      <div class="gami-card reveal reveal-delay-2">
+        <div class="gami-card-title">Daily Streak</div>
+        <div class="streak-display">
+          <div class="streak-ring">
+            <div class="streak-fire">&#128293;</div>
+            <div class="streak-count">12</div>
+            <div class="streak-label">Day Streak</div>
+          </div>
+          <div class="streak-days">
+            <div class="streak-dot done">M</div>
+            <div class="streak-dot done">T</div>
+            <div class="streak-dot done">W</div>
+            <div class="streak-dot done">T</div>
+            <div class="streak-dot done">F</div>
+            <div class="streak-dot today">S</div>
+            <div class="streak-dot future">S</div>
+          </div>
+        </div>
+      </div>
+      <div class="gami-card reveal reveal-delay-3">
+        <div class="gami-card-title">Achievements</div>
+        <div class="badges-grid">
+          <div class="badge-item"><div class="badge-icon">&#127942;</div><div class="badge-name">First Trade</div></div>
+          <div class="badge-item"><div class="badge-icon">&#128293;</div><div class="badge-name">7-Day Streak</div></div>
+          <div class="badge-item"><div class="badge-icon">&#128640;</div><div class="badge-name">10x Winner</div></div>
+          <div class="badge-item"><div class="badge-icon">&#129504;</div><div class="badge-name">ML Explorer</div></div>
+          <div class="badge-item"><div class="badge-icon">&#128142;</div><div class="badge-name">Portfolio Pro</div></div>
+          <div class="badge-item locked"><div class="badge-icon">&#128081;</div><div class="badge-name">Elite Trader</div></div>
+          <div class="badge-item locked"><div class="badge-icon">&#127775;</div><div class="badge-name">Market Sage</div></div>
+          <div class="badge-item locked"><div class="badge-icon">&#128171;</div><div class="badge-name">100 Trades</div></div>
+          <div class="badge-item locked"><div class="badge-icon">&#9889;</div><div class="badge-name">Speed Demon</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINE PIPELINE — Animated "How the Engine Works" -->
+<section class="pipeline-section" id="pipeline">
+  <div class="container">
+    <div class="pipeline-header reveal">
+      <div class="section-label">Under the Hood</div>
+      <h2 class="section-title">How the <span class="gradient-text">Engine Works</span></h2>
+      <p class="section-desc">From raw market data to actionable signals in seconds. Click any stage to see the details.</p>
+    </div>
+
+    <div class="pipeline-wrap reveal">
+      <!-- Animated flow line -->
+      <div class="pipeline-flow-line"><div class="pipeline-flow-fill" id="pipelineFlowFill"></div></div>
+      <!-- Traveling dots -->
+      <div class="pipeline-dot-track" id="pipelineDotTrack">
+        <div class="flow-dot"></div>
+        <div class="flow-dot"></div>
+        <div class="flow-dot"></div>
+        <div class="flow-dot"></div>
+        <div class="flow-dot"></div>
+      </div>
+
+      <!-- 6 Pipeline Stages -->
+      <div class="pipeline-stages" id="pipelineStages">
+        <div class="pipeline-stage" data-stage="0">
+          <div class="stage-node node-data">&#128225;</div>
+          <div class="stage-label">Market Data</div>
+          <div class="stage-sub">NSE / BSE feeds</div>
+        </div>
+        <div class="pipeline-stage" data-stage="1">
+          <div class="stage-node node-features">&#9881;</div>
+          <div class="stage-label">Feature Engine</div>
+          <div class="stage-sub">19 indicators</div>
+        </div>
+        <div class="pipeline-stage" data-stage="2">
+          <div class="stage-node node-ml">&#129504;</div>
+          <div class="stage-label">ML Models</div>
+          <div class="stage-sub">Ensemble scoring</div>
+        </div>
+        <div class="pipeline-stage" data-stage="3">
+          <div class="stage-node node-regime">&#129517;</div>
+          <div class="stage-label">Regime Check</div>
+          <div class="stage-sub">Bull / Bear / Sideways</div>
+        </div>
+        <div class="pipeline-stage" data-stage="4">
+          <div class="stage-node node-human">&#128100;</div>
+          <div class="stage-label">Human Review</div>
+          <div class="stage-sub">Expert validation</div>
+        </div>
+        <div class="pipeline-stage" data-stage="5">
+          <div class="stage-node node-output">&#127919;</div>
+          <div class="stage-label">Score Output</div>
+          <div class="stage-sub">0-100 + Signal</div>
+        </div>
+      </div>
+
+      <!-- Detail panel — content swaps per stage -->
+      <div class="pipeline-detail" id="pipelineDetail">
+
+        <!-- Stage 0: Market Data -->
+        <div class="detail-content active" data-detail="0">
+          <div class="detail-header">
+            <div class="detail-icon icon-indigo">&#128225;</div>
+            <div><div class="detail-title">Market Data Ingestion</div><div class="detail-subtitle">Real-time + historical data from Indian exchanges</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual">
+              <div class="mini-flow-items" id="dataFlowItems">
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--accent-1)"></div>Live prices — NSE / BSE tick-by-tick</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--cyan)"></div>Volume + delivery data — exchange APIs</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--emerald)"></div>FII / DII daily flows — NSDL reports</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--amber)"></div>Options chain — OI, volume, PCR</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--rose)"></div>India VIX + global indices — fear gauge</div>
+              </div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item">Pulls 2-year daily history + 60-day intraday (5-min candles) for every stock in the universe</div>
+              <div class="detail-text-item">Multiple data providers with automatic failover — if one source is down, the next picks up seamlessly</div>
+              <div class="detail-text-item">Data refreshes before 9:15 AM every trading day so scores are ready at market open</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 1: Feature Engine -->
+        <div class="detail-content" data-detail="1">
+          <div class="detail-header">
+            <div class="detail-icon icon-cyan">&#9881;</div>
+            <div><div class="detail-title">Feature Engineering</div><div class="detail-subtitle">19 quantitative features extracted per stock</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual">
+              <div class="mini-bars" id="featureBars"></div>
+              <div style="text-align:center;margin-top:0.5rem;font-size:0.65rem;color:var(--text-3)">Feature importance weights</div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item"><strong>Price action:</strong> Momentum, VWAP deviation, opening range breakout, trend strength</div>
+              <div class="detail-text-item"><strong>Volume:</strong> Relative volume ratio, volume surge detection, delivery percentage</div>
+              <div class="detail-text-item"><strong>Institutional:</strong> FII/DII flows, put-call ratio, open interest buildup, max pain distance</div>
+              <div class="detail-text-item"><strong>Relative strength:</strong> 5-day and 20-day performance vs NIFTY benchmark</div>
+              <div class="detail-text-item"><strong>Context:</strong> Sector breadth, VIX regime, market advance/decline ratio</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 2: ML Models -->
+        <div class="detail-content" data-detail="2">
+          <div class="detail-header">
+            <div class="detail-icon icon-violet">&#129504;</div>
+            <div><div class="detail-title">ML Ensemble Scoring</div><div class="detail-subtitle">Multiple models vote to reduce bias</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual">
+              <div class="mini-flow-items">
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--accent-2)"></div><strong>Model A</strong> — Gradient boosted trees (classification)</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--cyan)"></div><strong>Model B</strong> — Gradient boosted trees (ranking)</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--emerald)"></div><strong>Composite</strong> — Weighted ensemble vote</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--amber)"></div><strong>Relative rank</strong> — Percentile scoring across universe</div>
+              </div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item">Models are retrained daily on the latest data before market open — no stale predictions</div>
+              <div class="detail-text-item">Ensemble approach reduces overfitting — no single model dominates the decision</div>
+              <div class="detail-text-item">Relative ranking ensures you always get the top picks regardless of overall market direction</div>
+              <div class="detail-text-item">Models learn from 2 years of Indian market patterns — sector rotation, FII cycles, earnings seasons</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 3: Regime Detection -->
+        <div class="detail-content" data-detail="3">
+          <div class="detail-header">
+            <div class="detail-icon icon-amber">&#129517;</div>
+            <div><div class="detail-title">Market Regime Detection</div><div class="detail-subtitle">Adapt strategy to current market conditions</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual">
+              <div class="mini-flow-items">
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--emerald)"></div><strong style="color:var(--emerald)">BULL</strong> — Trending up. Full allocation, momentum-first.</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--amber)"></div><strong style="color:var(--amber)">SIDEWAYS</strong> — Range-bound. Reduce size, mean-reversion.</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--rose)"></div><strong style="color:var(--rose)">BEAR</strong> — Trending down. Defensive sectors, tight stops.</div>
+              </div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item">Analyses NIFTY trend, VIX level, advance/decline ratio, and FII flow direction to classify the regime</div>
+              <div class="detail-text-item">Each regime triggers different capital allocation — more aggressive in bull, more defensive in bear</div>
+              <div class="detail-text-item">Sector rotation is regime-aware — Energy and Pharma in bear markets, IT and Banking in bull markets</div>
+              <div class="detail-text-item">The v5 engine made +5.48% in 3 days during a BEAR regime by detecting sector rotation opportunities</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 4: Human Review -->
+        <div class="detail-content" data-detail="4">
+          <div class="detail-header">
+            <div class="detail-icon icon-emerald">&#128100;</div>
+            <div><div class="detail-title">Human-in-the-Loop</div><div class="detail-subtitle">Expert oversight at every critical step</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual">
+              <div class="mini-flow-items">
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--emerald)"></div><strong>Weight calibration</strong> — Feature weights set by domain experts</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--cyan)"></div><strong>Signal review</strong> — Unusual signals flagged for manual check</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--amber)"></div><strong>Risk override</strong> — Circuit breakers tuned from trading experience</div>
+                <div class="mini-flow-item"><div class="mini-flow-dot" style="background:var(--accent-2)"></div><strong>Daily validation</strong> — Paper trade results reviewed every evening</div>
+              </div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item">ML models propose, humans dispose — no trade goes out without passing human-defined risk rules</div>
+              <div class="detail-text-item">Feature weights are calibrated weekly based on what actually worked in the Indian market</div>
+              <div class="detail-text-item">Corporate action filters (earnings, splits, bonuses) prevent models from trading on distorted data</div>
+              <div class="detail-text-item">This is NOT a black box — every decision is transparent and reviewable</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 5: Score Output -->
+        <div class="detail-content" data-detail="5">
+          <div class="detail-header">
+            <div class="detail-icon icon-rose">&#127919;</div>
+            <div><div class="detail-title">Score Output</div><div class="detail-subtitle">Every stock gets a 0-100 score and a clear signal</div></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-visual" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div class="score-anim-ring" id="scoreAnimRing">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-bg" cx="50" cy="50" r="45"/>
+                  <circle class="ring-fill" id="scoreRingFill" cx="50" cy="50" r="45"/>
+                </svg>
+                <span class="score-anim-value" id="scoreAnimValue">0</span>
+              </div>
+              <div><span class="score-signal buy" id="scoreSignalBadge" style="opacity:0">BUY</span></div>
+            </div>
+            <div class="detail-text-items">
+              <div class="detail-text-item"><strong>BUY (70-100):</strong> Strong conviction — multiple factors aligned, momentum confirmed</div>
+              <div class="detail-text-item"><strong>HOLD (40-69):</strong> Mixed signals — wait for clarity or manage existing position</div>
+              <div class="detail-text-item"><strong>AVOID (0-39):</strong> Weak setup — models see more risk than opportunity right now</div>
+              <div class="detail-text-item">Scores recalculate every 30 minutes during market hours as new data flows in</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Click navigation dots -->
+      <div class="pipeline-nav" id="pipelineNav"></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO GET STARTED -->
+<section class="how-section">
+  <div class="container">
+    <div class="how-header reveal">
+      <div class="section-label">Get Started</div>
+      <h2 class="section-title">3 Steps to <span class="gradient-text">Smarter Trading</span></h2>
+    </div>
+    <div class="how-steps">
+      <div class="how-step reveal reveal-delay-1">
+        <div class="how-step-num">1</div>
+        <div class="how-step-title">Open TradePilot</div>
+        <div class="how-step-desc">No sign-up needed for paper trading. See ML scores for 200+ stocks instantly.</div>
+      </div>
+      <div class="how-step reveal reveal-delay-2">
+        <div class="how-step-num">2</div>
+        <div class="how-step-title">Check the Score</div>
+        <div class="how-step-desc">Every stock shows a 0-100 ML score with BUY/HOLD/AVOID signals. Tap for full analysis.</div>
+      </div>
+      <div class="how-step reveal reveal-delay-3">
+        <div class="how-step-num">3</div>
+        <div class="how-step-title">Trade with Confidence</div>
+        <div class="how-step-desc">Paper trade to practice, or use the signals with your existing broker. No lock-in.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERFORMANCE -->
+<section class="performance-section" id="performance">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem" class="reveal">
+      <div class="section-label">Results</div>
+      <h2 class="section-title">Real Numbers. <span class="gradient-text">No Hype.</span></h2>
+      <p class="section-desc" style="margin:0 auto">v5 engine paper trading results from April 11-13, 2026. Bear market conditions.</p>
+    </div>
+    <div class="performance-content">
+      <div class="perf-stats">
+        <div class="perf-stat-row reveal reveal-delay-1">
+          <div class="perf-stat-icon icon-emerald">&#8377;</div>
+          <div class="perf-stat-text"><div class="perf-stat-value" style="color:var(--emerald)">+&#8377;54,783</div><div class="perf-stat-label">Cumulative P&L (3 Days)</div></div>
+        </div>
+        <div class="perf-stat-row reveal reveal-delay-2">
+          <div class="perf-stat-icon icon-indigo">%</div>
+          <div class="perf-stat-text"><div class="perf-stat-value">+5.48%</div><div class="perf-stat-label">Return on &#8377;10L Capital</div></div>
+        </div>
+        <div class="perf-stat-row reveal reveal-delay-3">
+          <div class="perf-stat-icon icon-cyan">&#128200;</div>
+          <div class="perf-stat-text"><div class="perf-stat-value">93 Trades</div><div class="perf-stat-label">Executed Across 3 Days</div></div>
+        </div>
+        <div class="perf-stat-row reveal reveal-delay-4">
+          <div class="perf-stat-icon icon-amber">&#129517;</div>
+          <div class="perf-stat-text"><div class="perf-stat-value">BEAR Market</div><div class="perf-stat-label">Nifty -0.95%, VIX 20.5 — Still Profitable</div></div>
+        </div>
+      </div>
+      <div class="perf-chart reveal reveal-delay-2">
+        <div class="perf-chart-title">Daily P&L — v5 Engine</div>
+        <div class="perf-chart-bars" id="perfBars">
+          <div class="perf-bar positive" data-height="65%"><span class="perf-bar-value">+&#8377;22,480</span><span class="perf-bar-label">Day 1</span></div>
+          <div class="perf-bar positive" data-height="55%"><span class="perf-bar-value">+&#8377;18,000</span><span class="perf-bar-label">Day 2</span></div>
+          <div class="perf-bar positive" data-height="45%"><span class="perf-bar-value">+&#8377;14,303</span><span class="perf-bar-label">Day 3</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="pricing-header reveal">
+      <div class="section-label">Plans</div>
+      <h2 class="section-title">Start Free. <span class="gradient-text">Scale When Ready.</span></h2>
+      <p class="section-desc">No credit card. No commitment. Upgrade when you see the value.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal reveal-delay-1">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price">&#8377;0</div>
+        <div class="pricing-period">Forever free</div>
+        <ul class="pricing-features">
+          <li>ML scores for NIFTY 50 stocks</li>
+          <li>Paper trading with &#8377;1L virtual capital</li>
+          <li>Basic intraday charts</li>
+          <li>Investment Wizard (3 picks/day)</li>
+          <li>Daily market summary</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline">Get Started</button>
+      </div>
+      <div class="pricing-card featured reveal reveal-delay-2">
+        <div class="pricing-popular">Most Popular</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">&#8377;499<span>/mo</span></div>
+        <div class="pricing-period">Billed monthly</div>
+        <ul class="pricing-features">
+          <li>ML scores for NIFTY 200 stocks</li>
+          <li>Paper trading with &#8377;10L capital</li>
+          <li>All 4 algo engine signals</li>
+          <li>Full options chain + Greeks</li>
+          <li>Telegram real-time alerts</li>
+          <li>Multi-horizon picks (Swing + Positional)</li>
+          <li>Gamification + XP system</li>
+          <li>Smart Chat — unlimited questions</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-primary">Start 14-Day Trial</button>
+      </div>
+      <div class="pricing-card reveal reveal-delay-3">
+        <div class="pricing-name">Elite</div>
+        <div class="pricing-price">&#8377;999<span>/mo</span></div>
+        <div class="pricing-period">For serious traders</div>
+        <ul class="pricing-features">
+          <li>Everything in Pro</li>
+          <li>Full market: 451+ assets</li>
+          <li>Paper trading &#8377;50L capital</li>
+          <li>Regime-aware auto-allocation</li>
+          <li>F&O engine signals</li>
+          <li>Priority support</li>
+          <li>API access (coming soon)</li>
+          <li>Custom alert rules</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline">Contact Us</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="container reveal">
+    <h2 class="cta-title">Ready to Trade <span class="gradient-text">Smarter?</span></h2>
+    <p class="cta-desc">Join the next generation of Indian traders who use ML-powered algorithms to make better decisions. Start with zero risk.</p>
+    <a href="/" class="btn-primary" style="font-size:1.1rem;padding:1rem 2.5rem">Start Paper Trading Free</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="footer-brand-icon">T</div>TradePilot</div>
+        <p class="footer-tagline">ML-powered trading intelligence for the Indian market. Algorithms + human expertise. See your profit probability before every trade.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <ul class="footer-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#engines">Algo Engines</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="/">Launch App</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Resources</div>
+        <ul class="footer-links">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="mailto:support@devpilot.co.in">Contact</a></li>
+          <li><a href="https://devpilot.co.in/privacy">Privacy</a></li>
+          <li><a href="https://devpilot.co.in/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 TradePilot by Sidewall Technologies. All rights reserved.</span>
+      <span>Made in India with AI</span>
+    </div>
+    <div class="footer-disclaimer"><strong>Disclaimer:</strong> TradePilot provides algorithm-generated trading signals for educational and informational purposes only. Past performance does not guarantee future results. Paper trading results are simulated. Always do your own research. TradePilot is not a SEBI-registered investment advisor.</div>
+  </div>
+</footer>
+
+<!-- JAVASCRIPT -->
+<script>
+(function() {
+  'use strict';
+
+  // Navbar scroll effect
+  var navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', function() {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  // Ticker — build with DOM methods (no innerHTML)
+  var tickerData = [
+    { sym: 'RELIANCE', price: '\u20B92,891', change: '+2.3%', up: true },
+    { sym: 'TCS', price: '\u20B93,456', change: '+1.1%', up: true },
+    { sym: 'HDFCBANK', price: '\u20B91,654', change: '+0.8%', up: true },
+    { sym: 'INFY', price: '\u20B91,823', change: '-0.5%', up: false },
+    { sym: 'ICICIBANK', price: '\u20B91,089', change: '+1.4%', up: true },
+    { sym: 'BHARTIARTL', price: '\u20B91,567', change: '+0.6%', up: true },
+    { sym: 'SBIN', price: '\u20B9756', change: '-0.3%', up: false },
+    { sym: 'ITC', price: '\u20B9428', change: '+1.8%', up: true },
+    { sym: 'KOTAKBANK', price: '\u20B91,789', change: '-0.7%', up: false },
+    { sym: 'LT', price: '\u20B93,567', change: '+0.9%', up: true },
+    { sym: 'AXISBANK', price: '\u20B91,123', change: '+1.2%', up: true },
+    { sym: 'ADANIENT', price: '\u20B92,234', change: '+3.1%', up: true },
+    { sym: 'TATAMOTORS', price: '\u20B9678', change: '+2.7%', up: true },
+    { sym: 'NIFTY 50', price: '22,456', change: '+0.8%', up: true },
+    { sym: 'SENSEX', price: '73,890', change: '+0.6%', up: true },
+    { sym: 'BANKNIFTY', price: '48,234', change: '+0.9%', up: true },
+  ];
+
+  var track = document.getElementById('tickerTrack');
+  function buildTickerItems() {
+    var frag = document.createDocumentFragment();
+    tickerData.forEach(function(t) {
+      var item = document.createElement('div');
+      item.className = 'ticker-item';
+
+      var sym = document.createElement('span');
+      sym.className = 'ticker-sym';
+      sym.textContent = t.sym;
+
+      var price = document.createElement('span');
+      price.className = 'ticker-price';
+      price.textContent = t.price;
+
+      var change = document.createElement('span');
+      change.className = 'ticker-change ' + (t.up ? 'up' : 'down');
+      change.textContent = t.change;
+
+      item.appendChild(sym);
+      item.appendChild(price);
+      item.appendChild(change);
+      frag.appendChild(item);
+    });
+    return frag;
+  }
+  track.appendChild(buildTickerItems());
+  track.appendChild(buildTickerItems()); // duplicate for seamless loop
+
+  // Scroll reveal
+  var revealObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal').forEach(function(el) { revealObs.observe(el); });
+
+  // Counter animation
+  var counterObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var el = entry.target;
+        var target = parseInt(el.dataset.count);
+        var suffix = el.dataset.suffix || '';
+        var current = 0;
+        var step = Math.max(1, Math.floor(target / 60));
+        var timer = setInterval(function() {
+          current += step;
+          if (current >= target) { current = target; clearInterval(timer); }
+          el.textContent = current + suffix;
+        }, 25);
+        counterObs.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(function(el) { counterObs.observe(el); });
+
+  // Engine bar animation
+  var barObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var fill = entry.target.querySelector('.engine-bar-fill');
+        if (fill) setTimeout(function() { fill.style.width = fill.dataset.width; }, 300);
+        barObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.engine-card').forEach(function(el) { barObs.observe(el); });
+
+  // Performance chart bars
+  var chartObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var bars = entry.target.querySelectorAll('.perf-bar');
+        bars.forEach(function(bar, i) {
+          setTimeout(function() { bar.style.height = bar.dataset.height; }, i * 200 + 300);
+        });
+        chartObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  var perfBars = document.getElementById('perfBars');
+  if (perfBars) chartObs.observe(perfBars);
+
+  // Mobile nav
+  var toggle = document.getElementById('navToggle');
+  var navLinks = document.querySelector('.nav-links');
+  var mobileOpen = false;
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      mobileOpen = !mobileOpen;
+      if (mobileOpen) {
+        navLinks.style.display = 'flex';
+        navLinks.style.position = 'fixed';
+        navLinks.style.top = '60px';
+        navLinks.style.left = '0';
+        navLinks.style.right = '0';
+        navLinks.style.flexDirection = 'column';
+        navLinks.style.background = 'rgba(6,10,19,0.95)';
+        navLinks.style.backdropFilter = 'blur(20px)';
+        navLinks.style.padding = '1.5rem';
+        navLinks.style.gap = '1.25rem';
+        navLinks.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
+        navLinks.style.zIndex = '99';
+      } else {
+        navLinks.style.display = '';
+        navLinks.style.position = '';
+        navLinks.style.top = '';
+        navLinks.style.left = '';
+        navLinks.style.right = '';
+        navLinks.style.flexDirection = '';
+        navLinks.style.background = '';
+        navLinks.style.backdropFilter = '';
+        navLinks.style.padding = '';
+        navLinks.style.gap = '';
+        navLinks.style.borderBottom = '';
+        navLinks.style.zIndex = '';
+      }
+    });
+  }
+
+  // Theme toggle
+  var themeBtn = document.getElementById('themeToggle');
+  var html = document.documentElement;
+  // Default to light theme
+  var savedTheme = localStorage.getItem('tp-theme') || 'light';
+  html.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+
+  function updateThemeIcon(theme) {
+    if (theme === 'light') {
+      themeBtn.textContent = '\u263D'; // moon for "switch to dark"
+      themeBtn.title = 'Switch to dark mode';
+    } else {
+      themeBtn.textContent = '\u2600'; // sun for "switch to light"
+      themeBtn.title = 'Switch to light mode';
+    }
+  }
+
+  themeBtn.addEventListener('click', function() {
+    var current = html.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('tp-theme', next);
+    updateThemeIcon(next);
+  });
+
+  // ─── Pipeline Animation ───
+  var stages = document.querySelectorAll('.pipeline-stage');
+  var details = document.querySelectorAll('.detail-content');
+  var flowFill = document.getElementById('pipelineFlowFill');
+  var dotTrack = document.getElementById('pipelineDotTrack');
+  var pipelineNav = document.getElementById('pipelineNav');
+  var currentStage = -1;
+  var pipelineTimer = null;
+  var pipelineStarted = false;
+
+  // Build nav dots
+  for (var d = 0; d < 6; d++) {
+    var dot = document.createElement('button');
+    dot.className = 'pipeline-nav-dot';
+    dot.setAttribute('data-stage', d);
+    dot.setAttribute('aria-label', 'Stage ' + (d + 1));
+    pipelineNav.appendChild(dot);
+  }
+  var navDots = document.querySelectorAll('.pipeline-nav-dot');
+
+  function showStage(idx) {
+    currentStage = idx;
+    // Light up stages up to current
+    stages.forEach(function(s, i) {
+      s.classList.toggle('lit', i <= idx);
+    });
+    // Show detail
+    details.forEach(function(dc) { dc.classList.remove('active'); });
+    var activeDetail = document.querySelector('[data-detail="' + idx + '"]');
+    if (activeDetail) activeDetail.classList.add('active');
+    // Update nav dots
+    navDots.forEach(function(nd, i) { nd.classList.toggle('active', i === idx); });
+    // Flow line
+    var pct = ((idx + 1) / 6) * 100;
+    flowFill.style.width = pct + '%';
+    // Dot track
+    dotTrack.classList.toggle('active', idx > 0);
+    // Feature bars animation (stage 1)
+    if (idx === 1) buildFeatureBars();
+    // Score ring animation (stage 5)
+    if (idx === 5) animateScoreRing();
+  }
+
+  // Feature bars
+  function buildFeatureBars() {
+    var container = document.getElementById('featureBars');
+    if (!container || container.children.length > 0) return;
+    var heights = [85, 70, 60, 50, 50, 45, 45, 40, 35, 30, 30, 25, 25, 20, 20, 15, 15, 12, 10];
+    var colors = ['#6366F1','#6366F1','#06B6D4','#06B6D4','#8B5CF6','#8B5CF6','#10B981','#10B981','#F59E0B','#F59E0B','#F43F5E','#F43F5E','#6366F1','#06B6D4','#8B5CF6','#10B981','#F59E0B','#F43F5E','#94A3B8'];
+    heights.forEach(function(h, i) {
+      var bar = document.createElement('div');
+      bar.className = 'mini-bar';
+      bar.style.height = h + '%';
+      bar.style.background = 'linear-gradient(180deg, ' + colors[i] + ', ' + colors[i] + '44)';
+      bar.style.animationDelay = (i * 0.05) + 's';
+      container.appendChild(bar);
+    });
+  }
+
+  // Score ring animation
+  function animateScoreRing() {
+    var ringFill = document.getElementById('scoreRingFill');
+    var scoreVal = document.getElementById('scoreAnimValue');
+    var signalBadge = document.getElementById('scoreSignalBadge');
+    if (!ringFill) return;
+    ringFill.classList.remove('animate');
+    scoreVal.textContent = '0';
+    signalBadge.style.opacity = '0';
+    // Trigger reflow
+    void ringFill.offsetWidth;
+    ringFill.classList.add('animate');
+    // Animate number
+    var target = 86;
+    var current = 0;
+    var step = Math.ceil(target / 40);
+    var timer = setInterval(function() {
+      current += step;
+      if (current >= target) { current = target; clearInterval(timer); signalBadge.style.opacity = '1'; signalBadge.style.transition = 'opacity 0.3s'; }
+      scoreVal.textContent = current;
+    }, 35);
+  }
+
+  // Auto-play pipeline on scroll
+  var pipelineObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !pipelineStarted) {
+        pipelineStarted = true;
+        startPipelineAutoplay();
+      }
+    });
+  }, { threshold: 0.2 });
+  var pipelineWrap = document.querySelector('.pipeline-wrap');
+  if (pipelineWrap) pipelineObs.observe(pipelineWrap);
+
+  function startPipelineAutoplay() {
+    var idx = 0;
+    showStage(idx);
+    pipelineTimer = setInterval(function() {
+      idx++;
+      if (idx >= 6) { clearInterval(pipelineTimer); pipelineTimer = null; return; }
+      showStage(idx);
+    }, 2500);
+  }
+
+  // Click on stage or nav dot
+  stages.forEach(function(s) {
+    s.addEventListener('click', function() {
+      if (pipelineTimer) { clearInterval(pipelineTimer); pipelineTimer = null; }
+      showStage(parseInt(s.dataset.stage));
+    });
+  });
+  navDots.forEach(function(nd) {
+    nd.addEventListener('click', function() {
+      if (pipelineTimer) { clearInterval(pipelineTimer); pipelineTimer = null; }
+      showStage(parseInt(nd.dataset.stage));
+    });
+  });
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      var target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (mobileOpen && toggle) toggle.click();
+      }
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

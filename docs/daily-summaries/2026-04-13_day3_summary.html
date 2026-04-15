@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TradePilot Day 3 Report -- April 13, 2026</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0.7in 0.65in 0.8in 0.65in;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Avenir Next', 'Avenir', Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Cover Section */
+  .cover {
+    text-align: center;
+    padding: 60px 40px 40px 40px;
+    background: linear-gradient(180deg, #ffffff 0%, #f0f4ff 30%, #dbeafe 60%, #bfdbfe 85%, #93c5fd 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    page-break-after: always;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: #4f46e5;
+    color: white;
+    font-size: 11pt;
+    font-weight: 600;
+    padding: 6px 20px;
+    border-radius: 20px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+
+  .cover h1 {
+    font-size: 36pt;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .cover .subtitle {
+    font-size: 16pt;
+    color: #4338ca;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .cover .date {
+    font-size: 13pt;
+    color: #64748b;
+    margin-bottom: 40px;
+  }
+
+  .cover-stats {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin: 30px 0;
+  }
+
+  .cover-stat {
+    background: rgba(255,255,255,0.85);
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-width: 140px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .cover-stat .label {
+    font-size: 9pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .cover-stat .value {
+    font-size: 18pt;
+    font-weight: 700;
+  }
+
+  .cover-stat .value.green { color: #16a34a; }
+  .cover-stat .value.red { color: #dc2626; }
+  .cover-stat .value.gray { color: #64748b; }
+
+  .cover-author {
+    margin-top: 40px;
+    font-size: 10pt;
+    color: #64748b;
+  }
+
+  .cover-author a {
+    color: #4f46e5;
+    text-decoration: none;
+  }
+
+  /* Content Pages */
+  h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.3px;
+  }
+
+  h2 {
+    font-size: 15pt;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin: 28px 0 10px 0;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #e0e7ff;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #312e81;
+    margin: 18px 0 8px 0;
+  }
+
+  p {
+    margin-bottom: 8px;
+    text-align: justify;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+
+  thead th {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+
+  tbody td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eff6ff; }
+
+  /* Engine Cards */
+  .engine-card {
+    border: 1px solid #e0e7ff;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+
+  .engine-card.winner {
+    border-color: #16a34a;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  }
+
+  .engine-card.loser {
+    border-color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  }
+
+  .engine-card.neutral {
+    border-color: #d1d5db;
+    background: #f9fafb;
+  }
+
+  .engine-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .engine-name {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1e1b4b;
+  }
+
+  .engine-pnl {
+    font-size: 16pt;
+    font-weight: 700;
+  }
+
+  .engine-pnl.green { color: #16a34a; }
+  .engine-pnl.red { color: #dc2626; }
+  .engine-pnl.gray { color: #9ca3af; }
+
+  .engine-metrics {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+
+  .engine-metric {
+    font-size: 9pt;
+    color: #64748b;
+  }
+
+  .engine-metric strong {
+    color: #1e1b4b;
+    font-size: 10pt;
+  }
+
+  .engine-desc {
+    font-size: 9.5pt;
+    color: #374151;
+    margin-top: 6px;
+  }
+
+  .engine-tag {
+    display: inline-block;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tag-winner { background: #dcfce7; color: #16a34a; }
+  .tag-loser { background: #fee2e2; color: #dc2626; }
+  .tag-neutral { background: #f3f4f6; color: #6b7280; }
+
+  /* Ticker strip */
+  .ticker-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .ticker {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 8.5pt;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Code blocks */
+  code {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 9pt;
+  }
+
+  .code-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    color: #334155;
+    margin: 8px 0;
+    page-break-inside: avoid;
+  }
+
+  /* Key learning boxes */
+  .learning-box {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+
+  .learning-box h4 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #1e40af;
+    margin-bottom: 4px;
+  }
+
+  .learning-box p {
+    font-size: 9.5pt;
+    color: #1e3a5f;
+    margin: 0;
+  }
+
+  /* Warning box */
+  .warning-box {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+
+  .warning-box h4 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 4px;
+  }
+
+  .warning-box p {
+    font-size: 9.5pt;
+    color: #78350f;
+    margin: 0;
+  }
+
+  /* Success box */
+  .success-box {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+
+  .success-box h4 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #166534;
+    margin-bottom: 4px;
+  }
+
+  .success-box p {
+    font-size: 9.5pt;
+    color: #14532d;
+    margin: 0;
+  }
+
+  /* Watchdog section */
+  .watchdog-item {
+    padding: 6px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    font-size: 9.5pt;
+  }
+
+  .watchdog-item:last-child { border-bottom: none; }
+
+  .watchdog-num {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    background: #4f46e5;
+    color: white;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 8pt;
+    line-height: 22px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  /* Updates list */
+  .update-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .update-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9pt;
+  }
+
+  .update-item strong {
+    color: #4f46e5;
+  }
+
+  /* Plan list */
+  .plan-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .plan-list li {
+    padding: 6px 0 6px 28px;
+    position: relative;
+    font-size: 9.5pt;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .plan-list li::before {
+    content: attr(data-num);
+    position: absolute;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: #4f46e5;
+    color: white;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 8pt;
+    line-height: 20px;
+    font-weight: 700;
+  }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    font-size: 8pt;
+    color: #9ca3af;
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .page-footer a {
+    color: #4f46e5;
+    text-decoration: none;
+  }
+
+  /* Page breaks */
+  .page-break { page-break-before: always; }
+
+  /* Market indicator */
+  .market-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 12px 0;
+  }
+
+  .market-bar .regime-badge {
+    background: #dc2626;
+    color: white;
+    font-size: 9pt;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+
+  .market-bar .market-detail {
+    font-size: 9pt;
+    color: #991b1b;
+  }
+
+  /* Scorecard highlight */
+  .scorecard-row-highlight {
+    background: #f0fdf4 !important;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-badge">Paper Trading Report</div>
+  <h1>TradePilot</h1>
+  <div class="subtitle">Day 3 -- 4-Engine Evaluation</div>
+  <div class="date">April 13, 2026</div>
+
+  <div class="cover-stats">
+    <div class="cover-stat">
+      <div class="label">Best Engine</div>
+      <div class="value green">v5</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">Day P&L</div>
+      <div class="value green">+14,303</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">Win Rate</div>
+      <div class="value green">86%</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">Regime</div>
+      <div class="value red">BEAR</div>
+    </div>
+  </div>
+
+  <div class="cover-stats">
+    <div class="cover-stat">
+      <div class="label">NIFTY 50</div>
+      <div class="value red">-0.95%</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">India VIX</div>
+      <div class="value red">20.5</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">A/D Ratio</div>
+      <div class="value red">5.5%</div>
+    </div>
+    <div class="cover-stat">
+      <div class="label">3-Day Leader</div>
+      <div class="value green">+54,783</div>
+    </div>
+  </div>
+
+  <div class="cover-author">
+    Soumya Swain | <a href="mailto:soumya@devpilot.co.in">soumya@devpilot.co.in</a>
+  </div>
+</div>
+
+<!-- PAGE 2: MARKET CONTEXT + ENGINE RESULTS -->
+<h2>Market Context</h2>
+
+<div class="market-bar">
+  <span class="regime-badge">Bear -4/6</span>
+  <span class="market-detail">
+    NIFTY 23,822 (-0.95%) | SENSEX 76,706 (-1.09%) | VIX 20.5 | FII -1,039 Cr | A/D 5.5%
+  </span>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Indicator</th><th>Value</th><th>Signal</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>NIFTY 50</td><td>23,822 (-0.95%)</td><td style="color:#dc2626;">Bearish</td></tr>
+    <tr><td>SENSEX</td><td>76,706 (-1.09%)</td><td style="color:#dc2626;">Bearish</td></tr>
+    <tr><td>India VIX</td><td>20.5 (elevated)</td><td style="color:#dc2626;">Fear</td></tr>
+    <tr><td>Pre-market Gap</td><td>-1.90%</td><td style="color:#dc2626;">Gap Down</td></tr>
+    <tr><td>FII Flow</td><td>-1,039 Cr</td><td style="color:#dc2626;">Selling</td></tr>
+    <tr><td>S&P 500</td><td>-0.1%</td><td style="color:#9ca3af;">Neutral</td></tr>
+    <tr><td>Asia</td><td>-1.2%</td><td style="color:#dc2626;">Weak</td></tr>
+    <tr><td>A/D Ratio</td><td>5.5%</td><td style="color:#dc2626;">Extreme fear</td></tr>
+  </tbody>
+</table>
+
+<p>A brutal bear day. Nifty fell nearly 1%, FIIs were net sellers, and the advance-decline ratio hit 5.5% -- only 1 in 18 stocks closed green. The kind of day that separates adaptive engines from rigid ones.</p>
+
+<h2>4-Engine Results</h2>
+
+<!-- v4 -->
+<div class="engine-card neutral">
+  <div class="engine-header">
+    <div>
+      <span class="engine-name">v4: Equity Engine (Legacy)</span>
+      <span class="engine-tag tag-neutral">Inactive</span>
+    </div>
+    <span class="engine-pnl gray">Rs 0</span>
+  </div>
+  <div class="engine-metrics">
+    <span class="engine-metric">Trades: <strong>0</strong></span>
+    <span class="engine-metric">Win Rate: <strong>N/A</strong></span>
+  </div>
+  <div class="engine-desc">
+    VIX sizing reduced capital to 50%, but BEAR regime meant zero BUY signals crossed the threshold. Sat in 100% cash all day. <strong>Too scared.</strong> Cannot short, cannot rotate sectors, cannot adapt. Dead on bear days.
+  </div>
+</div>
+
+<!-- v5 -->
+<div class="engine-card winner">
+  <div class="engine-header">
+    <div>
+      <span class="engine-name">v5: Multi-Pool Engine</span>
+      <span class="engine-tag tag-winner">Day Winner</span>
+    </div>
+    <span class="engine-pnl green">Rs +14,303</span>
+  </div>
+  <div class="engine-metrics">
+    <span class="engine-metric">Trades: <strong>93</strong></span>
+    <span class="engine-metric">Wins: <strong>80</strong></span>
+    <span class="engine-metric">Losses: <strong>13</strong></span>
+    <span class="engine-metric">Win Rate: <strong>86%</strong></span>
+    <span class="engine-metric">Capital: <strong>30%</strong></span>
+  </div>
+  <div class="engine-desc">
+    The standout performer. SWING pool found <strong>16 stocks going UP</strong> while Nifty dropped. Sector rotation -- energy, metals, infrastructure rallied while the broader market fell.
+  </div>
+  <div class="ticker-strip">
+    <span class="ticker">VOLTAS</span>
+    <span class="ticker">NTPC</span>
+    <span class="ticker">VEDL</span>
+    <span class="ticker">ONGC</span>
+    <span class="ticker">COALINDIA</span>
+    <span class="ticker">BLUESTARCO</span>
+    <span class="ticker">MCX</span>
+    <span class="ticker">ADANIPOWER</span>
+    <span class="ticker">OIL</span>
+    <span class="ticker">WAAREEENER</span>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- v5.2 -->
+<div class="engine-card loser">
+  <div class="engine-header">
+    <div>
+      <span class="engine-name">v5.2: F&O Engine</span>
+      <span class="engine-tag tag-loser">Worst Day</span>
+    </div>
+    <span class="engine-pnl red">Rs -56,180</span>
+  </div>
+  <div class="engine-metrics">
+    <span class="engine-metric">Trades: <strong>2</strong></span>
+    <span class="engine-metric">Wins: <strong>0</strong></span>
+    <span class="engine-metric">Losses: <strong>2</strong></span>
+    <span class="engine-metric">Win Rate: <strong>0%</strong></span>
+  </div>
+  <div class="engine-desc">
+    Bought protective puts: NIFTY 23550PE at Rs 104 and NIFTY 23500PE at Rs 102. Both expired nearly worthless -- exited at Rs 9 each (<strong>-91% loss</strong>). Market only dropped -0.95%, not enough for puts to pay off. VIX at 20.5 made options expensive.
+  </div>
+</div>
+
+<div class="warning-box">
+  <h4>v5.2 Lesson Learned</h4>
+  <p>Don't buy puts when VIX > 18 -- options are already expensive with fear priced in. Puts work when VIX is LOW and you expect it to spike. On high-VIX days, sell premium (straddle/strangle selling) instead.</p>
+</div>
+
+<!-- v5.3 -->
+<div class="engine-card neutral">
+  <div class="engine-header">
+    <div>
+      <span class="engine-name">v5.3: Precision Engine</span>
+      <span class="engine-tag tag-neutral">No Action</span>
+    </div>
+    <span class="engine-pnl gray">Rs 0</span>
+  </div>
+  <div class="engine-metrics">
+    <span class="engine-metric">Trades: <strong>0</strong></span>
+    <span class="engine-metric">Signals: <strong>20 generated, 20 cancelled</strong></span>
+  </div>
+  <div class="engine-desc">
+    All 20 signals classified as Tier 2 (need ORB + volume confirmation). None confirmed -- volume was 0.0x to 0.4x of 20-day average. Every signal cancelled:
+  </div>
+  <div class="code-block">"low volume (0.0x &lt; 1.2x threshold)"</div>
+  <div class="engine-desc">
+    Ultra-conservative. Correct in principle but missed Rs 14,303 that v5 captured. Volume threshold (1.2x) is too strict for bear days.
+  </div>
+</div>
+
+<!-- 3-Day Scorecard -->
+<h2>3-Day Cumulative Scorecard</h2>
+
+<table>
+  <thead>
+    <tr><th>Engine</th><th>Day 1 (Bear)</th><th>Day 2 (Bull)</th><th>Day 3 (Bear)</th><th>TOTAL</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>v4</td><td style="color:#dc2626;">-30,816</td><td style="color:#16a34a;">+11,537</td><td>0</td><td><strong style="color:#dc2626;">-19,279</strong></td></tr>
+    <tr class="scorecard-row-highlight"><td><strong>v5</strong></td><td>0</td><td style="color:#16a34a;">+40,480</td><td style="color:#16a34a;">+14,303</td><td><strong style="color:#16a34a;">+54,783</strong></td></tr>
+    <tr><td>v5.2</td><td>0</td><td>0</td><td style="color:#dc2626;">-56,180</td><td><strong style="color:#dc2626;">-56,180</strong></td></tr>
+    <tr><td>v5.3</td><td>0</td><td>0</td><td>0</td><td><strong>0</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="success-box">
+  <h4>v5 leads v4 by Rs 74,062 over 3 days</h4>
+  <p>Consistent performance across both bull and bear regimes. v5.2 needs major recalibration. v5.3 hasn't traded yet -- too conservative to generate a confirmed signal.</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- WATCHDOG -->
+<h2>Watchdog Report Findings</h2>
+<p style="font-size:9pt; color:#64748b; margin-bottom:12px;">Analysis from April 12 watchdog run, validated against Day 3 data.</p>
+
+<h3>Trade Analysis Watchdog</h3>
+
+<div class="watchdog-item">
+  <span class="watchdog-num">1</span>
+  <strong>v5 entry price bug CONFIRMED</strong> -- COALINDIA short entry at 452.70 vs actual price 438. P&L overstated by ~40% on shorts. v5.3 fixes with live price confirmation.
+</div>
+<div class="watchdog-item">
+  <span class="watchdog-num">2</span>
+  <strong>Missed Rs 12-18K from Nifty 200</strong> -- SIEMENS +4.76%, ABB +3.27%, ADANIGREEN +3.91% not in scanning universe. Now FIXED with Nifty 200 expansion.
+</div>
+<div class="watchdog-item">
+  <span class="watchdog-num">3</span>
+  <strong>Entry timing lag</strong> -- v4 enters 15-16 min after open, missing 1.5-1.9% of gap-up move. v5.3's staged entry addresses this.
+</div>
+<div class="watchdog-item">
+  <span class="watchdog-num">4</span>
+  <strong>Pairs divergence uncaptured</strong> -- SUNPHARMA -2.6% vs DRREDDY +1.6% = 4.2% spread. No pairs module exists yet.
+</div>
+<div class="watchdog-item">
+  <span class="watchdog-num">5</span>
+  <strong>v4 re-entry bug</strong> -- SHRIRAMFIN entered 4x, losing Rs 8,400. Re-entry cap now in place.
+</div>
+
+<h3>Strategy Discovery -- Top Signals to Add</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:8%;">Rank</th><th style="width:25%;">Signal</th><th style="width:10%;">Impact</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr><td style="text-align:center;"><strong>1</strong></td><td>Sector Rotation</td><td style="text-align:center; color:#16a34a; font-weight:700;">9/10</td><td>40% CAGR on India backtest. Energy/metals/infra rallied while Nifty fell</td></tr>
+    <tr><td style="text-align:center;"><strong>2</strong></td><td>Cross-Asset Features</td><td style="text-align:center; color:#16a34a; font-weight:700;">8/10</td><td>DXY, crude, bonds, BTC correlation. Granger causality confirmed</td></tr>
+    <tr><td style="text-align:center;"><strong>3</strong></td><td>Market Breadth</td><td style="text-align:center; color:#16a34a; font-weight:700;">8/10</td><td>% above 20-DMA. A/D at 5.5% = extreme fear = potential bottom</td></tr>
+    <tr><td style="text-align:center;"><strong>4</strong></td><td>Options PCR + IV Skew</td><td style="text-align:center; color:#16a34a; font-weight:700;">8/10</td><td>PCR > 1.3 = reversal. Would improve v5.2 entry timing</td></tr>
+    <tr><td style="text-align:center;"><strong>5</strong></td><td>Technical Expansion</td><td style="text-align:center; font-weight:700;">7/10</td><td>ADX, Williams %R, calendar effects (Monday, expiry week)</td></tr>
+  </tbody>
+</table>
+
+<!-- KEY LEARNINGS -->
+<h2>Key Learnings</h2>
+
+<div class="success-box">
+  <h4>1. v5's SWING Pool is the Secret Weapon</h4>
+  <p>Finds sector rotation stocks going UP even when the market drops. VOLTAS +3.14%, MCX +3.13%, BLUESTARCO, NTPC, VEDL all green on a bear day. This is the core differentiator.</p>
+</div>
+
+<div class="warning-box">
+  <h4>2. v5.2 F&O Needs Complete Recalibration</h4>
+  <p>Don't buy puts when VIX > 18. Switch to premium selling (straddle/strangle) on high-VIX days. Puts only when VIX &lt; 15 AND regime score &lt;= -4.</p>
+</div>
+
+<div class="learning-box">
+  <h4>3. v5.3 is Too Conservative</h4>
+  <p>Cancelled ALL 20 signals. Volume filter (> 1.2x average) too strict for bear days when volume naturally dips. Reduce to 0.8x or use session-relative volume.</p>
+</div>
+
+<div class="learning-box">
+  <h4>4. v4 is Dead on Bear Days</h4>
+  <p>Zero trades, zero P&L. VIX sizing + no BUY signals = complete paralysis. Cannot short, cannot adapt to sector rotation.</p>
+</div>
+
+<div class="success-box">
+  <h4>5. Sector Rotation is #1 Missing Signal</h4>
+  <p>Energy, metals, infrastructure UP while IT, banking DOWN. A sector momentum scanner would have directed capital to right sectors automatically.</p>
+</div>
+
+<div class="warning-box">
+  <h4>6. Entry Price Accuracy is Critical</h4>
+  <p>Watchdog confirmed v5 short entries use stale prices. All engines should use <code>get_prices_batch()</code> at moment of entry. v5.3 already does this correctly.</p>
+</div>
+
+<div class="learning-box">
+  <h4>7. A/D at 5.5% = Extreme Fear = Contrarian Signal</h4>
+  <p>Historically, readings this extreme precede bounces within 1-3 days. Track as a contrarian buy indicator.</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- IMPROVEMENT TABLE -->
+<h2>What Could Have Been Done Better</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:12%;">Area</th><th style="width:38%;">What Happened</th><th>What Should Have Happened</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>v4</strong></td><td>0 trades (paralyzed)</td><td>Deploy 20-30% into sector rotation winners</td></tr>
+    <tr><td><strong>v5 shorts</strong></td><td>Entry at stale prices</td><td>Use live prices (v5.3 approach)</td></tr>
+    <tr><td><strong>v5.2 puts</strong></td><td>Bought expensive puts (-91%)</td><td>Sell premium, or buy puts only when VIX &lt; 15</td></tr>
+    <tr><td><strong>v5.3 volume</strong></td><td>All signals cancelled (0.0x)</td><td>Lower threshold to 0.8x, use session-relative</td></tr>
+    <tr><td><strong>Pairs</strong></td><td>DRREDDY/SUNPHARMA 4.2% spread missed</td><td>Build pairs trading module</td></tr>
+    <tr><td><strong>Sectors</strong></td><td>No sector-level analysis</td><td>Add sector rotation scanner</td></tr>
+  </tbody>
+</table>
+
+<!-- PLATFORM UPDATES -->
+<h2>Platform Updates Built Today</h2>
+
+<div class="update-grid">
+  <div class="update-item"><strong>AI Picks & Advisor</strong> -- Stocks/ETFs/MF + AI chat interface</div>
+  <div class="update-item"><strong>Smart Name Matching</strong> -- 80+ stock names resolved</div>
+  <div class="update-item"><strong>Live News Feed</strong> -- Google News RSS (replaces stale Day 1 news)</div>
+  <div class="update-item"><strong>F&O Tab Redesign</strong> -- Groww-style: index cards + chain</div>
+  <div class="update-item"><strong>Intraday Tab Redesign</strong> -- Index cards + top movers</div>
+  <div class="update-item"><strong>Gainers Index Filter</strong> -- Nifty 50/100/200/Midcap/Smallcap</div>
+  <div class="update-item"><strong>Swipe Removed</strong> -- Cleaner UX</div>
+  <div class="update-item"><strong>Telegram /status</strong> -- Working and tested</div>
+  <div class="update-item"><strong>v5 Telegram Alerts</strong> -- Entry/exit/regime/daily summary</div>
+</div>
+
+<!-- TOMORROW'S PLAN -->
+<h2>Tomorrow's Plan</h2>
+
+<ul class="plan-list">
+  <li data-num="1"><strong>v5 continues as-is</strong> -- winning engine, don't touch what's working</li>
+  <li data-num="2"><strong>Recalibrate v5.2</strong> -- switch from put buying to premium selling on high-VIX days</li>
+  <li data-num="3"><strong>Adjust v5.3 volume threshold</strong> -- from 1.2x down to 0.8x</li>
+  <li data-num="4"><strong>Start building sector rotation scanner</strong> -- highest impact new signal</li>
+  <li data-num="5"><strong>Watch for bounce signal</strong> -- A/D at 5.5% is extreme, contrarian buy may be coming</li>
+  <li data-num="6"><strong>Run all 4 engines</strong> for continued comparison</li>
+</ul>
+
+<!-- FOOTER -->
+<div class="page-footer">
+  TradePilot Paper Trading -- Day 3 of Multi-Engine Evaluation<br>
+  Soumya Swain | <a href="mailto:soumya@devpilot.co.in">soumya@devpilot.co.in</a>
+</div>
+
+</body>
+</html>

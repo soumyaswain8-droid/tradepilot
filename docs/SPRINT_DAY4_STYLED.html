@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#060A13;color:#F1F5F9;line-height:1.6}
+.page{max-width:800px;margin:0 auto;padding:40px}
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden;page-break-after:always}
+.cover::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(99,102,241,0.15),transparent 70%);border-radius:50%}
+.cover h1{font-family:Syne;font-size:48px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#6366F1,#8B5CF6,#C026D3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cover .sub{font-size:20px;color:#94A3B8;margin-bottom:40px}
+.cover .dt{font-family:Syne;font-size:14px;letter-spacing:3px;color:#64748B;text-transform:uppercase}
+.hero-stat{display:inline-flex;align-items:center;gap:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:50px;padding:12px 28px;margin:20px 0}
+.hero-stat .n{font-family:Syne;font-size:36px;font-weight:800;color:#10B981}
+.hero-stat .l{font-size:14px;color:#94A3B8;text-align:left}
+.info-row{display:flex;gap:20px;margin-top:20px}
+.info-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 20px;text-align:center}
+.info-box .v{font-family:Syne;font-size:22px;font-weight:800}
+.info-box .l{font-size:10px;color:#64748B}
+.sl{font-family:Syne;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#8B5CF6;margin-bottom:8px}
+.st{font-family:Syne;font-size:24px;font-weight:800;margin-bottom:4px}
+.gt{background:linear-gradient(135deg,#6366F1,#8B5CF6,#C026D3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.cd{background:#0C1121;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;text-align:center}
+.cd .v{font-family:Syne;font-size:28px;font-weight:800}
+.cd .l{font-size:11px;color:#64748B;margin-top:4px}
+.cd.hi{border-color:rgba(99,102,241,0.3);background:linear-gradient(135deg,#0C1121,rgba(99,102,241,0.06))}
+.grn{color:#10B981}.red{color:#F43F5E}.blu{color:#6366F1}.amb{color:#F59E0B}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+th{background:#111827;color:#94A3B8;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 6px;text-align:left;border-bottom:2px solid rgba(99,102,241,0.2)}
+td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.nr{text-align:right;font-family:"DM Mono",monospace}
+.pp{color:#10B981;font-weight:700}.np{color:#F43F5E;font-weight:700}
+.bg{display:inline-block;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:700}
+.bg-g{background:rgba(245,158,11,0.12);color:#F59E0B}
+.bg-a{background:rgba(244,63,94,0.12);color:#F43F5E}
+.bg-ok{background:rgba(16,185,129,0.12);color:#10B981}
+.bc{display:flex;align-items:flex-end;gap:8px;height:120px;margin:16px 0}
+.bcl{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.br{border-radius:4px 4px 0 0;width:100%;min-height:4px}
+.br-g{background:linear-gradient(180deg,#10B981,rgba(16,185,129,0.3))}
+.bl{font-size:9px;color:#64748B}
+.bv{font-size:9px;font-weight:700;color:#F1F5F9}
+.wd{background:#0C1121;border:1px solid rgba(244,63,94,0.15);border-left:3px solid #F43F5E;border-radius:0 12px 12px 0;padding:14px 16px;margin:10px 0}
+.wd.i{border-color:rgba(99,102,241,0.15);border-left-color:#6366F1}
+.wd.s{border-color:rgba(16,185,129,0.15);border-left-color:#10B981}
+.wd .wt{font-family:Syne;font-weight:700;font-size:13px;margin-bottom:4px}
+.wd .wx{font-size:12px;color:#94A3B8}
+.dv{height:1px;background:linear-gradient(90deg,transparent,rgba(99,102,241,0.15),transparent);margin:32px 0}
+.pb{page-break-before:always}
+.ft{text-align:center;font-size:10px;color:#475569;margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}
+</style></head><body>
+
+<div class="cover">
+<div class="dt">April 15, 2026 &bull; Day 4 &bull; Paper Trading</div>
+<h1>TradePilot</h1>
+<div class="sub">Daily Trade Summary &amp; Watchdog Report</div>
+<div class="hero-stat">
+<div class="n">+&#8377;49,713</div>
+<div class="l">v5 Engine P&amp;L<br>134 trades | 97% Win Rate</div>
+</div>
+<div class="info-row">
+<div class="info-box"><div class="v amb">SIDEWAYS</div><div class="l">Regime</div></div>
+<div class="info-box"><div class="v">18.7</div><div class="l">India VIX</div></div>
+<div class="info-box"><div class="v red">-0.96%</div><div class="l">Gap</div></div>
+</div>
+</div>
+
+<div class="page">
+<div class="sl">Engine Overview</div>
+<div class="st">5 Engines. <span class="gt">1 Clear Winner.</span></div>
+<div class="cg">
+<div class="cd hi"><div class="l">v5 P&amp;L</div><div class="v grn">+&#8377;49,713</div></div>
+<div class="cd"><div class="l">v5.4 P&amp;L</div><div class="v blu">+&#8377;26,854</div></div>
+<div class="cd"><div class="l">Combined</div><div class="v grn">+&#8377;76,567</div></div>
+</div>
+<div class="cg">
+<div class="cd"><div class="l">v5 Trades</div><div class="v">134</div></div>
+<div class="cd"><div class="l">Win Rate</div><div class="v grn">97%</div></div>
+<div class="cd"><div class="l">Win/Loss</div><div class="v">130W/4L</div></div>
+</div>
+<table>
+<tr><th>Engine</th><th>Regime</th><th class="nr">Trades</th><th>W/L</th><th class="nr">WR</th><th class="nr">P&amp;L</th><th>Status</th></tr>
+<tr><td><b>v5</b></td><td>SIDEWAYS</td><td class="nr">134</td><td>130W/4L</td><td class="nr pp">97%</td><td class="nr pp">+&#8377;49,713</td><td><span class="bg bg-g">WINNER</span></td></tr>
+<tr><td><b>v5.4</b></td><td>SIDEWAYS</td><td class="nr">90</td><td>87W/3L</td><td class="nr pp">97%</td><td class="nr pp">+&#8377;26,854</td><td><span class="bg bg-ok">ACTIVE</span></td></tr>
+<tr><td>v5.3</td><td>SIDEWAYS</td><td class="nr">3</td><td>1W/2L</td><td class="nr np">33%</td><td class="nr np">-&#8377;165</td><td>Staged</td></tr>
+<tr><td>v5.2</td><td>SIDEWAYS</td><td class="nr">0</td><td>--</td><td class="nr">--</td><td class="nr">&#8377;0</td><td>Non-expiry</td></tr>
+<tr><td>v4</td><td>HIGH-VIX</td><td class="nr">0</td><td>--</td><td class="nr">--</td><td class="nr">&#8377;0</td><td><span class="bg bg-a">FROZEN</span></td></tr>
+</table>
+<div class="dv"></div>
+<div class="sl">Time Analysis</div><div class="st">Hourly Performance</div><div class="bc">
+<div class="bcl"><div class="bv">93%</div><div class="br br-g" style="height:21%"></div><div class="bl">10h</div><div class="bl grn">+2,879</div></div>
+<div class="bcl"><div class="bv">93%</div><div class="br br-g" style="height:62%"></div><div class="bl">11h</div><div class="bl grn">+8,191</div></div>
+<div class="bcl"><div class="bv">100%</div><div class="br br-g" style="height:70%"></div><div class="bl">12h</div><div class="bl grn">+9,213</div></div>
+<div class="bcl"><div class="bv">100%</div><div class="br br-g" style="height:85%"></div><div class="bl">13h</div><div class="bl grn">+11,238</div></div>
+<div class="bcl"><div class="bv">97%</div><div class="br br-g" style="height:100%"></div><div class="bl">14h</div><div class="bl grn">+13,087</div></div>
+<div class="bcl"><div class="bv">100%</div><div class="br br-g" style="height:39%"></div><div class="bl">15h</div><div class="bl grn">+5,105</div></div>
+</div><div class="dv"></div>
+<div class="sl">Stock Analysis</div><div class="st">Stock Reliability Matrix</div><table><tr><th>Stock</th><th class="nr">Trades</th><th>W/L</th><th class="nr">WR</th><th class="nr">P&amp;L</th><th>Verdict</th></tr>
+<tr><td><b>SUZLON</b></td><td class="nr">9</td><td>9W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;11,453</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>MCX</b></td><td class="nr">9</td><td>9W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;4,599</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>BLUESTARCO</b></td><td class="nr">9</td><td>9W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;4,578</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>JSWENERGY</b></td><td class="nr">10</td><td>10W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;4,131</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>SOLARINDS</b></td><td class="nr">10</td><td>10W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;3,482</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>WAAREEENER</b></td><td class="nr">9</td><td>9W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;3,072</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>HDFCLIFE</b></td><td class="nr">9</td><td>9W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;2,651</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>TMPV</b></td><td class="nr">7</td><td>7W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;2,523</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>VOLTAS</b></td><td class="nr">5</td><td>5W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;1,916</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>NHPC</b></td><td class="nr">3</td><td>3W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;1,409</td><td><span class="bg bg-ok">GOOD</span></td></tr>
+<tr><td><b>GLENMARK</b></td><td class="nr">7</td><td>7W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;1,304</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>BSE</b></td><td class="nr">6</td><td>6W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;1,162</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>COFORGE</b></td><td class="nr">3</td><td>3W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;1,016</td><td><span class="bg bg-ok">GOOD</span></td></tr>
+<tr><td><b>ENRIN</b></td><td class="nr">5</td><td>5W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;937</td><td><span class="bg bg-g">GOLD</span></td></tr>
+<tr><td><b>APOLLOHOSP</b></td><td class="nr">3</td><td>3W/0L</td><td class="nr">100%</td><td class="nr pp">+&#8377;450</td><td><span class="bg bg-ok">GOOD</span></td></tr>
+<tr><td><b>DRREDDY</b></td><td class="nr">3</td><td>0W/3L</td><td class="nr">0%</td><td class="nr np">&#8377;-412</td><td><span class="bg bg-a">AVOID</span></td></tr>
+</table>
+<div class="pb"></div><div class="sl">Cumulative</div><div class="st">3-Day Performance Trend</div><div class="bc" style="height:150px">
+<div class="bcl"><div class="bv" style="font-size:11px">+&#8377;40,480</div><div class="br br-g" style="height:81%"></div><div class="bl">Apr 10</div><div class="bl">SIDEWAYS | 96%</div></div>
+<div class="bcl"><div class="bv" style="font-size:11px">+&#8377;14,303</div><div class="br br-g" style="height:28%"></div><div class="bl">Apr 13</div><div class="bl">BEAR | 86%</div></div>
+<div class="bcl"><div class="bv" style="font-size:11px">+&#8377;49,713</div><div class="br br-g" style="height:100%"></div><div class="bl">Apr 15</div><div class="bl">SIDEWAYS | 97%</div></div>
+</div>
+<div class="cg"><div class="cd hi"><div class="l">3-Day P&amp;L</div><div class="v grn">+&#8377;1,04,496</div></div><div class="cd"><div class="l">Total Trades</div><div class="v">253</div></div><div class="cd"><div class="l">Return</div><div class="v grn">+10.4%</div></div></div>
+<div class="dv"></div>
+<div class="sl">Watchdog</div><div class="st">Risk &amp; Pattern Findings</div>
+<div class="wd"><div class="wt">WD-1: DRREDDY Value Trap</div><div class="wx">Hit stoploss 3x today (0 wins, -&#8377;412). High fundamental score but bearish price. <b>Action:</b> Block re-entry for 60min after SL.</div></div>
+<div class="wd"><div class="wt">WD-2: SUZLON Concentration</div><div class="wx">23% of profit from one stock (9 trades, +&#8377;11,453). <b>Action:</b> Cap same-stock to 5/day.</div></div>
+<div class="wd i"><div class="wt">WD-3: Zero Shorts in SIDEWAYS</div><div class="wx">134 longs, 0 shorts. v5.4 shorts stuck in INTRADAY pool. <b>Action:</b> Fix pool assignment.</div></div>
+<div class="wd"><div class="wt">WD-4: v4 Engine Dead</div><div class="wx">27 scans, 0 trades. Absolute thresholds fail in non-bull. <b>Action:</b> Retire as trader.</div></div>
+<div class="wd s"><div class="wt">WD-5: Trailing Stops Perfect</div><div class="wx">9 SL exits, net P&amp;L +&#8377;147 (positive!). No change needed.</div></div>
+<div class="wd i"><div class="wt">WD-6: Afternoon Dominance</div><div class="wx">12-3PM = 67% of P&amp;L, 97-100% WR. 15-day experiment in progress.</div></div>
+<div class="dv"></div><div class="sl">Risk</div><div class="st">Key Metrics</div>
+<div class="cg"><div class="cd"><div class="l">Avg Win</div><div class="v grn">+&#8377;387</div></div><div class="cd"><div class="l">Avg Loss</div><div class="v red">-&#8377;152</div></div><div class="cd"><div class="l">W/L Ratio</div><div class="v blu">2.55x</div></div></div>
+<div class="cg"><div class="cd"><div class="l">Best Trade</div><div class="v grn">+&#8377;1,568</div><div class="l">SUZLON</div></div><div class="cd"><div class="l">Worst Trade</div><div class="v red">-&#8377;196</div><div class="l">OIL</div></div><div class="cd"><div class="l">Direction</div><div class="v">134L / 0S</div></div></div>
+<div class="dv"></div><div class="sl">Carry Forward</div><div class="st">Open Positions for Tomorrow</div><table><tr><th>Stock</th><th>Dir</th><th class="nr">Entry</th><th class="nr">SL</th><th class="nr">Target</th><th>Trail</th></tr>
+<tr><td><b>NTPC</b></td><td>LONG</td><td class="nr">&#8377;386.25</td><td class="nr">&#8377;391.53</td><td class="nr">&#8377;393.98</td><td><span class="bg bg-ok">YES</span></td></tr>
+<tr><td><b>TATAPOWER</b></td><td>LONG</td><td class="nr">&#8377;409.55</td><td class="nr">&#8377;420.09</td><td class="nr">&#8377;422.66</td><td><span class="bg bg-ok">YES</span></td></tr>
+<tr><td><b>ENRIN</b></td><td>LONG</td><td class="nr">&#8377;2,849.20</td><td class="nr">&#8377;2,902.91</td><td class="nr">&#8377;2,920.43</td><td><span class="bg bg-ok">YES</span></td></tr>
+<tr><td><b>VEDL</b></td><td>LONG</td><td class="nr">&#8377;752.55</td><td class="nr">&#8377;762.17</td><td class="nr">&#8377;776.63</td><td><span class="bg bg-ok">YES</span></td></tr>
+<tr><td><b>TATAINVEST</b></td><td>LONG</td><td class="nr">&#8377;713.20</td><td class="nr">&#8377;706.07</td><td class="nr">&#8377;731.03</td><td><span style="color:#64748B">No</span></td></tr>
+<tr><td><b>ADANIPOWER</b></td><td>LONG</td><td class="nr">&#8377;181.35</td><td class="nr">&#8377;183.08</td><td class="nr">&#8377;184.98</td><td><span class="bg bg-ok">YES</span></td></tr>
+<tr><td><b>DMART</b></td><td>LONG</td><td class="nr">&#8377;4,448.00</td><td class="nr">&#8377;4,381.28</td><td class="nr">&#8377;4,536.96</td><td><span style="color:#64748B">No</span></td></tr>
+<tr><td><b>ADANIENSOL</b></td><td>LONG</td><td class="nr">&#8377;1,175.30</td><td class="nr">&#8377;1,151.79</td><td class="nr">&#8377;1,205.86</td><td><span style="color:#64748B">No</span></td></tr>
+<tr><td><b>TORNTPHARM</b></td><td>LONG</td><td class="nr">&#8377;4,181.00</td><td class="nr">&#8377;4,118.28</td><td class="nr">&#8377;4,264.62</td><td><span style="color:#64748B">No</span></td></tr>
+</table>
+<div class="ft">TradePilot &bull; Day 4 Trade Summary &bull; April 15, 2026 &bull; CONFIDENTIAL</div></div></body></html>

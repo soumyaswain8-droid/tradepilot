@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePilot v6 - The Machine</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Avenir Next', 'Avenir', Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #ffffff;
+  }
+
+  /* ── COVER PAGE ── */
+  .cover {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(160deg, #0f0c29 0%, #1a1a4e 30%, #302b63 60%, #24243e 100%);
+    color: #ffffff;
+    text-align: center;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -15%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    padding: 6px 24px;
+    border-radius: 20px;
+    font-size: 11pt;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    z-index: 1;
+  }
+
+  .cover-title {
+    font-size: 42pt;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    z-index: 1;
+    line-height: 1.1;
+  }
+
+  .cover-subtitle {
+    font-size: 15pt;
+    font-weight: 400;
+    color: #c4b5fd;
+    margin-bottom: 50px;
+    z-index: 1;
+    max-width: 500px;
+  }
+
+  .cover-version {
+    font-size: 64pt;
+    font-weight: 800;
+    background: linear-gradient(135deg, #34d399, #6366f1, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+    z-index: 1;
+    line-height: 1;
+  }
+
+  .cover-machine {
+    font-size: 20pt;
+    font-weight: 300;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: #a5b4fc;
+    margin-bottom: 60px;
+    z-index: 1;
+  }
+
+  .cover-author {
+    font-size: 11pt;
+    color: #94a3b8;
+    z-index: 1;
+  }
+
+  .cover-author strong {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  .cover-date {
+    font-size: 10pt;
+    color: #64748b;
+    margin-top: 8px;
+    z-index: 1;
+  }
+
+  /* ── CONTENT PAGES ── */
+  .content {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 50px 60px;
+  }
+
+  h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #6366f1;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #312e81;
+    margin-top: 30px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #4338ca;
+    margin-top: 22px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin-bottom: 10px;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin-left: 22px;
+    margin-bottom: 12px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #1e1b4b;
+  }
+
+  blockquote {
+    margin: 16px 0;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #f0f4ff, #ede9fe);
+    border-left: 4px solid #6366f1;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #312e81;
+  }
+
+  blockquote strong {
+    font-style: normal;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+
+  thead th {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #ffffff;
+    font-weight: 600;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  thead th:first-child {
+    border-radius: 6px 0 0 0;
+  }
+
+  thead th:last-child {
+    border-radius: 0 6px 0 0;
+  }
+
+  tbody td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  tbody tr:hover {
+    background: #f0f4ff;
+  }
+
+  td.num, th.num {
+    text-align: right;
+  }
+
+  /* ── CODE / ARCHITECTURE BLOCK ── */
+  pre {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8.5pt;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 14px 0;
+    page-break-inside: avoid;
+    color: #334155;
+  }
+
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 9pt;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #6366f1;
+  }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #86efac;
+    border-left: 4px solid #16a34a;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+
+  .highlight-box strong {
+    color: #15803d;
+  }
+
+  .callout-box {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1px solid #93c5fd;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+
+  .risk-box {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #dc2626;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+
+  /* ── SECTION DIVIDER ── */
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, #6366f1, #a78bfa, #c4b5fd, transparent);
+    margin: 30px 0;
+  }
+
+  /* ── PHASE CARDS ── */
+  .phase-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    margin: 12px 0;
+    page-break-inside: avoid;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .phase-card h3 {
+    margin-top: 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .phase-card .target {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 9pt;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  /* ── LAYER BADGES ── */
+  .layer-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 8pt;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  .badge-new {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-evolved {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    page-break-after: always;
+    padding: 60px;
+  }
+
+  .toc h2 {
+    font-size: 20pt;
+    border-bottom: 3px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 24px;
+  }
+
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted #d1d5db;
+    font-size: 11pt;
+  }
+
+  .toc-item:hover {
+    background: #f8fafc;
+  }
+
+  .toc-num {
+    color: #6366f1;
+    font-weight: 700;
+    margin-right: 10px;
+    min-width: 24px;
+  }
+
+  .toc-label {
+    flex: 1;
+    color: #1e1b4b;
+    font-weight: 500;
+  }
+
+  .toc-page {
+    color: #6b7280;
+    font-size: 10pt;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+    font-size: 9pt;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 40px;
+  }
+
+  /* ── PAGE BREAKS ── */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* ── WIN CARD ── */
+  .win-list {
+    counter-reset: win;
+  }
+
+  .win-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+
+  .win-num {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12pt;
+    margin-right: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .win-text {
+    flex: 1;
+  }
+
+  .win-text strong {
+    color: #4338ca;
+  }
+
+  /* ── COMPETITIVE TABLE ── */
+  .comp-yes {
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  .comp-no {
+    color: #dc2626;
+    font-weight: 500;
+  }
+
+  .comp-special {
+    color: #6366f1;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ COVER ═══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">Master Plan</div>
+  <div class="cover-title">TradePilot</div>
+  <div class="cover-version">v6</div>
+  <div class="cover-machine">The Machine</div>
+  <div class="cover-subtitle">From Paper Trading to Market Domination</div>
+  <div class="cover-author">
+    <strong>Soumya Swain</strong><br>
+    soumya@devpilot.co.in
+  </div>
+  <div class="cover-date">April 12, 2026</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ TOC ═══════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-item"><span class="toc-num">1</span><span class="toc-label">Where We Are (Evolution Summary)</span><span class="toc-page">3</span></div>
+  <div class="toc-item"><span class="toc-num">2</span><span class="toc-label">v6 Vision: "The Machine"</span><span class="toc-page">4</span></div>
+  <div class="toc-item"><span class="toc-num">3</span><span class="toc-label">The Reality Check</span><span class="toc-page">5</span></div>
+  <div class="toc-item"><span class="toc-num">4</span><span class="toc-label">Six Strategy Layers</span><span class="toc-page">6</span></div>
+  <div class="toc-item"><span class="toc-num">5</span><span class="toc-label">Technology Stack</span><span class="toc-page">9</span></div>
+  <div class="toc-item"><span class="toc-num">6</span><span class="toc-label">Go-Live Checklist</span><span class="toc-page">10</span></div>
+  <div class="toc-item"><span class="toc-num">7</span><span class="toc-label">Implementation Phases</span><span class="toc-page">11</span></div>
+  <div class="toc-item"><span class="toc-num">8</span><span class="toc-label">Risk Management (Non-Negotiable)</span><span class="toc-page">13</span></div>
+  <div class="toc-item"><span class="toc-num">9</span><span class="toc-label">Competitive Analysis</span><span class="toc-page">14</span></div>
+  <div class="toc-item"><span class="toc-num">10</span><span class="toc-label">Revenue Model</span><span class="toc-page">15</span></div>
+  <div class="toc-item"><span class="toc-num">11</span><span class="toc-label">Why We Win</span><span class="toc-page">16</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SECTION 1 ═══════════════════════════════════════════ -->
+<div class="content">
+
+<h1>1. Where We Are</h1>
+<p>TradePilot has evolved across four major versions, each adding a critical capability. Here is where things stand today.</p>
+
+<table>
+  <thead>
+    <tr><th>Version</th><th>What It Does</th><th class="num">Lines</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>v3</td><td>ML classification, regime-aware</td><td class="num">~1,500</td><td>Retired</td></tr>
+    <tr><td>v4</td><td>7-signal composite scorer, long-only</td><td class="num">~2,100</td><td>Live (paper)</td></tr>
+    <tr><td>v5</td><td>Multi-pool + shorts + regime + risk</td><td class="num">~4,800</td><td>Live (paper)</td></tr>
+    <tr><td>v5.2</td><td>F&amp;O options experiment</td><td class="num">~1,300</td><td>Live (paper)</td></tr>
+    <tr style="font-weight:700; background:#f0f4ff;"><td>v6</td><td>The Machine</td><td class="num">~15,000 est</td><td>Planning</td></tr>
+  </tbody>
+</table>
+
+<h2>2-Day Paper Trading Results</h2>
+
+<div class="risk-box">
+  <strong>v4:</strong> Rs -19,279 &mdash; Day 1 bear: -30K, Day 2 bull: +11K
+</div>
+
+<div class="highlight-box">
+  <strong>v5:</strong> Rs +38,986 &mdash; Day 1: -1.5K, Day 2: +40K<br><br>
+  <strong>v5 proved the thesis:</strong> regime detection + shorts + risk management = profitable.
+</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 2 ═══════════════════════════════════════════ -->
+<h1>2. v6 Vision: "The Machine"</h1>
+
+<p>v6 is NOT a bigger v5. It is a fundamentally different architecture.</p>
+
+<blockquote>
+  <strong>v5</strong> = Rule-based system with ML assistance<br>
+  <strong>v6</strong> = Multi-agent AI system with rule-based safety rails
+</blockquote>
+
+<h2>Architecture Overview</h2>
+
+<pre>
+ ORCHESTRATOR (Master Agent)
+ Coordinates all agents, manages state, kills bad trades, enforces risk limits
+ ──────────────────────────────────────────────────────────────────────────────
+
+ SIGNAL AGENTS (4 parallel)
+ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐  ┌──────────────┐
+ │   Technical    │  │   Sentiment    │  │ Institutional  │  │  Cross-Asset │
+ │   Agent        │  │   Agent        │  │  Flow Agent    │  │    Agent     │
+ │   (ML + TA)    │  │   (LLM + NLP)  │  │ (FII/DII)      │  │ (Bonds/FX)   │
+ └────────────────┘  └────────────────┘  └────────────────┘  └──────────────┘
+ ──────────────────────────────────────────────────────────────────────────────
+
+ RISK AGENT
+ Regime detection (HMM + 8 indicators)  |  VIX-based sizing
+ Cross-strategy correlation guard       |  Portfolio VaR/CVaR limits
+ Kill switch
+ ──────────────────────────────────────────────────────────────────────────────
+
+ EXECUTION AGENT
+ Zerodha Kite API  |  Smart order routing  |  Slippage min  |  Audit trail
+ ──────────────────────────────────────────────────────────────────────────────
+
+ PORTFOLIO AGENT
+ Multi-strategy allocation  |  Kelly sizing  |  Dynamic rebalancing  |  Tax-aware
+ ──────────────────────────────────────────────────────────────────────────────
+
+ MARKETS: NSE 500 Equity + Index F&amp;O + Stock F&amp;O + Commodities + Currency
+ ──────────────────────────────────────────────────────────────────────────────
+
+ DATA LAYER: Real-time ticks + News (LLM) + FII/DII + Insider + Delivery %
+             + Options chain + Cross-asset + Google Trends + Alt data
+</pre>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 3 ═══════════════════════════════════════════ -->
+<h1>3. The Reality Check</h1>
+
+<p>The OpenAI "$9K to $90K" story is cherry-picked backtests, not a real product.</p>
+
+<h2>What ACTUALLY Works at Top Quant Funds</h2>
+
+<div class="callout-box">
+  <ul>
+    <li><strong>Renaissance:</strong> Signal processing + HMM + statistical arbitrage (Sharpe ~2.0)</li>
+    <li><strong>Two Sigma:</strong> Gradient boosting on alternative data (15-20% annual)</li>
+    <li><strong>Citadel:</strong> ML for execution optimization</li>
+  </ul>
+  <p style="margin-top:10px; margin-bottom:0;"><strong>No LLM makes trading decisions.</strong> The AI is infrastructure, not the decision-maker.</p>
+</div>
+
+<h2>Our Realistic Targets</h2>
+
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Target</th><th style="text-align:center">World-Class?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Sharpe ratio</td><td>1.5 &ndash; 2.0</td><td style="text-align:center">Yes (top 1% of hedge funds)</td></tr>
+    <tr><td>Annual return</td><td>25 &ndash; 40%</td><td style="text-align:center">Yes (beats 99% of mutual funds)</td></tr>
+    <tr><td>Max drawdown</td><td>&lt;15%</td><td style="text-align:center">Yes (institutional grade)</td></tr>
+    <tr><td>Win rate</td><td>60%+</td><td style="text-align:center">Yes (with proper R:R)</td></tr>
+    <tr><td>Profit ratio</td><td>80% days profitable</td><td style="text-align:center">Ambitious but achievable</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 4 ═══════════════════════════════════════════ -->
+<h1>4. Six Strategy Layers</h1>
+
+<p>v6 deploys ALL six simultaneously. Each layer is independent but cross-correlated via the Risk Agent.</p>
+
+<div class="phase-card">
+  <h3>Layer 1: Technical Momentum/Reversion <span class="layer-badge badge-evolved">EVOLVED</span></h3>
+  <ul>
+    <li>LightGBM + TFT + LSTM ensemble on 500 stocks</li>
+    <li>Dynamic blend: momentum in BULL, mean-reversion in BEAR</li>
+    <li>Intraday (ORB, VWAP) + Swing (3-7d) + Positional (2-4wk)</li>
+  </ul>
+  <span class="target">Expected Sharpe: 1.0 &ndash; 1.5</span>
+</div>
+
+<div class="phase-card">
+  <h3>Layer 2: Sentiment Alpha <span class="layer-badge badge-new">NEW in v6</span></h3>
+  <ul>
+    <li>Claude/Llama sentiment scoring of news headlines + earnings calls</li>
+    <li>74% directional accuracy per research (Sharpe 3.05 in papers)</li>
+    <li>Sources: MoneyControl, Economic Times, BSE announcements</li>
+    <li>Contrarian at extremes (panic sell = buy signal)</li>
+  </ul>
+  <span class="target">Expected Sharpe: 1.5 &ndash; 3.0 (supplementary)</span>
+</div>
+
+<div class="phase-card">
+  <h3>Layer 3: Institutional Flow <span class="layer-badge badge-evolved">ENHANCED</span></h3>
+  <ul>
+    <li>FII/DII daily net flow &mdash; 1-3 day lead indicator</li>
+    <li>Delivery percentage spikes &mdash; institutional accumulation signal</li>
+    <li>Insider buying clusters &mdash; 11.2% annual alpha</li>
+    <li>Bulk/block deal following</li>
+  </ul>
+  <span class="target">Expected Sharpe: 0.8 &ndash; 1.3</span>
+</div>
+
+<div class="page-break"></div>
+
+<div class="phase-card">
+  <h3>Layer 4: Cross-Asset Signals <span class="layer-badge badge-new">NEW in v6</span></h3>
+  <ul>
+    <li>India 10Y bond yield changes &rarr; equity sector rotation</li>
+    <li>USD/INR trend &rarr; FII flow prediction</li>
+    <li>Crude oil spikes &rarr; negative for Indian equities</li>
+    <li>Gold rally + equity fall &rarr; risk-off regime</li>
+    <li>US market overnight &rarr; gap prediction</li>
+  </ul>
+  <span class="target">Expected Sharpe: 0.8 &ndash; 1.2 (overlay)</span>
+</div>
+
+<div class="phase-card">
+  <h3>Layer 5: Options Premium Harvesting <span class="layer-badge badge-evolved">EVOLVED</span></h3>
+  <ul>
+    <li>Weekly expiry straddle/strangle selling on Nifty/BankNifty</li>
+    <li>IV consistently exceeds realized vol by 20-30% in India</li>
+    <li>Protective puts during BEAR regime</li>
+    <li>Covered calls on profitable SWING holdings</li>
+  </ul>
+  <span class="target">Expected Sharpe: 1.0 &ndash; 2.0</span>
+</div>
+
+<div class="phase-card">
+  <h3>Layer 6: Pairs/Statistical Arbitrage <span class="layer-badge badge-new">NEW in v6</span></h3>
+  <ul>
+    <li>Cointegrated pairs within sectors (e.g., TCS-INFY, HDFCBANK-ICICIBANK)</li>
+    <li>Market-neutral: profit regardless of market direction</li>
+    <li>4.97% annual on Nifty 50 pairs (from research)</li>
+  </ul>
+  <span class="target">Expected Sharpe: 1.5 &ndash; 2.5 (market-neutral)</span>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 5 ═══════════════════════════════════════════ -->
+<h1>5. Technology Stack</h1>
+
+<table>
+  <thead>
+    <tr><th style="width:22%">Component</th><th style="width:38%">Tool</th><th style="width:40%">Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Live execution</td><td>Zerodha Kite Connect (Rs 2K/mo)</td><td>Best reliability, Python SDK</td></tr>
+    <tr><td>Tick data</td><td>Kite WebSocket (3000 instruments)</td><td>Real-time, ~1sec latency</td></tr>
+    <tr><td>Historical data</td><td>QuestDB + DuckDB</td><td>ASOF JOIN, fastest ingestion</td></tr>
+    <tr><td>ML training</td><td>LightGBM + neuralforecast (TFT/LSTM)</td><td>Proven, M1 Mac compatible</td></tr>
+    <tr><td>Sentiment</td><td>Claude API + Llama 3.1 (Ollama)</td><td>Best accuracy + local fallback</td></tr>
+    <tr><td>Feature store</td><td>DuckDB + Parquet files</td><td>Zero infra cost, AES-256</td></tr>
+    <tr><td>Backtesting</td><td>vectorbt + custom event-driven</td><td>Speed + accuracy</td></tr>
+    <tr><td>Monitoring</td><td>Grafana + Telegram bot</td><td>Real-time dashboards + alerts</td></tr>
+    <tr><td>Server</td><td>AWS Mumbai (ap-south-1)</td><td>Low latency to NSE, SEBI compliant</td></tr>
+    <tr><td>CI/CD</td><td>GitHub Actions</td><td>Auto-deploy on push</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 6 ═══════════════════════════════════════════ -->
+<h1>6. Go-Live Checklist</h1>
+
+<table>
+  <thead>
+    <tr><th style="width:8%">Step</th><th style="width:45%">What</th><th style="width:22%">Timeline</th><th style="width:25%">Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Complete 20-session paper validation</td><td>2 more weeks</td><td style="color:#d97706;font-weight:600">In Progress</td></tr>
+    <tr><td>2</td><td>Open Zerodha API account (Rs 2K/month)</td><td>1 day</td><td>TODO</td></tr>
+    <tr><td>3</td><td>SEBI algo registration</td><td>2-4 weeks</td><td>TODO</td></tr>
+    <tr><td>4</td><td>Build execution agent (Kite API wrapper)</td><td>1 week</td><td>TODO</td></tr>
+    <tr><td>5</td><td>Shadow mode (log orders, don't execute)</td><td>1 week</td><td>TODO</td></tr>
+    <tr><td>6</td><td>Live with 1 lot (tiny size, real money)</td><td>2 weeks</td><td>TODO</td></tr>
+    <tr><td>7</td><td>Scale to full capital</td><td>After 1 month live</td><td>TODO</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 7 ═══════════════════════════════════════════ -->
+<h1>7. Implementation Phases</h1>
+
+<div class="phase-card">
+  <h3>Phase 1: Foundation (Weeks 1-4) &mdash; "Make It Work"</h3>
+  <ul>
+    <li>Complete 20-session v5 paper validation</li>
+    <li>Open Shoonya account, download 1 year intraday data</li>
+    <li>Retrain ML ensemble (LightGBM + TFT + LSTM) with intraday features</li>
+    <li>Build cross-asset signal overlay (bonds, crude, USD/INR)</li>
+    <li>Add delivery percentage to signal engine</li>
+  </ul>
+  <span class="target">Target: Sharpe > 1.0, 60%+ win rate on paper</span>
+</div>
+
+<div class="phase-card">
+  <h3>Phase 2: Intelligence (Weeks 5-8) &mdash; "Make It Smart"</h3>
+  <ul>
+    <li>LLM sentiment layer (Claude API for news scoring)</li>
+    <li>Insider buying data from SEBI filings</li>
+    <li>Pairs trading module (cointegrated Nifty 200 pairs)</li>
+    <li>Enhanced options strategies (volatility selling)</li>
+    <li>Multi-agent orchestrator (coordinate all signal agents)</li>
+  </ul>
+  <span class="target">Target: Sharpe > 1.5, 65%+ win rate</span>
+</div>
+
+<div class="phase-card">
+  <h3>Phase 3: Execution (Weeks 9-12) &mdash; "Make It Real"</h3>
+  <ul>
+    <li>Zerodha Kite API integration</li>
+    <li>Smart order routing (limit for liquid, market for urgent)</li>
+    <li>Shadow mode testing (2 weeks)</li>
+    <li>SEBI algo registration</li>
+    <li>Kill switch + audit trail</li>
+    <li>AWS Mumbai deployment</li>
+  </ul>
+  <span class="target">Target: Live with 1 lot, no catastrophic bugs</span>
+</div>
+
+<div class="phase-card">
+  <h3>Phase 4: Scale (Weeks 13-20) &mdash; "Make It Bigger"</h3>
+  <ul>
+    <li>Scale from 1 lot to full capital</li>
+    <li>Add Grafana real-time P&amp;L dashboard</li>
+    <li>Commodities module (gold, crude)</li>
+    <li>Currency hedging (USD/INR)</li>
+    <li>Tax optimization engine (STCG/LTCG awareness)</li>
+    <li>Public API for future subscribers</li>
+  </ul>
+  <span class="target">Target: 25-40% annual return, Sharpe > 1.5</span>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 8 ═══════════════════════════════════════════ -->
+<h1>8. Risk Management</h1>
+<p style="color:#dc2626; font-weight:600; font-size:12pt; margin-bottom:14px;">Non-Negotiable Rules</p>
+
+<table>
+  <thead>
+    <tr><th style="width:30%">Rule</th><th style="width:25%">Limit</th><th style="width:45%">Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Daily max loss</td><td><strong>2% of capital</strong></td><td>Survive any single day</td></tr>
+    <tr><td>Weekly max loss</td><td><strong>5% of capital</strong></td><td>Survive any bad week</td></tr>
+    <tr><td>Monthly max loss</td><td><strong>10% of capital</strong></td><td>Kill switch trigger</td></tr>
+    <tr><td>Single position max</td><td><strong>10% of capital</strong></td><td>Diversification</td></tr>
+    <tr><td>Max leverage (F&amp;O)</td><td><strong>3x</strong></td><td>Don't blow up</td></tr>
+    <tr><td>Max correlated positions</td><td><strong>3 from same sector</strong></td><td>Concentration risk</td></tr>
+    <tr><td>Kill switch</td><td><strong>Auto at -2% daily</strong></td><td>Hard stop, no override</td></tr>
+    <tr><td>Recovery ladder</td><td><strong>25/50/75/100% over 15d</strong></td><td>Don't revenge trade</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 9 ═══════════════════════════════════════════ -->
+<h1>9. Competitive Analysis</h1>
+
+<table>
+  <thead>
+    <tr><th style="width:24%">Feature</th><th style="width:14%">Zerodha</th><th style="width:14%">Groww</th><th style="width:14%">Angel</th><th style="width:34%">TradePilot v6</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Stock trading</td><td class="comp-yes">Yes</td><td class="comp-yes">Yes</td><td class="comp-yes">Yes</td><td class="comp-yes">Yes (via Kite)</td></tr>
+    <tr><td>F&amp;O</td><td class="comp-yes">Yes</td><td class="comp-no">No</td><td class="comp-yes">Yes</td><td class="comp-special">Yes + AI strategies</td></tr>
+    <tr><td>Algo trading</td><td>Manual</td><td class="comp-no">No</td><td>Basic</td><td class="comp-special">Full AI-powered</td></tr>
+    <tr><td>Regime detection</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">HMM + 8 indicators</td></tr>
+    <tr><td>Short signals</td><td>Manual</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">Auto-generated</td></tr>
+    <tr><td>Risk management</td><td>Basic SL</td><td>Basic</td><td>Basic</td><td class="comp-special">5-tier breakers</td></tr>
+    <tr><td>Sentiment analysis</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">LLM-powered</td></tr>
+    <tr><td>Multi-strategy</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">6 layers</td></tr>
+    <tr><td>Cross-asset</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">Bonds, crude, FX</td></tr>
+    <tr><td>Paper trading</td><td>Streak</td><td class="comp-no">No</td><td class="comp-no">No</td><td class="comp-special">Built-in</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 10 ═══════════════════════════════════════════ -->
+<h1>10. Revenue Model</h1>
+<p>After proving the system works (6+ months live track record):</p>
+
+<table>
+  <thead>
+    <tr><th style="width:18%">Tier</th><th style="width:18%">Price</th><th style="width:64%">What They Get</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Free</td><td>Rs 0</td><td>Market data, basic signals, paper trading</td></tr>
+    <tr><td>Pro</td><td>Rs 999/mo</td><td>Full v6 signals, regime alerts, Telegram bot</td></tr>
+    <tr><td>Algo</td><td>Rs 4,999/mo</td><td>API access, auto-execution, all strategies</td></tr>
+    <tr><td>Enterprise</td><td>Custom</td><td>White-label, custom strategies, dedicated support</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight-box" style="margin-top:20px;">
+  <strong>Target:</strong> 1,000 paying users at avg Rs 2,000/month = <strong>Rs 20L MRR</strong>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════ SECTION 11 ═══════════════════════════════════════════ -->
+<h1>11. Why We Win</h1>
+
+<div class="win-list">
+  <div class="win-item">
+    <div class="win-num">1</div>
+    <div class="win-text"><strong>We built the system before raising money</strong> &mdash; 6,600 lines of battle-tested code across 4 versions.</div>
+  </div>
+  <div class="win-item">
+    <div class="win-num">2</div>
+    <div class="win-text"><strong>We have live paper trading data</strong> &mdash; not backtests, real market decisions with real-time signals.</div>
+  </div>
+  <div class="win-item">
+    <div class="win-num">3</div>
+    <div class="win-text"><strong>Multi-strategy diversification</strong> &mdash; 6 independent layers, not dependent on any single approach failing or succeeding.</div>
+  </div>
+  <div class="win-item">
+    <div class="win-num">4</div>
+    <div class="win-text"><strong>India-first</strong> &mdash; FII/DII flows, delivery %, F&amp;O expiry patterns are our unique edge that no US-built system has.</div>
+  </div>
+  <div class="win-item">
+    <div class="win-num">5</div>
+    <div class="win-text"><strong>AI as infrastructure, not hype</strong> &mdash; regime detection + risk management, not "GPT picks stocks".</div>
+  </div>
+  <div class="win-item">
+    <div class="win-num">6</div>
+    <div class="win-text"><strong>Bootstrapped, profitable, then scale</strong> &mdash; same DevPilot philosophy. Prove it works, then grow.</div>
+  </div>
+</div>
+
+<hr>
+
+<div class="footer">
+  <strong>TradePilot v6 &mdash; The Machine</strong><br>
+  Built by traders, for traders.<br><br>
+  Soumya Swain &nbsp;|&nbsp; soumya@devpilot.co.in<br>
+  April 2026
+</div>
+
+</div><!-- /content -->
+
+</body>
+</html>

@@ -13,7 +13,7 @@ import traceback
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from data_engine import get_market_indices, NIFTY_STOCKS
+from data_engine import get_market_indices, load_stock_data, NIFTY_STOCKS
 from ai_scorer import score_stocks, train_model
 from analytics import (track_visit, track_page_view, track_stock_view,
                        track_swipe, track_paper_trade, track_wizard_search,
@@ -28,10 +28,28 @@ except ImportError:
     HAS_V2 = False
     print("[ENGINE] v2 not available, using v1")
 
+# Try to load v3 regime-aware engine
+try:
+    from trading_engine_v3 import score_stocks_v3
+    HAS_V3 = True
+    print("[ENGINE] v3 regime-aware engine loaded")
+except ImportError:
+    HAS_V3 = False
+    print("[ENGINE] v3 not available")
+
+# Try to load v4 composite scorer
+try:
+    from v4.composite_scorer import score_all_stocks as score_stocks_v4
+    HAS_V4 = True
+    print("[ENGINE] v4 composite scorer loaded")
+except ImportError:
+    HAS_V4 = False
+    print("[ENGINE] v4 not available")
+
 app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
             static_folder=os.path.join(os.path.dirname(__file__), "static"))
-CORS(app)  # Allow Flutter web app to call API from different port
+CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
 
 
 def get_model_meta():
@@ -42,6 +60,15 @@ def get_model_meta():
         if os.path.exists(path):
             with open(path) as f:
                 return json.load(f)
+    return None
+
+
+def get_model_meta_v3():
+    """Load v3 model metadata."""
+    v3_path = os.path.join(os.path.dirname(__file__), "models", "model_meta_v3.json")
+    if os.path.exists(v3_path):
+        with open(v3_path) as f:
+            return json.load(f)
     return None
 
 
@@ -56,6 +83,11 @@ def get_backtest_results():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/landing")
+def landing():
+    """Premium landing page for client demos."""
+    return render_template("landing.html")
 
 @app.route("/api/preloaded-scores")
 def api_preloaded():
@@ -148,9 +180,11 @@ def api_scores():
     """Get AI scores -- uses NIFTY 50 by default for speed, with caching."""
     import time
     category = request.args.get('category', 'nifty50')
+    default_engine = "v4" if HAS_V4 else "v2"
+    engine = request.args.get('engine', default_engine)
 
     # Cache for 5 minutes on Render (reduce API calls)
-    cache_key = category
+    cache_key = f"{category}_{engine}"
     now = time.time()
     if _score_cache["data"] and (now - _score_cache["time"]) < 300 and _score_cache.get("key") == cache_key:
         return jsonify(_score_cache["data"])
@@ -161,7 +195,17 @@ def api_scores():
 
         # Try trained model first
         raw_scores = None
-        if ensure_data():
+        if engine == "v4" and HAS_V4:
+            try:
+                raw_scores = score_stocks_v4(cat_stocks)
+            except Exception:
+                pass
+        if not raw_scores and engine == "v3" and HAS_V3:
+            try:
+                raw_scores = score_stocks_v3(cat_stocks)
+            except Exception:
+                pass
+        if not raw_scores and ensure_data():
             try:
                 raw_scores = score_stocks_v2(cat_stocks) if HAS_V2 else score_stocks()
             except Exception:
@@ -196,20 +240,28 @@ def api_scores():
             score = safe(s.get("score"), 0)
             change = safe(s.get("change_pct"), 0)
             rsi = safe(s.get("rsi"), 50)
-            vol = safe(s.get("volatility"), 20)
+            vol_raw = s.get("volatility", 20)
+            vol = safe(vol_raw, 20) if not isinstance(vol_raw, str) else 20
 
             # Skip entries with no valid price
             if price == 0:
                 continue
 
+            # Sanitize reasons — strip numeric values to prevent reverse engineering
             reasons = []
             for r in s.get("reasons", []):
+                raw_text = r.get("text", "")
+                # Remove specific numbers from reason text (e.g. "Price +1.43% above VWAP (7059)")
+                import re
+                sanitized = re.sub(r'\([\d,.]+\)', '', raw_text)  # strip parenthesized numbers
+                sanitized = re.sub(r'[\d,.]+%', '%', sanitized)   # strip percentage values
+                sanitized = re.sub(r'[\d,.]+\s*Cr', 'Cr', sanitized)  # strip crore values
                 reasons.append({
-                    "text": r.get("text", ""),
-                    "type": r.get("impact", "neutral"),
+                    "text": sanitized.strip(),
+                    "type": r.get("type", r.get("impact", "neutral")),
                 })
 
-            stocks.append({
+            entry = {
                 "symbol": s.get("name", s.get("symbol", "").replace(".NS", "")),
                 "name": s.get("name", s.get("symbol", "")),
                 "price": round(price, 2),
@@ -224,7 +276,17 @@ def api_scores():
                 "target": round(safe(s.get("target_pct"), 4.0), 1),
                 "riskReward": round(safe(s.get("risk_reward"), 2.0), 1),
                 "reasons": reasons,
-            })
+            }
+
+            # Add v3/v4-specific fields when present
+            if engine in ("v3", "v4"):
+                entry["market_regime"] = s.get("market_regime", "unknown")
+                entry["relative_strength_5d"] = safe(s.get("relative_strength_5d"), 0)
+                entry["relative_strength_20d"] = safe(s.get("relative_strength_20d"), 0)
+                entry["confidence"] = safe(s.get("confidence"), 0)
+                entry["model_version"] = s.get("model_version", engine)
+
+            stocks.append(entry)
 
         _score_cache["data"] = stocks
         _score_cache["time"] = now
@@ -237,84 +299,174 @@ def api_scores():
 
 @app.route("/api/model")
 def api_model():
-    """Get model metadata -- formatted for frontend."""
+    """Get model metadata -- sanitized for public consumption."""
     try:
-        meta = get_model_meta()
-        backtest = get_backtest_results()
+        default_engine = "v4" if HAS_V4 else "v2"
+        engine = request.args.get('engine', default_engine)
 
-        if not meta:
-            return jsonify({"accuracy": 0, "trainingSamples": 0, "lastTrained": "Not trained"})
-
-        # Transform feature importance to frontend format
-        features = []
-        fi = meta.get("feature_importance", {})
-        max_imp = max(fi.values()) if fi else 1
-
-        # Friendly names for features
-        friendly = {
-            "rsi_14": "RSI", "macd": "MACD", "macd_signal": "MACD Signal",
-            "macd_hist": "MACD Histogram", "sma_20": "SMA 20", "sma_50": "SMA 50",
-            "ema_9": "EMA 9", "ema_21": "EMA 21", "atr_14": "ATR",
-            "bb_pct": "Bollinger %B", "volume_ratio": "Volume", "adx": "ADX/Trend",
-            "pct_from_high": "52W High Dist", "pct_from_low": "52W Low Dist",
-            "return_1d": "1-Day Return", "return_5d": "5-Day Return",
-            "return_10d": "10-Day Return", "volatility_20d": "Volatility",
-        }
-
-        for feat, imp in sorted(fi.items(), key=lambda x: x[1], reverse=True)[:8]:
-            features.append({
-                "name": friendly.get(feat, feat),
-                "importance": round(imp / max_imp, 2),  # normalize to 0-1
+        # Return v4 metadata if requested and available
+        if engine == "v4" and HAS_V4:
+            return jsonify({
+                "accuracy": 0,
+                "version": "v4",
+                "trainingSamples": 0,
+                "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+                "features": [],
+                "backtest": [],
+                "model_type": "composite_scorer",
+                "description": "Multi-signal composite scorer (technical + momentum + regime)",
+                "target_metric": "precision (80% profitable trades)",
             })
 
-        # Transform backtest to frontend format
-        backtest_bins = []
-        if backtest and "confidence_breakdown" in backtest:
-            for b in backtest["confidence_breakdown"]:
-                backtest_bins.append({
-                    "bin": b.get("range", b.get("confidence", "")),
-                    "trades": b.get("trades", 0),
-                    "winRate": b.get("actual_profit_rate", 0),
-                    "avgProfit": b.get("avg_return_pct", 0),
-                    "maxDrawdown": 0,
+        # Return v3 metadata if requested and available
+        if engine == "v3" and HAS_V3:
+            meta_v3 = get_model_meta_v3()
+            if meta_v3:
+                trained_at = meta_v3.get("trained_at", "Unknown")
+                if "T" in trained_at:
+                    trained_at = trained_at.split("T")[0]
+                return jsonify({
+                    "accuracy": round(meta_v3.get("accuracy", 0) * 100, 1) if meta_v3.get("accuracy", 0) < 1 else meta_v3.get("accuracy", 0),
+                    "version": "v3",
+                    "trainingSamples": meta_v3.get("train_samples", 0) + meta_v3.get("test_samples", 0),
+                    "lastTrained": trained_at,
+                    "features": [],  # populated below if available
+                    "backtest": [],
+                    "market_regime": meta_v3.get("market_regime", "unknown"),
+                    "precision": meta_v3.get("precision", 0),
+                    "target_metric": "precision (80% profitable trades)",
                 })
 
-        trained_at = meta.get("trained_at", "Unknown")
-        if "T" in trained_at:
-            trained_at = trained_at.split("T")[0]  # just date
-
-        # Support both v1 (accuracy) and v2 (ensemble_accuracy) formats
-        acc = meta.get("ensemble_accuracy", meta.get("accuracy", 0))
-        # v2 stores as 0.66, v1 as 0.61 -- both need * 100
-        if acc < 1:
-            acc = round(acc * 100, 1)
-
-        # v2 backtest is embedded in meta
-        bt = meta.get("backtest", {})
-        if bt and "total_return_pct" in bt:
-            backtest_bins = [{
-                "bin": "Overall",
-                "trades": bt.get("total_trades", 0),
-                "winRate": bt.get("win_rate_pct", 0),
-                "avgProfit": bt.get("total_return_pct", 0),
-                "maxDrawdown": bt.get("max_drawdown_pct", 0),
-                "sharpe": bt.get("sharpe_ratio", 0),
-                "profitFactor": bt.get("profit_factor", 0),
-            }]
-
-        result = {
-            "accuracy": acc,
-            "version": meta.get("version", "v1"),
-            "trainingSamples": meta.get("train_samples", 0) + meta.get("test_samples", 0),
-            "lastTrained": trained_at,
-            "features": features,
-            "backtest": backtest_bins,
-        }
-
-        return jsonify(result)
+        # SECURITY-006: Strip all IP-sensitive data from public response
+        # No feature importances, no backtest metrics, no ensemble weights
+        return jsonify({
+            "accuracy": 0,
+            "version": "v2",
+            "trainingSamples": 0,
+            "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+            "features": [],
+            "backtest": [],
+            "model_type": "ensemble",
+            "description": "ML ensemble scorer",
+            "status": "active",
+        })
     except Exception as e:
         traceback.print_exc()
         return jsonify({"accuracy": 0, "trainingSamples": 0, "lastTrained": "Error"})
+
+
+@app.route("/api/compare")
+def api_compare():
+    """Return v2 and v3 scores side by side for comparison."""
+    try:
+        from data_engine import STOCK_CATEGORIES, NIFTY_50
+        category = request.args.get('category', 'nifty50')
+        cat_stocks = STOCK_CATEGORIES.get(category, {}).get('stocks', NIFTY_50)
+
+        v2_scores = []
+        v3_scores = []
+
+        # Get v2 scores
+        if HAS_V2 and ensure_data():
+            try:
+                v2_scores = score_stocks_v2(cat_stocks) or []
+            except Exception:
+                pass
+
+        # Get v3 scores
+        if HAS_V3:
+            try:
+                v3_scores = score_stocks_v3(cat_stocks) or []
+            except Exception:
+                pass
+
+        # Index by symbol for side-by-side
+        v2_map = {s.get("symbol", s.get("name", "")): s for s in v2_scores}
+        v3_map = {s.get("symbol", s.get("name", "")): s for s in v3_scores}
+        all_symbols = sorted(set(list(v2_map.keys()) + list(v3_map.keys())))
+
+        comparison = []
+        for sym in all_symbols:
+            v2 = v2_map.get(sym, {})
+            v3 = v3_map.get(sym, {})
+            comparison.append({
+                "symbol": sym.replace(".NS", ""),
+                "v2_score": round(v2.get("score", 0), 1),
+                "v2_direction": v2.get("direction", "N/A"),
+                "v3_score": round(v3.get("score", 0), 1),
+                "v3_direction": v3.get("direction", "N/A"),
+                "v3_confidence": v3.get("confidence", 0),
+                "v3_market_regime": v3.get("market_regime", "unknown"),
+                "score_diff": round(v3.get("score", 0) - v2.get("score", 0), 1),
+            })
+
+        comparison.sort(key=lambda x: abs(x["score_diff"]), reverse=True)
+
+        return jsonify({
+            "comparison": comparison,
+            "v2_available": HAS_V2,
+            "v3_available": HAS_V3,
+            "total_stocks": len(comparison),
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"comparison": [], "error": str(e)}), 500
+
+
+@app.route("/api/compare-v4")
+def api_compare_v4():
+    """Return v3 and v4 scores side by side for comparison."""
+    try:
+        from data_engine import STOCK_CATEGORIES, NIFTY_50
+        category = request.args.get('category', 'nifty50')
+        cat_stocks = STOCK_CATEGORIES.get(category, {}).get('stocks', NIFTY_50)
+
+        v3_scores = []
+        v4_scores = []
+
+        if HAS_V3:
+            try:
+                v3_scores = score_stocks_v3(cat_stocks) or []
+            except Exception:
+                pass
+
+        if HAS_V4:
+            try:
+                v4_scores = score_stocks_v4(cat_stocks) or []
+            except Exception:
+                pass
+
+        v3_map = {s.get("symbol", s.get("name", "")): s for s in v3_scores}
+        v4_map = {s.get("symbol", s.get("name", "")): s for s in v4_scores}
+        all_symbols = sorted(set(list(v3_map.keys()) + list(v4_map.keys())))
+
+        comparison = []
+        for sym in all_symbols:
+            v3 = v3_map.get(sym, {})
+            v4 = v4_map.get(sym, {})
+            comparison.append({
+                "symbol": sym.replace(".NS", ""),
+                "v3_score": round(v3.get("score", 0), 1),
+                "v3_direction": v3.get("direction", "N/A"),
+                "v3_confidence": v3.get("confidence", 0),
+                "v4_score": round(v4.get("score", 0), 1),
+                "v4_direction": v4.get("direction", "N/A"),
+                "v4_confidence": v4.get("confidence", 0),
+                "v4_market_regime": v4.get("market_regime", "unknown"),
+                "score_diff": round(v4.get("score", 0) - v3.get("score", 0), 1),
+            })
+
+        comparison.sort(key=lambda x: abs(x["score_diff"]), reverse=True)
+
+        return jsonify({
+            "comparison": comparison,
+            "v3_available": HAS_V3,
+            "v4_available": HAS_V4,
+            "total_stocks": len(comparison),
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"comparison": [], "error": str(e)}), 500
 
 
 @app.route("/api/indices")
@@ -335,7 +487,29 @@ def api_indices():
             elif "SENSEX" in name.upper():
                 result["sensex"] = entry
 
-        # Fallback if indices fetch failed
+        # Fallback: read from local CSV if yfinance failed
+        if "nifty" not in result or result.get("nifty", {}).get("price", 0) == 0:
+            try:
+                nifty_df = load_stock_data("^NSEI")
+                if nifty_df is not None and len(nifty_df) >= 2:
+                    last = nifty_df.iloc[-1]
+                    prev = nifty_df.iloc[-2]
+                    chg = float(last["Close"] - prev["Close"])
+                    chg_pct = round(chg / prev["Close"] * 100, 2)
+                    result["nifty"] = {"price": round(float(last["Close"]), 2), "change": round(chg, 2), "changePct": chg_pct}
+            except Exception:
+                pass
+        if "sensex" not in result or result.get("sensex", {}).get("price", 0) == 0:
+            try:
+                sensex_df = load_stock_data("^BSESN")
+                if sensex_df is not None and len(sensex_df) >= 2:
+                    last = sensex_df.iloc[-1]
+                    prev = sensex_df.iloc[-2]
+                    chg = float(last["Close"] - prev["Close"])
+                    chg_pct = round(chg / prev["Close"] * 100, 2)
+                    result["sensex"] = {"price": round(float(last["Close"]), 2), "change": round(chg, 2), "changePct": chg_pct}
+            except Exception:
+                pass
         if "nifty" not in result:
             result["nifty"] = {"price": 0, "change": 0, "changePct": 0}
         if "sensex" not in result:
@@ -350,9 +524,16 @@ def api_indices():
         })
 
 
+def _valid_symbol(symbol):
+    """Validate stock symbol — only uppercase letters, numbers, &, -, . (max 20 chars)."""
+    import re
+    return bool(re.match(r'^[A-Z0-9&\-\.]{1,20}$', symbol))
+
 @app.route("/api/stock/<symbol>")
 def api_stock(symbol):
     """Get detailed data for a single stock."""
+    if not _valid_symbol(symbol.replace(".NS", "").upper()):
+        return jsonify({"error": "Invalid symbol"}), 400
     full_symbol = f"{symbol}.NS" if not symbol.endswith(".NS") else symbol
     try:
         scores = score_stocks_v2([full_symbol]) if HAS_V2 else score_stocks([full_symbol])
@@ -500,66 +681,120 @@ def api_index_intraday(index):
         return jsonify({"data": [], "error": str(e)}), 500
 
 
+_news_cache = {"global": None, "local": None, "time": 0}
+
 @app.route("/api/bots/geopolitical")
 def api_bots_geopolitical():
-    """Geopolitical analysis bot - events affecting Indian markets."""
-    events = [
-        {
-            "title": "US Fed Signals Rate Pause",
-            "impact": "positive",
-            "severity": "high",
-            "affected_sectors": ["Banking", "IT", "Auto"],
-            "summary": "Federal Reserve hints at holding rates steady through Q2 2026. Positive for emerging market flows — FII inflows likely to increase.",
-            "market_impact": "NIFTY may see 2-3% upside in coming weeks as FII buying resumes.",
-            "timestamp": "2h ago"
-        },
-        {
-            "title": "Crude Oil Drops Below $70",
-            "impact": "positive",
-            "severity": "medium",
-            "affected_sectors": ["Oil & Gas", "Airlines", "Paint"],
-            "summary": "Brent crude falls to $68/barrel on weak demand outlook. Reduces India's import bill significantly.",
-            "market_impact": "ONGC, BPCL may see pressure. Indigo, Asian Paints benefit from lower input costs.",
-            "timestamp": "4h ago"
-        },
-        {
-            "title": "China-Taiwan Tensions Escalate",
-            "impact": "negative",
-            "severity": "high",
-            "affected_sectors": ["IT", "Semiconductor", "Defence"],
-            "summary": "Military exercises in Taiwan Strait spook global markets. Supply chain risks for chip-dependent sectors.",
-            "market_impact": "IT sector may face selling pressure. Defence stocks like HAL, BEL could rally.",
-            "timestamp": "6h ago"
-        },
-        {
-            "title": "India-EU FTA Talks Progress",
-            "impact": "positive",
-            "severity": "medium",
-            "affected_sectors": ["Pharma", "Textile", "Auto"],
-            "summary": "India and EU reach agreement on key provisions. Pharma exports to benefit from reduced tariffs.",
-            "market_impact": "Sun Pharma, Dr Reddy's, Cipla positioned for gains. Textile exporters also benefit.",
-            "timestamp": "8h ago"
-        },
-        {
-            "title": "RBI Liquidity Injection Rs 50,000 Cr",
-            "impact": "positive",
-            "severity": "high",
-            "affected_sectors": ["Banking", "NBFC", "Real Estate"],
-            "summary": "RBI announces OMO purchases to ease liquidity. Banking sector to benefit from improved NIM outlook.",
-            "market_impact": "PSU banks and NBFCs could see 3-5% upside. Real estate sector also benefits.",
-            "timestamp": "1d ago"
-        },
-        {
-            "title": "Global Recession Fears Rise",
-            "impact": "negative",
-            "severity": "medium",
-            "affected_sectors": ["Metal", "IT", "Export-heavy"],
-            "summary": "Germany enters technical recession. US PMI data weakens. Risk-off sentiment building globally.",
-            "market_impact": "Metal stocks (Tata Steel, JSW) under pressure. Defensive sectors (FMCG, Pharma) may outperform.",
-            "timestamp": "1d ago"
-        }
-    ]
-    return jsonify({"events": events, "overall_sentiment": "cautiously_bullish", "confidence": 72})
+    """Geopolitical analysis bot - fetches LIVE news affecting Indian markets."""
+    import time as _time
+    now = _time.time()
+
+    # Cache for 30 minutes
+    if _news_cache["global"] and (now - _news_cache["time"]) < 1800:
+        return jsonify(_news_cache["global"])
+
+    events = []
+    try:
+        import requests as req
+
+        # Source 1: Google News RSS for market keywords
+        rss_feeds = [
+            ("https://news.google.com/rss/search?q=indian+stock+market+today&hl=en-IN&gl=IN", "India Market"),
+            ("https://news.google.com/rss/search?q=nifty+sensex+today&hl=en-IN&gl=IN", "India Market"),
+            ("https://news.google.com/rss/search?q=RBI+policy+india&hl=en-IN&gl=IN", "RBI Policy"),
+            ("https://news.google.com/rss/search?q=FII+DII+india+market&hl=en-IN&gl=IN", "FII/DII"),
+            ("https://news.google.com/rss/search?q=global+markets+recession+fed&hl=en-IN&gl=IN", "Global"),
+            ("https://news.google.com/rss/search?q=crude+oil+price+today&hl=en-IN&gl=IN", "Commodities"),
+        ]
+
+        import xml.etree.ElementTree as ET
+        from datetime import datetime, timedelta
+        seen_titles = set()
+
+        for feed_url, category in rss_feeds[:4]:  # Limit to 4 feeds
+            try:
+                resp = req.get(feed_url, timeout=8, headers={"User-Agent": "TradePilot/1.0"})
+                if resp.status_code != 200:
+                    continue
+                root = ET.fromstring(resp.content)
+                items = root.findall(".//item")[:3]  # Top 3 per feed
+
+                for item in items:
+                    title = item.findtext("title", "")
+                    if not title or title in seen_titles:
+                        continue
+                    seen_titles.add(title)
+
+                    desc = item.findtext("description", "")
+                    pub_date = item.findtext("pubDate", "")
+
+                    # Parse time ago
+                    time_ago = "recently"
+                    try:
+                        from email.utils import parsedate_to_datetime
+                        dt = parsedate_to_datetime(pub_date)
+                        diff = datetime.now(dt.tzinfo) - dt
+                        hours = diff.total_seconds() / 3600
+                        if hours < 1: time_ago = f"{int(diff.total_seconds()/60)}m ago"
+                        elif hours < 24: time_ago = f"{int(hours)}h ago"
+                        else: time_ago = f"{int(hours/24)}d ago"
+                    except Exception:
+                        pass
+
+                    # Determine impact from keywords
+                    title_lower = title.lower()
+                    if any(w in title_lower for w in ["crash", "fall", "drop", "recession", "fear", "tension", "war"]):
+                        impact = "negative"
+                    elif any(w in title_lower for w in ["rally", "surge", "rise", "gain", "bull", "record", "buying"]):
+                        impact = "positive"
+                    else:
+                        impact = "neutral"
+
+                    # Determine affected sectors
+                    sectors = []
+                    if any(w in title_lower for w in ["bank", "rbi", "rate", "nbfc"]): sectors.append("Banking")
+                    if any(w in title_lower for w in ["it", "tech", "infosys", "tcs"]): sectors.append("IT")
+                    if any(w in title_lower for w in ["oil", "crude", "ongc", "bpcl"]): sectors.append("Oil & Gas")
+                    if any(w in title_lower for w in ["pharma", "drug", "health"]): sectors.append("Pharma")
+                    if any(w in title_lower for w in ["auto", "car", "ev"]): sectors.append("Auto")
+                    if any(w in title_lower for w in ["fii", "dii", "foreign"]): sectors.append("FII/DII")
+                    if not sectors: sectors = [category]
+
+                    events.append({
+                        "title": title[:120],
+                        "impact": impact,
+                        "severity": "high" if any(w in title_lower for w in ["crash", "surge", "record", "rbi", "fed"]) else "medium",
+                        "affected_sectors": sectors[:3],
+                        "summary": desc[:200] if desc else title,
+                        "market_impact": "",
+                        "timestamp": time_ago,
+                        "source": "Google News",
+                    })
+            except Exception:
+                continue
+
+    except Exception:
+        pass
+
+    # Fallback if no news fetched
+    if not events:
+        events = [
+            {"title": "Market data loading...", "impact": "neutral", "severity": "low",
+             "affected_sectors": ["General"], "summary": "Live news feed is being refreshed. Check back in a few minutes.",
+             "market_impact": "", "timestamp": "now", "source": "system"}
+        ]
+
+    # Determine overall sentiment
+    pos = sum(1 for e in events if e["impact"] == "positive")
+    neg = sum(1 for e in events if e["impact"] == "negative")
+    if pos > neg + 1: sentiment = "bullish"
+    elif neg > pos + 1: sentiment = "bearish"
+    else: sentiment = "neutral"
+
+    result = {"events": events[:8], "overall_sentiment": sentiment, "confidence": min(max(len(events) * 10, 30), 85)}
+    _news_cache["global"] = result
+    _news_cache["time"] = now
+    return jsonify(result)
 
 
 @app.route("/api/bots/market-pulse")
@@ -832,10 +1067,30 @@ def api_gainers_losers():
                 "macd": s.get("macd_signal", "Neutral"),
             })
 
+        # Index filter
+        idx_filter = request.args.get("index", "all").lower()
+        if idx_filter != "all":
+            try:
+                from v4.config import NIFTY_50_SYMBOLS, NIFTY_200_SYMBOLS
+                idx_sets = {
+                    "nifty50": set(NIFTY_50_SYMBOLS),
+                    "nifty100": set(NIFTY_50_SYMBOLS),  # approximate
+                    "nifty200": set(NIFTY_200_SYMBOLS),
+                    "midcap": set(NIFTY_200_SYMBOLS) - set(NIFTY_50_SYMBOLS),
+                    "smallcap": set(),  # needs separate list
+                    "total": set(),  # show all
+                }
+                filter_set = idx_sets.get(idx_filter)
+                if filter_set:
+                    clean = [s for s in clean if s["symbol"].replace(".NS", "") in filter_set
+                             or s["name"].replace(".NS", "") in filter_set]
+            except ImportError:
+                pass
+
         gainers = sorted(clean, key=lambda x: x["change"], reverse=True)[:50]
         losers = sorted(clean, key=lambda x: x["change"])[:50]
 
-        result = {"gainers": gainers, "losers": losers}
+        result = {"gainers": gainers, "losers": losers, "index": idx_filter}
         _movers_cache["data"] = result
         _movers_cache["time"] = now
         return jsonify(result)
@@ -1178,9 +1433,418 @@ def api_track():
 
 @app.route("/admin")
 def admin_dashboard():
-    """Analytics dashboard for founders."""
+    """Analytics dashboard for founders — localhost only."""
+    # Security: only allow from localhost
+    if request.remote_addr not in ('127.0.0.1', '::1', 'localhost'):
+        return jsonify({"error": "Forbidden"}), 403
     stats = get_dashboard_stats()
     return jsonify(stats)
+
+
+# ═══════════════════════════════════════════════════════
+# TRADE LAB — v4 vs v5 daily trade tracking
+# ═══════════════════════════════════════════════════════
+
+@app.route("/api/tradelab/days")
+def api_tradelab_days():
+    """List all trading days with summary P&L for v4 and v5."""
+    import glob
+    base = os.path.join(os.path.dirname(__file__), "..", "docs", "paper-trades")
+    days = {}
+
+    # v4 days (only date-named files like 2026-04-10.json)
+    import re as _re
+    for f in sorted(glob.glob(os.path.join(base, "v4", "*.json"))):
+        if not _re.match(r'^\d{4}-\d{2}-\d{2}\.json$', os.path.basename(f)):
+            continue
+        try:
+            with open(f) as fh:
+                s = json.load(fh)
+            date = s.get("date") or os.path.basename(f).replace(".json", "")
+            if date not in days:
+                days[date] = {"date": date, "v4": None, "v5": None}
+            cl = s.get("closed_trades", [])
+            w = sum(1 for t in cl if t.get("pnl", 0) > 0)
+            days[date]["v4"] = {
+                "pnl": round(s.get("realized_pnl", 0), 2),
+                "pnl_pct": round(s.get("realized_pnl", 0) / max(s.get("daily_pool", 1000000), 1) * 100, 2),
+                "trades": len(cl), "wins": w,
+                "win_rate": round(w / len(cl) * 100, 1) if cl else 0,
+                "pool": s.get("daily_pool", 1000000),
+            }
+        except Exception:
+            pass
+
+    # v5 days (only date-named files)
+    for f in sorted(glob.glob(os.path.join(base, "v5", "*.json"))):
+        if not _re.match(r'^\d{4}-\d{2}-\d{2}\.json$', os.path.basename(f)):
+            continue
+        try:
+            with open(f) as fh:
+                s = json.load(fh)
+            date = s.get("date") or os.path.basename(f).replace(".json", "")
+            if date not in days:
+                days[date] = {"date": date, "v4": None, "v5": None}
+            sm = s.get("summary", {})
+            days[date]["v5"] = {
+                "pnl": round(sm.get("total_pnl", 0), 2),
+                "pnl_pct": round(sm.get("total_pnl", 0) / max(s.get("total_capital", 5000000), 1) * 100, 2),
+                "trades": sm.get("trades", 0), "wins": sm.get("wins", 0),
+                "win_rate": round(sm.get("wins", 0) / max(sm.get("trades", 1), 1) * 100, 1),
+                "longs": sm.get("longs", 0), "shorts": sm.get("shorts", 0),
+                "pool": s.get("total_capital", 5000000),
+                "regime": s.get("regime", "UNKNOWN"),
+            }
+        except Exception:
+            pass
+
+    return jsonify(sorted(days.values(), key=lambda d: d["date"], reverse=True))
+
+
+@app.route("/api/engine-arena")
+def api_engine_arena():
+    """Live status for v5.2, v5.3, v5.4 engines."""
+    import json as _json
+    from pathlib import Path as _Path
+    base = _Path(__file__).parent.parent / "docs" / "paper-trades"
+    today = __import__('datetime').datetime.now().strftime("%Y-%m-%d")
+    result = {}
+
+    for eng, dirname in [("v5.2", "v5_2"), ("v5.3", "v5_3"), ("v5.4", "v5_4")]:
+        state_file = base / dirname / f"{today}.json"
+        info = {"pnl": 0, "trades": 0, "wins": 0, "losses": 0, "longs": 0, "shorts": 0,
+                "long_pnl": 0, "short_pnl": 0, "regime": "?", "positions": [],
+                "confirmed": 0, "cancelled": 0, "capital": 1000000,
+                "direction_budget": {"long": 0.5, "short": 0.5}}
+        if state_file.exists():
+            try:
+                d = _json.loads(state_file.read_text())
+                s = d.get("summary", {})
+                info["pnl"] = s.get("total_pnl", 0)
+                info["trades"] = s.get("trades", 0)
+                info["wins"] = s.get("wins", 0)
+                info["losses"] = s.get("losses", 0)
+                info["longs"] = s.get("longs", 0)
+                info["shorts"] = s.get("shorts", 0)
+                info["long_pnl"] = s.get("long_pnl", 0)
+                info["short_pnl"] = s.get("short_pnl", 0)
+                info["regime"] = d.get("regime", "?")
+                info["confirmed"] = s.get("confirmed", 0)
+                info["cancelled"] = s.get("cancelled", 0)
+                info["capital"] = d.get("total_capital", 1000000)
+                info["direction_budget"] = d.get("direction_budget", {"long": 0.5, "short": 0.5})
+                # Collect open positions
+                for pn, pd in d.get("pools", {}).items():
+                    for p in pd.get("positions", []):
+                        info["positions"].append({
+                            "engine": eng, "symbol": p.get("symbol"),
+                            "direction": p.get("position_type", "LONG"),
+                            "pool": pn, "entry_price": p.get("entry_price", 0),
+                            "sl_price": p.get("sl_price", 0),
+                            "target_price": p.get("target_price", 0),
+                            "trailing": p.get("trailing_activated", False)})
+            except Exception:
+                pass
+        # Also check carry forward for cumulative
+        cf_file = base / dirname / f"carry_forward_{dirname}.json"
+        if cf_file.exists():
+            try:
+                cf = _json.loads(cf_file.read_text())
+                info["cumulative_pnl"] = cf.get("cumulative_pnl", 0)
+                info["capital"] = cf.get("closing_balance", 1000000)
+            except Exception:
+                pass
+        result[eng] = info
+    return jsonify(result)
+
+
+@app.route("/api/tradelab/trades/<date>")
+def api_tradelab_trades(date):
+    """Get all individual trades for a specific date, both v4 and v5."""
+    base = os.path.join(os.path.dirname(__file__), "..", "docs", "paper-trades")
+    result = {"date": date, "v4_trades": [], "v5_trades": [], "v4_open": [], "v5_open": []}
+
+    # v4
+    v4f = os.path.join(base, "v4", f"{date}.json")
+    if os.path.exists(v4f):
+        with open(v4f) as fh:
+            s = json.load(fh)
+        result["v4_trades"] = s.get("closed_trades", [])
+        result["v4_open"] = [p for p in s.get("positions", []) if p.get("status") == "open"]
+        result["v4_summary"] = {
+            "pnl": round(s.get("realized_pnl", 0), 2),
+            "pool": s.get("daily_pool", 1000000),
+            "scans": s.get("scan_count", 0),
+            "rescores": s.get("rescore_count", 0),
+        }
+
+    # v5
+    v5f = os.path.join(base, "v5", f"{date}.json")
+    if os.path.exists(v5f):
+        with open(v5f) as fh:
+            s = json.load(fh)
+        for pool_name, pool_data in s.get("pools", {}).items():
+            for t in pool_data.get("closed", []):
+                t["pool"] = pool_name
+                result["v5_trades"].append(t)
+            for p in pool_data.get("positions", []):
+                p["pool"] = pool_name
+                result["v5_open"].append(p)
+        result["v5_summary"] = s.get("summary", {})
+        result["v5_regime"] = s.get("regime", "UNKNOWN")
+        result["v5_premarket"] = s.get("premarket", {})
+
+    return jsonify(result)
+
+
+# ═══════════════ AI PICKS & ADVISOR ═══════════════
+
+@app.route("/api/picks")
+def api_picks():
+    """Get AI-powered top picks across categories."""
+    category = request.args.get("category", "stocks")  # stocks, etfs, mf
+    count = int(request.args.get("count", 10))
+    horizon = request.args.get("horizon", "intraday")  # intraday, swing, investment
+
+    if category == "stocks":
+        try:
+            scores = score_stocks_v4() if HAS_V4 else (score_stocks_v2(NIFTY_STOCKS) if HAS_V2 else score_stocks())
+            # Sort by score, take top N
+            picks = sorted(scores, key=lambda x: x.get("score", 0), reverse=True)[:count]
+            # Add recommendation context
+            for p in picks:
+                score = p.get("score", 0)
+                if score > 70: p["recommendation"] = "Strong Buy"
+                elif score > 60: p["recommendation"] = "Buy"
+                elif score > 50: p["recommendation"] = "Hold"
+                else: p["recommendation"] = "Watch"
+
+                # Add horizon-specific advice
+                if horizon == "intraday":
+                    p["strategy"] = f"Entry near {p.get('price', 0):.0f}, SL {p.get('price', 0) * 0.985:.0f}, Target {p.get('price', 0) * 1.02:.0f}"
+                elif horizon == "swing":
+                    p["strategy"] = f"Buy on dips near support. Hold 3-7 days. Target +3-5%"
+                else:
+                    p["strategy"] = f"Accumulate over next month. Long-term outlook positive"
+
+            return jsonify({"picks": picks, "category": category, "horizon": horizon, "count": len(picks), "engine": "v4" if HAS_V4 else "v2"})
+        except Exception as e:
+            return jsonify({"picks": [], "error": str(e)})
+
+    elif category == "etfs":
+        # Top ETFs for Indian market
+        etfs = [
+            {"symbol": "NIFTYBEES", "name": "Nippon Nifty 50 ETF", "price": 240, "change": -0.9, "recommendation": "Buy on dips", "why": "Core portfolio holding. Low cost Nifty 50 exposure."},
+            {"symbol": "BANKBEES", "name": "Nippon Bank Nifty ETF", "price": 555, "change": -0.8, "recommendation": "Hold", "why": "Banking sector volatile. Wait for RBI clarity."},
+            {"symbol": "GOLDBEES", "name": "Nippon Gold ETF", "price": 58, "change": 0.5, "recommendation": "Strong Buy", "why": "Gold rallying globally. Safe haven in uncertainty."},
+            {"symbol": "ITBEES", "name": "Nippon IT ETF", "price": 38, "change": -1.5, "recommendation": "Watch", "why": "IT sector under pressure. Wait for earnings season."},
+            {"symbol": "JUNIORBEES", "name": "Nippon Junior Nifty ETF", "price": 680, "change": 0.3, "recommendation": "Buy", "why": "Nifty Next 50 has higher growth potential."},
+            {"symbol": "LIQUIDBEES", "name": "Nippon Liquid ETF", "price": 1000, "change": 0.02, "recommendation": "Park Cash", "why": "Park idle trading capital. Better than savings account."},
+            {"symbol": "SILVERBEES", "name": "Nippon Silver ETF", "price": 88, "change": 1.2, "recommendation": "Buy", "why": "Silver undervalued vs gold. Industrial demand rising."},
+            {"symbol": "PSUBNKBEES", "name": "Nippon PSU Bank ETF", "price": 72, "change": 0.8, "recommendation": "Strong Buy", "why": "PSU banks showing strong NPA recovery."},
+        ]
+        return jsonify({"picks": etfs[:count], "category": "etfs", "count": min(count, len(etfs))})
+
+    elif category == "mf":
+        # Top mutual funds
+        mfs = [
+            {"symbol": "PPFAS", "name": "Parag Parikh Flexi Cap", "nav": 82, "returns_1y": 18.5, "recommendation": "Strong Buy", "why": "Best diversified fund. US + India exposure. Consistent alpha."},
+            {"symbol": "HDFC_MID", "name": "HDFC Mid-Cap Opportunities", "nav": 175, "returns_1y": 22.3, "recommendation": "Buy (SIP)", "why": "Top mid-cap fund. SIP for 3+ years."},
+            {"symbol": "AXIS_SMALL", "name": "Axis Small Cap Fund", "nav": 92, "returns_1y": 28.1, "recommendation": "Buy (SIP)", "why": "High growth potential. Only via SIP (volatile)."},
+            {"symbol": "ICICI_BLUE", "name": "ICICI Pru Bluechip Fund", "nav": 95, "returns_1y": 12.8, "recommendation": "Core Holding", "why": "Large cap stability. Good for risk-averse investors."},
+            {"symbol": "KOTAK_FLEX", "name": "Kotak Flexicap Fund", "nav": 68, "returns_1y": 16.2, "recommendation": "Buy", "why": "Flexible allocation across market caps."},
+            {"symbol": "SBI_CONTRA", "name": "SBI Contra Fund", "nav": 350, "returns_1y": 20.5, "recommendation": "Strong Buy", "why": "Value investing. Buys beaten-down stocks."},
+            {"symbol": "NIFTY_INDEX", "name": "UTI Nifty 50 Index Fund", "nav": 150, "returns_1y": 11.5, "recommendation": "Best for Beginners", "why": "Lowest cost. Just tracks Nifty 50."},
+            {"symbol": "QUANT_SMALL", "name": "Quant Small Cap Fund", "nav": 220, "returns_1y": 35.2, "recommendation": "High Risk Buy", "why": "Top performer but very volatile. Only 5-10% of portfolio."},
+        ]
+        return jsonify({"picks": mfs[:count], "category": "mf", "count": min(count, len(mfs))})
+
+    return jsonify({"picks": [], "error": "Unknown category"})
+
+
+@app.route("/api/ask", methods=["POST"])
+def api_ask():
+    """Answer market questions using available data."""
+    data = request.get_json() or {}
+    question = data.get("question", "").strip()
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+
+    # Build context from available data
+    answer = generate_market_answer(question)
+    return jsonify({"question": question, "answer": answer})
+
+
+def generate_market_answer(question):
+    """Generate answer using available market data. Smart keyword matching + data-driven."""
+    import re
+    q = question.lower().strip()
+
+    # Build stock name → symbol mapping for fuzzy matching
+    _name_map = {
+        "tata steel": "TATASTEEL", "tata motors": "TATAMOTORS", "tata power": "TATAPOWER",
+        "tata consumer": "TATACONSUM", "tata chemicals": "TATACHEM", "tata elxsi": "TATAELXSI",
+        "tata investment": "TATAINVEST", "tata comm": "TATACOMM",
+        "reliance": "RELIANCE", "infosys": "INFY", "hdfc bank": "HDFCBANK", "hdfc": "HDFCBANK",
+        "icici bank": "ICICIBANK", "icici": "ICICIBANK", "sbi": "SBIN", "state bank": "SBIN",
+        "kotak": "KOTAKBANK", "kotak bank": "KOTAKBANK", "axis bank": "AXISBANK", "axis": "AXISBANK",
+        "bajaj finance": "BAJFINANCE", "bajaj finserv": "BAJAJFINSV", "bajaj auto": "BAJAJ-AUTO",
+        "asian paints": "ASIANPAINT", "asian paint": "ASIANPAINT", "maruti": "MARUTI",
+        "maruti suzuki": "MARUTI", "hero moto": "HEROMOTOCO", "hero motocorp": "HEROMOTOCO",
+        "eicher motors": "EICHERMOT", "eicher": "EICHERMOT", "m&m": "M&M", "mahindra": "M&M",
+        "sun pharma": "SUNPHARMA", "dr reddy": "DRREDDY", "dr reddys": "DRREDDY",
+        "ultratech": "ULTRACEMCO", "ultra tech": "ULTRACEMCO", "titan": "TITAN",
+        "wipro": "WIPRO", "hcl tech": "HCLTECH", "hcltech": "HCLTECH", "hcl": "HCLTECH",
+        "tech mahindra": "TECHM", "tech m": "TECHM", "l&t": "LT", "larsen": "LT",
+        "adani enterprises": "ADANIENT", "adani ports": "ADANIPORTS", "adani green": "ADANIGREEN",
+        "adani power": "ADANIPOWER", "power grid": "POWERGRID", "ntpc": "NTPC",
+        "coal india": "COALINDIA", "ongc": "ONGC", "bpcl": "BPCL", "ioc": "IOC",
+        "indusind bank": "INDUSINDBK", "indusind": "INDUSINDBK",
+        "nestle": "NESTLEIND", "britannia": "BRITANNIA", "itc": "ITC", "hindustan unilever": "HINDUNILVR",
+        "hul": "HINDUNILVR", "bharti airtel": "BHARTIARTL", "airtel": "BHARTIARTL",
+        "jio financial": "JIOFIN", "jio": "JIOFIN", "zomato": "ZOMATO",
+        "paytm": "PAYTM", "nykaa": "NYKAA", "delhivery": "DELHIVERY",
+        "jsw steel": "JSWSTEEL", "jsw energy": "JSWENERGY", "jsw": "JSWSTEEL",
+        "hindalco": "HINDALCO", "vedanta": "VEDL", "vedl": "VEDL",
+        "grasim": "GRASIM", "shriram finance": "SHRIRAMFIN", "shriram": "SHRIRAMFIN",
+        "apollo hospital": "APOLLOHOSP", "apollo": "APOLLOHOSP",
+        "cipla": "CIPLA", "divis lab": "DIVISLAB", "divis": "DIVISLAB",
+        "sbi life": "SBILIFE", "hdfc life": "HDFCLIFE",
+        "mcx": "MCX", "voltas": "VOLTAS", "bhel": "BHEL", "zydus": "ZYDUSLIFE",
+        "zydus life": "ZYDUSLIFE", "zydus wellness": "ZYDUSLIFE",
+        "waaree": "WAAREEENER", "waaree energies": "WAAREEENER",
+        "page industries": "PAGEIND", "coforge": "COFORGE",
+        "nifty": "^NSEI", "sensex": "^BSESN", "bank nifty": "^NSEBANK",
+    }
+
+    # Try to find a stock in the query
+    def find_stock(query):
+        q_lower = query.lower().strip()
+        # 1. Exact name match (longest first)
+        for name in sorted(_name_map.keys(), key=len, reverse=True):
+            if name in q_lower:
+                return _name_map[name]
+        # 2. Try each word as a symbol directly
+        for word in q_lower.replace("?", "").replace(".", "").split():
+            sym = word.upper()
+            if len(sym) >= 2:
+                try:
+                    scores = score_stocks_v4() if HAS_V4 else []
+                    match = next((s for s in scores if s.get("symbol", "").replace(".NS", "") == sym), None)
+                    if match:
+                        return sym
+                except Exception:
+                    pass
+        return None
+
+    # Stock lookup
+    sym = find_stock(q)
+    if sym and not sym.startswith("^"):
+        try:
+            scores = score_stocks_v4() if HAS_V4 else []
+            stock_data = next((s for s in scores if s.get("symbol", "").replace(".NS", "") == sym), None)
+            if stock_data:
+                score = stock_data.get("score", 0)
+                price = stock_data.get("price", 0)
+                change = stock_data.get("change_pct", 0)
+                direction = stock_data.get("direction", "HOLD")
+                rsi = stock_data.get("rsi", 50)
+                vol = stock_data.get("volatility", "Medium")
+
+                # Build rich response
+                if score > 70: rec, rec_detail = "Strong Buy", "High composite score across multiple signals. Consider entry."
+                elif score > 60: rec, rec_detail = "Buy", "Above-average signal strength. Good for swing or intraday."
+                elif score > 50: rec, rec_detail = "Hold", "Moderate signal. Wait for stronger confirmation before entering."
+                elif score > 40: rec, rec_detail = "Weak", "Below average. Not recommended for fresh entry."
+                else: rec, rec_detail = "Avoid", "Weak on most signals. Stay away or consider shorting."
+
+                lines = [
+                    f"**{sym}** -- Rs {price:.2f} ({change:+.2f}%)",
+                    "",
+                    f"AI Score: **{score:.0f}/100** | Signal: **{direction}**",
+                    f"RSI: {rsi:.0f} ({'Overbought - may correct' if rsi > 70 else 'Oversold - bounce possible' if rsi < 30 else 'Neutral range'})",
+                    f"Volatility: {vol}",
+                    "",
+                    f"**Recommendation: {rec}**",
+                    f"{rec_detail}",
+                    "",
+                ]
+                if direction == "BUY":
+                    sl = price * 0.985
+                    tgt = price * 1.02
+                    lines.append(f"**Intraday Strategy:**")
+                    lines.append(f"Entry: Rs {price:.0f} | SL: Rs {sl:.0f} (-1.5%) | Target: Rs {tgt:.0f} (+2%)")
+                    lines.append(f"Risk:Reward = 1:1.3")
+                    lines.append("")
+                    lines.append(f"**Swing Strategy (3-7 days):**")
+                    lines.append(f"Buy on dips near Rs {price*0.97:.0f}. Target Rs {price*1.05:.0f} (+5%)")
+                elif direction == "AVOID":
+                    lines.append(f"**Strategy:** No entry recommended. Wait for score > 60.")
+                    lines.append(f"If you hold, set SL at Rs {price*0.95:.0f} (-5%)")
+                else:
+                    lines.append(f"**Strategy:** Hold if already in position. Fresh entry at Rs {price*0.98:.0f} support.")
+
+                return "\n".join(lines)
+        except Exception:
+            pass
+
+        # Stock found in name map but not in scorer — try basic info
+        return f"**{sym}** is recognized but not currently in our scoring universe or data is loading.\n\nTry refreshing or ask about a Nifty 200 stock."
+
+    # Market regime questions
+    if any(w in q for w in ["market", "nifty", "regime", "bull", "bear", "today"]):
+        try:
+            from v5.regime_detector import detect_regime
+            r = detect_regime()
+            regime = r.get("regime", "SIDEWAYS")
+            score = r.get("score", 0)
+            alloc = r.get("allocation", 0.75)
+            return (f"**Market Regime: {regime}** (score {score}/6)\n"
+                    f"Recommended allocation: {alloc:.0%}\n\n"
+                    f"{'Market is in fear mode. Reduce equity exposure. Keep 30-50% cash.' if regime == 'BEAR' else 'Market is neutral. Normal position sizing. Watch for breakout direction.' if regime == 'SIDEWAYS' else 'Market is bullish. Full deployment. Ride the momentum.'}")
+        except Exception:
+            pass
+
+    # VIX questions
+    if "vix" in q:
+        return ("**India VIX** measures market fear/greed.\n"
+                "- VIX < 13: Very calm, full risk-on\n"
+                "- VIX 13-18: Normal, standard positions\n"
+                "- VIX 18-25: Elevated fear, reduce size 50%\n"
+                "- VIX > 25: High fear, only 30-40% deployed\n\n"
+                "Current TradePilot strategy: Automatically adjusts position sizes based on VIX level.")
+
+    # Best stocks to buy
+    if any(w in q for w in ["best", "top", "pick", "recommend", "which"]):
+        try:
+            scores = score_stocks_v4() if HAS_V4 else []
+            top5 = sorted(scores, key=lambda x: x.get("score", 0), reverse=True)[:5]
+            lines = ["**Top 5 AI Picks Right Now:**\n"]
+            for i, s in enumerate(top5, 1):
+                lines.append(f"{i}. **{s.get('symbol','?').replace('.NS','')}** -- Score {s.get('score',0):.0f} | Rs {s.get('price',0):.0f} ({s.get('change_pct',0):+.2f}%)")
+            lines.append("\n*Scores update every 30 minutes during market hours.*")
+            return "\n".join(lines)
+        except Exception:
+            pass
+
+    # SIP / investment questions
+    if any(w in q for w in ["sip", "invest", "long term", "mutual fund", "etf"]):
+        return ("**For Long-Term Investment (3+ years):**\n\n"
+                "1. **Nifty 50 Index Fund** (UTI/HDFC) -- Safest, lowest cost\n"
+                "2. **Parag Parikh Flexi Cap** -- Best diversified fund\n"
+                "3. **HDFC Mid-Cap Opportunities** -- Growth potential\n"
+                "4. **Gold ETF (GOLDBEES)** -- 10% allocation for hedging\n\n"
+                "**SIP Strategy:** Start with Rs 5,000/month across 2-3 funds. Increase annually.\n"
+                "**Rule:** Never stop SIP during crashes -- that's when you get the best units.")
+
+    # Default
+    return ("I can help with:\n"
+            "- **Stock analysis**: 'Tell me about RELIANCE'\n"
+            "- **Market regime**: 'How is the market today?'\n"
+            "- **Top picks**: 'Best stocks to buy'\n"
+            "- **Investment advice**: 'Best SIP mutual funds'\n"
+            "- **VIX analysis**: 'What does VIX mean?'\n\n"
+            "Try asking one of these questions!")
 
 
 if __name__ == "__main__":
@@ -1203,4 +1867,4 @@ if __name__ == "__main__":
     print("\nStarting server at http://localhost:5050")
     print("Open your browser to http://localhost:5050\n")
 
-    app.run(host="0.0.0.0", port=5050, debug=False)
+    app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

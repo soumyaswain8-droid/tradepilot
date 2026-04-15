@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-04-10T16:43:41.863739",
+  "type": "composite_7_signal_backtest",
+  "weights": {
+    "ml_score": 0.25,
+    "rs_score": 0.2,
+    "orb_score": 0.15,
+    "vwap_score": 0.1,
+    "fii_score": 0.1,
+    "oi_score": 0.1,
+    "vol_score": 0.1
+  },
+  "without_regime": {
+    "total_return_pct": 131.94,
+    "annualized_return_pct": 137.58,
+    "annualized_volatility_pct": 5.88,
+    "sharpe_ratio": 21.965,
+    "sortino_ratio": 52.248,
+    "max_drawdown_pct": -0.4,
+    "win_rate_pct": 94.69,
+    "profit_factor": 77.632,
+    "avg_daily_pnl_rs": 5385.17,
+    "total_pnl_rs": 1319366.47,
+    "final_equity_rs": 2319366.47,
+    "total_trading_days": 245,
+    "capital": 1000000
+  },
+  "with_regime": {
+    "total_return_pct": 123.15,
+    "annualized_return_pct": 128.33,
+    "annualized_volatility_pct": 7.33,
+    "sharpe_ratio": 16.392,
+    "sortino_ratio": 63.572,
+    "max_drawdown_pct": -0.29,
+    "win_rate_pct": 91.02,
+    "profit_factor": 44.043,
+    "avg_daily_pnl_rs": 5026.7,
+    "total_pnl_rs": 1231541.32,
+    "final_equity_rs": 2231541.32,
+    "total_trading_days": 245,
+    "capital": 1000000
+  },
+  "signal_analysis": {
+    "ML": {
+      "return_pct": -33.85,
+      "sharpe": -7.296,
+      "win_rate_pct": 31.4,
+      "weight_pct": 25,
+      "contribution": "Negative"
+    },
+    "Relative Str": {
+      "return_pct": 90.75,
+      "sharpe": 15.749,
+      "win_rate_pct": 89.0,
+      "weight_pct": 20,
+      "contribution": "Positive"
+    },
+    "ORB proxy": {
+      "return_pct": -73.39,
+      "sharpe": -16.748,
+      "win_rate_pct": 11.8,
+      "weight_pct": 15,
+      "contribution": "Negative"
+    },
+    "VWAP proxy": {
+      "return_pct": 122.99,
+      "sharpe": 26.302,
+      "win_rate_pct": 96.3,
+      "weight_pct": 10,
+      "contribution": "Positive"
+    },
+    "FII proxy": {
+      "return_pct": -47.53,
+      "sharpe": -13.381,
+      "win_rate_pct": 20.4,
+      "weight_pct": 10,
+      "contribution": "Negative"
+    },
+    "OI proxy": {
+      "return_pct": 57.7,
+      "sharpe": 9.06,
+      "win_rate_pct": 66.9,
+      "weight_pct": 10,
+      "contribution": "Positive"
+    },
+    "Volume": {
+      "return_pct": -16.21,
+      "sharpe": -2.801,
+      "win_rate_pct": 42.9,
+      "weight_pct": 10,
+      "contribution": "Negative"
+    }
+  },
+  "vix_regime": {
+    "High (>20)": {
+      "days": 20,
+      "avg_daily_return_pct": 0.9171,
+      "win_rate_pct": 85.0,
+      "total_return_pct": 18.34,
+      "sharpe": 17.868
+    },
+    "Low (<15)": {
+      "days": 183,
+      "avg_daily_return_pct": 0.4707,
+      "win_rate_pct": 92.3,
+      "total_return_pct": 86.14,
+      "sharpe": 18.371
+    },
+    "Normal (15-20)": {
+      "days": 42,
+      "avg_daily_return_pct": 0.4446,
+      "win_rate_pct": 88.1,
+      "total_return_pct": 18.67,
+      "sharpe": 19.169
+    }
+  }
+}

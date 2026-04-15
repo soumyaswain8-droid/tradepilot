@@ -16,3 +16,27 @@ prototype/models/*.pkl
 # Temp
 *.log
 .env
+
+# ═══ SECURITY — Never commit these ═══
+# Telegram bot credentials
+prototype/v5/telegram_config.json
+
+# Analytics DB (contains user data)
+prototype/tradepilot_analytics.db
+*.db
+
+# Paper trade data (trade secrets)
+docs/paper-trades/
+logs/
+
+# Model weights and metadata (IP)
+prototype/models/*.json
+prototype/models/*.h5
+
+# Deployment artifacts
+deployments/
+
+# Secrets
+*.pem
+*.key
+credentials.json

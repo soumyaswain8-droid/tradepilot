@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>
+@page {
+    size: A4;
+    margin: 0.7in 0.6in 0.7in 0.6in;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Avenir Next', 'Avenir', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #ffffff;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* Title block */
+body > h1:first-child {
+    font-size: 24pt;
+    text-align: center;
+    border-bottom: none;
+    color: #1e1b4b;
+    margin-top: 1.2rem;
+    margin-bottom: 0.2rem;
+    padding-bottom: 0;
+    letter-spacing: -0.5px;
+}
+
+body > h1:first-child + p {
+    text-align: center;
+    font-style: italic;
+    color: #6366f1;
+    font-size: 11pt;
+    margin-bottom: 0.3rem;
+}
+
+body > h1:first-child + p + p {
+    text-align: center;
+    color: #64748b;
+    font-size: 9.5pt;
+    margin-bottom: 0.1rem;
+}
+
+body > h1:first-child + p + p + p {
+    text-align: center;
+    color: #64748b;
+    font-size: 9.5pt;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #312e81;
+    border-bottom: 3px solid #6366f1;
+    padding-bottom: 0.35rem;
+    margin-top: 1.6rem;
+    margin-bottom: 0.7rem;
+    letter-spacing: -0.3px;
+}
+
+h2 {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #3730a3;
+    border-left: 4px solid #818cf8;
+    padding-left: 0.6rem;
+    margin-top: 1.4rem;
+    margin-bottom: 0.5rem;
+    page-break-after: avoid;
+}
+
+h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: #4338ca;
+    margin-top: 1rem;
+    margin-bottom: 0.35rem;
+    page-break-after: avoid;
+}
+
+p {
+    margin-bottom: 0.5rem;
+}
+
+strong {
+    color: #1e1b4b;
+}
+
+em {
+    color: #475569;
+}
+
+hr {
+    border: none;
+    border-top: 1.5px solid #c7d2fe;
+    margin: 1rem 0;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 96%;
+    margin: 0.6rem auto;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+thead th {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    font-weight: 600;
+    padding: 0.45rem 0.5rem;
+    text-align: left;
+    font-size: 8pt;
+    letter-spacing: 0.3px;
+    border: none;
+    white-space: nowrap;
+}
+
+thead th:first-child {
+    border-radius: 6px 0 0 0;
+}
+thead th:last-child {
+    border-radius: 0 6px 0 0;
+}
+
+tbody td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+}
+
+tbody tr:nth-child(odd) {
+    background: #f8fafc;
+}
+tbody tr:nth-child(even) {
+    background: #ffffff;
+}
+
+tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 6px;
+}
+tbody tr:last-child td:last-child {
+    border-radius: 0 0 6px 0;
+}
+
+/* Profit cells green, loss cells red */
+td {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Code blocks */
+pre {
+    background: #f5f5fa;
+    border: 1px solid #e0e0eb;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    overflow-x: auto;
+    color: #1e1b4b;
+    page-break-inside: avoid;
+}
+
+code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8.5pt;
+    background: #eef0f8;
+    padding: 0.1rem 0.25rem;
+    border-radius: 3px;
+    color: #4338ca;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+/* Lists */
+ul, ol {
+    margin: 0.3rem 0 0.5rem 1.3rem;
+    padding: 0;
+}
+
+li {
+    margin-bottom: 0.2rem;
+}
+
+/* Bold rows in tables for totals */
+tbody tr td strong {
+    color: #312e81;
+    font-weight: 700;
+}
+
+/* Page breaks */
+h2 {
+    page-break-after: avoid;
+}
+
+/* Footer */
+body > p:last-child {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 8.5pt;
+    margin-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.5rem;
+}
+</style>
+</head>
+<body>
+<h1>TradePilot Complete Trade Report &ndash; April 10, 2026</h1>
+<p><em>V4 + V5 Engine Performance | Paper Trading Day</em></p>
+<p><strong>Author:</strong> Soumya Swain | soumya@devpilot.co.in
+<strong>Date:</strong> Thursday, April 10, 2026</p>
+<hr />
+<h2>Executive Summary</h2>
+<p>A dominant day for TradePilot. Both engines delivered profits with near-perfect execution. The V4 engine achieved a flawless 100% win rate across 22 trades on Rs 10,00,000 capital, netting Rs +11,537 (+1.15%). The V5 multi-pool engine, operating on Rs 50,00,000 capital with both longs and shorts, generated Rs +40,480 (+0.81%) across 26 trades with a 96% win rate. V5&rsquo;s intraday short pool was the standout, with COALINDIA shorted 6 times for a combined Rs +23,198. Combined P&amp;L across both engines: <strong>Rs +52,017</strong>.</p>
+<hr />
+<h2>1. Market Context</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Indicator</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Market Regime</td>
+<td style="text-align: left;">SIDEWAYS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Gap Direction</td>
+<td style="text-align: left;">UP</td>
+</tr>
+<tr>
+<td style="text-align: left;">V4 Strategy</td>
+<td style="text-align: left;">Long-Only</td>
+</tr>
+<tr>
+<td style="text-align: left;">V5 Strategy</td>
+<td style="text-align: left;">Multi-Pool (Longs + Shorts)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. V4 Engine Performance</h2>
+<h3>Capital &amp; Summary</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Capital</td>
+<td style="text-align: right;">Rs 10,00,000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Net P&amp;L</td>
+<td style="text-align: right;">Rs +11,537</td>
+</tr>
+<tr>
+<td style="text-align: left;">Return</td>
+<td style="text-align: right;">+1.15%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Total Trades</td>
+<td style="text-align: right;">22</td>
+</tr>
+<tr>
+<td style="text-align: left;">Winners</td>
+<td style="text-align: right;">22</td>
+</tr>
+<tr>
+<td style="text-align: left;">Losers</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Win Rate</td>
+<td style="text-align: right;">100%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Scans</td>
+<td style="text-align: right;">32</td>
+</tr>
+<tr>
+<td style="text-align: left;">Rescores</td>
+<td style="text-align: right;">11</td>
+</tr>
+</tbody>
+</table>
+<h3>V4 Closed Trades (22 &ndash; All Winners)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: right;">Entry</th>
+<th style="text-align: right;">Exit</th>
+<th style="text-align: right;">Qty</th>
+<th style="text-align: right;">P&amp;L</th>
+<th style="text-align: right;">P&amp;L%</th>
+<th style="text-align: left;">Entry Time</th>
+<th style="text-align: left;">Exit Time</th>
+<th style="text-align: left;">Reason</th>
+<th style="text-align: right;">Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">ASIANPAINT</td>
+<td style="text-align: right;">2,311.80</td>
+<td style="text-align: right;">2,360.00</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">+1,012</td>
+<td style="text-align: right;">+2.08%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">10:11</td>
+<td style="text-align: left;">TARGET</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255.00</td>
+<td style="text-align: right;">7,304.00</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">+294</td>
+<td style="text-align: right;">+0.68%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">10:57</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">58</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">ASIANPAINT</td>
+<td style="text-align: right;">2,311.80</td>
+<td style="text-align: right;">2,352.70</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">+900</td>
+<td style="text-align: right;">+1.77%</td>
+<td style="text-align: left;">10:11</td>
+<td style="text-align: left;">10:57</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">71</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">ICICIBANK</td>
+<td style="text-align: right;">1,302.90</td>
+<td style="text-align: right;">1,315.70</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">+512</td>
+<td style="text-align: right;">+0.98%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">12:50</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">66</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">HEROMOTOCO</td>
+<td style="text-align: right;">5,373.50</td>
+<td style="text-align: right;">5,461.50</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">+792</td>
+<td style="text-align: right;">+1.64%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">12:50</td>
+<td style="text-align: left;">TARGET</td>
+<td style="text-align: right;">66</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">SBILIFE</td>
+<td style="text-align: right;">1,928.20</td>
+<td style="text-align: right;">1,932.70</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">+81</td>
+<td style="text-align: right;">+0.23%</td>
+<td style="text-align: left;">10:47</td>
+<td style="text-align: left;">12:50</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255.00</td>
+<td style="text-align: right;">7,412.00</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">+785</td>
+<td style="text-align: right;">+2.16%</td>
+<td style="text-align: left;">11:18</td>
+<td style="text-align: left;">12:50</td>
+<td style="text-align: left;">TARGET</td>
+<td style="text-align: right;">63</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: right;">3,208.70</td>
+<td style="text-align: right;">3,260.60</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">+778</td>
+<td style="text-align: right;">+1.62%</td>
+<td style="text-align: left;">09:41</td>
+<td style="text-align: left;">13:41</td>
+<td style="text-align: left;">TARGET</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: right;">3,208.70</td>
+<td style="text-align: right;">3,245.20</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">+511</td>
+<td style="text-align: right;">+1.14%</td>
+<td style="text-align: left;">14:02</td>
+<td style="text-align: left;">14:32</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">66</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">SBIN</td>
+<td style="text-align: right;">1,057.50</td>
+<td style="text-align: right;">1,062.80</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">+254</td>
+<td style="text-align: right;">+0.50%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">14:43</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">63</td>
+</tr>
+<tr>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">BAJAJ-AUTO</td>
+<td style="text-align: right;">9,673.00</td>
+<td style="text-align: right;">9,760.50</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">+438</td>
+<td style="text-align: right;">+0.90%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">14:43</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">65</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">ADANIENT</td>
+<td style="text-align: right;">2,062.00</td>
+<td style="text-align: right;">2,077.40</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">+323</td>
+<td style="text-align: right;">+0.75%</td>
+<td style="text-align: left;">13:31</td>
+<td style="text-align: left;">14:43</td>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">AXISBANK</td>
+<td style="text-align: right;">1,345.80</td>
+<td style="text-align: right;">1,351.20</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">+211</td>
+<td style="text-align: right;">+0.40%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">INDUSINDBK</td>
+<td style="text-align: right;">827.40</td>
+<td style="text-align: right;">830.85</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">+210</td>
+<td style="text-align: right;">+0.42%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">64</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">SHRIRAMFIN</td>
+<td style="text-align: right;">1,026.80</td>
+<td style="text-align: right;">1,028.45</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">+79</td>
+<td style="text-align: right;">+0.16%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">63</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">BAJAJFINSV</td>
+<td style="text-align: right;">1,794.40</td>
+<td style="text-align: right;">1,810.30</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">+413</td>
+<td style="text-align: right;">+0.89%</td>
+<td style="text-align: left;">09:31</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">64</td>
+</tr>
+<tr>
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">BAJFINANCE</td>
+<td style="text-align: right;">914.95</td>
+<td style="text-align: right;">925.80</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+597</td>
+<td style="text-align: right;">+1.19%</td>
+<td style="text-align: left;">10:11</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">65</td>
+</tr>
+<tr>
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">HDFCBANK</td>
+<td style="text-align: right;">807.50</td>
+<td style="text-align: right;">810.35</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">+180</td>
+<td style="text-align: right;">+0.35%</td>
+<td style="text-align: left;">10:11</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr>
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">HEROMOTOCO</td>
+<td style="text-align: right;">5,373.50</td>
+<td style="text-align: right;">5,469.00</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">+955</td>
+<td style="text-align: right;">+1.78%</td>
+<td style="text-align: left;">13:01</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">72</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">ICICIBANK</td>
+<td style="text-align: right;">1,302.90</td>
+<td style="text-align: right;">1,322.60</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">+827</td>
+<td style="text-align: right;">+1.51%</td>
+<td style="text-align: left;">13:01</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">69</td>
+</tr>
+<tr>
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">BAJAJ-AUTO</td>
+<td style="text-align: right;">9,673.00</td>
+<td style="text-align: right;">9,815.50</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">+855</td>
+<td style="text-align: right;">+1.47%</td>
+<td style="text-align: left;">15:04</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">67</td>
+</tr>
+<tr>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">SBIN</td>
+<td style="text-align: right;">1,057.50</td>
+<td style="text-align: right;">1,066.95</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">+529</td>
+<td style="text-align: right;">+0.89%</td>
+<td style="text-align: left;">15:04</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">65</td>
+</tr>
+</tbody>
+</table>
+<h3>V4 Exit Reason Breakdown</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Exit Reason</th>
+<th style="text-align: right;">Trades</th>
+<th style="text-align: right;">Total P&amp;L</th>
+<th style="text-align: right;">Avg P&amp;L/Trade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">TARGET</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">+3,368</td>
+<td style="text-align: right;">+842</td>
+</tr>
+<tr>
+<td style="text-align: left;">STOPLOSS</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">+3,313</td>
+<td style="text-align: right;">+414</td>
+</tr>
+<tr>
+<td style="text-align: left;">TIME_EXIT</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">+4,857</td>
+<td style="text-align: right;">+486</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: right;"><strong>22</strong></td>
+<td style="text-align: right;"><strong>+11,537</strong></td>
+<td style="text-align: right;"><strong>+524</strong></td>
+</tr>
+</tbody>
+</table>
+<p>All stop-loss exits were profitable &ndash; trailing stops had moved above entry price before triggering. This confirms the V4 trailing stop mechanism is working correctly.</p>
+<hr />
+<h2>3. V5 Engine Performance</h2>
+<h3>Capital &amp; Summary</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Capital</td>
+<td style="text-align: right;">Rs 50,00,000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Net P&amp;L</td>
+<td style="text-align: right;">Rs +40,480</td>
+</tr>
+<tr>
+<td style="text-align: left;">Return</td>
+<td style="text-align: right;">+0.81%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Total Trades</td>
+<td style="text-align: right;">26</td>
+</tr>
+<tr>
+<td style="text-align: left;">Winners</td>
+<td style="text-align: right;">25</td>
+</tr>
+<tr>
+<td style="text-align: left;">Losers</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Win Rate</td>
+<td style="text-align: right;">96.2%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Regime</td>
+<td style="text-align: right;">SIDEWAYS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Gap</td>
+<td style="text-align: right;">UP</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3a. V5 Intraday Pool &ndash; Shorts</h3>
+<p><strong>Pool P&amp;L: Rs +26,487 | 13 trades | 12W / 1L</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: right;">Entry</th>
+<th style="text-align: right;">Exit</th>
+<th style="text-align: right;">Qty</th>
+<th style="text-align: right;">P&amp;L</th>
+<th style="text-align: right;">P&amp;L%</th>
+<th style="text-align: left;">Entry</th>
+<th style="text-align: left;">Exit</th>
+<th style="text-align: left;">Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">439.50</td>
+<td style="text-align: right;">244</td>
+<td style="text-align: right;">+3,221</td>
+<td style="text-align: right;">+2.92%</td>
+<td style="text-align: left;">13:03</td>
+<td style="text-align: left;">13:13</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">431.60</td>
+<td style="text-align: right;">244</td>
+<td style="text-align: right;">+5,148</td>
+<td style="text-align: right;">+4.66%</td>
+<td style="text-align: left;">13:13</td>
+<td style="text-align: left;">13:23</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">TCS</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">2,539.80</td>
+<td style="text-align: right;">2,529.60</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">+490</td>
+<td style="text-align: right;">+0.40%</td>
+<td style="text-align: left;">13:03</td>
+<td style="text-align: left;">13:43</td>
+<td style="text-align: left;">STOPLOSS</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">433.50</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">+4,186</td>
+<td style="text-align: right;">+4.24%</td>
+<td style="text-align: left;">13:44</td>
+<td style="text-align: left;">13:54</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">436.80</td>
+<td style="text-align: right;">195</td>
+<td style="text-align: right;">+3,100</td>
+<td style="text-align: right;">+3.51%</td>
+<td style="text-align: left;">14:14</td>
+<td style="text-align: left;">14:24</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">432.80</td>
+<td style="text-align: right;">194</td>
+<td style="text-align: right;">+3,861</td>
+<td style="text-align: right;">+4.40%</td>
+<td style="text-align: left;">14:45</td>
+<td style="text-align: left;">14:55</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">TCS</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">2,539.80</td>
+<td style="text-align: right;">2,526.00</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">+662</td>
+<td style="text-align: right;">+0.54%</td>
+<td style="text-align: left;">13:44</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">STOPLOSS</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">SUNPHARMA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">1,665.40</td>
+<td style="text-align: right;">1,655.70</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">+883</td>
+<td style="text-align: right;">+0.58%</td>
+<td style="text-align: left;">13:03</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">INFY</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">1,299.40</td>
+<td style="text-align: right;">1,293.00</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">+672</td>
+<td style="text-align: right;">+0.49%</td>
+<td style="text-align: left;">13:03</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">NTPC</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">380.60</td>
+<td style="text-align: right;">380.45</td>
+<td style="text-align: right;">288</td>
+<td style="text-align: right;">+43</td>
+<td style="text-align: right;">+0.04%</td>
+<td style="text-align: left;">13:44</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">ONGC</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">289.45</td>
+<td style="text-align: right;">286.90</td>
+<td style="text-align: right;">339</td>
+<td style="text-align: right;">+864</td>
+<td style="text-align: right;">+0.88%</td>
+<td style="text-align: left;">14:14</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">APOLLOHOSP</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">7,481.00</td>
+<td style="text-align: right;">7,506.00</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">-325</td>
+<td style="text-align: right;">-0.33%</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+<tr>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: left;">SHORT</td>
+<td style="text-align: right;">452.70</td>
+<td style="text-align: right;">434.20</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">+3,682</td>
+<td style="text-align: right;">+4.09%</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">15:15</td>
+<td style="text-align: left;">TIME_EXIT</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Star Performer: COALINDIA</strong> &ndash; Shorted 6 times, all profitable, combined P&amp;L: <strong>Rs +23,198</strong></p>
+<hr />
+<h3>3b. V5 Swing Pool &ndash; Longs</h3>
+<p><strong>Pool P&amp;L: Rs +13,993 | 13 closed trades | 9 positions still open</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: right;">Entry</th>
+<th style="text-align: right;">Exit</th>
+<th style="text-align: right;">Qty</th>
+<th style="text-align: right;">P&amp;L</th>
+<th style="text-align: right;">P&amp;L%</th>
+<th style="text-align: left;">Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255</td>
+<td style="text-align: right;">7,402</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">+2,058</td>
+<td style="text-align: right;">+2.03%</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255</td>
+<td style="text-align: right;">7,417</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">+1,300</td>
+<td style="text-align: right;">+2.24%</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255</td>
+<td style="text-align: right;">7,412</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">+1,260</td>
+<td style="text-align: right;">+2.17%</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">HEROMOTOCO</td>
+<td style="text-align: right;">5,373</td>
+<td style="text-align: right;">5,442</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">+1,449</td>
+<td style="text-align: right;">+1.28%</td>
+<td style="text-align: left;">STOPLOSS</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: right;">3,208</td>
+<td style="text-align: right;">3,243</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">+733</td>
+<td style="text-align: right;">+1.09%</td>
+<td style="text-align: left;">STOPLOSS</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255</td>
+<td style="text-align: right;">7,402</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">+1,176</td>
+<td style="text-align: right;">+2.03%</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">BAJAJ-AUTO</td>
+<td style="text-align: right;">9,673</td>
+<td style="text-align: right;">9,763</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">+724</td>
+<td style="text-align: right;">+0.94%</td>
+<td style="text-align: left;">STOPLOSS</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">AXISBANK</td>
+<td style="text-align: right;">1,345</td>
+<td style="text-align: right;">1,346</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+33</td>
+<td style="text-align: right;">+0.04%</td>
+<td style="text-align: left;">SIGNAL_FLIP</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">7,255</td>
+<td style="text-align: right;">7,404</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">+1,639</td>
+<td style="text-align: right;">+2.05%</td>
+<td style="text-align: left;">TARGET</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">ASIANPAINT</td>
+<td style="text-align: right;">2,311</td>
+<td style="text-align: right;">2,360</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">+2,608</td>
+<td style="text-align: right;">+2.09%</td>
+<td style="text-align: left;">SIGNAL_FLIP</td>
+</tr>
+<tr>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">INDUSINDBK</td>
+<td style="text-align: right;">827</td>
+<td style="text-align: right;">831</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">+292</td>
+<td style="text-align: right;">+0.48%</td>
+<td style="text-align: left;">SIGNAL_FLIP</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">SBIN</td>
+<td style="text-align: right;">1,057</td>
+<td style="text-align: right;">1,067</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">+484</td>
+<td style="text-align: right;">+0.90%</td>
+<td style="text-align: left;">SIGNAL_FLIP</td>
+</tr>
+<tr>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">HDFCBANK</td>
+<td style="text-align: right;">807</td>
+<td style="text-align: right;">810</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">+236</td>
+<td style="text-align: right;">+0.34%</td>
+<td style="text-align: left;">SIGNAL_FLIP</td>
+</tr>
+</tbody>
+</table>
+<h3>Open Positions (Carrying Overnight)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">ICICIBANK</td>
+<td style="text-align: left;">Trailing stop active</td>
+</tr>
+<tr>
+<td style="text-align: left;">HEROMOTOCO</td>
+<td style="text-align: left;">Trailing stop active</td>
+</tr>
+<tr>
+<td style="text-align: left;">BAJAJ-AUTO</td>
+<td style="text-align: left;">Trailing stop active</td>
+</tr>
+<tr>
+<td style="text-align: left;">SHRIRAMFIN</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+<tr>
+<td style="text-align: left;">AXISBANK</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+<tr>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+<tr>
+<td style="text-align: left;">WIPRO</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+<tr>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+<tr>
+<td style="text-align: left;">BAJAJFINSV</td>
+<td style="text-align: left;">Holding</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>4. V4 vs V5 Head-to-Head Comparison</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">V4</th>
+<th style="text-align: right;">V5</th>
+<th style="text-align: left;">Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Capital</td>
+<td style="text-align: right;">Rs 10,00,000</td>
+<td style="text-align: right;">Rs 50,00,000</td>
+<td style="text-align: left;">&ndash;</td>
+</tr>
+<tr>
+<td style="text-align: left;">Net P&amp;L</td>
+<td style="text-align: right;">+Rs 11,537</td>
+<td style="text-align: right;">+Rs 40,480</td>
+<td style="text-align: left;">V5 (3.5x)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Return %</td>
+<td style="text-align: right;">+1.15%</td>
+<td style="text-align: right;">+0.81%</td>
+<td style="text-align: left;">V4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Total Trades</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: left;">&ndash;</td>
+</tr>
+<tr>
+<td style="text-align: left;">Win Rate</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">96.2%</td>
+<td style="text-align: left;">V4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Long Trades</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">&ndash;</td>
+</tr>
+<tr>
+<td style="text-align: left;">Short Trades</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">V5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Intraday Short P&amp;L</td>
+<td style="text-align: right;">&ndash;</td>
+<td style="text-align: right;">+Rs 26,487</td>
+<td style="text-align: left;">V5 unique</td>
+</tr>
+<tr>
+<td style="text-align: left;">Swing Open Positions</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">V5 carries overnight</td>
+</tr>
+<tr>
+<td style="text-align: left;">Avg P&amp;L per Trade</td>
+<td style="text-align: right;">+Rs 524</td>
+<td style="text-align: right;">+Rs 1,557</td>
+<td style="text-align: left;">V5</td>
+</tr>
+</tbody>
+</table>
+<h3>Key Takeaways</h3>
+<ul>
+<li><strong>V4</strong> delivered a perfect session &ndash; 100% win rate with disciplined trailing stops converting even stop-loss exits into profitable trades.</li>
+<li><strong>V5</strong> demonstrated the power of multi-pool architecture &ndash; intraday shorts contributed 65% of total P&amp;L, a capability V4 lacks entirely.</li>
+<li><strong>COALINDIA</strong> was the day&rsquo;s biggest opportunity &ndash; V5 captured Rs 23,198 from it through repeated short entries. V4 could not participate.</li>
+<li><strong>V5 swing pool</strong> carries 9 positions overnight, creating potential for next-day gains (or risk). V4 is fully flat by close.</li>
+<li>Combined both engines produced <strong>Rs +52,017</strong> in a single trading day.</li>
+</ul>
+<hr />
+<h2>5. Top Performing Stocks</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stock</th>
+<th style="text-align: right;">V4 P&amp;L</th>
+<th style="text-align: right;">V5 P&amp;L</th>
+<th style="text-align: right;">Combined</th>
+<th style="text-align: left;">Best Play</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">COALINDIA</td>
+<td style="text-align: right;">&ndash;</td>
+<td style="text-align: right;">+23,198</td>
+<td style="text-align: right;">+23,198</td>
+<td style="text-align: left;">V5 short x6</td>
+</tr>
+<tr>
+<td style="text-align: left;">EICHERMOT</td>
+<td style="text-align: right;">+1,079</td>
+<td style="text-align: right;">+7,433</td>
+<td style="text-align: right;">+8,512</td>
+<td style="text-align: left;">V5 swing + V4 target</td>
+</tr>
+<tr>
+<td style="text-align: left;">ASIANPAINT</td>
+<td style="text-align: right;">+1,912</td>
+<td style="text-align: right;">+2,608</td>
+<td style="text-align: right;">+4,520</td>
+<td style="text-align: left;">Both engines long</td>
+</tr>
+<tr>
+<td style="text-align: left;">HEROMOTOCO</td>
+<td style="text-align: right;">+1,747</td>
+<td style="text-align: right;">+1,449</td>
+<td style="text-align: right;">+3,196</td>
+<td style="text-align: left;">Both engines long</td>
+</tr>
+<tr>
+<td style="text-align: left;">ICICIBANK</td>
+<td style="text-align: right;">+1,339</td>
+<td style="text-align: right;">&ndash;</td>
+<td style="text-align: right;">+1,339</td>
+<td style="text-align: left;">V4 re-entry</td>
+</tr>
+<tr>
+<td style="text-align: left;">BAJAJ-AUTO</td>
+<td style="text-align: right;">+1,293</td>
+<td style="text-align: right;">+724</td>
+<td style="text-align: right;">+2,017</td>
+<td style="text-align: left;">V4 time exits</td>
+</tr>
+<tr>
+<td style="text-align: left;">M&amp;M</td>
+<td style="text-align: right;">+1,289</td>
+<td style="text-align: right;">+733</td>
+<td style="text-align: right;">+2,022</td>
+<td style="text-align: left;">Both engines long</td>
+</tr>
+<tr>
+<td style="text-align: left;">SBIN</td>
+<td style="text-align: right;">+783</td>
+<td style="text-align: right;">+484</td>
+<td style="text-align: right;">+1,267</td>
+<td style="text-align: left;">Both engines long</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. Session Statistics</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">V4</th>
+<th style="text-align: right;">V5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">First Trade</td>
+<td style="text-align: right;">09:31</td>
+<td style="text-align: right;">13:01 (swing) / 13:03 (intraday)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Last Trade</td>
+<td style="text-align: right;">15:15</td>
+<td style="text-align: right;">15:15</td>
+</tr>
+<tr>
+<td style="text-align: left;">Session Duration</td>
+<td style="text-align: right;">5h 44m</td>
+<td style="text-align: right;">2h 14m</td>
+</tr>
+<tr>
+<td style="text-align: left;">Unique Stocks Traded</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td style="text-align: left;">Avg Hold Time (est.)</td>
+<td style="text-align: right;">2-3 hrs</td>
+<td style="text-align: right;">30-60 min (intraday)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Max Concurrent Positions</td>
+<td style="text-align: right;">~15</td>
+<td style="text-align: right;">~12</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Report generated by TradePilot | soumya@devpilot.co.in</em></p>
+</body>
+</html>

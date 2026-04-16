@@ -1,0 +1,66 @@
+{
+  "date": "2026-04-16",
+  "capital": 943820.5,
+  "starting_capital": 943820.5,
+  "open_positions": [],
+  "closed_positions": [
+    {
+      "id": "FO-001",
+      "strategy": "PROTECTIVE_PUT",
+      "instrument": "NIFTY",
+      "option_type": "PE",
+      "strike": 24350,
+      "action": "BUY",
+      "lot_size": 75,
+      "lots": 2,
+      "qty": 150,
+      "entry_premium": 210.07,
+      "current_premium": 337.66,
+      "sl_premium": 105.04,
+      "target_premium": 315.1,
+      "cost": 31510.5,
+      "credit": 0,
+      "expiry": "2026-04-21",
+      "entry_time": "2026-04-16T09:13:50.345747",
+      "entry_nifty": 24385.2,
+      "pnl": 19138.5,
+      "status": "CLOSED",
+      "exit_premium": 337.66,
+      "exit_time": "2026-04-16T09:13:50.521108",
+      "exit_reason": "TARGET_HIT",
+      "exit_nifty": 24211.9
+    }
+  ],
+  "signals_generated": [
+    {
+      "strategy": "PROTECTIVE_PUT",
+      "instrument": "NIFTY",
+      "option_type": "PE",
+      "strike": 24350,
+      "action": "BUY",
+      "lot_size": 75,
+      "lots": 2,
+      "qty": 150,
+      "premium": 210.07,
+      "cost": 31510.5,
+      "credit": 0,
+      "sl_premium": 105.04,
+      "target_premium": 315.1,
+      "expiry": "2026-04-21",
+      "regime": "SIDEWAYS",
+      "regime_score": -2,
+      "vix": 18.67,
+      "reason": "BEAR regime (score=-2), buying put insurance",
+      "timestamp": "2026-04-16T09:13:50.345542"
+    }
+  ],
+  "regime": "SIDEWAYS",
+  "vix": 18.67,
+  "nifty_price": 24211.9,
+  "day_pnl": 19138.5,
+  "status": "settled",
+  "timestamps": {
+    "start": "2026-04-16T09:13:39.552531",
+    "end": "2026-04-16T09:13:50.522232"
+  }
+}

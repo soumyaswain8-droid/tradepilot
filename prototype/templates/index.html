@@ -2579,7 +2579,70 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
 <!-- ═══ TOP BAR ═══ -->
 <header class="topbar">
   <div class="logo">
-    <div class="logo-icon">&#9889;</div>
+    <div class="logo-icon" id="logoIcon" title="Click to change logo" style="cursor:pointer;overflow:hidden">
+      <!-- Logo 1: Candlestick (default) -->
+      <svg class="tp-logo" data-logo="1" viewBox="0 0 36 36" width="30" height="30">
+        <circle cx="18" cy="18" r="17" fill="url(#lgBg1)" stroke="#1E293B" stroke-width="1"/>
+        <defs><linearGradient id="lgBg1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#0C1121"/><stop offset="100%" stop-color="#111827"/></linearGradient></defs>
+        <rect x="8" y="14" width="4" height="8" rx="1" fill="#10B981"/><line x1="10" y1="11" x2="10" y2="24" stroke="#10B981" stroke-width="1"/>
+        <rect x="16" y="12" width="4" height="9" rx="1" fill="#F43F5E"/><line x1="18" y1="9" x2="18" y2="23" stroke="#F43F5E" stroke-width="1"/>
+        <rect x="24" y="10" width="4" height="10" rx="1" fill="#10B981"/><line x1="26" y1="7" x2="26" y2="22" stroke="#10B981" stroke-width="1"/>
+        <line x1="6" y1="26" x2="30" y2="6" stroke="#6366F1" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+        <polygon points="30,6 26,8 28,12" fill="#6366F1" opacity="0.7"/>
+      </svg>
+      <!-- Logo 2: Shield -->
+      <svg class="tp-logo" data-logo="2" viewBox="0 0 36 36" width="30" height="30" style="display:none">
+        <path d="M18 2 L32 10 L32 22 L18 34 L4 22 L4 10 Z" fill="#6366F1" fill-opacity="0.1" stroke="#6366F1" stroke-width="1.5"/>
+        <path d="M18 6 L28 12 L28 20 L18 30 L8 20 L8 12 Z" fill="#8B5CF6" fill-opacity="0.06"/>
+        <polyline points="8,18 13,15 17,21 22,13 27,18 30,24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="30" text-anchor="middle" font-size="9" font-weight="900" fill="#F1F5F9" font-family="sans-serif">T</text>
+      </svg>
+      <!-- Logo 3: Hexagon + Pulse -->
+      <svg class="tp-logo" data-logo="3" viewBox="0 0 36 36" width="30" height="30" style="display:none">
+        <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="#8B5CF6" fill-opacity="0.08" stroke="#8B5CF6" stroke-width="1.5"/>
+        <polygon points="18,6 28,12 28,24 18,30 8,24 8,12" fill="#8B5CF6" fill-opacity="0.05"/>
+        <polyline points="2,18 10,18 13,18 15,8 18,28 21,8 23,18 26,18 34,18" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="28" text-anchor="middle" font-size="7" font-weight="800" fill="#C084FC" fill-opacity="0.5" font-family="sans-serif">TP</text>
+      </svg>
+      <!-- Logo 4: Crosshair -->
+      <svg class="tp-logo" data-logo="4" viewBox="0 0 36 36" width="30" height="30" style="display:none">
+        <circle cx="18" cy="18" r="15" fill="none" stroke="#6366F1" stroke-width="1.5"/>
+        <circle cx="18" cy="18" r="10" fill="#6366F1" fill-opacity="0.04"/>
+        <circle cx="18" cy="18" r="5" fill="none" stroke="#6366F1" stroke-width="0.8" opacity="0.4"/>
+        <line x1="18" y1="2" x2="18" y2="34" stroke="#6366F1" stroke-width="0.6" opacity="0.25"/>
+        <line x1="2" y1="18" x2="34" y2="18" stroke="#6366F1" stroke-width="0.6" opacity="0.25"/>
+        <line x1="10" y1="26" x2="28" y2="8" stroke="#10B981" stroke-width="2.5" stroke-linecap="round"/>
+        <polygon points="28,8 24,10 26,14" fill="#10B981"/>
+        <circle cx="18" cy="18" r="3" fill="#C026D3" opacity="0.8"/>
+        <circle cx="18" cy="18" r="5" fill="#C026D3" fill-opacity="0.15"/>
+      </svg>
+      <!-- Logo 5: Lamborghini Bull + Candle Horns (Final) -->
+      <svg class="tp-logo" data-logo="5" viewBox="0 0 100 100" width="30" height="30" style="display:none">
+        <!-- Diamond bg -->
+        <polygon points="50,4 94,50 50,96 6,50" fill="#4F46E5"/>
+        <polygon points="50,12 86,50 50,88 14,50" fill="#5B21B6" opacity="0.6"/>
+        <!-- Solid bull head — wide jaw, muscular -->
+        <polygon points="38,20 42,18 50,16 58,18 62,20 66,26 68,32 70,38 72,44 76,46 78,50 74,48 72,50 72,52 62,54 50,56 38,54 28,52 28,50 26,48 22,50 24,46 28,44 30,38 32,32 34,26 38,20" fill="white" opacity="0.95"/>
+        <!-- Forehead crease -->
+        <line x1="50" y1="30" x2="50" y2="48" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+        <!-- Nose pad -->
+        <rect x="40" y="18" width="20" height="8" rx="4" fill="#E2E8F0"/>
+        <!-- Nostrils -->
+        <circle cx="43" cy="22" r="3.5" fill="#4F46E5"/>
+        <circle cx="57" cy="22" r="3.5" fill="#4F46E5"/>
+        <!-- Angry slit eyes -->
+        <line x1="34" y1="40" x2="42" y2="38" stroke="#10B981" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="58" y1="38" x2="66" y2="40" stroke="#10B981" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- LEFT HORN — Green candle -->
+        <line x1="23" y1="50" x2="26" y2="54" stroke="#10B981" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="18" y="54" width="10" height="24" rx="2" fill="#10B981" stroke="#059669" stroke-width="0.5"/>
+        <line x1="23" y1="78" x2="21" y2="86" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+        <!-- RIGHT HORN — Red candle -->
+        <line x1="77" y1="50" x2="74" y2="54" stroke="#F43F5E" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="72" y="54" width="10" height="24" rx="2" fill="#F43F5E" stroke="#DC2626" stroke-width="0.5"/>
+        <line x1="77" y1="78" x2="79" y2="86" stroke="#F43F5E" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
     TradePilot
   </div>
   <div class="idx-bar">
@@ -2761,6 +2824,139 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
         <div class="cat-card bse" data-cat="bse_it"><div class="cat-card-name">IT</div><div class="cat-card-desc">BSE IT sector</div></div>
         <div class="cat-card bse" data-cat="bse_chemicals"><div class="cat-card-name">Chemicals</div><div class="cat-card-desc">Chemical sector</div></div>
         <div class="cat-card bse" data-cat="bse_realty"><div class="cat-card-name">Realty</div><div class="cat-card-desc">BSE real estate</div></div>
+      </div>
+    </div>
+
+    <!-- Penny Stocks Watchlist -->
+    <div class="exchange-section" id="pennySection" style="margin-top:16px">
+      <div class="exchange-header">
+        <div class="exchange-badge" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;font-size:11px;padding:6px 12px;border-radius:8px;font-weight:700">PENNY</div>
+        <div>
+          <h2 class="exchange-title">Penny Stock Watchlist</h2>
+          <p class="exchange-sub">High-risk, high-reward picks under Rs 50 &bull; Max 5-10% of capital &bull; 15-20% hard SL</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0" id="pennyGrid">
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--green);cursor:pointer" onclick="if(window.openStockModal)openStockModal('SUZLON')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">SUZLON</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(16,185,129,0.12);color:var(--green)">TIER 1</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Wind Energy | Debt-free</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 49</span>
+            <span style="color:var(--text-dim)">P/E: 30</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">6,409 MW order book | Profit +539%</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--green);cursor:pointer" onclick="if(window.openStockModal)openStockModal('SOUTHBANK')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">SOUTH INDIAN BANK</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(16,185,129,0.12);color:var(--green)">TIER 1</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Banking | Undervalued</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 38</span>
+            <span style="color:var(--green);font-weight:700">P/E: 7.3</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">RBI regulated | Dividend paying</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--green);cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">PREMIER POLYFILM</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(16,185,129,0.12);color:var(--green)">TIER 1</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">PVC/Vinyl Mfg | ROCE 25%</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 61</span>
+            <span style="color:var(--text-dim)">Profit CAGR: 33%</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">Infra-linked | Q3 profit +39% YoY</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--green);cursor:pointer" onclick="if(window.openStockModal)openStockModal('PAISALO')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">PAISALO DIGITAL</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(16,185,129,0.12);color:var(--green)">TIER 1</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">NBFC/Microfinance</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 43</span>
+            <span style="color:var(--text-dim)">P/E: 15.3</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">Rural India | Revenue +17.8% YoY</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--cyan);cursor:pointer" onclick="if(window.openStockModal)openStockModal('MSUMI')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">MOTHERSON WIRING</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(99,102,241,0.12);color:var(--cyan)">TIER 1</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Auto Components | EV Play</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 39</span>
+            <span style="color:var(--text-dim)">MCap: 26K Cr</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">Wiring harnesses | Motherson group</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--cyan);cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">NANDAN DENIM</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(245,158,11,0.12);color:var(--amber)">TIER 2</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Textiles | China+1 Beneficiary</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 4</span>
+            <span style="color:var(--text-dim)">P/E: 11</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">Revenue doubled in 2yrs | Thin margins</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--cyan);cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">SAGILITY INDIA</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(245,158,11,0.12);color:var(--amber)">TIER 2</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Healthcare BPO | USD Revenue</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 43</span>
+            <span style="color:var(--text-dim)">P/E: 55 (expensive)</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">Rupee depreciation hedge</div>
+        </div>
+
+        <div class="glass" style="padding:12px;border-radius:12px;border-left:3px solid var(--cyan);cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:800;font-size:13px;color:var(--text)">HI-TECH PIPES</div>
+            <span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:50px;background:rgba(245,158,11,0.12);color:var(--amber)">TIER 2</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-ghost);margin-bottom:6px">Steel Pipes | Infra Play</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="font-weight:700;color:var(--text)">Rs 79</span>
+            <span style="color:var(--text-dim)">P/E: 20</span>
+          </div>
+          <div style="font-size:8px;color:var(--text-ghost);margin-top:4px">1.05M ton capacity | Govt capex</div>
+        </div>
+
+      </div>
+
+      <!-- Macro context bar -->
+      <div class="glass" style="padding:10px 14px;border-radius:10px;margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-size:10px;color:var(--text-dim)">
+        <span>Brent: <strong style="color:var(--red)">$95-100</strong></span>
+        <span>USD/INR: <strong>93.38</strong></span>
+        <span>FII: <strong style="color:var(--green)">+666 Cr</strong></span>
+        <span>Theme: <strong style="color:var(--cyan)">China+1 | Defense | Infra</strong></span>
+        <span>Risk: <strong style="color:var(--amber)">Max 5-10% capital</strong></span>
+        <span>SL: <strong style="color:var(--red)">15-20% hard stop</strong></span>
+      </div>
+
+      <!-- Avoid list -->
+      <div style="margin-top:8px;padding:8px 12px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:8px;font-size:9px;color:var(--text-dim)">
+        <strong style="color:var(--red)">AVOID:</strong> Ola Electric (Rs 39, -84% margin, analyst target Rs 20) &bull; GTL Infra (Rs 1.25, debt trap) &bull; Vikas EcoTech (Rs 1.40, falling profits) &bull; Shah Metacorp (Rs 5, profit -89%) &bull; Any stock spiking 100%+ in 30 days with no news
       </div>
     </div>
 
@@ -3648,6 +3844,27 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
    TRADEPILOT NEURON ENGINE
    ═══════════════════════════════════════════════════════════════ */
 
+/* ─── Logo Switcher — click logo to cycle through 5 designs ─── */
+(function() {
+  var logos = document.querySelectorAll('.tp-logo');
+  var current = parseInt(localStorage.getItem('tp-logo') || '5');
+  function showLogo(n) {
+    logos.forEach(function(l) { l.style.display = 'none'; });
+    var target = document.querySelector('.tp-logo[data-logo="' + n + '"]');
+    if (target) target.style.display = 'block';
+    localStorage.setItem('tp-logo', n);
+    current = n;
+  }
+  showLogo(current);
+  var icon = document.getElementById('logoIcon');
+  if (icon) {
+    icon.addEventListener('click', function() {
+      var next = current >= 5 ? 1 : current + 1;
+      showLogo(next);
+    });
+  }
+})();
+
 /* ─── Theme Toggle (shared with landing page via localStorage) ─── */
 (function() {
   var html = document.documentElement;
@@ -4110,7 +4327,7 @@ function loadIndices() {
 /* ═══ LOAD MODEL ═══ */
 function loadModel() {
   api('/api/model', function(d) {
-    $('aiBadge').textContent = (d.accuracy || 0).toFixed(1) + '%';
+    $('aiBadge').textContent = d.status === 'active' ? 'Active' : (d.accuracy ? d.accuracy.toFixed(1) + '%' : 'Active');
   });
 }
 

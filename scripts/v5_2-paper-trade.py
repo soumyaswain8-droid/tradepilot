@@ -40,6 +40,14 @@ SCAN_INTERVAL_MIN = 10
 FORCE_EXIT_HOUR = 15
 FORCE_EXIT_MIN = 15
 
+# ═══════════════ RISK GUARDS (added 2026-04-22 post-mortem) ═══════════════
+# Trigger event: NIFTY 24300PE bought @Rs 210.20 → exited @Rs 8.50 EOD
+#                Single trade lost Rs 45,385 (-96%, -4.54% of capital).
+# Two safety nets: (1) per-trade size cap, (2) daily loss kill-switch.
+# Disable a guard by setting the value to None.
+MAX_POSITION_SIZE_PCT = 0.10   # max 10% of current capital per option trade
+MAX_DAILY_LOSS_RS     = -5000  # kill-switch trips at -Rs 5,000 (realized + unrealized)
+
 # ═══════════════════════════ IMPORTS (graceful) ═══════════════════════════
 
 def _import_module(mod_path, attr_name):
@@ -167,9 +175,47 @@ def get_vix_live() -> float:
 
 # ═══════════════════════════ POSITION MANAGEMENT ═══════════════════════════
 
+def total_unrealized_pnl(state: dict) -> float:
+    return sum(float(p.get("pnl", 0) or 0) for p in state.get("open_positions", []))
+
+
+def total_pnl(state: dict) -> float:
+    """Realized + unrealized — the right number for kill-switch decisions."""
+    return float(state.get("day_pnl", 0) or 0) + total_unrealized_pnl(state)
+
+
+def is_killed(state: dict) -> bool:
+    """True once daily loss kill-switch has tripped (sticky for the day)."""
+    if MAX_DAILY_LOSS_RS is None:
+        return False
+    if state.get("kill_switch_tripped"):
+        return True
+    if total_pnl(state) <= MAX_DAILY_LOSS_RS:
+        state["kill_switch_tripped"] = True
+        state["kill_switch_at"] = datetime.now().isoformat()
+        return True
+    return False
+
+
 def deploy_signals(state: dict, signals: list) -> dict:
-    """Deploy F&O signals as paper positions."""
+    """Deploy F&O signals as paper positions, with risk-guard checks."""
+    if is_killed(state):
+        log(f"  [KILL-SWITCH] day P&L {total_pnl(state):+.0f} <= {MAX_DAILY_LOSS_RS} "
+            f"— rejecting {len(signals)} signal(s)")
+        return state
+
     for sig in signals:
+        # Per-trade position-size cap
+        cost_or_margin = float(sig.get("cost", 0) or 0) or float(sig.get("credit", 0) or 0)
+        if MAX_POSITION_SIZE_PCT is not None and cost_or_margin > 0:
+            cap = state.get("capital", INITIAL_CAPITAL) * MAX_POSITION_SIZE_PCT
+            if cost_or_margin > cap:
+                log(f"  [SIZE-CAP] REJECTED {sig.get('action','?')} "
+                    f"NIFTY {sig.get('strike','?')}{sig.get('option_type','?')} "
+                    f"x{sig.get('qty','?')} — cost Rs {cost_or_margin:,.0f} > "
+                    f"{int(MAX_POSITION_SIZE_PCT*100)}% of capital (Rs {cap:,.0f})")
+                continue
+
         pos = {
             "id": f"FO-{len(state['open_positions'])+1:03d}",
             "strategy": sig["strategy"],
@@ -509,6 +555,14 @@ def run_autopilot():
             if nifty_now > 0:
                 state["nifty_price"] = nifty_now
                 state = update_positions(state, nifty_now, state["vix"])
+
+            # Risk-guard: daily loss kill-switch (force close everything)
+            if is_killed(state):
+                log(f"  [KILL-SWITCH TRIPPED] total P&L {total_pnl(state):+.0f} "
+                    f"<= {MAX_DAILY_LOSS_RS} — force-closing all positions NOW")
+                state = force_close_all(state, state["nifty_price"], state["vix"])
+                save_today_state(state)
+                break
 
             if not state["open_positions"]:
                 log("  All positions closed (SL/target hit)")

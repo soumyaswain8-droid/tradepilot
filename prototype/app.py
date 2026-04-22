@@ -6,6 +6,7 @@ Transforms backend data to match frontend's expected format.
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
+from pathlib import Path
 import json
 import os
 import sys
@@ -887,6 +888,119 @@ def api_bots_market_pulse():
         })
 
 
+# ═══════════════════════════════════════════════════════════
+# LIVE ENGINE PICKS — what the engines actually hold right now
+# Added 2026-04-22 (tonight queue Item #2). Reads paper-trade
+# JSON state files. No live mark-to-market — shows entries +
+# day-level realized P&L from engine summary.
+# ═══════════════════════════════════════════════════════════
+
+LIVE_ENGINES = ["v5", "v5_6", "v5_7"]
+PAPER_TRADES_DIR = Path(__file__).resolve().parent.parent / "docs" / "paper-trades"
+
+
+def _load_engine_state_for(engine):
+    """Read the most recent state JSON for an engine. Returns dict or {}."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    p = PAPER_TRADES_DIR / engine / f"{today}.json"
+    if not p.exists():
+        # Fall back to most recent file
+        files = sorted(PAPER_TRADES_DIR.glob(f"{engine}/2026-*.json"))
+        if not files:
+            return {}
+        p = files[-1]
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {}
+
+
+@app.route("/api/live-engine-picks")
+def api_live_engine_picks():
+    """What v5 / v5_6 / v5_7 are holding right now (live position snapshot).
+
+    Powers the 'Live Engine Picks' dashboard tab + the per-card holding
+    indicator on the Stocks tab. Group-by-symbol surfaces consensus picks.
+    """
+    by_symbol = {}            # symbol -> {engines:[], pools:set, entries:[], total_qty}
+    by_engine = {}            # engine -> summary dict
+    state_files_used = []
+
+    for eng in LIVE_ENGINES:
+        state = _load_engine_state_for(eng)
+        if not state:
+            by_engine[eng] = {"open": 0, "realized": 0.0, "trades": 0, "win_rate": 0,
+                              "regime": "?", "available": False}
+            continue
+        state_files_used.append(eng)
+
+        summary = state.get("summary", {}) or {}
+        wins = int(summary.get("wins", 0))
+        trades = int(summary.get("trades", 0))
+        wr = round(100.0 * wins / trades, 1) if trades else 0.0
+
+        open_count = 0
+        for pname, pool in (state.get("pools") or {}).items():
+            for pos in (pool.get("positions") or []):
+                sym = pos.get("symbol", "?")
+                open_count += 1
+                rec = by_symbol.setdefault(sym, {
+                    "symbol": sym,
+                    "engines": [],
+                    "pools": set(),
+                    "entries": [],
+                    "total_qty": 0,
+                })
+                if eng not in rec["engines"]:
+                    rec["engines"].append(eng)
+                rec["pools"].add(pname)
+                rec["entries"].append({
+                    "engine": eng,
+                    "pool": pname,
+                    "entry_price": pos.get("entry_price"),
+                    "qty": pos.get("qty"),
+                    "cost": pos.get("cost"),
+                    "entry_time": pos.get("entry_time", ""),
+                    "entry_date": pos.get("entry_date", ""),
+                    "sl_price": pos.get("sl_price"),
+                    "target_price": pos.get("target_price"),
+                    "score": pos.get("score"),
+                    "direction": pos.get("direction", "LONG"),
+                })
+                rec["total_qty"] += int(pos.get("qty") or 0)
+
+        by_engine[eng] = {
+            "open": open_count,
+            "realized": round(float(summary.get("total_pnl", 0) or 0), 2),
+            "trades": trades,
+            "win_rate": wr,
+            "regime": state.get("regime", "?"),
+            "available": True,
+        }
+
+    # Convert by_symbol to a sorted list — consensus picks first
+    positions = []
+    for sym, rec in by_symbol.items():
+        rec["pools"] = sorted(rec["pools"])
+        rec["consensus_count"] = len(rec["engines"])
+        positions.append(rec)
+    positions.sort(key=lambda r: (-r["consensus_count"], r["symbol"]))
+
+    total_open = sum(e.get("open", 0) for e in by_engine.values())
+    total_realized = round(sum(e.get("realized", 0) for e in by_engine.values()), 2)
+
+    return jsonify({
+        "as_of": datetime.now().strftime("%H:%M:%S"),
+        "engines": LIVE_ENGINES,
+        "engines_with_data": state_files_used,
+        "total_open_positions": total_open,
+        "total_unique_symbols": len(positions),
+        "total_realized_pnl": total_realized,
+        "by_engine": by_engine,
+        "positions": positions,
+    })
+
+
 @app.route("/api/trade/calculate")
 def api_trade_calculate():
     """Calculate potential profit/loss for a trade."""
@@ -1531,7 +1645,7 @@ def api_engine_arena():
     today = __import__('datetime').datetime.now().strftime("%Y-%m-%d")
     result = {}
 
-    for eng, dirname in [("v5.2", "v5_2"), ("v5.3", "v5_3"), ("v5.4", "v5_4")]:
+    for eng, dirname in [("v5.2", "v5_2"), ("v5.3", "v5_3"), ("v5.6", "v5_6"), ("v5.7", "v5_7"), ("v5_classic", "v5_classic")]:
         state_file = base / dirname / f"{today}.json"
         info = {"pnl": 0, "trades": 0, "wins": 0, "losses": 0, "longs": 0, "shorts": 0,
                 "long_pnl": 0, "short_pnl": 0, "regime": "?", "positions": [],

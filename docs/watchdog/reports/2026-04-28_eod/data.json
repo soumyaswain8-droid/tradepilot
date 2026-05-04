@@ -1,0 +1,162 @@
+{
+  "date": "2026-04-28",
+  "generated_at": "2026-04-28T15:35:10.679227",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 0.0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 4897.14,
+      "trades": 88,
+      "wins": 57,
+      "losses": 31,
+      "longs": 33,
+      "shorts": 55,
+      "win_rate": 64.8,
+      "open_positions": 1,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 1677.23,
+      "trades": 66,
+      "wins": 38,
+      "losses": 28,
+      "longs": 21,
+      "shorts": 45,
+      "win_rate": 57.6,
+      "open_positions": 4,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 0.0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_6",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 3772.71,
+      "trades": 76,
+      "wins": 47,
+      "losses": 29,
+      "longs": 29,
+      "shorts": 47,
+      "win_rate": 61.8,
+      "open_positions": 2,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_7",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 4487.29,
+      "trades": 79,
+      "wins": 47,
+      "losses": 32,
+      "longs": 28,
+      "shorts": 51,
+      "win_rate": 59.5,
+      "open_positions": 3,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 3
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "SUNPHARMA"
+    ],
+    "v5|v5_6": [
+      "SUNPHARMA"
+    ],
+    "v5|v5_7": [
+      "SUNPHARMA"
+    ],
+    "v5_classic|v5_6": [
+      "RELIANCE",
+      "SUNPHARMA"
+    ],
+    "v5_classic|v5_7": [
+      "COFORGE",
+      "RELIANCE",
+      "SUNPHARMA"
+    ],
+    "v5_6|v5_7": [
+      "RELIANCE",
+      "SUNPHARMA"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +4,897 across 88 trades (64.8% win).",
+    "Laggard: <b>v5_3</b> with Rs +0 across 0 trades (0.0% win).",
+    "v5 trade-throttling fix <b>worked</b>: v5 did 88 trades today vs 76 for v5.6 (yesterday v5 was stuck at 10).",
+    "P&L gap: v5 is ahead by Rs 1,124. Investigate overlap matrix to see where they diverged.",
+    "<b>v5_classic</b>: 57.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_7</b>: 59.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

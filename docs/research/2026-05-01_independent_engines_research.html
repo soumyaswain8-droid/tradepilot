@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Independent Engines — Architecture Research</title>
+<style>
+@page { size: 7in 10in; margin: 0.85in 0.7in 0.85in 0.8in; }
+
+:root {
+  --navy: #1e1b4b;
+  --indigo: #4f46e5;
+  --indigo-2: #7c3aed;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-bd: #bbf7d0;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --red-bd: #fecaca;
+  --amber: #f59e0b;
+  --amber-bg: #fffbeb;
+  --amber-bd: #fde68a;
+  --slate: #475569;
+  --slate-bg: #f8fafc;
+  --slate-bd: #e2e8f0;
+  --ink: #0f172a;
+}
+
+html, body { font-family: Charter, Georgia, "Times New Roman", serif; font-size: 11pt; line-height: 1.55; color: var(--ink); margin: 0; padding: 0; }
+h1, h2, h3, h4 { font-family: "Avenir Next", Avenir, Helvetica, Arial, sans-serif; color: var(--navy); page-break-after: avoid; }
+h1 { font-size: 24pt; line-height: 1.15; margin: 0 0 0.4rem; }
+h2 { font-size: 16pt; margin: 1.2rem 0 0.5rem; border-bottom: 2px solid var(--indigo); padding-bottom: 0.2rem; }
+h3 { font-size: 13pt; margin: 1rem 0 0.4rem; color: var(--indigo); }
+p { margin: 0 0 0.55rem; }
+strong { color: var(--ink); }
+code { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: var(--navy); }
+
+/* Cover */
+.cover {
+  height: 8.0in;
+  background-color: #eef2ff;
+  background-image: linear-gradient(160deg, #ffffff 0%, #e0e7ff 30%, #a5b4fc 65%, #6366f1 100%);
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  page-break-after: always;
+  padding: 0.7in 0.6in;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.cover * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.cover .badge {
+  display: inline-block;
+  background: var(--indigo);
+  color: white;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  letter-spacing: 1.5px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+.cover h1 {
+  font-size: 30pt;
+  margin: 0.8rem 0 0.4rem;
+  letter-spacing: -0.5px;
+}
+.cover .subtitle {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 13pt;
+  color: #312e81;
+  margin: 0 0 1.2rem;
+  font-style: italic;
+}
+.cover .stats { display: flex; gap: 10px; margin: 0.8rem 0; }
+.cover .stat {
+  background: white;
+  border-radius: 10px;
+  padding: 11px 14px;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(30,27,75,0.10);
+  text-align: center;
+}
+.cover .stat .num {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 19pt;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+}
+.cover .stat .lbl {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8pt;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+.cover .meta {
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 10pt;
+  color: var(--ink);
+  margin-top: auto;
+}
+.cover .meta div { margin: 3px 0; }
+.cover .meta b { color: var(--navy); }
+
+/* Generic */
+.section { page-break-before: always; }
+.section.no-break { page-break-before: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0 0.8rem;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+th {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-2));
+  color: white;
+  padding: 7px 9px;
+  text-align: left;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  font-weight: 600;
+}
+td { padding: 6px 9px; border-bottom: 1px solid var(--slate-bd); vertical-align: top; }
+tr:nth-child(even) td { background: #fafbfc; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: "Courier New", monospace; font-size: 9pt; }
+td.center, th.center { text-align: center; }
+
+.callout {
+  border-left: 4px solid var(--indigo);
+  background: #eef2ff;
+  padding: 11px 15px;
+  margin: 0.7rem 0;
+  border-radius: 0 6px 6px 0;
+  page-break-inside: avoid;
+}
+.callout.red { border-color: var(--red); background: var(--red-bg); }
+.callout.green { border-color: var(--green); background: var(--green-bg); }
+.callout.amber { border-color: var(--amber); background: var(--amber-bg); }
+.callout p { margin: 0; }
+.callout .label {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--indigo);
+  display: block;
+  margin-bottom: 4px;
+}
+.callout.red .label { color: var(--red); }
+.callout.green .label { color: var(--green); }
+.callout.amber .label { color: #b45309; }
+
+.fig { margin: 0.8rem 0 0.4rem; text-align: center; page-break-inside: avoid; }
+.fig img { width: 100%; max-width: 6in; border-radius: 6px; box-shadow: 0 2px 8px rgba(15,23,42,0.08); }
+.fig .cap {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  color: var(--slate);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+ul.tight { margin: 0.4rem 0 0.7rem; padding-left: 1.2rem; }
+ul.tight li { margin-bottom: 0.22rem; }
+
+.tag {
+  display: inline-block;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 7.5pt;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.tag.green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.tag.amber { background: var(--amber-bg); color: #b45309; border: 1px solid var(--amber-bd); }
+.tag.red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.tag.indigo { background: #eef2ff; color: var(--indigo); border: 1px solid #c7d2fe; }
+.tag.slate { background: var(--slate-bg); color: var(--slate); border: 1px solid var(--slate-bd); }
+
+.toc {
+  background: var(--slate-bg);
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--indigo);
+  margin: 0.8rem 0 1.2rem;
+}
+.toc h3 { margin-top: 0; }
+.toc ol { padding-left: 1.4rem; margin: 0; }
+.toc li { margin: 3px 0; font-family: "Avenir Next", sans-serif; font-size: 10pt; }
+
+.kpi-row { display: flex; gap: 10px; margin: 0.7rem 0; }
+.kpi {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--slate-bg);
+  border: 1px solid var(--slate-bd);
+  text-align: center;
+  page-break-inside: avoid;
+}
+.kpi .v { font-family: "Avenir Next", sans-serif; font-size: 17pt; font-weight: 800; color: var(--navy); }
+.kpi .l { font-family: "Avenir Next", sans-serif; font-size: 8pt; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.kpi.green { background: var(--green-bg); border-color: var(--green-bd); } .kpi.green .v { color: var(--green); }
+.kpi.amber { background: var(--amber-bg); border-color: var(--amber-bd); } .kpi.amber .v { color: #b45309; }
+.kpi.red { background: var(--red-bg); border-color: var(--red-bd); } .kpi.red .v { color: var(--red); }
+
+/* Back cover */
+.back-page { page-break-before: always; padding: 0; margin: 0; }
+.back-card {
+  width: 100%;
+  min-height: 6.5in;
+  background-color: #1e1b4b !important;
+  background-image: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%) !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color: #ffffff;
+  padding: 0.6in 0.5in;
+  box-sizing: border-box;
+  border-radius: 8px;
+}
+.back-card * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.back-card h2 { color: #ffffff !important; border-color: rgba(255,255,255,0.4); margin-top: 0; }
+.back-card h3 { color: #c7d2fe !important; }
+.back-card p { color: #e0e7ff !important; }
+.back-card code { background: rgba(255,255,255,0.15); color: #fde68a; }
+.back-card .closing {
+  margin-top: 0.15in;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8.5pt;
+  color: rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.25);
+  padding-top: 10px;
+}
+.back-card h2 { font-size: 14pt; }
+.back-card h3 { font-size: 11pt; margin-top: 0.6rem; margin-bottom: 0.2rem; }
+.back-card p { font-size: 10pt; line-height: 1.45; margin-bottom: 0.35rem; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <span class="badge">Architecture Research · TradePilot</span>
+  <h1>Independent Engines</h1>
+  <p class="subtitle">From 11 wrappers around one brain to 6 specialist engines, each with its own ML model</p>
+
+  <div class="stats">
+    <div class="stat"><div class="num">11</div><div class="lbl">Variants today</div></div>
+    <div class="stat"><div class="num">1</div><div class="lbl">Brain underneath</div></div>
+    <div class="stat"><div class="num">6</div><div class="lbl">Specialist engines (target)</div></div>
+    <div class="stat"><div class="num">3</div><div class="lbl">Regime-tuned ML models</div></div>
+  </div>
+
+  <div class="meta">
+    <div><b>Date:</b> 2026-05-01 · Research synthesis from 4 parallel agents</div>
+    <div><b>Trigger:</b> RCA on 2026-04-30 surfaced that "8 engines" share <code>v4.composite_scorer</code> + <code>v5.signal_engine</code> via dynamic <code>importlib</code></div>
+    <div><b>Goal:</b> Make engines truly independent so each can be ML-trained on its own data and evaluated against its best-fit regime</div>
+    <div><b>Author:</b> TradePilot architecture research · Soumya Swain</div>
+    <div><b>Status:</b> Research only — no code changes shipped from this document</div>
+  </div>
+</section>
+
+<!-- ============ EXEC SUMMARY ============ -->
+<section class="section no-break" style="page-break-before: avoid;">
+  <h2>Executive Summary</h2>
+  <p>Yesterday's RCA exposed an uncomfortable truth: TradePilot has 11 paper-trading variants but only <b>4 distinct strategy brains</b> beneath them. Seven of the eleven (<code>v5</code>, <code>v5_classic</code>, <code>v5_4</code>, <code>v5_5</code>, <code>v5_6</code>, <code>v5_7</code>, <code>v5_8</code>) share the same <code>v5.signal_engine</code> via dynamic <code>importlib</code> calls. They differ only in slot-partition tweaks, exit-rule overrides, or output directory.</p>
+
+  <p>This report answers three questions:</p>
+  <ol>
+    <li><b>What does the lab actually look like today</b> — corrected dependency map after one of the research agents missed dynamic imports?</li>
+    <li><b>How do battle-tested OSS frameworks structure independent strategies + per-strategy ML</b> — and which patterns are worth borrowing?</li>
+    <li><b>Which engine fits which regime</b> — and what's the lightest path to per-regime ML training?</li>
+  </ol>
+
+  <div class="callout green">
+    <span class="label">Headline recommendation</span>
+    <p>Adopt <b>Freqtrade's <code>IStrategy</code> + FreqAI pattern</b> for engine isolation, layered on a <b>shared regime router</b>. Train one ML model per detected regime (BULL / SIDEWAYS / BEAR) using the lightweight <b>V3 Hybrid</b> approach — no full retraining of every signal, just a per-regime slot-allocation classifier. Cold-start fallback = today's fixed slot partition.</p>
+  </div>
+
+  <div class="toc">
+    <h3>Inside this report</h3>
+    <ol>
+      <li>Today's reality — 11 variants, 1 brain (the bottleneck visualised)</li>
+      <li>How OSS does it — 7-framework comparison + winners</li>
+      <li>Regime ↔ engine fit map (which variant for which regime)</li>
+      <li>Target architecture — 6 specialist engines + shared infra</li>
+      <li>ML training plan — V3 hybrid (recommended) vs V1 + V2</li>
+      <li>Migration path — 4 phases over 6 weeks</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ TODAY'S REALITY ============ -->
+<section class="section">
+  <h2>1. Today's Reality — 11 Variants, 1 Brain</h2>
+
+  <div class="fig">
+    <img src="charts/01_today_bottleneck.png" alt="Today's architecture">
+    <div class="cap">Figure 1 · The dependency reality. Eleven scripts on top, but only four distinct strategy brains underneath. Bottom layer is fully shared — same risk gates, same regime detector, same data feed.</div>
+  </div>
+
+  <h3>Corrected sharing map</h3>
+  <p>One research agent missed the <code>importlib</code> import pattern (variants register modules in a dict like <code>"signals": ("prototype.v5.signal_engine", "generate_signals")</code> then dynamically load). After direct verification:</p>
+
+  <table>
+    <thead><tr><th>Variant</th><th>Strategy brain</th><th>Risk + regime + pool layer</th><th>Independence</th></tr></thead>
+    <tbody>
+      <tr><td><code>v4</code></td><td>Own (<code>v4.composite_scorer</code> inline)</td><td>Own (v4 risk controls)</td><td><span class="tag green">true engine</span></td></tr>
+      <tr><td><code>v5</code></td><td><code>v5.signal_engine</code> (shared)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">wrapper</span></td></tr>
+      <tr><td><code>v5_classic</code></td><td><code>v5.signal_engine</code> (shared)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag red">near-duplicate of v5</span></td></tr>
+      <tr><td><code>v5_2</code></td><td>Own (<code>v5_2.options_engine</code>)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag green">true (F&amp;O)</span></td></tr>
+      <tr><td><code>v5_3</code></td><td><code>v5.signal_engine</code> + own <code>v5_3.staged_entry</code></td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">extension</span></td></tr>
+      <tr><td><code>v5_4</code></td><td><code>v5.signal_engine</code> (shared)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">wrapper (direction budget)</span></td></tr>
+      <tr><td><code>v5_5</code></td><td><code>v5.signal_engine</code> (shared)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">wrapper (exit logic)</span></td></tr>
+      <tr><td><code>v5_6</code></td><td><code>v5.signal_engine</code> + own <code>v5_6.darvas_box</code></td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">extension</span></td></tr>
+      <tr><td><code>v5_7</code></td><td><code>v5.signal_engine</code> + own <code>v5_7.intraday_box</code></td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">extension</span></td></tr>
+      <tr><td><code>v5_8</code></td><td><code>v5.signal_engine</code> + monkey-patch</td><td><code>v5.risk_manager</code> + monkey-patch</td><td><span class="tag red">wrapper (slot-cap experiment)</span></td></tr>
+      <tr><td><code>v6</code></td><td>Direct <code>v4.composite_scorer</code> (skips v5.signal_engine)</td><td><code>v5.risk_manager</code> (shared)</td><td><span class="tag amber">hybrid</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <span class="label">Implications for ML</span>
+    <p>You can't train 7 independent ML models when 7 variants share one scorer. The training data they generate is essentially the same data with different slot-allocation rules applied on top. To get genuinely independent training signal, each variant needs its <b>own scorer module</b> (or the scorer needs explicit per-variant model files).</p>
+  </div>
+</section>
+
+<!-- ============ OSS COMPARISON ============ -->
+<section class="section">
+  <h2>2. How OSS Frameworks Do It</h2>
+
+  <p>Surveyed 7 actively-maintained Python trading frameworks. The question wasn't "which is best in general" — it was <b>"which has the cleanest pattern for independent strategies + per-strategy ML training"</b>. That's a narrower lens.</p>
+
+  <div class="fig">
+    <img src="charts/04_oss_comparison.png" alt="OSS comparison">
+    <div class="cap">Figure 2 · Multi-criteria fit scores. Freqtrade (with FreqAI) is the clear leader for our specific need: per-strategy isolation + first-class ML retraining + live trading.</div>
+  </div>
+
+  <h3>Why Freqtrade + FreqAI wins for our use case</h3>
+  <table>
+    <thead><tr><th>Capability</th><th>What FreqAI gives us</th><th>How we'd adapt it</th></tr></thead>
+    <tbody>
+      <tr><td>Strategy isolation</td><td><code>IStrategy</code> base class — each strategy is a self-contained Python class with its own scorer, indicators, and entry/exit logic</td><td>Map our <code>v5_6</code>, <code>v5_7</code>, etc. to subclasses; one file per engine</td></tr>
+      <tr><td>Per-strategy ML</td><td><code>FreqaiDataDrawer</code> — separate data + model registry per strategy, trained in background threads without blocking live execution</td><td>Each engine gets its own <code>models/&lt;engine&gt;/</code> directory; train nightly</td></tr>
+      <tr><td>Walk-forward retraining</td><td>Built-in time-series CV; retrains every N candles to avoid look-ahead bias</td><td>Set retrain cadence per engine (e.g. weekly for SWING, daily for INTRADAY)</td></tr>
+      <tr><td>Hyperparameter search</td><td>Hyperopt module — multi-objective optimisation (return + drawdown)</td><td>Use for per-regime tuning (separate hyperopt run per BULL/SIDEWAYS/BEAR)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What to borrow from each runner-up</h3>
+  <ul class="tight">
+    <li><b>NautilusTrader</b> — its event-driven core gives identical behavior in backtest and live (no "works in backtest, breaks in live" surprises). We'd borrow the contract: every engine uses the same execution simulator.</li>
+    <li><b>PyBroker</b> — walk-forward ML training built into the backtest loop. We'd borrow this pattern for nightly model refreshes.</li>
+    <li><b>QuantConnect Lean</b> — universe selection abstraction (decouple "which stocks" from "what strategy"). We'd borrow this so each engine can specify its own universe.</li>
+  </ul>
+
+  <h3>Patterns to avoid</h3>
+  <ul class="tight">
+    <li><b>vectorbt</b> — vectorised arrays force engines to share data structures; per-engine ML training is awkward. Great for parameter sweeps, wrong tool for our independence goal.</li>
+    <li><b>Backtrader</b> — class-based but indicators share an event bus, leaking state between strategies. Same trap we already have with shared <code>composite_scorer</code>.</li>
+    <li><b>Indian-market-specific OSS</b> — <code>pykiteconnect</code>, <code>kite-connect samples</code>, etc. — these are broker adapters, not engine architectures. Useful when we go live on Zerodha; don't model our engine after them.</li>
+  </ul>
+</section>
+
+<!-- ============ REGIME-FIT ============ -->
+<section class="section">
+  <h2>3. Regime ↔ Engine Fit Map</h2>
+
+  <p>Each variant has a natural regime where it should outperform. Today they all run on every regime, which is why the lab averages mediocre across the board. Mapping each engine to its best regime is the prerequisite for regime-routed ML.</p>
+
+  <div class="fig">
+    <img src="charts/03_regime_fit_heatmap.png" alt="Regime-fit heatmap">
+    <div class="cap">Figure 3 · Best-fit regime per variant (based on trading style + observed behavior on Apr 27-30). Green = strong fit, amber = OK, red = poor.</div>
+  </div>
+
+  <h3>What each variant is actually good at</h3>
+  <table>
+    <thead><tr><th>Variant</th><th>Style</th><th>Best regime</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td><code>v4</code></td><td>LONG-only composite scorer</td><td><span class="tag green">BULL</span></td><td>Apr 28: +Rs 47K, 71% WR on green-tape day. No SHORT gate.</td></tr>
+      <tr><td><code>v5</code></td><td>Multi-pool, regime-aware partition</td><td><span class="tag green">BEAR</span></td><td>BEAR partition reserves 12 SHORT slots; v5 outperforms in BEAR-labelled days</td></tr>
+      <tr><td><code>v5_classic</code></td><td>Apr 16 v5 snapshot</td><td><span class="tag green">BEAR</span></td><td>Near-duplicate of v5; serves as A/B baseline only</td></tr>
+      <tr><td><code>v5_2</code></td><td>F&amp;O straddle/puts</td><td><span class="tag green">SIDEWAYS / BEAR</span></td><td>Straddle selling thrives in low-vol SIDEWAYS; puts hedge in BEAR</td></tr>
+      <tr><td><code>v5_3</code></td><td>3-stage entry with confirmation</td><td><span class="tag amber">ANY</span></td><td>Optimised for false-positive avoidance, not regime fit</td></tr>
+      <tr><td><code>v5_4</code></td><td>Regime-weighted L/S split (50/50 in SIDEWAYS)</td><td><span class="tag green">SIDEWAYS</span></td><td>+Rs 16K Apr 29; balanced bias suits range-bound days</td></tr>
+      <tr><td><code>v5_5</code></td><td>Exit-tuning: HOLD in BULL, SELL in others</td><td><span class="tag green">SIDEWAYS / BULL</span></td><td>+Rs 17K Apr 29; reduces churn from signal flips</td></tr>
+      <tr><td><code>v5_6</code></td><td>Darvas box breakout + dynamic SL/TP</td><td><span class="tag green">BULL</span></td><td>Breakout strategies fire on trends; weak in chop</td></tr>
+      <tr><td><code>v5_7</code></td><td>Mean reversion on prior day's box</td><td><span class="tag green">SIDEWAYS</span></td><td>+Rs 26.8K Apr 29 — best performer; bounce trades thrive in chop</td></tr>
+      <tr><td><code>v5_8</code></td><td>Slot cap disabled (LONG-heavy)</td><td><span class="tag amber">BULL only</span></td><td>−Rs 11K Apr 29 — hypothesis rejected; partition mattered</td></tr>
+      <tr><td><code>v6</code></td><td>Raw v4 scorer + Track A guards (SHORT-bias)</td><td><span class="tag green">BEAR</span></td><td>Mechanical SHORT gate triggers in BEAR regime</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span class="label">The reduced 6-engine line-up</span>
+    <p>After consolidation: <b>v4</b> (BULL specialist), <b>v5_4</b> (SIDEWAYS balanced), <b>v5_6</b> (BULL breakout), <b>v5_7</b> (SIDEWAYS mean-revert), <b>v5_2</b> (BEAR options hedge), <b>v6</b> (BEAR short-bias). Retire <code>v5_classic</code> (duplicate of v5), <code>v5_8</code> (failed experiment), <code>v5_3</code> (general-purpose with no regime fit), and likely <code>v5</code> + <code>v5_5</code> after picking which one is the SIDEWAYS workhorse.</p>
+  </div>
+</section>
+
+<!-- ============ TARGET ARCHITECTURE ============ -->
+<section class="section">
+  <h2>4. Recommended Target Architecture</h2>
+
+  <div class="fig">
+    <img src="charts/02_target_architecture.png" alt="Target architecture">
+    <div class="cap">Figure 4 · Three-tier target. Top tier is fully independent (own scorer, own ML model). Middle tier is a thin router. Bottom tier is shared infrastructure — including the corp-action filter shipped 2026-05-01.</div>
+  </div>
+
+  <h3>The three tiers</h3>
+  <table>
+    <thead><tr><th>Tier</th><th>What lives here</th><th>Independence</th><th>Why this split</th></tr></thead>
+    <tbody>
+      <tr><td><b>Engine layer</b></td><td>One module per engine: own scorer, own indicators, own ML model file</td><td><span class="tag green">100% independent</span></td><td>Clean A/B; per-engine ML training has unique data</td></tr>
+      <tr><td><b>Router layer</b></td><td>Regime detector → engine selector. Today might run v5_7 only; tomorrow if regime flips to BEAR, route to v5_2 + v6</td><td><span class="tag indigo">routing logic only</span></td><td>The "which engine, when" decision is itself a small ML problem</td></tr>
+      <tr><td><b>Infrastructure layer</b></td><td>Risk gates (blacklist, kill-switch), pool manager, regime detector, data feed (with corp-action filter), execution simulator</td><td><span class="tag green">shared, single source of truth</span></td><td>Hygiene fixes apply once, propagate everywhere</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What stays the same</h3>
+  <p>The <code>risk_manager.py</code> patch shipped 2026-05-01 (blacklist auto-loader, baseline kill-switch, corp-action filter) lives in the infrastructure layer. <b>Every engine inherits these protections automatically</b> — that's the whole point of the layer split.</p>
+
+  <h3>What's net-new</h3>
+  <ul class="tight">
+    <li><b><code>engines/</code> directory</b> — one Python module per engine with the <code>IStrategy</code> contract (analogous to Freqtrade)</li>
+    <li><b>Per-engine model registry</b> — <code>models/&lt;engine&gt;/&lt;regime&gt;/model.pkl</code></li>
+    <li><b>Regime router</b> — small Python class that reads detected regime and picks engine + weights</li>
+    <li><b>Engine contract</b> — every engine implements <code>generate_signals(quotes, state) -&gt; List[Signal]</code> + <code>train(history) -&gt; Model</code> + <code>evaluate(history) -&gt; Metrics</code></li>
+  </ul>
+</section>
+
+<!-- ============ ML PLAN ============ -->
+<section class="section">
+  <h2>5. ML Training Plan</h2>
+
+  <p>Three patterns are viable. The recommendation is <b>V3 Hybrid</b> because it builds on what already works (your existing regime detector + slot partition) without requiring a full ML rewrite.</p>
+
+  <table>
+    <thead><tr><th>Pattern</th><th>Architecture</th><th>Effort</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td><b>V1 — One model per regime</b></td><td>Train 3 Random Forests (BULL/SIDEWAYS/BEAR) on historical signal+outcome pairs. At runtime, regime label picks model.</td><td><span class="tag amber">~1 week</span></td><td>Hard switching at regime boundaries causes whiplash</td></tr>
+      <tr><td><b>V2 — Weighted ensemble</b></td><td>Train per-regime models PLUS a confidence classifier (HMM). Final signal = weighted average where weights = regime-classifier confidence. Smooth transitions.</td><td><span class="tag red">~3 weeks</span></td><td>HMM training is delicate; confidence calibration is hard</td></tr>
+      <tr><td><b>V3 — Slot-allocation hybrid <span class="tag green">RECOMMENDED</span></b></td><td>Keep existing scorer. Train a lightweight gradient-boosted classifier: <code>f(regime, RSI, vol, vix) → (long_slots, short_slots)</code>. Use Apr 20-30 outcomes.</td><td><span class="tag green">~3-4 days</span></td><td>Cold-start fallback to today's fixed partition is trivial</td></tr>
+    </tbody>
+  </table>
+
+  <div class="fig">
+    <img src="charts/06_ml_pipeline.png" alt="ML pipeline">
+    <div class="cap">Figure 5 · V3 Hybrid pipeline. Per-regime training is offline; runtime is a dictionary lookup. Cold-start = today's behavior, so deployment risk is minimal.</div>
+  </div>
+
+  <h3>Why V3 over V1 or V2</h3>
+  <ul class="tight">
+    <li><b>Builds on existing infrastructure</b> — your regime detector already outputs BULL/SIDEWAYS/BEAR labels. V3 just adds a smarter slot-allocation layer on top.</li>
+    <li><b>The bottleneck is allocation, not scoring</b> — v5_8 proved the scorer was fine but slot partition mattered. Training the partition is more impactful than retraining the scorer.</li>
+    <li><b>Cheap to validate</b> — train on Apr 20-30 (10 days), backtest on Apr 27-30 (4-day holdout). If the per-regime allocation beats fixed partition by even 10%, ship it.</li>
+    <li><b>Reversible</b> — toggle via env var. If model degrades, fallback is unchanged behavior.</li>
+  </ul>
+
+  <div class="callout amber">
+    <span class="label">Caveat</span>
+    <p>10 days of data is too little for a full ML model — V3's strength is that it only needs to learn a small allocation policy, not a full signal predictor. For V1/V2, you'd want ~3-6 months of regime-labelled history, which you don't yet have. V3 gets you started; V2 is the year-end target once you've accumulated 3+ months of clean data.</p>
+  </div>
+</section>
+
+<!-- ============ MIGRATION PATH ============ -->
+<section class="section">
+  <h2>6. Migration Path — 4 Phases</h2>
+
+  <div class="fig">
+    <img src="charts/05_migration.png" alt="Migration phases">
+    <div class="cap">Figure 6 · Six-week migration. Phase 1 is the weekend hygiene work already on the backlog. Phases 2-4 deliver the independent-engine target.</div>
+  </div>
+
+  <h3>Phase 1 — Weekend hygiene (carry over from RCA)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Task</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td>Per-position absolute Rs SL (force-close at −Rs 25K)</td><td><span class="tag amber">~3 hr</span></td></tr>
+      <tr><td class="center">2</td><td>Per-stock cool-off across variants</td><td><span class="tag amber">~4 hr</span></td></tr>
+      <tr><td class="center">3</td><td>Retire <code>v5_classic</code> + <code>v5_8</code> (wrappers with no unique value)</td><td><span class="tag green">~30 min</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Phase 2 — Extract first independent engine (Week 1-2)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Task</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">4</td><td>Define <code>IStrategy</code> base class — borrow Freqtrade's contract</td><td><span class="tag amber">~2 hr</span></td></tr>
+      <tr><td class="center">5</td><td>Fork <code>v5_7</code> (best SIDEWAYS performer) into own scorer + own model dir</td><td><span class="tag amber">~6 hr</span></td></tr>
+      <tr><td class="center">6</td><td>Run side-by-side with current v5_7 wrapper for 3 days</td><td><span class="tag green">passive</span></td></tr>
+      <tr><td class="center">7</td><td>If parity confirmed, fork <code>v5_6</code> + <code>v6</code> the same way</td><td><span class="tag amber">~6 hr each</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Phase 3 — Per-engine ML training (Week 3-4)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Task</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">8</td><td>Stand up training pipeline (sklearn / lightgbm)</td><td><span class="tag amber">~4 hr</span></td></tr>
+      <tr><td class="center">9</td><td>Train V3 hybrid slot-allocator per engine on Apr 20-30 data</td><td><span class="tag amber">~6 hr</span></td></tr>
+      <tr><td class="center">10</td><td>Backtest each engine on its target regime</td><td><span class="tag green">~2 hr</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Phase 4 — Regime router + production (Week 5-6)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Task</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">11</td><td>Build router: regime label → engine + weight selection</td><td><span class="tag amber">~3 hr</span></td></tr>
+      <tr><td class="center">12</td><td>A/B for 1 week: router vs current v5</td><td><span class="tag green">passive</span></td></tr>
+      <tr><td class="center">13</td><td>If router wins, retire wrappers; declare v7 architecture</td><td><span class="tag green">~1 hr</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ DECISIONS NOW ============ -->
+<section class="section">
+  <h2>7. What to Decide Now</h2>
+
+  <p>This document is research, not implementation. Three decisions unblock Phase 2:</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="v">1</div><div class="l">Pick first engine to fork</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Confirm Freqtrade contract or roll own</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Approve V3 ML approach</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th class="center">#</th><th>Decision</th><th>Default if you say nothing</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td><b>Which engine to fork first as the proof-of-concept?</b> Recommend <code>v5_7</code> (best SIDEWAYS performer Apr 29) because it already has its own <code>intraday_box.py</code> module — half the work is done.</td><td>Fork <code>v5_7</code></td></tr>
+      <tr><td class="center">2</td><td><b>Adopt Freqtrade's <code>IStrategy</code> contract verbatim, or write our own contract?</b> Adopting borrows their docs + ecosystem; rolling own keeps full control of the abstraction.</td><td>Write our own (lighter)</td></tr>
+      <tr><td class="center">3</td><td><b>V1, V2, or V3 for ML?</b> V3 hybrid is the recommendation — small, reversible, builds on what works.</td><td>V3 Hybrid</td></tr>
+      <tr><td class="center">4</td><td><b>Pruning aggressiveness:</b> retire 5 wrappers (v5_classic, v5_8, v5_3, v5_5, v5) immediately, or keep them running through the migration?</td><td>Retire only the 2 with no value (v5_classic, v5_8); decide on others after Phase 2 parity test</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span class="label">If you approve everything as-is</span>
+    <p>The first concrete engineering work is Phase 2 Task 4 — defining the <code>IStrategy</code> base class. That's a 2-hour exercise. Want me to draft it as the next session's deliverable?</p>
+  </div>
+</section>
+
+<!-- ============ BACK ============ -->
+<section class="back-page">
+  <div class="back-card">
+    <h2>The One-Paragraph Answer</h2>
+
+    <h3>What you have today</h3>
+    <p>Eleven paper-trading variants that look like independent engines but actually share one scorer (<code>v5.signal_engine</code> or <code>v4.composite_scorer</code>) plus the entire risk + regime + pool stack. Differences between variants are mostly slot-partition tweaks, exit-rule overrides, and output directory.</p>
+
+    <h3>What you should build</h3>
+    <p>Six specialist engines (v4 BULL · v5_4 SIDEWAYS · v5_6 BULL-breakout · v5_7 SIDEWAYS-revert · v5_2 BEAR-options · v6 BEAR-short), each with its own scorer + ML model, sitting on top of a shared infrastructure layer (your already-patched <code>risk_manager.py</code>, regime detector, pool manager, data feed with corp-action filter). A thin regime router picks which engine runs given today's detected regime.</p>
+
+    <h3>How to get there</h3>
+    <p>Borrow Freqtrade's <code>IStrategy</code> + FreqAI patterns; don't model on Backtrader or vectorbt. Use the V3 Hybrid ML pattern (lightweight per-regime slot-allocation classifier) instead of full per-regime model training — you don't have enough data yet for full models. Fork engines one at a time over 6 weeks; A/B every step against the current wrapper.</p>
+
+    <h3>What to decide tonight</h3>
+    <p>Pick the first engine to fork (recommend <code>v5_7</code>) and approve V3 Hybrid as the ML approach. Everything else can be deferred until Phase 2 starts.</p>
+
+    <div class="closing">
+      <div>TradePilot &middot; Architecture Research &middot; 2026-05-01</div>
+      <div>Author: Soumya Swain &middot; Local-only &middot; Synthesis from 4 parallel research agents</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

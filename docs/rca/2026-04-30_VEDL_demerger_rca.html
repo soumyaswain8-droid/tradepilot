@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RCA — 2026-04-30 VEDL Demerger Loss</title>
+<style>
+@page { size: 7in 10in; margin: 0.85in 0.7in 0.85in 0.8in; }
+
+:root {
+  --navy: #1e1b4b;
+  --indigo: #4f46e5;
+  --indigo-2: #7c3aed;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-bd: #bbf7d0;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --red-bd: #fecaca;
+  --amber: #f59e0b;
+  --amber-bg: #fffbeb;
+  --amber-bd: #fde68a;
+  --slate: #475569;
+  --slate-bg: #f8fafc;
+  --slate-bd: #e2e8f0;
+  --ink: #0f172a;
+}
+
+html, body {
+  font-family: Charter, Georgia, "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
+  color: var(--navy);
+  page-break-after: avoid;
+}
+h1 { font-size: 24pt; line-height: 1.15; margin: 0 0 0.4rem; }
+h2 { font-size: 16pt; margin: 1.4rem 0 0.6rem; border-bottom: 2px solid var(--indigo); padding-bottom: 0.2rem; }
+h3 { font-size: 13pt; margin: 1rem 0 0.4rem; color: var(--indigo); }
+
+p { margin: 0 0 0.6rem; }
+strong { color: var(--ink); }
+code { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: var(--navy); }
+
+/* ---------- Cover ---------- */
+.cover {
+  height: 8.6in;
+  background-color: #eef2ff;
+  background-image: linear-gradient(160deg, #ffffff 0%, #eef2ff 30%, #c7d2fe 65%, #818cf8 100%);
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  page-break-after: always;
+  position: relative;
+  padding: 1.2in 0.8in;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.cover * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.cover .badge {
+  display: inline-block;
+  background: var(--indigo);
+  color: white;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  letter-spacing: 1.5px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+.cover h1 {
+  font-size: 36pt;
+  margin: 1.2rem 0 0.4rem;
+  color: var(--navy);
+  letter-spacing: -0.5px;
+}
+.cover .subtitle {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 14pt;
+  color: #312e81;
+  margin: 0 0 1.6rem;
+  font-style: italic;
+}
+.cover .meta {
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 10.5pt;
+  color: var(--ink);
+  margin-top: auto;
+}
+.cover .meta div { margin: 4px 0; }
+.cover .meta b { color: var(--navy); }
+
+.cover .stats {
+  display: flex;
+  gap: 12px;
+  margin: 1.2rem 0;
+}
+.cover .stat {
+  background: white;
+  border-radius: 10px;
+  padding: 12px 16px;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(30,27,75,0.08);
+}
+.cover .stat .num {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 22pt;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+}
+.cover .stat .lbl {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8.5pt;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 4px;
+}
+.cover .stat.red .num { color: var(--red); }
+.cover .stat.green .num { color: var(--green); }
+
+/* ---------- Generic ---------- */
+.section { page-break-before: always; }
+.section.no-break { page-break-before: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0 0.8rem;
+  font-size: 10pt;
+  page-break-inside: avoid;
+}
+th {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-2));
+  color: white;
+  padding: 8px 10px;
+  text-align: left;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9.5pt;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--slate-bd);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #fafbfc; }
+
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: "Courier New", monospace; font-size: 9.5pt; }
+td.center { text-align: center; }
+
+.callout {
+  border-left: 4px solid var(--indigo);
+  background: #eef2ff;
+  padding: 12px 16px;
+  margin: 0.8rem 0;
+  border-radius: 0 6px 6px 0;
+  page-break-inside: avoid;
+}
+.callout.red { border-color: var(--red); background: var(--red-bg); }
+.callout.green { border-color: var(--green); background: var(--green-bg); }
+.callout.amber { border-color: var(--amber); background: var(--amber-bg); }
+.callout p { margin: 0; }
+.callout .label {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--indigo);
+  display: block;
+  margin-bottom: 4px;
+}
+.callout.red .label { color: var(--red); }
+.callout.green .label { color: var(--green); }
+.callout.amber .label { color: #b45309; }
+
+.fig {
+  margin: 0.8rem 0 0.4rem;
+  text-align: center;
+  page-break-inside: avoid;
+}
+.fig img {
+  width: 100%;
+  max-width: 6in;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+}
+.fig .cap {
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  color: var(--slate);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+ul.tight { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+ul.tight li { margin-bottom: 0.25rem; }
+
+.kpi-row {
+  display: flex;
+  gap: 10px;
+  margin: 0.8rem 0;
+}
+.kpi {
+  flex: 1;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--slate-bg);
+  border: 1px solid var(--slate-bd);
+  text-align: center;
+  page-break-inside: avoid;
+}
+.kpi .v { font-family: "Avenir Next", sans-serif; font-size: 18pt; font-weight: 800; color: var(--navy); }
+.kpi .l { font-family: "Avenir Next", sans-serif; font-size: 8.5pt; color: var(--slate); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px; }
+.kpi.red { background: var(--red-bg); border-color: var(--red-bd); } .kpi.red .v { color: var(--red); }
+.kpi.green { background: var(--green-bg); border-color: var(--green-bd); } .kpi.green .v { color: var(--green); }
+.kpi.amber { background: var(--amber-bg); border-color: var(--amber-bd); } .kpi.amber .v { color: #b45309; }
+
+.tag {
+  display: inline-block;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 8pt;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.tag.red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.tag.amber { background: var(--amber-bg); color: #b45309; border: 1px solid var(--amber-bd); }
+.tag.green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+
+.toc {
+  background: var(--slate-bg);
+  padding: 18px 22px;
+  border-radius: 8px;
+  border-left: 4px solid var(--indigo);
+  margin: 0.8rem 0 1.2rem;
+}
+.toc h3 { margin-top: 0; }
+.toc ol { padding-left: 1.4rem; margin: 0; }
+.toc li { margin: 4px 0; font-family: "Avenir Next", sans-serif; font-size: 10.5pt; }
+
+/* ---------- Back cover ---------- */
+.back-page {
+  page-break-before: always;
+  padding: 0;
+  margin: 0;
+}
+.back-card {
+  width: 100%;
+  min-height: 8.3in;
+  background-color: #1e1b4b !important;
+  background-image: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%) !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color: #ffffff;
+  padding: 0.6in 0.5in;
+  box-sizing: border-box;
+  border-radius: 8px;
+  position: relative;
+}
+.back-card h2 { color: #ffffff !important; border-color: rgba(255,255,255,0.4); margin-top: 0; }
+.back-card h3 { color: #c7d2fe !important; }
+.back-card p { color: #e0e7ff !important; }
+.back-card code { background: rgba(255,255,255,0.15); color: #fde68a; }
+.back-card * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.back-card .closing {
+  margin-top: 1.2in;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  color: rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.25);
+  padding-top: 14px;
+}
+.back h2 { color: white; border-color: rgba(255,255,255,0.4); }
+.back h3 { color: #c7d2fe; }
+.back p { color: #e0e7ff; }
+.back .closing {
+  position: absolute;
+  bottom: 0.9in;
+  left: 0.8in;
+  right: 0.8in;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 9pt;
+  color: rgba(255,255,255,0.65);
+  border-top: 1px solid rgba(255,255,255,0.25);
+  padding-top: 14px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <span class="badge">Root-Cause Analysis · TradePilot</span>
+  <h1>The VEDL Day</h1>
+  <p class="subtitle">Why 7 engines lost Rs 1.18L on a stock that didn't actually fall</p>
+
+  <div class="stats">
+    <div class="stat red">
+      <div class="num">−Rs 1.18L</div>
+      <div class="lbl">Reported loss (all 7 engines)</div>
+    </div>
+    <div class="stat amber">
+      <div class="num">79%</div>
+      <div class="lbl">Came from one stock (VEDL)</div>
+    </div>
+    <div class="stat green">
+      <div class="num">~Rs 0</div>
+      <div class="lbl">Real economic impact</div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div><b>Incident date:</b> 2026-04-30 (Wednesday)</div>
+    <div><b>Trigger:</b> Vedanta Ltd 1:1 demerger ex-date — value redistributed across 5 ISINs</div>
+    <div><b>Impact:</b> All 7 active engines opened LONG VEDL at 09:09:51 @ Rs 773.60; ex-open dropped to Rs ~277</div>
+    <div><b>Author:</b> TradePilot RCA · Soumya Swain</div>
+    <div><b>Status:</b> Diagnosis complete · Fixes in <code>FUTURE_PLANS.md</code></div>
+  </div>
+</section>
+
+<!-- ============ EXECUTIVE SUMMARY ============ -->
+<section class="section no-break" style="page-break-before: avoid;">
+  <h2>Executive Summary</h2>
+  <p>On 2026-04-30, every active TradePilot variant (v4, v5, v5_2, v5_3, v5_6, v5_7, v5_8, v6) booked a paper-trading loss of Rs&nbsp;11K–15K. A single LONG SWING position in VEDL accounted for Rs&nbsp;6.5K–14K of that loss in <b>each</b> variant.</p>
+  <p>The price collapse was real on the tape but <b>fictitious in economic terms</b>: today was Vedanta's ex-date for a 1:1 demerger into 5 entities. The Rs&nbsp;773 → Rs&nbsp;277 drop is the value moving to four newly-issued ISINs that the engines do not yet track. A real holder's portfolio value is unchanged.</p>
+
+  <div class="callout red">
+    <span class="label">The real story</span>
+    <p>This was not a strategy failure. It was a <b>data-hygiene blind spot</b>: TradePilot has no corporate-action calendar, so it treated a structural price reset as a market loss. The risk gates that exist — pool-daily, portfolio-daily, monthly drawdown — are all sized for aggregate market moves, not single-position structural events.</p>
+  </div>
+
+  <div class="toc">
+    <h3>Inside this report</h3>
+    <ol>
+      <li>Why "−1.18L" is the wrong number — adjusted P&amp;L per engine</li>
+      <li>Q1 — Why the 10% loss cap didn't fire (it doesn't exist the way you think)</li>
+      <li>Q2 — Why every engine picked VEDL at the same opening tick</li>
+      <li>Q3 — Why a SIDEWAYS regime produced 28 LONG-only trades</li>
+      <li>Q4 — Where v5_8 and v6 actually live (no separate prototype dirs)</li>
+      <li>Recommendations &amp; immediate actions</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ ADJUSTED P&L ============ -->
+<section class="section">
+  <h2>1. The Real Damage — Adjusted P&amp;L per Engine</h2>
+  <p>The user already did the spadework: strip VEDL out, and the picture changes from <b>catastrophic</b> to <b>routine sideways-day chop</b>.</p>
+
+  <div class="kpi-row">
+    <div class="kpi red"><div class="v">−Rs 1.18L</div><div class="l">As reported</div></div>
+    <div class="kpi amber"><div class="v">−Rs 25K</div><div class="l">VEDL stripped (true)</div></div>
+    <div class="kpi green"><div class="v">+Rs 93K</div><div class="l">Reclassified as fictitious</div></div>
+  </div>
+
+  <div class="fig">
+    <img src="charts/01_pnl_comparison.png" alt="P&L by variant">
+    <div class="cap">Figure 1 · Reported vs VEDL-adjusted P&amp;L. Every engine moves from "ugly" to "−Rs 1–5K", which is normal for a sideways tape.</div>
+  </div>
+
+  <table>
+    <thead><tr><th>Engine</th><th class="num">Reported</th><th class="num">VEDL impact</th><th class="num">Adjusted</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><code>v4</code></td><td class="num">−32,543</td><td class="num">+19,340</td><td class="num">−13,203</td><td><span class="tag amber">soft loss</span></td></tr>
+      <tr><td><code>v5</code></td><td class="num">−16,734</td><td class="num">+14,523</td><td class="num">−2,211</td><td><span class="tag green">flat</span></td></tr>
+      <tr><td><code>v5_classic</code></td><td class="num">−14,640</td><td class="num">+~13,000</td><td class="num">~−2,000</td><td><span class="tag green">flat</span></td></tr>
+      <tr><td><code>v5_6</code></td><td class="num">−13,221</td><td class="num">+~12,000</td><td class="num">~−1,000</td><td><span class="tag green">flat</span></td></tr>
+      <tr><td><code>v5_7</code></td><td class="num">−15,080</td><td class="num">+~14,000</td><td class="num">~−1,000</td><td><span class="tag green">flat</span></td></tr>
+      <tr><td><code>v5_8</code></td><td class="num">−11,327</td><td class="num">+6,457</td><td class="num">−4,870</td><td><span class="tag amber">soft loss</span></td></tr>
+      <tr><td><code>v6</code></td><td class="num">−15,136</td><td class="num">+~14,000</td><td class="num">~−1,000</td><td><span class="tag green">flat</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="fig">
+    <img src="charts/03_loss_share.png" alt="Loss share donut">
+    <div class="cap">Figure 2 · 79% of today's combined paper loss is the VEDL data artifact. Strategy losses account for ~21%.</div>
+  </div>
+</section>
+
+<!-- ============ Q1: 10% CAP ============ -->
+<section class="section">
+  <h2>2. Q1 — Why the 10% Loss Cap Didn't Fire</h2>
+
+  <div class="callout red">
+    <span class="label">Headline finding</span>
+    <p>There is <b>no portfolio-wide 10% intraday cap</b>. The "10%" you remember refers only to <b>monthly</b> pool drawdowns. None of the existing caps could have caught a single −60% structural move on one stock.</p>
+  </div>
+
+  <h3>What actually exists in the code</h3>
+  <p>From <code>prototype/v5/risk_manager.py</code> (lines 35–41):</p>
+
+  <table>
+    <thead><tr><th>Cap layer</th><th>Threshold</th><th>Scope</th><th>Did it fire?</th></tr></thead>
+    <tbody>
+      <tr><td>SWING pool — daily</td><td class="num">None</td><td>Pool aggregate</td><td><span class="tag red">cannot fire — disabled</span></td></tr>
+      <tr><td>INTRADAY pool — daily</td><td class="num">2% (Rs 10K)</td><td>Pool aggregate</td><td><span class="tag amber">N/A — VEDL was SWING</span></td></tr>
+      <tr><td>Portfolio — daily</td><td class="num">1% (Rs 50K)</td><td>Portfolio aggregate</td><td><span class="tag red">no — VEDL was Rs 14K, only 0.28%</span></td></tr>
+      <tr><td>SWING pool — weekly</td><td class="num">3% (Rs 1.5L)</td><td>Pool aggregate</td><td><span class="tag amber">cumulative, not intraday</span></td></tr>
+      <tr><td>SWING pool — monthly</td><td class="num">8% (Rs 4L)</td><td>Pool aggregate</td><td><span class="tag amber">monthly window</span></td></tr>
+      <tr><td>v5_2 per-trade kill-switch (commit 0b9ff84)</td><td class="num">−Rs 5K realised+unrealised</td><td>Single trade</td><td><span class="tag amber">would fire — but only on v5_2</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="fig">
+    <img src="charts/04_risk_caps.png" alt="Risk cap ladder">
+    <div class="cap">Figure 3 · The cap ladder. Three of the most relevant rails (per-trade SL, per-position daily, SWING-pool daily) are missing. The portfolio-daily Rs 50K rail is so coarse VEDL never came close.</div>
+  </div>
+
+  <h3>Why the 1% portfolio cap didn't fire</h3>
+  <p>VEDL's worst-variant loss was Rs&nbsp;14,039. Portfolio is Rs&nbsp;50L. That's <b>0.28%</b> of portfolio — well under the 1% trigger. The portfolio cap is sized to catch a market-wide rout, not a single ticker structural reset.</p>
+
+  <h3>Why the kill-switch didn't fire on 6 of 7 variants</h3>
+  <p>Commit <code>0b9ff84</code> (2026-04-22) shipped <code>MAX_DAILY_LOSS_RS = -5000</code> and a 10%-of-pool position-size cap — but only inside <code>scripts/v5_2-paper-trade.py</code>. Variants v5, v5_3, v5_6, v5_7, v5_8, v6 import the v5 risk manager directly and never see those guards.</p>
+
+  <div class="callout amber">
+    <span class="label">The gap</span>
+    <p>You believed there was a "we cannot lose more than 10%" rule. The closest thing is the <b>monthly</b> 8% SWING / 10% INTRADAY cap. There is currently <b>no per-position daily stoploss</b> for SWING positions and <b>no single-trade kill-switch</b> outside v5_2. A −60% gap on one stock has no defense.</p>
+  </div>
+</section>
+
+<!-- ============ Q2: WHY ALL ENGINES ============ -->
+<section class="section">
+  <h2>3. Q2 — Why Every Engine Picked VEDL</h2>
+
+  <div class="callout red">
+    <span class="label">Headline finding</span>
+    <p>All 7 engines read from <b>one shared scorer</b> (<code>v4.composite_scorer</code>). They are not independent experiments — they are 7 wrappers around the same opinion. There is also <b>no per-stock cool-off</b> after a stoploss, so when VEDL gapped down, every wrapper still entered fresh on the next tick.</p>
+  </div>
+
+  <div class="fig">
+    <img src="charts/05_signal_pipeline.png" alt="Signal pipeline">
+    <div class="cap">Figure 4 · The shared signal pipeline. <code>stock_universe.py</code> + <code>data_engine.py</code> feed <code>v4.composite_scorer</code>, which all variants consume. Convergent picks are not a coincidence — they are guaranteed.</div>
+  </div>
+
+  <h3>The shared path</h3>
+  <ul class="tight">
+    <li><code>prototype/stock_universe.py:127</code> — VEDL is in the NIFTY_METAL sector list.</li>
+    <li><code>prototype/data_engine.py</code> — fetches quotes; <b>no corporate-action filter</b>.</li>
+    <li><code>prototype/v4/composite_scorer.py:score_all_stocks()</code> — single source of truth for ranks.</li>
+    <li><code>prototype/v5/signal_engine.py:155</code> — v5/v5_3/v5_6/v5_7 all call this.</li>
+    <li><code>scripts/v5_8-paper-trade.py:46-50</code> — patches <code>REGIME_SLOT_SPLIT</code>, then calls v5's <code>generate_signals()</code>.</li>
+    <li><code>scripts/v6-paper-trade.py:131-149</code> — bypasses v5, hits <code>v4.composite_scorer</code> directly.</li>
+  </ul>
+
+  <h3>Identical entry timestamp</h3>
+  <p>Every variant's <code>2026-04-30.json</code> shows VEDL entry @ <b>09:09:51</b> at <b>Rs&nbsp;773.60</b>. That's the opening scan tick, before the demerger gap was reflected in the price feed. All wrappers fired off the same pre-gap snapshot.</p>
+
+  <div class="fig">
+    <img src="charts/02_vedl_price.png" alt="VEDL price">
+    <div class="cap">Figure 5 · VEDL intraday. Engines all went LONG at the green band; the red band is the demerger ex-open they had no way to anticipate.</div>
+  </div>
+
+  <h3>No per-stock cool-off</h3>
+  <p>If v5 stoplossed at 09:30, v5_6 still entered at 09:35, v5_7 at 09:40, v6 at 09:45. There is no shared "this stock just blew up — sit out" memo across variants. Each runs in its own process and reads the scorer fresh.</p>
+
+  <div class="callout amber">
+    <span class="label">Why this multiplies losses</span>
+    <p>This is also exactly why "running 8 variants" today produced "1 variant's loss × 7" instead of 8 different bets. They are not diversified strategies — they are 7 copies of the same prior with slight risk-management differences.</p>
+  </div>
+</section>
+
+<!-- ============ Q3: SIDEWAYS REGIME ============ -->
+<section class="section">
+  <h2>4. Q3 — Why SIDEWAYS Produced 28 LONG-Only Trades</h2>
+
+  <div class="callout red">
+    <span class="label">Headline finding</span>
+    <p>The regime-aware slot partition (<code>15 LONG / 5 SHORT</code> for SIDEWAYS) <b>was disabled in v5_8</b> as part of an experiment, and <b>never enforced in v6</b> because v6 bypasses the slot logic entirely. Engines that kept the partition (v5_6, v5_7) still went 18–23 LONG vs 1 SHORT — the regime classifier marked the day SIDEWAYS but the scorer's underlying long bias dominated.</p>
+  </div>
+
+  <h3>The regime partition (defined but inconsistently applied)</h3>
+  <p>From <code>prototype/v5/risk_manager.py:55-59</code>:</p>
+  <table>
+    <thead><tr><th>Regime</th><th class="num">LONG slots</th><th class="num">SHORT slots</th></tr></thead>
+    <tbody>
+      <tr><td>BULL</td><td class="num">18</td><td class="num">2</td></tr>
+      <tr><td><b>SIDEWAYS</b></td><td class="num"><b>15</b></td><td class="num"><b>5</b></td></tr>
+      <tr><td>BEAR</td><td class="num">8</td><td class="num">12</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What actually happened today</h3>
+  <div class="fig">
+    <img src="charts/06_regime_bias.png" alt="Regime bias">
+    <div class="cap">Figure 6 · Expected SIDEWAYS LONG cap (15) vs actual LONGs/SHORTs. v5_6/v5_7 honored the partition but the scorer never produced 5 SHORT candidates. v5_8 explicitly disabled it. v6 doesn't use it.</div>
+  </div>
+
+  <h3>Per-variant root cause</h3>
+  <table>
+    <thead><tr><th>Variant</th><th>Trades</th><th>LONG/SHORT</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>v5_6</code></td><td class="num">19</td><td>18 / 1</td><td>Partition active, but scorer surfaced no SHORTs in green sectors → drifted long-heavy</td></tr>
+      <tr><td><code>v5_7</code></td><td class="num">24</td><td>23 / 1</td><td>Same as v5_6 — partition is a cap, not a quota</td></tr>
+      <tr><td><code>v5_8</code></td><td class="num">28</td><td>28 / 0</td><td><b>Partition explicitly overridden to 20/20</b> in test script (line 47–50)</td></tr>
+      <tr><td><code>v6</code></td><td class="num">17</td><td>17 / 0</td><td>Bypasses partition — uses absolute v4 thresholds (BUY≥60, SHORT≤35)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <span class="label">The deeper finding</span>
+    <p>Even when the partition is active (v5_6, v5_7), it is a <b>ceiling</b>, not a <b>floor</b>. If the scorer doesn't produce 5 SHORT candidates with the right scores, you don't get 5 SHORTs — you get 0–1. SIDEWAYS regime needs a <b>SHORT-floor</b> rule, not just a SHORT-ceiling, to actually neutralise direction bias.</p>
+  </div>
+</section>
+
+<!-- ============ Q4: DISPATCHER PATTERN ============ -->
+<section class="section">
+  <h2>5. Q4 — Where v5_8 and v6 Actually Live</h2>
+
+  <p>Memory said you have prototype dirs <code>v5</code>, <code>v5_2</code>, <code>v5_3</code>, <code>v5_6</code>, <code>v5_7</code>. There are no <code>v5_8</code> or <code>v6</code> dirs. Yet both produce daily reports. Mystery solved:</p>
+
+  <table>
+    <thead><tr><th>Variant</th><th>Lives at</th><th>Reuses</th><th>Mechanism</th></tr></thead>
+    <tbody>
+      <tr><td><code>v5_8</code></td><td><code>scripts/v5_8-paper-trade.py</code></td><td><code>prototype/v5/*</code></td><td>Imports v5 risk manager, monkey-patches <code>REGIME_SLOT_SPLIT</code> in-memory before calling <code>generate_signals()</code></td></tr>
+      <tr><td><code>v6</code></td><td><code>scripts/v6-paper-trade.py</code></td><td><code>prototype/v4/composite_scorer</code></td><td>Skips v5 entirely; calls v4 scorer with hard-coded absolute thresholds (<code>V6_BUY_MIN_SCORE=60</code>, <code>V6_SHORT_MAX_SCORE=35</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <span class="label">What this means for the lab</span>
+    <p>You have <b>2 real engines</b> (v4 scorer + v5 signal_engine) and <b>5 dispatcher scripts</b> wrapping them. The "8 variants" mental model is misleading — they share roots. Pruning is easier than it looks: delete v5_8/v6 dispatcher scripts and you've removed 2 of 8 "engines" without losing any unique strategy.</p>
+  </div>
+</section>
+
+<!-- ============ RECOMMENDATIONS ============ -->
+<section class="section">
+  <h2>6. Recommendations &amp; Immediate Actions</h2>
+
+  <h3>Tonight (before tomorrow's open)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Action</th><th>Why</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td>Add VEDL to a temporary <code>blacklist.json</code> through 2026-05-07</td><td>Engines won't re-enter on the demerger noise that will continue this week</td><td><span class="tag green">15 min</span></td></tr>
+      <tr><td class="center">2</td><td>Manually adjust today's EOD report — strip VEDL from each variant's P&amp;L</td><td>Tomorrow's running totals would otherwise carry a fictional loss</td><td><span class="tag green">10 min</span></td></tr>
+      <tr><td class="center">3</td><td>Add this incident to <code>RETIRED_ENGINES.md</code> learning notes</td><td>Future Soumya will hit this again — corp actions repeat quarterly</td><td><span class="tag green">5 min</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>This weekend (Phase 1 hygiene fix)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Action</th><th>Where</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">4</td><td>Add corporate-action ex-date filter to <code>data_engine.py</code></td><td>Pull NSE corp-actions JSON daily; skip stocks with ex-date today</td><td><span class="tag amber">~3 hr</span></td></tr>
+      <tr><td class="center">5</td><td>Promote v5_2's per-trade kill-switch (Rs 5K) to <code>risk_manager.py</code> baseline</td><td>So all 6 variants inherit it, not just v5_2</td><td><span class="tag amber">~1 hr</span></td></tr>
+      <tr><td class="center">6</td><td>Add per-position daily SL — e.g. cap any single ticker loss at 0.5% of portfolio (Rs 25K)</td><td>The missing rail in Figure 3</td><td><span class="tag amber">~2 hr</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Next sprint (architecture)</h3>
+  <table>
+    <thead><tr><th class="center">#</th><th>Action</th><th>Why</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="center">7</td><td>Add per-stock cool-off — if any variant stoplosses ticker X, others sit out X for 2 hours</td><td>Stops the convergent-loss multiplier (Q2)</td><td><span class="tag amber">~4 hr</span></td></tr>
+      <tr><td class="center">8</td><td>Convert SHORT-slot partition from ceiling to <b>floor</b> in SIDEWAYS regime</td><td>Forces direction-neutrality; today's 28 LONG / 0 SHORT outcome wouldn't repeat</td><td><span class="tag amber">~3 hr</span></td></tr>
+      <tr><td class="center">9</td><td>Prune the lab: retire v5_8 + v6 dispatcher scripts after their experiments conclude</td><td>"8 engines" is misleading — 2 real, 6 wrappers</td><td><span class="tag green">discussion</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Where to source the corp-action calendar</h3>
+  <table>
+    <thead><tr><th>Source</th><th>What it gives</th><th>Cost</th></tr></thead>
+    <tbody>
+      <tr><td>NSE official feed</td><td><code>nseindia.com/api/corporates-corporateActions</code> — daily JSON</td><td><span class="tag green">Free</span></td></tr>
+      <tr><td>BSE corporate actions</td><td>Daily JSON via bseindia.com</td><td><span class="tag green">Free</span></td></tr>
+      <tr><td>Zerodha Kite Connect</td><td>Has corp-actions endpoint after Phase 3</td><td><span class="tag amber">Rs 2K/mo</span></td></tr>
+      <tr><td>nsetools / nsepython</td><td>Python wrappers around NSE API</td><td><span class="tag green">Free (rate-limited)</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span class="label">The bigger pattern</span>
+    <p>This is the 3rd hidden failure mode the side-by-side observation window has exposed in 3 days: 04-28 SHORTs forced in green tapes, 04-29 slot partition starves LONGs, 04-30 zero corp-action filter. Running 7 engines on the same data is exactly what surfaced it — strategy losses look different across variants; <b>data losses bleed identically</b>. That is the most valuable signal of this entire observation period.</p>
+  </div>
+</section>
+
+<!-- ============ BACK COVER ============ -->
+<section class="back-page">
+  <div class="back-card">
+    <h2>Closing the Loop</h2>
+
+    <h3>What this document is</h3>
+    <p>A root-cause analysis of the 2026-04-30 paper-trading loss across all 7 active TradePilot variants. Generated from engine code (<code>engine/src/risk/mod.rs</code>, <code>prototype/v5/risk_manager.py</code>, dispatcher scripts) and EOD reports under <code>docs/paper-trades/</code>.</p>
+
+    <h3>What changes next</h3>
+    <p>Three Phase-1 hygiene fixes (corp-action filter, baseline kill-switch, per-position SL) and three architecture improvements (cool-off, SHORT floor, lab pruning). All actions are listed in §6 with effort estimates.</p>
+
+    <h3>What this is not</h3>
+    <p>This is not a verdict on any individual engine's strategy. The −Rs 25K adjusted loss across all 7 engines on a sideways tape is in normal range. The story today is about the <b>data layer</b>, not the <b>strategy layer</b>.</p>
+
+    <div class="closing">
+      <div>TradePilot &middot; Root-Cause Analysis &middot; 2026-04-30</div>
+      <div>Author: Soumya Swain &middot; Generated locally &middot; Not pushed to DevPilot</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

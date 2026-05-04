@@ -1,0 +1,56 @@
+combined_pnl: 35879.11289245608
+date: '2026-04-23'
+insights:
+- ⚠ Combined P&L Rs +35,879 is -64% vs baseline. Investigate.
+- ● v5 vs v5_classic gap Rs -15,352 (narrowing but not closed).
+- ⚠ v4 win rate dropped to 43% (3W/4L). Below 60% is abnormal.
+- ⚠ v5_7 win rate dropped to 49% (18W/19L). Below 60% is abnormal.
+- ⚠ v5_classic win rate dropped to 42% (13W/18L). Below 60% is abnormal.
+- ⚠ v5_6 trade count 45 vs baseline 126. May be throttled — check rejection logs.
+- '🚀 Week 1 target exceeded: v5 Rs +16,438 > Rs 15,000. Over-performing!'
+per_engine:
+  v4:
+    losses: 4
+    pnl: 1228.1133044433643
+    trades: 7
+    wins: 3
+    wr: 42.857142857142854
+  v5:
+    losses: 16
+    pnl: 16437.570945434578
+    trades: 50
+    wins: 34
+    wr: 68.0
+  v5_2:
+    losses: 0
+    pnl: 0
+    trades: 0
+    wins: 0
+    wr: 0
+  v5_3:
+    losses: 3
+    pnl: 2337.2552764892584
+    trades: 7
+    wins: 4
+    wr: 57.14285714285714
+  v5_6:
+    losses: 17
+    pnl: 11761.1857171631
+    trades: 45
+    wins: 28
+    wr: 62.22222222222222
+  v5_7:
+    losses: 19
+    pnl: 3029.438395996095
+    trades: 37
+    wins: 18
+    wr: 48.64864864864865
+  v5_classic:
+    losses: 18
+    pnl: 1085.5492529296894
+    trades: 31
+    wins: 13
+    wr: 41.935483870967744
+phase_change: Rust cap 30 → 150 (externalized)
+phase_week: 1
+storage: local-only per project rule

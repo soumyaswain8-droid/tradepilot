@@ -1,0 +1,50 @@
+combined_pnl: 41013.50195316316
+date: '2026-04-28'
+insights:
+- ✅ Combined P&L Rs +41,014 is +119% vs 3-day baseline. Strong day.
+- ● v5 vs v5_classic gap Rs -3,220 (narrowing but not closed).
+- ⚠ v5_7 win rate dropped to 59% (47W/32L). Below 60% is abnormal.
+- ⚠ v5_classic win rate dropped to 58% (38W/28L). Below 60% is abnormal.
+- '● Week 2 target not yet hit: v5 Rs +4,897 < Rs 18,000. Need: P&L scales linearly
+  with position size?'
+- ⚠ v5_3 took 0 trades today. Likely dormant or over-filtered.
+per_engine:
+  v4:
+    losses: 30
+    pnl: 26179.132686843892
+    trades: 103
+    wins: 73
+    wr: 70.87378640776699
+  v5:
+    losses: 31
+    pnl: 4897.138021583562
+    trades: 88
+    wins: 57
+    wr: 64.77272727272727
+  v5_3:
+    losses: 0
+    pnl: 0
+    trades: 0
+    wins: 0
+    wr: 0
+  v5_6:
+    losses: 29
+    pnl: 3772.7121347808848
+    trades: 76
+    wins: 47
+    wr: 61.8421052631579
+  v5_7:
+    losses: 32
+    pnl: 4487.288590240477
+    trades: 79
+    wins: 47
+    wr: 59.49367088607595
+  v5_classic:
+    losses: 28
+    pnl: 1677.2305197143528
+    trades: 66
+    wins: 38
+    wr: 57.57575757575758
+phase_change: Position size 15% → 20% of pool budget
+phase_week: 2
+storage: local-only per project rule

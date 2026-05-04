@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TradePilot v6.1 Production Roadmap - 2026-04-29</title>
+<style>
+  @page {
+    size: 7in 10in;
+    margin: 0.85in 0.7in 0.85in 0.85in;
+  }
+  @page :first {
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Charter', Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Cover page */
+  .cover {
+    background: linear-gradient(160deg, #ffffff 0%, #ecfdf5 25%, #d1fae5 55%, #6ee7b7 85%, #10b981 100%);
+    width: 7in;
+    height: 10in;
+    padding: 1.1in 0.8in 0.9in 0.8in;
+    page-break-after: always;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #064e3b;
+  }
+  .cover-badge {
+    display: inline-block;
+    background: #047857;
+    color: white;
+    padding: 6px 18px;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 11pt;
+    letter-spacing: 2px;
+    border-radius: 3px;
+    align-self: center;
+    margin-bottom: 0.3in;
+  }
+  .cover-title {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 44pt;
+    margin: 0 0 0.18in 0;
+    color: #064e3b;
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+  }
+  .cover-subtitle {
+    font-family: 'Charter', Georgia, serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 13pt;
+    margin: 0 0 0.4in 0;
+    color: #065f46;
+    line-height: 1.45;
+    max-width: 5.2in;
+    align-self: center;
+  }
+  .cover-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 0.4in 0 0.5in 0;
+  }
+  .cover-stats .stat {
+    background: rgba(255,255,255,0.92);
+    border-radius: 10px;
+    padding: 18px 14px;
+    width: 30%;
+    box-shadow: 0 4px 14px rgba(6,78,59,0.18);
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+  .cover-stats .stat-value {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 26pt;
+    color: #047857;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .cover-stats .stat-label {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 8.5pt;
+    color: #064e3b;
+    line-height: 1.3;
+  }
+  .cover-date {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 13pt;
+    color: #047857;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 0 0 0.18in 0;
+  }
+  .cover-author {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 10.5pt;
+    color: #064e3b;
+    line-height: 1.65;
+  }
+
+  /* Body content */
+  h1 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 22pt;
+    color: #064e3b;
+    border-bottom: 3px solid #10b981;
+    padding-bottom: 6px;
+    margin-top: 0.4in;
+    margin-bottom: 0.18in;
+    page-break-after: avoid;
+    page-break-before: always;
+  }
+  h1:first-of-type {
+    page-break-before: auto;
+  }
+  h2 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 15pt;
+    color: #065f46;
+    margin-top: 0.28in;
+    margin-bottom: 0.12in;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 12.5pt;
+    color: #047857;
+    margin-top: 0.2in;
+    margin-bottom: 0.08in;
+    page-break-after: avoid;
+  }
+  p {
+    margin: 0 0 0.55rem 0;
+    text-align: justify;
+    page-break-inside: avoid;
+  }
+  strong { color: #064e3b; }
+  em { color: #047857; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    max-width: 95%;
+    border-collapse: collapse;
+    margin: 0.16in 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: linear-gradient(135deg, #047857, #10b981);
+    color: white;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 9pt;
+  }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td {
+    background: #f0fdf4;
+  }
+
+  /* Page break utility */
+  .page-break {
+    page-break-after: always;
+    height: 0;
+  }
+
+  /* Code blocks */
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 9pt;
+    background: #f0fdf4;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #065f46;
+    border: 1px solid #d1fae5;
+  }
+  pre {
+    background: #064e3b;
+    color: #ecfdf5;
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    page-break-inside: avoid;
+    margin: 0.18in 0;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+  }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 1.4em;
+    margin: 0.35rem 0 0.55rem 0;
+  }
+  li {
+    margin-bottom: 0.15rem;
+  }
+
+  /* HR */
+  hr {
+    border: none;
+    border-top: 1px solid #6ee7b7;
+    margin: 0.3in 0;
+  }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 4px solid #10b981;
+    background: #ecfdf5;
+    margin: 0.2in 0;
+    padding: 12px 18px;
+    color: #065f46;
+    font-style: italic;
+    page-break-inside: avoid;
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="cover-badge">PRODUCTION ROADMAP</div>
+  <h1 class="cover-title">TradePilot v6.1</h1>
+  <h2 class="cover-subtitle">From a 6-engine paper trading laptop to a SEBI-compliant, multi-broker, optionally autonomous production system</h2>
+
+  <div class="cover-stats">
+    <div class="stat">
+      <div class="stat-value">36-40</div>
+      <div class="stat-label">Weeks to public launch</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Statistical decision gates</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">80%</div>
+      <div class="stat-label">Phase 1 complete today</div>
+    </div>
+  </div>
+
+  <div class="cover-date">Wednesday, 29 April 2026</div>
+
+  <div class="cover-author">
+    <div>Author: Soumya Swain</div>
+    <div>Co-founder, TradePilot / Sidewall</div>
+    <div>Reconciles April 12 v6 master plan with shipped Track A + Fix #1</div>
+  </div>
+</section>
+
+<main>
+<h1 id="naming-clarification">Naming clarification</h1>
+<p>Two things are called "v6" right now. This doc fixes that.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>What it is</th>
+<th>Lifecycle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v6</strong> (the engine)</td>
+<td>Paper-trading experiment shipped 2026-04-28 EOD. "v4 raw signals + Track A bolt-on." Lives in <code>scripts/v6-paper-trade.py</code>. One of 6 engines running on the laptop.</td>
+<td>Experiment. Will be retired or promoted at the May-25 statistical gate.</td>
+</tr>
+<tr>
+<td><strong>v6.1</strong> (this roadmap)</td>
+<td>The full production system from the April 12 master plan, refreshed with everything we've learned and shipped since then. The cloud-hosted, multi-broker, optionally autonomous TradePilot.</td>
+<td>Roadmap. 9-12 months from today to public launch.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>From here on:</strong> "v6" always means the paper-trading engine. "v6.1" always means the production system.</p>
+<hr />
+<h1 id="where-we-actually-are-tonight">Where we actually are tonight</h1>
+<p>A clean snapshot before we plan forward.</p>
+<h2 id="engines-in-observation-6-active">Engines in observation (6 active)</h2>
+<table>
+<thead>
+<tr>
+<th>Engine</th>
+<th>Role</th>
+<th>Edge being tested</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v4</td>
+<td>Control. Raw v4 composite scorer, LONG-only.</td>
+<td>Baseline. 04-28 made +Rs 26,179 (71% WR).</td>
+</tr>
+<tr>
+<td>v5 (Fix #1)</td>
+<td>v5 wrapper + tonight's Fix #1.</td>
+<td>Does Fix #1 close the gap to v4?</td>
+</tr>
+<tr>
+<td>v5_classic</td>
+<td>Baseline v5 with no Track A.</td>
+<td>Confirms Track A's contribution.</td>
+</tr>
+<tr>
+<td>v5_6</td>
+<td>v5 + Darvas Box overlay.</td>
+<td>Independent variant.</td>
+</tr>
+<tr>
+<td>v5_7</td>
+<td>v5 + Intraday Box overlay.</td>
+<td>Independent variant.</td>
+</tr>
+<tr>
+<td>v6</td>
+<td>v4 raw + Track A bolt-on.</td>
+<td>Cleanest test of Track A's marginal value.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="whats-already-shipped">What's already shipped</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Multi-engine paper trading framework</td>
+<td>Live, 6 engines, daily reports</td>
+</tr>
+<tr>
+<td>Track A defensive layer (cost modeling, RE-ARM, SHORT_BLOCK, FLAT_EXIT)</td>
+<td>Shipped 2026-04-27</td>
+</tr>
+<tr>
+<td>Fix #1 (SHORT requires absolute weakness)</td>
+<td>Shipped 2026-04-28</td>
+</tr>
+<tr>
+<td>ML staging + 4-gate promotion system</td>
+<td>Shipped — no model auto-promotes to production</td>
+</tr>
+<tr>
+<td>Crash watchdog</td>
+<td>Shipped — auto-restart, market-hours-aware</td>
+</tr>
+<tr>
+<td>Telegram digest (2-hour cadence)</td>
+<td>Shipped</td>
+</tr>
+<tr>
+<td>Laptop heartbeat (15-min)</td>
+<td>Shipped</td>
+</tr>
+<tr>
+<td>Auto-stop-EOD (15:35)</td>
+<td>Shipped</td>
+</tr>
+<tr>
+<td>Daily watchdog learning insights</td>
+<td>Shipped</td>
+</tr>
+<tr>
+<td>LaunchAgent for Monday weekly tracker</td>
+<td>Shipped</td>
+</tr>
+<tr>
+<td>LaunchAgent for tomorrow's EOD comparison</td>
+<td>Shipped tonight</td>
+</tr>
+<tr>
+<td>Statistical gate doc (deflated Sharpe + 95% CI)</td>
+<td>Live in <code>docs/IMPLEMENTATION_BRIEF_2026-04-27.md</code></td>
+</tr>
+<tr>
+<td>Threat surface analysis (1,597 lines)</td>
+<td>Live in <code>docs/security/TRADEPILOT_V6_LIVE_TRADING_THREAT_ANALYSIS.md</code></td>
+</tr>
+<tr>
+<td>Competitive analysis (Zerodha, Groww, Streak, Sensibull, etc.)</td>
+<td>Live in <code>docs/research/competitive-analysis.md</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="where-the-original-april-12-plan-put-us">Where the original April 12 plan put us</h2>
+<blockquote>
+<p>"Phase 1: Foundation, Weeks 1-4. Make it work."</p>
+</blockquote>
+<p>Reality: We are at session ~14 of 20-session paper validation. Track A (which wasn't in the original plan) ate the last 4 weeks and was correct to do so. <strong>Phase 1 is ~80% complete.</strong> Phases 2, 3, 4 are unchanged from the original plan.</p>
+<hr />
+<h1 id="the-four-phase-staircase-v61-refreshed">The four-phase staircase (v6.1, refreshed)</h1>
+<p>Original plan had 20 weeks. Reality says 36-40 weeks across 4 phases. Here's the honest version:</p>
+<h2 id="phase-1-foundation-make-it-work">Phase 1 — Foundation ("make it work")</h2>
+<p>Goal: prove on paper that at least one engine produces statistically significant alpha.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Original (Apr 12)</th>
+<th>Refreshed (Apr 29)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paper trading framework</td>
+<td>Build</td>
+<td>Built (multi-engine)</td>
+<td>Done</td>
+</tr>
+<tr>
+<td>20-session validation</td>
+<td>4 weeks</td>
+<td>4-week observation window through 2026-05-25</td>
+<td>In progress</td>
+</tr>
+<tr>
+<td>ML model with proper training</td>
+<td>Foundation</td>
+<td>Done (LightGBM, best_iter ≥ 100 guardrail, atomic promote)</td>
+<td>Done</td>
+</tr>
+<tr>
+<td>Track A defensive layer</td>
+<td>Not in plan</td>
+<td>Shipped — 4 fixes</td>
+<td>Done (added April 27)</td>
+</tr>
+<tr>
+<td>Statistical gate (Sharpe + CI)</td>
+<td>Not in plan</td>
+<td>Lopez de Prado deflated Sharpe + 95% CI methodology</td>
+<td>Methodology defined, awaiting data</td>
+</tr>
+<tr>
+<td>Cross-asset signals (bonds, crude, USD/INR)</td>
+<td>Foundation</td>
+<td>Deferred to Phase 2</td>
+<td>Not started</td>
+</tr>
+<tr>
+<td>Shoonya account for historical data</td>
+<td>Foundation</td>
+<td>Deferred — not needed for current observation</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria for Phase 1 → Phase 2:</strong> At the May 25 gate, at least ONE engine must show a deflated Sharpe ≥ 1.0 with 95% CI lower bound &gt; 0 over the 20-session window. If yes, that becomes our base engine. If no, we extend observation by 4 more weeks and revisit.</p>
+<p><strong>Time remaining in Phase 1:</strong> ~4 weeks (through May 25, 2026).</p>
+<h2 id="phase-2-intelligence-make-it-smart">Phase 2 — Intelligence ("make it smart")</h2>
+<p>Goal: layer additional alpha sources on top of the winning Phase 1 engine.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Original (Apr 12)</th>
+<th>Refreshed (Apr 29)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM sentiment layer (Claude API for news)</td>
+<td>Yes</td>
+<td>Yes — but only if Phase 1 base engine alone falls below Sharpe 1.5</td>
+</tr>
+<tr>
+<td>FII/DII institutional flow signals</td>
+<td>Yes</td>
+<td>Yes — public data, Rs 0 cost</td>
+</tr>
+<tr>
+<td>Insider buying clusters from SEBI filings</td>
+<td>Yes</td>
+<td>Yes — public data</td>
+</tr>
+<tr>
+<td>Pairs trading (cointegrated Nifty 200 pairs)</td>
+<td>Yes</td>
+<td>Yes — separate strategy pool</td>
+</tr>
+<tr>
+<td>Options strategies (premium harvesting)</td>
+<td>Yes</td>
+<td>Defer to Phase 3 — too risky to layer with equity in early Phase 2</td>
+</tr>
+<tr>
+<td>Multi-agent orchestrator</td>
+<td>Yes</td>
+<td>Soft-yes — only if monolithic loop becomes the bottleneck</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Time:</strong> 8 weeks (May 26 → July 21, 2026).</p>
+<p><strong>Exit criteria for Phase 2 → Phase 3:</strong> Combined system (base engine + 2-3 alpha layers) shows Sharpe &gt; 1.5, max drawdown &lt; 12%, win rate &gt; 60% on a fresh 30-session paper window.</p>
+<h2 id="phase-3-execution-make-it-real">Phase 3 — Execution ("make it real")</h2>
+<p>Goal: connect to a real broker, execute real orders with real money — but tiny size and hard kill switches.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Original (Apr 12)</th>
+<th>Refreshed (Apr 29)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Open Zerodha Kite Connect dev account</td>
+<td>Yes</td>
+<td>Yes — Rs 2,000/month, apply during Phase 2</td>
+</tr>
+<tr>
+<td>Build Kite execution agent</td>
+<td>Yes</td>
+<td>Yes — separate microservice with audit log</td>
+</tr>
+<tr>
+<td>Smart order routing (limit vs market)</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Shadow mode (log orders, do not execute)</strong></td>
+<td>Yes — 2 weeks</td>
+<td><strong>Yes — extended to 4 weeks.</strong> This is the most important step in the entire plan.</td>
+</tr>
+<tr>
+<td>SEBI algo registration via Kite</td>
+<td>Yes — 2-4 weeks</td>
+<td><strong>OPEN — needs fresh SEBI April 2026 rules research.</strong> Different from RIA.</td>
+</tr>
+<tr>
+<td>Kill switch + audit trail</td>
+<td>Yes</td>
+<td>Yes — daily, weekly, monthly loss caps with hard auto-halt</td>
+</tr>
+<tr>
+<td>Move from laptop to AWS Mumbai</td>
+<td>Yes (ap-south-1)</td>
+<td>Yes — same VPC as Kite servers for sub-50ms latency</td>
+</tr>
+<tr>
+<td>Live with 1 lot</td>
+<td>Yes — 2 weeks</td>
+<td><strong>Yes — extended to 4 weeks. No exceptions.</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Time:</strong> 12 weeks (July 22 → October 13, 2026).</p>
+<p><strong>Exit criteria for Phase 3 → Phase 4:</strong> 4 weeks live with 1 lot, no catastrophic incidents, real-money Sharpe within 1 standard deviation of paper Sharpe (this proves paper-to-live transfer worked).</p>
+<h2 id="phase-4-scale-make-it-bigger">Phase 4 — Scale ("make it bigger")</h2>
+<p>Goal: scale capital, add second-order features, prepare for public-facing offering.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Original (Apr 12)</th>
+<th>Refreshed (Apr 29)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scale 1 lot → full personal capital</td>
+<td>Yes</td>
+<td>Yes — over 4-6 weeks, 25/50/75/100% ladder</td>
+</tr>
+<tr>
+<td>Grafana real-time P&amp;L dashboard</td>
+<td>Yes</td>
+<td>Yes — separate from paper-trading dashboard</td>
+</tr>
+<tr>
+<td>Commodities (gold, crude)</td>
+<td>Yes</td>
+<td>Soft-yes — only if equity engine plateaus</td>
+</tr>
+<tr>
+<td>Currency hedging (USD/INR)</td>
+<td>Yes</td>
+<td>Defer — adds complexity without clear edge</td>
+</tr>
+<tr>
+<td>Tax optimization (STCG/LTCG awareness)</td>
+<td>Yes</td>
+<td>Yes — automated booking</td>
+</tr>
+<tr>
+<td><strong>Public API for subscribers</strong></td>
+<td>Yes</td>
+<td><strong>OPEN — depends on SEBI RIA license decision (separate workstream)</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Time:</strong> 16 weeks (October 14, 2026 → February 2, 2027).</p>
+<hr />
+<h1 id="decision-gates-statistical-not-vibes">Decision gates (statistical, not vibes)</h1>
+<p>The gates are what stop us from "feeling like" the system is ready and shipping it anyway.</p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Date</th>
+<th>What we measure</th>
+<th>What passes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1</strong></td>
+<td>2026-05-25</td>
+<td>Phase 1 → Phase 2</td>
+<td>At least one engine: deflated Sharpe ≥ 1.0, 95% CI lower bound &gt; 0, 20+ trading days</td>
+</tr>
+<tr>
+<td><strong>G2</strong></td>
+<td>2026-07-21</td>
+<td>Phase 2 → Phase 3</td>
+<td>Combined system: Sharpe &gt; 1.5, max drawdown &lt; 12%, win rate &gt; 60%, 30+ trading days fresh post-Phase-1</td>
+</tr>
+<tr>
+<td><strong>G3</strong></td>
+<td>2026-08-31</td>
+<td>Shadow mode → Live with 1 lot</td>
+<td>4 weeks of shadow mode with zero divergence between predicted and would-have-been-actual fills</td>
+</tr>
+<tr>
+<td><strong>G4</strong></td>
+<td>2026-10-13</td>
+<td>1 lot → Full personal capital</td>
+<td>4 weeks live: real-money Sharpe within 1 SD of paper Sharpe; zero unauthorised orders; zero kill-switch overrides</td>
+</tr>
+<tr>
+<td><strong>G5</strong></td>
+<td>2027-Q1</td>
+<td>Personal → Public</td>
+<td>Determined separately by SEBI license + 6+ months of audited live track record</td>
+</tr>
+</tbody>
+</table>
+<p>If any gate fails, we extend that phase. We do not skip gates.</p>
+<hr />
+<h1 id="production-architecture-v61">Production architecture (v6.1)</h1>
+<p>Refreshed from the April 12 master plan. The core idea is unchanged: separate <strong>signal generation</strong> from <strong>risk management</strong> from <strong>execution</strong> from <strong>portfolio construction</strong>. Each is its own service, each is independently testable.</p>
+<h2 id="service-map">Service map</h2>
+<pre><code>                    ORCHESTRATOR (master agent)
+                          |
+     +----------+---------+---------+-----------+
+     |          |         |         |           |
+  SIGNAL    SIGNAL    SIGNAL    RISK       EXECUTION
+  Technical Sentiment Flow      AGENT      AGENT
+  Agent     Agent     Agent     |          |
+     |          |         |         |           |
+     +----------+---------+         |           |
+                |                   |           |
+            FUSION                  |           |
+            LAYER                   |           |
+                |                   |           |
+                +-------------------+-----------+
+                                    |
+                              PORTFOLIO
+                              AGENT
+                                    |
+                              KITE API
+                              (live broker)
+                                    |
+                              NSE / BSE
+</code></pre>
+<h2 id="what-each-service-does">What each service does</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Job</th>
+<th>What goes wrong if it fails</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Orchestrator</strong></td>
+<td>Coordinate all agents, manage state, hold the global kill switch</td>
+<td>Whole system halts safely (correct behaviour)</td>
+</tr>
+<tr>
+<td><strong>Technical signal agent</strong></td>
+<td>LightGBM composite scorer + Track A rules (this is v5/v6 today)</td>
+<td>Lose primary alpha source — fall back to no-trade</td>
+</tr>
+<tr>
+<td><strong>Sentiment signal agent</strong></td>
+<td>Claude API news scoring (Phase 2)</td>
+<td>Lose secondary alpha — degrade to technical-only</td>
+</tr>
+<tr>
+<td><strong>Flow signal agent</strong></td>
+<td>FII/DII + insider + delivery % (Phase 2)</td>
+<td>Lose tertiary alpha — degrade gracefully</td>
+</tr>
+<tr>
+<td><strong>Fusion layer</strong></td>
+<td>Combine signals into a single decision per stock</td>
+<td>Single point of failure — needs heavy testing</td>
+</tr>
+<tr>
+<td><strong>Risk agent</strong></td>
+<td>Regime detect, VIX size, kill switches, correlation guard</td>
+<td>Hard halt on breach — never override</td>
+</tr>
+<tr>
+<td><strong>Execution agent</strong></td>
+<td>Submit orders to Kite, smart routing, retry, audit</td>
+<td>Order failures logged, alerted, manual recovery</td>
+</tr>
+<tr>
+<td><strong>Portfolio agent</strong></td>
+<td>Multi-strategy allocation, Kelly sizing, rebalance</td>
+<td>Holds the actual book of record — never deletes positions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="hosting">Hosting</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compute</td>
+<td>AWS Mumbai (ap-south-1)</td>
+<td>Same region as Kite servers — sub-50ms latency, SEBI data residency</td>
+</tr>
+<tr>
+<td>Hot DB (ticks)</td>
+<td>QuestDB</td>
+<td>Fastest tick ingestion, ASOF JOIN, time-series native</td>
+</tr>
+<tr>
+<td>Analytics DB</td>
+<td>DuckDB + Parquet</td>
+<td>Zero infra cost, columnar, plenty fast for our scale</td>
+</tr>
+<tr>
+<td>Object store</td>
+<td>S3 (Mumbai region)</td>
+<td>Backups, model artifacts, historical Parquet</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>AWS Secrets Manager</td>
+<td>Kite tokens, API keys, never on disk in plaintext</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Grafana + CloudWatch + Telegram</td>
+<td>3 layers: deep dive, native, instant alert</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions → AWS</td>
+<td>Auto-deploy from <code>main</code>, manual gate for production</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="tech-stack-locked-in">Tech stack (locked-in)</h1>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Tool</th>
+<th>Cost (monthly, INR)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Live execution broker</td>
+<td>Zerodha Kite Connect</td>
+<td>Rs 2,000</td>
+</tr>
+<tr>
+<td>Tick data</td>
+<td>Kite WebSocket (3,000 instruments)</td>
+<td>Included</td>
+</tr>
+<tr>
+<td>Historical data download</td>
+<td>Shoonya (Finvasia) free API</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>ML training</td>
+<td>LightGBM + neuralforecast (TFT/LSTM)</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>LLM sentiment</td>
+<td>Claude API (Anthropic)</td>
+<td>~Rs 4,000</td>
+</tr>
+<tr>
+<td>Backup local LLM</td>
+<td>Llama 3.1 via Ollama</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>Hot DB</td>
+<td>QuestDB (self-hosted on EC2)</td>
+<td>included in compute</td>
+</tr>
+<tr>
+<td>Analytics</td>
+<td>DuckDB + Parquet</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>Cloud compute</td>
+<td>AWS EC2 t4g.large + EBS gp3</td>
+<td>~Rs 6,000</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>S3 + lifecycle to Glacier</td>
+<td>~Rs 500</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Grafana Cloud (free tier) → paid</td>
+<td>Rs 0 → Rs 2,000</td>
+</tr>
+<tr>
+<td>Telegram bot</td>
+<td>Free</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>Domain + SSL</td>
+<td>Cloudflare</td>
+<td>Rs 100</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phase-by-phase monthly cost (INR):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Items</th>
+<th>Monthly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1 (now)</td>
+<td>Laptop + Telegram</td>
+<td>~Rs 0</td>
+</tr>
+<tr>
+<td>Phase 2</td>
+<td>Cloud paper + Claude API + Shoonya</td>
+<td>~Rs 8,000</td>
+</tr>
+<tr>
+<td>Phase 3</td>
+<td>Above + Kite API + AWS Mumbai + Grafana paid</td>
+<td>~Rs 18,000</td>
+</tr>
+<tr>
+<td>Phase 4</td>
+<td>Above + scaled compute + monitoring</td>
+<td>~Rs 30,000</td>
+</tr>
+</tbody>
+</table>
+<p>These are pre-revenue costs. Revenue model in section 9.</p>
+<hr />
+<h1 id="risk-rules-non-negotiable">Risk rules (non-negotiable)</h1>
+<p>These come from the April 12 plan and are unchanged. They are the load-bearing safety layer.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Limit</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daily max loss</td>
+<td>2% of capital</td>
+<td>Survive any single bad day</td>
+</tr>
+<tr>
+<td>Weekly max loss</td>
+<td>5% of capital</td>
+<td>Survive any bad week</td>
+</tr>
+<tr>
+<td>Monthly max loss</td>
+<td>10% of capital</td>
+<td>Kill switch trigger — pause all trading</td>
+</tr>
+<tr>
+<td>Single position max</td>
+<td>10% of capital</td>
+<td>Concentration risk</td>
+</tr>
+<tr>
+<td>Max F&amp;O leverage</td>
+<td>3x</td>
+<td>Survive a 30% gap-down</td>
+</tr>
+<tr>
+<td>Max correlated positions</td>
+<td>3 from same sector</td>
+<td>Survive a sector blowup</td>
+</tr>
+<tr>
+<td>Kill switch</td>
+<td>Auto-fire at -2% daily</td>
+<td>Hard stop. No override.</td>
+</tr>
+<tr>
+<td>Recovery ladder after kill switch</td>
+<td>25 / 50 / 75 / 100% over 15 days</td>
+<td>Don't revenge-trade</td>
+</tr>
+<tr>
+<td>Order size validation</td>
+<td>Reject if &gt; 2% of capital OR &gt; 5x average position</td>
+<td>Catch fat-fingers + bugs</td>
+</tr>
+<tr>
+<td>Pre-trade sanity check</td>
+<td>Reject if price &gt; 3 SD from VWAP in last 5 min</td>
+<td>Catch quote-stuffing / market-manip windows</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The kill switch is the single most important piece of code in the system.</strong> It is tested in every CI run. It cannot be silenced by any other agent. If it fires, only manual intervention with a 24-hour cooldown can restart trading.</p>
+<hr />
+<h1 id="compliance-the-gate-before-we-open-to-others">Compliance — the gate before we open to others</h1>
+<p>This is the section that changes everything else. Three regulatory regimes, three different obligations.</p>
+<table>
+<thead>
+<tr>
+<th>Regime</th>
+<th>Who needs it</th>
+<th>What it lets us do</th>
+<th>What it costs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Personal trading</strong></td>
+<td>Anyone</td>
+<td>Trade your own money via your own broker, automated or manual. No license needed.</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td><strong>SEBI algo trading registration (broker-side)</strong></td>
+<td>Anyone running automated orders through a broker</td>
+<td>Register the algo strategy with the broker, who registers with the exchange. <strong>April 2026 SEBI rules tightened this.</strong> Needs fresh research.</td>
+<td>TBD — likely Rs 0 to Rs 50K</td>
+</tr>
+<tr>
+<td><strong>SEBI Registered Investment Adviser (RIA)</strong></td>
+<td>Anyone giving paid investment advice to non-related third parties</td>
+<td>Charge subscribers for signals, recommendations, or advisory services</td>
+<td>Rs 5 lakh net worth + NISM XA + XB exams + ~3 month process. ~Rs 50K total fees</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-this-means-for-v61s-roadmap">What this means for v6.1's roadmap</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Compliance posture</th>
+<th>Allowed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1, 2 (paper)</td>
+<td>None needed</td>
+<td>Paper trade, write blog posts, share own results in journal form</td>
+</tr>
+<tr>
+<td>Phase 3 (shadow + live with 1 lot, personal)</td>
+<td>SEBI algo registration via Kite</td>
+<td>Trade your own money automated</td>
+</tr>
+<tr>
+<td>Phase 4 personal scale</td>
+<td>Same</td>
+<td>Trade more of your own money</td>
+</tr>
+<tr>
+<td><strong>Phase 4+ public</strong></td>
+<td><strong>RIA license required</strong></td>
+<td>Take subscribers, send paid signals, charge for access</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision needed by July 2026:</strong> Do we apply for the RIA license or stay personal-only? If RIA, application starts in parallel with Phase 2 work because it takes ~3 months and blocks public launch. A separate compliance doc is the next deliverable after this one.</p>
+<hr />
+<h1 id="threat-surface-already-documented-in-detail">Threat surface (already documented in detail)</h1>
+<p>A 1,597-line analysis already exists at <code>docs/security/TRADEPILOT_V6_LIVE_TRADING_THREAT_ANALYSIS.md</code>. The categories:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>What's covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kite API security</td>
+<td>Token theft, session hijack, rate limit abuse, key vs secret vs access token danger ranking</td>
+</tr>
+<tr>
+<td>Financial threats</td>
+<td>Rogue orders, flash crash, double ordering, market manipulation rules, slippage</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>MITM, DNS hijack, SSL pinning, VPN, internet drop mid-trade</td>
+</tr>
+<tr>
+<td>Infrastructure</td>
+<td>SSH compromise, DDoS, DB corruption, power failure, clock sync</td>
+</tr>
+<tr>
+<td>Quantum</td>
+<td>Harvest-now-decrypt-later (long-term)</td>
+</tr>
+</tbody>
+</table>
+<p>For v6.1 production launch, every Phase 3 item must reference its corresponding threat category and demonstrate a control. <strong>No code goes live without a paired threat-mitigation entry.</strong></p>
+<hr />
+<h1 id="revenue-model-phase-4-contingent-on-ria">Revenue model (Phase 4+, contingent on RIA)</h1>
+<p>From the April 12 plan, refreshed.</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Price (INR/month)</th>
+<th>What they get</th>
+<th>Volume target Y1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Free</td>
+<td>Rs 0</td>
+<td>Market data, basic signals, paper trading sandbox</td>
+<td>10,000</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>Rs 999</td>
+<td>Full signals, regime alerts, Telegram bot</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Algo</td>
+<td>Rs 4,999</td>
+<td>API access, auto-execution via their own Kite, all strategies</td>
+<td>50</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>Custom (&gt;Rs 25K)</td>
+<td>White-label, dedicated support, custom strategies</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Revenue projection (Year 1 post-RIA launch):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Users</th>
+<th>MRR</th>
+<th>Annual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Free</td>
+<td>10,000</td>
+<td>Rs 0</td>
+<td>Rs 0</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>500</td>
+<td>Rs 5,00,000</td>
+<td>Rs 60 lakh</td>
+</tr>
+<tr>
+<td>Algo</td>
+<td>50</td>
+<td>Rs 2,50,000</td>
+<td>Rs 30 lakh</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>5</td>
+<td>Rs 1,25,000</td>
+<td>Rs 15 lakh</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>10,555</strong></td>
+<td><strong>Rs 8.75 lakh MRR</strong></td>
+<td><strong>Rs 1.05 Cr ARR</strong></td>
+</tr>
+</tbody>
+</table>
+<p>This is a conservative re-scoping. The April 12 plan said Rs 20L MRR; that assumed faster ramp. Year 1 we hit Rs 8.75L MRR. Year 2 target is Rs 25L MRR.</p>
+<hr />
+<h1 id="risk-register-swot-style">Risk register (SWOT-style)</h1>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Category</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Insufficient sample at May 25 gate (no engine crosses Sharpe 1.0)</td>
+<td>Statistical</td>
+<td>Extend observation window 4 weeks. Do not lower the bar.</td>
+</tr>
+<tr>
+<td>SEBI April 2026 rules disqualify our algo registration</td>
+<td>Regulatory</td>
+<td>Compliance doc due first week of May with full rule reading + workaround paths</td>
+</tr>
+<tr>
+<td>Kite API outage during a signal-fire window</td>
+<td>Technical</td>
+<td>Smart order router with automatic retry + halt-on-stale-quote; documented incident at competitive-analysis.md:125</td>
+</tr>
+<tr>
+<td>Streak / Sensibull copy our edge once visible</td>
+<td>Competitive</td>
+<td>Multi-layer alpha (Phase 2) + execution moat (sub-50ms) — they can't easily replicate</td>
+</tr>
+<tr>
+<td>Solo founder bandwidth (Soumya also runs DevPilot + Sidewall)</td>
+<td>Personal</td>
+<td>Strict no-engine-changes-mid-day rule, MindPilot framework cadence, automation everywhere</td>
+</tr>
+<tr>
+<td>ML model degrades silently (alpha decay)</td>
+<td>ML</td>
+<td>4-gate promotion + rolling 5-day IC tracking + auto-alert if IC turns negative</td>
+</tr>
+<tr>
+<td>Real-money Sharpe diverges from paper Sharpe (transaction cost surprise)</td>
+<td>Live transition</td>
+<td>4-week shadow mode + 4-week 1-lot live before scaling</td>
+</tr>
+<tr>
+<td>Kill switch bug</td>
+<td>Catastrophic</td>
+<td>Daily CI test + manual quarterly drill</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="todays-actionable-checklist-next-4-weeks">Today's actionable checklist (next 4 weeks)</h1>
+<p>Concrete items between now and the May 25 gate.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Owner</th>
+<th>When</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Continue 6-engine observation window</td>
+<td>Engines (auto)</td>
+<td>Daily through 2026-05-25</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>Watch for Fix #1 firing pattern in v5 logs</td>
+<td>Soumya</td>
+<td>Daily</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>Watch v6 vs v4 head-to-head</td>
+<td>Soumya</td>
+<td>Daily via auto EOD report</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>Read SEBI April 2026 algo trading rules</td>
+<td>Soumya / Claude (research agent)</td>
+<td>First week of May</td>
+<td>Not started</td>
+</tr>
+<tr>
+<td>Write compliance roadmap doc (the "B" option)</td>
+<td>Claude</td>
+<td>Week of May 5</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>Apply for Zerodha Kite Connect dev account</td>
+<td>Soumya</td>
+<td>After May 25 gate passes</td>
+<td>Blocked on G1</td>
+</tr>
+<tr>
+<td>Start drafting Kite execution agent code</td>
+<td>Claude</td>
+<td>After May 25 gate passes</td>
+<td>Blocked on G1</td>
+</tr>
+<tr>
+<td>Open Shoonya account (for historical data download)</td>
+<td>Soumya</td>
+<td>Phase 2 entry</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Set up AWS Mumbai account + IAM</td>
+<td>Soumya</td>
+<td>Phase 3 prep</td>
+<td>Not started</td>
+</tr>
+<tr>
+<td>RIA license decision</td>
+<td>Soumya</td>
+<td>By July 2026</td>
+<td>Open</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Today's gate before doing any of this: does the May 25 statistical test pass?</strong> Everything downstream depends on at least one engine crossing the Sharpe-1.0 / CI-positive bar.</p>
+<hr />
+<h1 id="reference-docs-index">Reference docs index</h1>
+<p>The supporting material for this roadmap, in priority order.</p>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/IMPLEMENTATION_BRIEF_2026-04-27.md</code></td>
+<td>Statistical gate methodology, Track A spec, ML promotion gates</td>
+</tr>
+<tr>
+<td><code>docs/security/TRADEPILOT_V6_LIVE_TRADING_THREAT_ANALYSIS.md</code></td>
+<td>Every Phase 3 security control</td>
+</tr>
+<tr>
+<td><code>docs/research/2026-04-12_v6_master_plan.md</code></td>
+<td>The original v6 master plan (this doc supersedes it)</td>
+</tr>
+<tr>
+<td><code>docs/research/competitive-analysis.md</code></td>
+<td>Competitor moats, Kite outage history, SEBI rule context</td>
+</tr>
+<tr>
+<td><code>docs/learning/2026-04-28-eod-summary.md</code></td>
+<td>The v4 vs v5 RCA that motivated Fix #1 and v6</td>
+</tr>
+<tr>
+<td><code>docs/learning/2026-04-29-v5-vs-v6-experiment.md</code></td>
+<td>Tomorrow's experiment design + decision matrix</td>
+</tr>
+<tr>
+<td><code>docs/observation_journal.md</code></td>
+<td>Daily observation log through May 25</td>
+</tr>
+<tr>
+<td><code>docs/RETIRED_ENGINES.md</code></td>
+<td>Why engines were retired (and why some came back)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="one-line-summary">One-line summary</h1>
+<p><strong>v6.1 is a 36-40 week journey from today's 6-engine paper trading laptop setup to a public-facing, SEBI-compliant, multi-broker production system. We are 80% through Phase 1. The May 25 statistical gate is the next decision point. Nothing ships to live trading until at least one engine crosses Sharpe 1.0 with a positive 95% CI lower bound.</strong></p>
+</main>
+</body>
+</html>

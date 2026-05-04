@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TradePilot Battle Report 2026-04-17</title>
+<style>
+@page { size: 7in 10in; margin: 1in 0.75in 1in 0.875in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Charter, Georgia, serif; font-size: 10.5pt; line-height: 1.55; color: #1e1b4b; }
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif; font-weight: 600; }
+h1 { font-size: 28pt; margin: 0 0 0.3rem 0; }
+h2 { font-size: 18pt; margin: 0.6rem 0 0.5rem 0; color: #1e1b4b; }
+h3 { font-size: 14pt; margin: 0.8rem 0 0.4rem 0; color: #312e81; }
+h4 { font-size: 11pt; margin: 0.5rem 0 0.3rem 0; color: #4f46e5; }
+p { margin-bottom: 0.6rem; }
+.cover {
+  height: 9in;
+  background: linear-gradient(180deg, #ffffff, #f0f4ff, #dbeafe, #bfdbfe, #93c5fd);
+  padding: 1.5in 0.5in 0.5in;
+  text-align: center;
+  page-break-after: always;
+  border-radius: 8px;
+  position: relative;
+}
+.cover .badge { display: inline-block; background: #4f46e5; color: white; padding: 6px 18px; border-radius: 999px; font-size: 9pt; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.cover h1 { font-size: 40pt; color: #1e1b4b; line-height: 1.1; }
+.cover .subtitle { font-size: 14pt; color: #312e81; margin: 1rem 0; font-style: italic; }
+.cover .date { font-size: 12pt; color: #4338ca; margin-top: 2rem; font-weight: 600; }
+.cover .tagline { position: absolute; bottom: 0.5in; left: 0; right: 0; color: #1e1b4b; font-size: 10pt; font-style: italic; padding: 0 1in; }
+.cover .emoji-row { font-size: 32pt; margin: 1.5rem 0; }
+
+.report-meta {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem;
+  background: #f8fafc; padding: 0.8rem 1rem; border-left: 4px solid #4f46e5;
+  border-radius: 4px; margin: 0.8rem 0;
+  font-family: 'Avenir Next', sans-serif; font-size: 9.5pt;
+}
+.report-meta b { color: #4f46e5; }
+
+.hero-box {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: 1rem 1.2rem; border-left: 4px solid #f59e0b;
+  border-radius: 4px; margin: 0.8rem 0;
+  page-break-inside: avoid;
+}
+.hero-box h3 { color: #92400e; margin-top: 0; }
+
+.leader {
+  display: grid; grid-template-columns: 50px 1fr 120px 100px 100px;
+  gap: 0.5rem; align-items: center;
+  padding: 0.6rem 0.8rem; margin: 0.35rem 0;
+  background: #f8fafc; border-radius: 6px; border-left: 4px solid #4f46e5;
+  page-break-inside: avoid;
+}
+.leader.gold { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+.leader.silver { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-color: #6b7280; }
+.leader.bronze { background: linear-gradient(135deg, #fed7aa, #fdba74); border-color: #ea580c; }
+.leader .rank { font-size: 18pt; text-align: center; font-weight: bold; }
+.leader .name { font-family: 'Avenir Next', sans-serif; font-weight: 600; font-size: 11pt; }
+.leader .pnl { font-weight: bold; text-align: right; font-size: 12pt; }
+.leader .pnl.pos { color: #16a34a; }
+.leader .pnl.neg { color: #dc2626; }
+.leader .stats { font-size: 9pt; color: #4b5563; text-align: center; }
+
+.engine-card {
+  margin: 0.6rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  page-break-inside: avoid;
+  border: 1px solid #e5e7eb;
+}
+.card-hdr { padding: 0.8rem 1rem; color: white; }
+.card-hdr h2 { color: white; margin: 0; font-size: 14pt; }
+.card-hdr .hdr-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.3rem; font-size: 9pt; opacity: 0.95; font-family: 'Avenir Next', sans-serif; }
+.card-hdr .hdr-stats b { font-size: 10pt; }
+.trade-viz { padding: 0.3rem; background: white; }
+.trade-viz img { width: 100%; display: block; }
+.trade-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.trade-table th { background: #f1f5f9; padding: 0.4rem 0.6rem; text-align: left; font-weight: 600; font-family: 'Avenir Next', sans-serif; border-bottom: 2px solid #4f46e5; }
+.trade-table td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #f1f5f9; }
+.trade-table tr.win td.dir, .trade-table tr.win td:nth-child(5) { color: #16a34a; font-weight: 600; }
+.trade-table tr.loss td.dir, .trade-table tr.loss td:nth-child(5) { color: #dc2626; font-weight: 600; }
+.trade-table td.sym { font-family: 'Avenir Next', sans-serif; font-weight: 600; }
+
+.chart-block { margin: 0.8rem 0; page-break-inside: avoid; }
+.chart-block img { width: 100%; border-radius: 6px; border: 1px solid #e5e7eb; }
+.chart-caption { font-size: 9pt; color: #6b7280; text-align: center; font-style: italic; margin-top: 0.2rem; }
+
+.finding-row, .lesson-row {
+  background: #fef2f2; border-left: 4px solid #dc2626;
+  padding: 0.7rem 1rem; margin: 0.5rem 0; border-radius: 4px;
+  page-break-inside: avoid;
+}
+.lesson-row { background: #eff6ff; border-color: #4f46e5; }
+.finding-row h4 { color: #991b1b; margin: 0 0 0.2rem 0; }
+.lesson-row h4 { color: #1e40af; margin: 0 0 0.2rem 0; }
+.finding-row .impact { color: #7c2d12; font-size: 9.5pt; margin: 0.2rem 0; }
+.finding-row .fix { color: #065f46; font-size: 9.5pt; font-weight: 600; }
+.lesson-row .body { font-size: 9.5pt; margin: 0.2rem 0; }
+.lesson-row .action { color: #065f46; font-size: 9.5pt; font-weight: 600; background: #d1fae5; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-block; margin-top: 0.3rem; }
+
+code { font-family: 'Courier New', monospace; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 9.5pt; color: #be185d; }
+
+.page-break { page-break-before: always; }
+
+.back-cover {
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+  color: white;
+  padding: 1.2in 0.6in 0.8in;
+  text-align: center;
+  page-break-before: always;
+  page-break-after: avoid;
+  border-radius: 8px;
+}
+.back-cover h2 { color: white; font-size: 22pt; margin-bottom: 0.8rem; }
+.back-cover p { font-size: 10.5pt; color: #c7d2fe; margin: 0.3rem 0; line-height: 1.4; }
+.back-cover .quote { font-size: 13pt; color: white; font-style: italic; margin: 1rem 0 1.5rem; line-height: 1.4; }
+.back-cover .footer { font-size: 9pt; color: #a5b4fc; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); }
+</style></head><body>
+
+<!-- ====== COVER ====== -->
+<div class="cover">
+  <div class="badge">TRADEPILOT BATTLE REPORT</div>
+  <h1>6 Engines.<br>1 Trading Day.<br>Rs +10,270.</h1>
+  <div class="emoji-row">🥇 🥈 🥉</div>
+  <div class="subtitle">Post-mortem of Day 1 live-market test<br>featuring v5.6 Darvas &amp; v5.7 Box Theory</div>
+  <div class="date">April 17, 2026 · Nifty 24,231 · VIX 17.2</div>
+  <div class="tagline">"Everything failed in interesting ways — the data taught us more than perfection ever could."</div>
+</div>
+
+<!-- ====== META ====== -->
+<h2>Executive Summary</h2>
+<div class="report-meta">
+  <div><b>Date</b></div><div>2026-04-17 (Fri) · 09:15 – 15:15 IST</div>
+  <div><b>Market</b></div><div>Nifty 24,231 · Gap UP +0.38% · Regime SIDEWAYS · VIX 17.2</div>
+  <div><b>Engines</b></div><div>v4, v5, v5.2, v5.3, v5.6, v5.7, Rust</div>
+  <div><b>Capital</b></div><div>Rs 10.00L per engine (Rs 60L aggregate)</div>
+  <div><b>Combined P&amp;L</b></div><div>Rs +10,270 today vs +Rs 38,977 yesterday</div>
+  <div><b>Author</b></div><div>Soumya Swain · soumya@sidewall.in</div>
+</div>
+
+<p>Today was a stress-test: brand-new engines (v5.6 Darvas, v5.7 Box Theory — committed yesterday 21:19) went into production with no prior live-market exposure. Three Python crashes, one stuck ML retrain, and one laptop sleep event later, we came out with useful data and a clear path forward.</p>
+
+<div class="hero-box">
+  <h3>🎯 The Hero Stock: UNITDSPR</h3>
+  <p>4 engines independently caught UNITDSPR long. v4 booked +Rs 2,835 and +Rs 1,921 on two re-entries. v5.6 and v5.7 held it through close at +Rs 1,097 and +Rs 1,791 unrealized. Cross-engine consensus validates the v4 composite scorer.</p>
+</div>
+
+<!-- ====== LEADERBOARD ====== -->
+<h2>Leaderboard</h2>
+<div class="chart-block">
+  <img src="charts/leaderboard.png"/>
+  <div class="chart-caption">Realized P&amp;L per engine at end of day</div>
+</div>
+
+
+    <div class="leader gold">
+      <div class="rank">🥇</div>
+      <div class="name">v4 Composite</div>
+      <div class="pnl pos">Rs +8,454</div>
+      <div class="stats">4W / 3L</div>
+      <div class="stats">57% win</div>
+    </div>
+
+    <div class="leader silver">
+      <div class="rank">🥈</div>
+      <div class="name">v5.7 Box Theory</div>
+      <div class="pnl pos">Rs +2,116</div>
+      <div class="stats">10W / 10L</div>
+      <div class="stats">50% win</div>
+    </div>
+
+    <div class="leader bronze">
+      <div class="rank">🥉</div>
+      <div class="name">v5.6 Darvas</div>
+      <div class="pnl pos">Rs +1,183</div>
+      <div class="stats">10W / 8L</div>
+      <div class="stats">56% win</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">4</div>
+      <div class="name">v5 Multi-Horizon</div>
+      <div class="pnl neg">Rs -1,482</div>
+      <div class="stats">6W / 10L</div>
+      <div class="stats">38% win</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">5</div>
+      <div class="name">v5.3 Staged</div>
+      <div class="pnl ">Rs +0</div>
+      <div class="stats">0 trades</div>
+      <div class="stats">sat out</div>
+    </div>
+
+<div class="chart-block">
+  <img src="charts/winrate.png"/>
+  <div class="chart-caption">Win rate comparison · v4's 80% (on 5 trades) stands out</div>
+</div>
+
+<!-- ====== V5 DEEP DIVE ====== -->
+<div class="page-break"></div>
+<h2>The v5 Collapse — 95% Drop Day-over-Day</h2>
+
+<div class="chart-block">
+  <img src="charts/v5_dod.png"/>
+  <div class="chart-caption">v5 went from +Rs 17,295 (92% win) yesterday to +Rs 781 (36% win) today</div>
+</div>
+
+<h3>Four root causes</h3>
+
+<div class="finding-row">
+  <h4>1. Shorting in a rising market (-Rs 3,566 on one stock)</h4>
+  <div class="impact">v5 shorted ENRIN THREE times, lost all three: -Rs 1,098, -Rs 1,314, -Rs 1,154. Also lost JIOFIN shorts -Rs 318, TMPV -Rs 151.</div>
+  <div class="fix">Fix: Pre-market gap filter — if Nifty gap &gt; +0.2%, disable all shorts for the day.</div>
+</div>
+
+<div class="finding-row">
+  <h4>2. Crash wiped out morning gains (-Rs 487)</h4>
+  <div class="impact">v5 crashed at 10:28 (NaN guard bug). Before crash, it had hit GODFRYPHLP target for +Rs 487 and deployed UNITDSPR. State save was pending — both were lost on restart.</div>
+  <div class="fix">Fix: Atomic state writes after every trade entry/exit, not per-cycle.</div>
+</div>
+
+<div class="finding-row">
+  <h4>3. No same-stock re-entry block</h4>
+  <div class="impact">After ENRIN short #1 hit SL, v5 re-entered ENRIN short. Hit SL. Re-entered again. Hit SL. No circuit breaker for repeated losses on same stock.</div>
+  <div class="fix">Fix: Block same-stock short re-entry for the day after 1 SL hit.</div>
+</div>
+
+<div class="finding-row">
+  <h4>4. KALYANKJIL carry-over hit SL (-Rs 119)</h4>
+  <div class="impact">Yesterday's open LONG KALYANKJIL @442.50 stopped out today at 427.65. Holding overnight added risk without commensurate reward.</div>
+  <div class="fix">Fix: Evaluate all carry-overs against opening gap before market open; exit losers proactively.</div>
+</div>
+
+<div class="chart-block">
+  <img src="charts/longs_vs_shorts.png"/>
+  <div class="chart-caption">Long trades made money across all engines. Short trades lost money across all engines.</div>
+</div>
+
+<!-- ====== PER-ENGINE ====== -->
+<div class="page-break"></div>
+<h2>Per-Engine Trade Ledger</h2>
+
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #16a34a, #16a34add);">
+        <h2>v4 Composite Scorer (control, long-only)</h2>
+        <div class="hdr-stats">
+          <span>Total: <b>Rs +8,454</b></span>
+          <span>Realized: Rs +8,454</span>
+          <span>Unrealized: Rs +0</span>
+          <span>4W / 3L (57%)</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v4.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1289.5</td><td>+2,835</td><td>+2.79%</td><td>-</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1288.2</td><td>+1,921</td><td>+2.69%</td><td>-</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1235.5</td><td>+1,071</td><td>+1.06%</td><td>-</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>251.3</td><td>-558</td><td>-0.55%</td><td>-</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1250.0</td><td>+4,145</td><td>+2.25%</td><td>-</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4730.0</td><td>4700.0</td><td>-630</td><td>-0.63%</td><td>-</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>252.2</td><td>-330</td><td>-0.18%</td><td>-</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #dc2626, #dc2626dd);">
+        <h2>v5 Multi-Horizon (main)</h2>
+        <div class="hdr-stats">
+          <span>Total: <b>Rs -1,482</b></span>
+          <span>Realized: Rs -1,482</span>
+          <span>Unrealized: Rs +0</span>
+          <span>6W / 10L (38%)</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">GODFRYPHLP</td><td>2092.8</td><td>2214.6</td><td>+487</td><td>+5.82%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">KALYANKJIL</td><td>442.5</td><td>440.4</td><td>-17</td><td>-0.49%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">KALYANKJIL</td><td>442.5</td><td>427.6</td><td>-119</td><td>-3.36%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">GODFRYPHLP</td><td>2092.9</td><td>2208.0</td><td>+461</td><td>+5.50%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">TATACONSUM</td><td>1094.2</td><td>1124.0</td><td>+149</td><td>+2.72%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.3</td><td>3001.1</td><td>-1,098</td><td>-3.44%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.8</td><td>-181</td><td>-0.63%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.3</td><td>3032.7</td><td>-1,314</td><td>-4.53%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.0</td><td>+956</td><td>+3.63%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">TMPV</td><td>356.3</td><td>358.4</td><td>-151</td><td>-0.59%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.3</td><td>3029.5</td><td>-1,154</td><td>-4.42%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.3</td><td>+962</td><td>+3.65%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.5</td><td>-137</td><td>-0.52%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1259.8</td><td>+186</td><td>+3.04%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>252.2</td><td>-12</td><td>-0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4729.8</td><td>4700.0</td><td>-30</td><td>-0.63%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #f59e0b, #f59e0bdd);">
+        <h2>v5.6 Darvas Box (breakout)</h2>
+        <div class="hdr-stats">
+          <span>Total: <b>Rs +1,183</b></span>
+          <span>Realized: Rs +1,183</span>
+          <span>Unrealized: Rs +0</span>
+          <span>10W / 8L (56%)</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_6.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4729.8</td><td>4733.1</td><td>+19</td><td>+0.07%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.4</td><td>2942.9</td><td>-416</td><td>-1.43%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.7</td><td>-168</td><td>-0.59%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1287.4</td><td>+691</td><td>+2.62%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1237.6</td><td>+360</td><td>+1.23%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">TMPV</td><td>356.3</td><td>359.6</td><td>-234</td><td>-0.93%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>253.0</td><td>+27</td><td>+0.10%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.4</td><td>2969.3</td><td>-680</td><td>-2.34%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.9</td><td>-188</td><td>-0.66%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">TMPV</td><td>356.3</td><td>359.4</td><td>-223</td><td>-0.87%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.0</td><td>+956</td><td>+3.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.6</td><td>1302.1</td><td>+238</td><td>+3.79%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.2</td><td>+228</td><td>+3.64%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.0</td><td>+228</td><td>+3.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1259.8</td><td>+186</td><td>+3.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1304.6</td><td>+200</td><td>+3.99%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>252.2</td><td>-11</td><td>-0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4729.8</td><td>4700.0</td><td>-30</td><td>-0.63%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #4f46e5, #4f46e5dd);">
+        <h2>v5.7 Box Theory (mean reversion)</h2>
+        <div class="hdr-stats">
+          <span>Total: <b>Rs +2,116</b></span>
+          <span>Realized: Rs +2,116</span>
+          <span>Unrealized: Rs +0</span>
+          <span>10W / 10L (50%)</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_7.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.4</td><td>2932.7</td><td>-220</td><td>-1.08%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1290.0</td><td>+746</td><td>+2.83%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>252.4</td><td>-18</td><td>-0.11%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4729.9</td><td>4732.7</td><td>+5</td><td>+0.06%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">TMPV</td><td>356.3</td><td>358.2</td><td>-108</td><td>-0.53%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.8</td><td>-122</td><td>-0.64%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.3</td><td>2946.3</td><td>-270</td><td>-1.55%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1288.2</td><td>+708</td><td>+2.69%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.7</td><td>1241.0</td><td>+350</td><td>+1.50%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ENRIN</td><td>2901.2</td><td>2967.9</td><td>-466</td><td>-2.30%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">JIOFIN</td><td>241.3</td><td>242.6</td><td>-111</td><td>-0.54%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1300.0</td><td>+956</td><td>+3.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1302.5</td><td>+240</td><td>+3.83%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.6</td><td>1301.1</td><td>+233</td><td>+3.71%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.6</td><td>1300.1</td><td>+228</td><td>+3.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>1222.6</td><td>1259.8</td><td>+186</td><td>+3.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>1254.5</td><td>1304.6</td><td>+200</td><td>+3.99%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>252.7</td><td>252.2</td><td>-11</td><td>-0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">LTM</td><td>4729.8</td><td>4700.0</td><td>-30</td><td>-0.63%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">TMPV</td><td>356.3</td><td>360.1</td><td>-380</td><td>-1.07%</td><td>TIME_EXIT</td></tr></tbody>
+      </table>
+    </div>
+    
+
+<!-- ====== WATCHDOG FINDINGS ====== -->
+<div class="page-break"></div>
+<h2>Watchdog Findings</h2>
+<p>The auto-restart + crash-detection infrastructure surfaced <b>7 bugs in itself or the environment</b>. Net saves during market hours: 0. The system caught bugs by breaking, not by protecting.</p>
+
+<div class="finding-row"><h4>#1. pgrep -f tradepilot-engine matched watchdog itself</h4><div class="impact"><b>Impact:</b> rust auto-restart broken</div><div class="fix"><b>Status:</b> Fixed v2 — port 8080 lsof check</div></div><div class="finding-row"><h4>#2. pgrep -f 'python3 app.py' matched watchdog itself</h4><div class="impact"><b>Impact:</b> flask auto-restart broken</div><div class="fix"><b>Status:</b> Fixed v2 — port 5050 lsof check</div></div><div class="finding-row"><h4>#3. Yahoo per-stock TypeError fired false crash alerts</h4><div class="impact"><b>Impact:</b> Noise notifications</div><div class="fix"><b>Status:</b> Fixed v3 — negative grep filter</div></div><div class="finding-row"><h4>#4. Watchdog had no market-hours awareness</h4><div class="impact"><b>Impact:</b> Restarted v5.3 infinitely post-close</div><div class="fix"><b>Status:</b> Stopped manually at 16:15</div></div><div class="finding-row"><h4>#5. sudo pmset -a disablesleep 1 silently failed (SleepDisabled=0)</h4><div class="impact"><b>Impact:</b> Laptop slept in bag, ALL python engines died</div><div class="fix"><b>Status:</b> Never took effect — retry tomorrow, verify</div></div><div class="finding-row"><h4>#6. caffeinate -dims alone does not prevent clamshell sleep</h4><div class="impact"><b>Impact:</b> False sense of protection</div><div class="fix"><b>Status:</b> Known limitation</div></div><div class="finding-row"><h4>#7. Engine's telegram_bot.py returns 404 on every send</h4><div class="impact"><b>Impact:</b> Engines can't alert user directly</div><div class="fix"><b>Status:</b> Not fixed (my monitor works via direct curl)</div></div>
+
+<!-- ====== LESSONS ====== -->
+<div class="page-break"></div>
+<h2>Top 5 Lessons for Tomorrow</h2>
+
+<div class="lesson-row"><h4>#1. NaN guard bug in 5 files</h4><div class="body">v5, v5.4, v5.5, v5.6, v5.7 all had <code>if price &lt;= 0</code> which doesn't catch NaN (NaN&lt;=0 is False in Python). Fixed to <code>if not (price &gt; 0)</code>. Root cause: copy-paste propagation.</div><div class="action">Create <code>utils/signal_guards.py</code> with shared <code>safe_qty(budget, price)</code>. One fix, all engines benefit.</div></div><div class="lesson-row"><h4>#2. Shorts got destroyed in a rising market</h4><div class="body">v5 shorted ENRIN 3 times, lost 3 times for total -Rs 3,566. Same pattern in v5.6/v5.7. Regime was SIDEWAYS but Nifty gapped +0.38%.</div><div class="action">Add pre-market gap filter: Nifty gap &gt; +0.2% disables all shorts for the day.</div></div><div class="lesson-row"><h4>#3. Laptop-in-bag is unreliable on macOS</h4><div class="body">Clamshell sleep killed all 5 paper-trade engines at ~16:15. Rust+Flask survived (launched via different shell paths).</div><div class="action">Move engines to a $5/mo VPS (DigitalOcean/Hetzner). 24/7 uptime, no sleep issues.</div></div><div class="lesson-row"><h4>#4. pmset silently failed</h4><div class="body"><code>sudo pmset -a disablesleep 1</code> appeared to succeed but <code>SleepDisabled</code> remained 0.</div><div class="action">Always verify with <code>pmset -g | grep SleepDisabled</code> showing 1 BEFORE trusting.</div></div><div class="lesson-row"><h4>#5. State saved only at cycle end</h4><div class="body">v5 crashed at 10:28, lost GODFRYPHLP +Rs 487 win because state save was pending for the cycle.</div><div class="action">Atomic state writes after every trade entry/exit, not per-scan.</div></div>
+
+<!-- ====== BACK COVER ====== -->
+<div class="back-cover">
+  <h2>Tomorrow's Action Plan</h2>
+  <p>1. Shared <span style="background:rgba(255,255,255,0.15);color:#fef3c7;padding:1px 6px;border-radius:3px;font-family:Courier New;">utils/signal_guards.py</span> — consolidate NaN protection across all engines</p>
+  <p>2. Pre-market gap filter — disable shorts if Nifty gap &gt; +0.2%</p>
+  <p>3. Migrate to cloud VPS — laptop-in-bag failed, clamshell sleep killed engines</p>
+  <p>4. Atomic state writes — save after every trade, not per-cycle</p>
+  <p>5. Same-stock re-entry block after stoploss</p>
+  <div class="quote">"Yesterday's winning engine is today's losing engine.<br>The market doesn't reward yesterday."</div>
+  <div class="footer">
+    TradePilot · Soumya Swain · soumya@sidewall.in<br>
+    Generated 2026-04-18 09:06 IST
+  </div>
+</div>
+
+</body></html>

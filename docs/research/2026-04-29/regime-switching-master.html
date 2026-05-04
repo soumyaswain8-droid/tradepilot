@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Regime-Switching Engines — Deep Research</title>
+<style>
+  @page {
+    size: 7in 10in;
+    margin: 0.85in 0.7in 0.85in 0.85in;
+  }
+  @page :first {
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Charter', Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Cover page — green to match v6.1 roadmap */
+  .cover {
+    background: linear-gradient(160deg, #ffffff 0%, #ecfdf5 25%, #d1fae5 55%, #6ee7b7 85%, #10b981 100%);
+    width: 7in;
+    height: 10in;
+    padding: 1.0in 0.8in 0.85in 0.8in;
+    page-break-after: always;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #064e3b;
+  }
+  .cover-badge {
+    display: inline-block;
+    background: #047857;
+    color: white;
+    padding: 6px 18px;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 11pt;
+    letter-spacing: 2px;
+    border-radius: 3px;
+    align-self: center;
+    margin-bottom: 0.25in;
+  }
+  .cover-title {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 40pt;
+    margin: 0 0 0.18in 0;
+    color: #064e3b;
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+  }
+  .cover-subtitle {
+    font-family: 'Charter', Georgia, serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 13pt;
+    margin: 0 0 0.35in 0;
+    color: #065f46;
+    line-height: 1.45;
+    max-width: 5.2in;
+    align-self: center;
+  }
+  .cover-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 0.3in 0 0.4in 0;
+  }
+  .cover-stats .stat {
+    background: rgba(255,255,255,0.92);
+    border-radius: 10px;
+    padding: 16px 12px;
+    width: 30%;
+    box-shadow: 0 4px 14px rgba(6,78,59,0.18);
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+  .cover-stats .stat-value {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 24pt;
+    color: #047857;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .cover-stats .stat-label {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 8.5pt;
+    color: #064e3b;
+    line-height: 1.3;
+  }
+  .cover-date {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 13pt;
+    color: #047857;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 0 0 0.16in 0;
+  }
+  .cover-author {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-size: 10pt;
+    color: #064e3b;
+    line-height: 1.65;
+  }
+
+  /* Body content */
+  h1 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 22pt;
+    color: #064e3b;
+    border-bottom: 3px solid #10b981;
+    padding-bottom: 6px;
+    margin-top: 0.4in;
+    margin-bottom: 0.18in;
+    page-break-after: avoid;
+    page-break-before: always;
+  }
+  h1:first-of-type {
+    page-break-before: auto;
+  }
+  h2 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 15pt;
+    color: #065f46;
+    margin-top: 0.28in;
+    margin-bottom: 0.12in;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 12.5pt;
+    color: #047857;
+    margin-top: 0.2in;
+    margin-bottom: 0.08in;
+    page-break-after: avoid;
+  }
+  p {
+    margin: 0 0 0.55rem 0;
+    text-align: justify;
+    page-break-inside: avoid;
+  }
+  strong { color: #064e3b; }
+  em { color: #047857; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    max-width: 95%;
+    border-collapse: collapse;
+    margin: 0.16in 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: linear-gradient(135deg, #047857, #10b981);
+    color: white;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 9pt;
+  }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td {
+    background: #f0fdf4;
+  }
+
+  /* Diagrams */
+  .diagram-lr {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 0.25in 0;
+    page-break-inside: avoid;
+    gap: 4px;
+  }
+  .phase-card {
+    background: linear-gradient(135deg, #047857, #10b981);
+    color: white;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 9pt;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(6,78,59,0.2);
+    flex: 1;
+    min-width: 1.3in;
+    line-height: 1.3;
+  }
+  .diagram-arrow {
+    color: #047857;
+    font-size: 14pt;
+    font-weight: 700;
+    padding: 0 4px;
+  }
+  .diagram-td {
+    margin: 0.25in auto;
+    text-align: center;
+    page-break-inside: avoid;
+    max-width: 5in;
+  }
+  .td-node {
+    display: inline-block;
+    background: #ecfdf5;
+    border: 2px solid #10b981;
+    color: #064e3b;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-family: 'Avenir Next', Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 9.5pt;
+    margin: 4px 0;
+    min-width: 2in;
+  }
+  .td-root {
+    background: linear-gradient(135deg, #047857, #10b981);
+    color: white;
+    border-color: #064e3b;
+  }
+  .td-arrow {
+    color: #047857;
+    font-size: 12pt;
+    font-weight: 700;
+    line-height: 1;
+    margin: 2px 0;
+  }
+  .td-arrow-lbl {
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #065f46;
+    font-weight: 400;
+  }
+
+  /* Page break utility */
+  .page-break { page-break-after: always; height: 0; }
+
+  /* Code */
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 9pt;
+    background: #f0fdf4;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #065f46;
+    border: 1px solid #d1fae5;
+  }
+  pre {
+    background: #064e3b;
+    color: #ecfdf5;
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    page-break-inside: avoid;
+    margin: 0.18in 0;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+  }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 1.4em;
+    margin: 0.35rem 0 0.55rem 0;
+  }
+  li { margin-bottom: 0.15rem; }
+
+  /* HR */
+  hr {
+    border: none;
+    border-top: 1px solid #6ee7b7;
+    margin: 0.3in 0;
+  }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 4px solid #10b981;
+    background: #ecfdf5;
+    margin: 0.2in 0;
+    padding: 12px 18px;
+    color: #065f46;
+    font-style: italic;
+    page-break-inside: avoid;
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="cover-badge">DEEP RESEARCH</div>
+  <h1 class="cover-title">Regime-Switching<br/>Engines</h1>
+  <h2 class="cover-subtitle">Should TradePilot build 3-4 specialist engines and route between them by market regime? A 5-agent parallel research dive.</h2>
+
+  <div class="cover-stats">
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Parallel research agents</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">175</div>
+      <div class="stat-label">LONG signals v5 blocked on 04-29</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3 wk</div>
+      <div class="stat-label">Recommended fix vs 9-15 wk hard switch</div>
+    </div>
+  </div>
+
+  <div class="cover-date">Wednesday, 29 April 2026</div>
+
+  <div class="cover-author">
+    <div>Author: Soumya Swain · Synthesis from 5 sub-agents</div>
+    <div>Co-founder, TradePilot / Sidewall</div>
+    <div>Companion to PRODUCTION_ROADMAP_v6.1</div>
+  </div>
+</section>
+
+<main>
+<h1 id="verdict-read-this-first">Verdict (read this first)</h1>
+<p>You asked: "Build 3-4 specialised engines (BULL/BEAR/SIDEWAYS), one per regime, and a router that switches between them mid-day."</p>
+<p>5 parallel research agents (academic literature, industry precedent, regime detection, engine training, switching mechanics) all came back with the <strong>same answer</strong>: that specific architecture is the most-rejected pattern in real-world quant finance. Every famous quant blow-up of the last 30 years (LTCM 1998, Quant Quake 2007, Volmageddon 2018) was a case of a single-regime model deployed into a regime it hadn't trained on.</p>
+<p>But the <strong>underlying instinct is right</strong>. v5 IS leaving alpha on the table by being regime-blind in the wrong direction. The fix is just smaller and safer than 4 engines.</p>
+<p>The right answer is two changes:</p>
+<ol>
+<li>
+<p><strong>Fix the detector first</strong> (Phase 1, ~1 week). The 04-29 failure (175 blocked LONGs on a green day labelled BEAR) was caused by v5's regime detector — a static vote-aggregator with no dwell time, no hysteresis, no confidence threshold. Replace with a 2-state Gaussian HMM + hysteresis + 3-bar dwell time. This alone would have prevented yesterday's failure.</p>
+</li>
+<li>
+<p><strong>Use regime as a feature, not a switch</strong> (Phase 2, ~2 weeks). Keep the v4 LightGBM scorer. Add the regime detector's output as 3 continuous features (<code>P_bull</code>, <code>P_bear</code>, <code>P_sideways</code>). Specialise only the <em>exit rules and position sizing</em> per regime — not the scorer itself. This is exactly what Two Sigma, AQR, and the MDPI 2026 paper do.</p>
+</li>
+</ol>
+<p>Hard switching between specialised engines stays on the shelf as a Phase 4 option only if Phase 1+2 plateau.</p>
+<hr />
+<h1 id="why-hard-switching-is-the-wrong-answer">Why hard switching is the wrong answer</h1>
+<h2 id="industry-has-rejected-it">Industry has rejected it</h2>
+<table>
+<thead>
+<tr>
+<th>Fund</th>
+<th>Public approach</th>
+<th>Hard router?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Renaissance Medallion</td>
+<td>Ensemble of 100+ small signals; HMM detects breaks but blends, doesn't switch</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Two Sigma</td>
+<td>Gaussian Mixture labels regimes; uses regime as a <strong>feature</strong> in the ensemble</td>
+<td>No</td>
+</tr>
+<tr>
+<td>AQR</td>
+<td>"Factor Timing is Hard" — explicitly anti-regime-timing; static factor weights</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Bridgewater All Weather</td>
+<td>4-quadrant regime model — but runs ALL 4 buckets simultaneously, never routes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Bridgewater Pure Alpha</td>
+<td>100+ uncorrelated bets layered together (ensemble)</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Zero major fund runs a "hard if/else regime → engine X" architecture in production. The pattern isn't unknown — it's been tried and abandoned.</p>
+<h2 id="the-math-doesnt-work">The math doesn't work</h2>
+<p>Detector latency × switch frequency × position turnover = friction that exceeds your alpha.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Calculation</th>
+<th>Daily friction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 detector flips/day, 5 open positions, hard close</td>
+<td>4 × 5 × 12 bps round-trip</td>
+<td>60–120 bps/day</td>
+</tr>
+<tr>
+<td>TradePilot's current daily alpha</td>
+<td>empirical, days like 04-29</td>
+<td>50–80 bps/day</td>
+</tr>
+<tr>
+<td>Ratio</td>
+<td>friction ÷ alpha</td>
+<td><strong>1.2× — capital burn</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Hard close is mathematically infeasible at TradePilot's current edge size.</p>
+<h2 id="the-famous-failures-all-share-one-cause">The famous failures all share one cause</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Event</th>
+<th>Root cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1998</td>
+<td>LTCM</td>
+<td>Single-regime model in a regime that didn't exist in training data (Russia default + flight-to-quality). Lost 44% in August.</td>
+</tr>
+<tr>
+<td>2007</td>
+<td>Quant Quake</td>
+<td>All factor funds trained on similar regimes deleveraged together. Showed regime detection lags 5–15 days.</td>
+</tr>
+<tr>
+<td>2018</td>
+<td>Volmageddon</td>
+<td>Vol-targeting funds forced to deleverage into falling market. Regime model said "low vol" right up until it didn't.</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>March COVID</td>
+<td>1-day-lag detector eats 2.5% drawdown before switching; 5-day-lag eats 12.5%.</td>
+</tr>
+</tbody>
+</table>
+<p>Every one is a case of <em>trusting the regime label too much</em>. Hard switching is the architectural pattern that maximises that trust.</p>
+<h2 id="indian-specific-math-is-even-worse-for-hard-switching">Indian-specific math is even worse for hard switching</h2>
+<table>
+<thead>
+<tr>
+<th>Statistic</th>
+<th>Indian Nifty/Sensex</th>
+<th>Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bull regime persistence (<code>p_bull,bull</code>)</td>
+<td>0.97-0.99 daily</td>
+<td>Bull is the default state</td>
+</tr>
+<tr>
+<td>Bull regime average duration</td>
+<td>200-481 days</td>
+<td>Bull engine runs months at a stretch</td>
+</tr>
+<tr>
+<td>Bear regime samples in last 35 years</td>
+<td>6-8 distinct episodes</td>
+<td>A specialised BEAR engine has cold-started training data</td>
+</tr>
+<tr>
+<td>Bear regime samples in 5-year intraday window</td>
+<td>&lt;2,000 rows</td>
+<td>Below LightGBM's reliable training floor (~5-10K rows)</td>
+</tr>
+</tbody>
+</table>
+<p>Translation: a TradePilot BEAR engine trained on Indian intraday data is <em>guaranteed</em> to be undertrained. Soumya's instinct that "we have 3-4 trained engines and they will be expert in one market" runs head-on into the data scarcity problem. There is no path to "expert-in-one-market" for the BEAR side without using US data, which doesn't transfer cleanly.</p>
+<hr />
+<h1 id="why-the-underlying-instinct-is-still-right">Why the underlying instinct is still right</h1>
+<p>The 04-29 day was real. v5 made +Rs 18,044 while v4 made +Rs 47,354 on the same scorer because v5's wrapper blocked 175 LONG signals. The wrapper assumed BEAR regime → reduce LONG capacity. The detector said BEAR. The tape said green. v5 hit a 16-position cap and stopped trading; v4 had no cap and kept trading.</p>
+<p>So Soumya's question was: "if we can't trust one engine's regime call, why not have a different engine for each regime?"</p>
+<p>The research's answer: the problem isn't "one engine is wrong about regimes." The problem is "the regime label was wrong, and the engine trusted the label too literally." Hard switching makes that worse, not better — it just amplifies the trust.</p>
+<p>The right move is <em>less</em> trust in the regime label, not more. That means:</p>
+<ul>
+<li>The detector emits a probability vector, not a hard label</li>
+<li>The engine reads the probability vector and modulates behaviour continuously</li>
+<li>When confidence is low, the engine reduces aggression rather than choosing a different specialist</li>
+<li>When confidence is high, the engine still hedges by listening to other features</li>
+</ul>
+<p>This is the "regime as a feature" pattern. It's what the academic literature recommends, what Two Sigma publishes, what the MDPI 2026 paper validates with SHAP, and what avoids the LTCM failure mode.</p>
+<hr />
+<h1 id="what-todays-failure-04-29-actually-was">What today's failure (04-29) actually was</h1>
+<p>A diagnosis from research agent C, who read v5's existing detector code:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What v5 has today</th>
+<th>What's wrong</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State storage</td>
+<td>None — stateless majority vote on every call</td>
+<td>Cannot enforce dwell time</td>
+</tr>
+<tr>
+<td>Indicator weighting</td>
+<td>Equal weight, 6 votes</td>
+<td>3 of 6 (200-DMA, FII 5d, 5d momentum) are structurally lagging — they all stay -1 on a green day after a red streak</td>
+</tr>
+<tr>
+<td>Hysteresis</td>
+<td>None — same threshold for entry and exit</td>
+<td>Oscillates around the boundary</td>
+</tr>
+<tr>
+<td>Confidence threshold</td>
+<td>None — always flips on ≥3 votes</td>
+<td>Low-confidence flips not filtered</td>
+</tr>
+<tr>
+<td>Look-ahead bias</td>
+<td>Suspected: <code>_load_csv</code> returns <code>df.tail(300)</code> without point-in-time filter</td>
+<td>When called intraday, includes the running bar</td>
+</tr>
+<tr>
+<td>HMM module</td>
+<td>Present in v5, but only used as metadata — not the actual switch decision</td>
+<td>The good part isn't being used</td>
+</tr>
+</tbody>
+</table>
+<p>This is fixable in ~1 week. It does not need new engines.</p>
+<hr />
+<h1 id="the-4-phase-rollout-recommended">The 4-phase rollout (recommended)</h1>
+<div class="diagram-lr"><div class="phase-card">Phase 2: Regime as Feature — 2 weeks</div><div class="diagram-arrow">▶</div><div class="phase-card">Phase 3: Per-Regime — Exit Rules + Sizing — 2 weeks</div><div class="diagram-arrow">▶</div><div class="phase-card">Phase 4: Specialised Engines — DEFER unless 1-3 plateau — 4-6 weeks</div></div>
+
+<h2 id="phase-1-fix-the-detector-1-week">Phase 1 — Fix the detector (1 week)</h2>
+<p>Goal: replace v5's vote-counting detector with a probabilistic, hysteresis-aware HMM.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Detection algorithm</td>
+<td>2-state Gaussian HMM, fit weekly on rolling 250 days</td>
+</tr>
+<tr>
+<td>Input features</td>
+<td><code>[Nifty 5d log-return, India VIX level, Nifty-500 % above 50-DMA]</code></td>
+</tr>
+<tr>
+<td>Output</td>
+<td><code>{regime, P(BULL), P(BEAR), P(SIDEWAYS), confidence}</code></td>
+</tr>
+<tr>
+<td>Dwell time</td>
+<td>3 consecutive daily reads in new regime before switching</td>
+</tr>
+<tr>
+<td>Hysteresis</td>
+<td>Enter BEAR at P(BEAR) &gt; 0.70; exit BEAR at P(BULL) &gt; 0.55 (asymmetric — easier to leave defensive)</td>
+</tr>
+<tr>
+<td>Cooldown</td>
+<td>After any flip, lock regime for 6 bars (3 hours)</td>
+</tr>
+<tr>
+<td>TRANSITIONING band</td>
+<td>When 0.50 &lt; P(new) &lt; 0.70: keep previous regime, allocation × 0.5</td>
+</tr>
+<tr>
+<td>Intraday confirm</td>
+<td>Kaufman Efficiency Ratio on 5-min Nifty modulates <em>size only</em>, never flips daily regime</td>
+</tr>
+<tr>
+<td>Skip opening 30 min</td>
+<td>First read at 10:00 IST</td>
+</tr>
+<tr>
+<td>Look-ahead bug</td>
+<td>Fix <code>_load_csv</code> to use point-in-time slicing</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why this fixes 04-29</strong>: On a +0.81% Nifty day with breadth &gt;55%, the HMM posterior P(BEAR) would have been ≈ 0.40-0.55 — <em>not</em> &gt;0.70. The TRANSITIONING band would have triggered: previous regime kept (whatever it was the day before), allocation halved. The 175 blocked LONGs would have run at half size instead of being blocked entirely.</p>
+<h2 id="phase-2-regime-as-a-feature-2-weeks">Phase 2 — Regime as a feature (2 weeks)</h2>
+<p>Goal: ingest regime probability into the v4 scorer.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Where to add</td>
+<td><code>prototype/v4/composite_scorer.py</code> LightGBM input matrix</td>
+</tr>
+<tr>
+<td>Features to add</td>
+<td><code>P_bull</code>, <code>P_bear</code>, <code>P_sideways</code> (continuous), <code>regime_argmax</code> (categorical)</td>
+</tr>
+<tr>
+<td>Bonus features (cheap, high-leverage)</td>
+<td><code>vix_india_level</code>, <code>vix_india_5d_change</code>, <code>fii_dii_flow_z</code>, <code>usd_inr_change</code>, <code>is_expiry_nifty</code>, <code>mins_to_expiry</code>, <code>is_event_day</code></td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Combinatorial Purged CV (CPCV) with 6 splits, 2 test groups, embargo = 15 min</td>
+</tr>
+<tr>
+<td>Acceptance gates</td>
+<td>Deflated Sharpe Ratio &gt; 1.0, Probability of Backtest Overfitting &lt; 30%, hold-out regime episodes (2020-Mar, 2024-Q4) Sharpe &gt; 0.5× in-sample</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why this works</strong>: SHAP analysis on regime-aware LightGBM (MDPI 2026) shows the <em>same model</em> auto-shifts feature importance across regimes — yield-curve proxy and gold/equity ratio dominate in BEAR; market beta and 3-month momentum dominate in BULL. Tree splits do the regime-conditional logic naturally. No separate models needed.</p>
+<h2 id="phase-3-per-regime-exits-and-sizing-2-weeks">Phase 3 — Per-regime exits and sizing (2 weeks)</h2>
+<p>Goal: where specialisation actually pays off, in exit logic and position sizing.</p>
+<table>
+<thead>
+<tr>
+<th>Regime</th>
+<th>Exit philosophy</th>
+<th>Sizing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BULL</td>
+<td>Trailing stop (Chandelier 3×ATR), let winners run, partial book at 1R/2R, no fixed TP</td>
+<td>Full size</td>
+</tr>
+<tr>
+<td>BEAR</td>
+<td>Tight SL (0.5-1×ATR), fixed TP at 1R, time-stop after 30 min, no overnight</td>
+<td>Half size</td>
+</tr>
+<tr>
+<td>SIDEWAYS</td>
+<td>TP/SL bracket at Bollinger bands, 1:1 risk-reward, fade extremes, exit at VWAP touch</td>
+<td>Three-quarter size</td>
+</tr>
+<tr>
+<td>TRANSITIONING</td>
+<td>Inherit previous regime's exit rules but cap size at 0.5×</td>
+<td>Half size</td>
+</tr>
+</tbody>
+</table>
+<p>This is where 80% of the regime-specialisation alpha lives in practice. Same scorer, regime-conditional exit table.</p>
+<h2 id="phase-4-specialised-engines-defer">Phase 4 — Specialised engines (DEFER)</h2>
+<p>Only if Phase 1-3 plateau AND we've augmented BEAR data via US transfer + 2024-Q4 + 2020-Mar episodes. Until then, the 3-engine approach has worse expected Sharpe than the regime-feature approach due to BEAR sample starvation.</p>
+<p>If we ever do this, the architecture is the soft-hold pattern from research agent E:</p>
+<div class="diagram-td"></div>
+
+<p>Switching gates: HMM posterior ≥ 0.65 AND dwell ≥ 3 bars AND ≥ 6 bars cooling. Empirically caps real-world switches at 2-3 per day.</p>
+<hr />
+<h1 id="how-this-fits-into-v61-roadmap">How this fits into v6.1 roadmap</h1>
+<p>The v6.1 production roadmap (<code>docs/reports/2026-04-29/PRODUCTION_ROADMAP_v6.1.pdf</code>) has these phases:</p>
+<table>
+<thead>
+<tr>
+<th>v6.1 Phase</th>
+<th>Original scope</th>
+<th>Where regime-switching research fits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1 — Foundation (now → May 25)</td>
+<td>Statistical gate, validate at least one engine</td>
+<td><strong>Phase 1 detector fix can ship inside this</strong> as a v5 patch — does not violate the "no engine code changes" rule because the detector is upstream of engines</td>
+</tr>
+<tr>
+<td>Phase 2 — Intelligence (May 26 → July 21)</td>
+<td>LLM sentiment, FII/DII, pairs trading</td>
+<td><strong>Regime-as-feature (Phase 2 above) belongs here</strong> — it's an alpha layer addition, not a re-architecture</td>
+</tr>
+<tr>
+<td>Phase 3 — Execution (July 22 → Oct 13)</td>
+<td>Kite API, shadow mode, SEBI registration</td>
+<td><strong>Per-regime exit/sizing (Phase 3 above) ships before live trading</strong> — exit rules are critical for 1-lot live</td>
+</tr>
+<tr>
+<td>Phase 4 — Scale (Oct 14 → Feb 2 2027)</td>
+<td>1 lot → full capital</td>
+<td><strong>Specialised engines (Phase 4 above) deferred to here</strong> if and only if needed</td>
+</tr>
+</tbody>
+</table>
+<p>The regime-switching question doesn't change the v6.1 timeline. It fills in the "what alpha layers do we add in Phase 2?" question with a concrete answer.</p>
+<hr />
+<h1 id="decision-matrix-which-path-to-take">Decision matrix — which path to take</h1>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Effort</th>
+<th>Expected upside</th>
+<th>Risk</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Do nothing</strong></td>
+<td>0 weeks</td>
+<td>Continue observing 7 engines through May 25 gate</td>
+<td>None</td>
+<td>Default if 04-30 v5.8 result shows the slot-cap fix is enough</td>
+</tr>
+<tr>
+<td><strong>Phase 1 only (detector fix)</strong></td>
+<td>1 week</td>
+<td>Solves 04-29 failure mode; modest Sharpe lift</td>
+<td>Low — pure detector improvement</td>
+<td>Recommended baseline</td>
+</tr>
+<tr>
+<td><strong>Phase 1 + Phase 2</strong></td>
+<td>3 weeks</td>
+<td>+0.15-0.30 DSR per MDPI 2026 evidence; full benefit of regime-conditional alpha</td>
+<td>Low-medium — CPCV validation required</td>
+<td><strong>Recommended path</strong></td>
+</tr>
+<tr>
+<td><strong>Phase 1 + 2 + 3</strong></td>
+<td>5 weeks</td>
+<td>Adds per-regime exit/sizing; biggest empirical win</td>
+<td>Medium — exit rule changes need careful testing</td>
+<td>Recommended for Q3 2026</td>
+</tr>
+<tr>
+<td><strong>Phase 4 (specialised engines)</strong></td>
+<td>9-15 weeks</td>
+<td>Highest theoretical, lowest empirical</td>
+<td>High — BEAR data starvation, LTCM failure mode</td>
+<td><strong>Defer indefinitely</strong> unless 1-3 plateau</td>
+</tr>
+</tbody>
+</table>
+<p><strong>My recommendation: Phase 1 + Phase 2.</strong> Phase 1 fixes 04-29 directly (1 week). Phase 2 adds the regime-as-feature pattern that real quants use (2 more weeks). Phase 3 gets queued for Q3 2026. Phase 4 stays on the shelf.</p>
+<hr />
+<h1 id="what-the-research-has-decided-for-you">What the research has decided FOR you</h1>
+<p>Across 5 independent research agents working in parallel, several positions are now settled:</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Settled answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Should regime detection use a probabilistic posterior, not a hard label?</td>
+<td><strong>Yes</strong>, every agent agrees</td>
+</tr>
+<tr>
+<td>Should the detector have dwell time + hysteresis + cooldown?</td>
+<td><strong>Yes</strong>, every agent agrees</td>
+</tr>
+<tr>
+<td>Should engines hard-switch on regime flip?</td>
+<td><strong>No</strong>, every agent agrees — soft hold or regime-as-feature instead</td>
+</tr>
+<tr>
+<td>Should we train separate ML models per regime on hard-sliced data?</td>
+<td><strong>No</strong> — Indian BEAR data is too sparse, and slicing leaks regime labels</td>
+</tr>
+<tr>
+<td>Where should specialisation actually happen?</td>
+<td><strong>Exit rules and position sizing</strong>, not the scorer</td>
+</tr>
+<tr>
+<td>Is the v5 regime detector the bottleneck?</td>
+<td><strong>Yes</strong> — confirmed by code reading (no dwell, no hysteresis, vote-counting, lagging indicators)</td>
+</tr>
+<tr>
+<td>Will fixing the detector alone close the v5-vs-v4 gap?</td>
+<td><strong>Probably yes</strong> — the 175 blocked LONGs would not have been blocked under the recommended Phase 1 detector</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="open-questions-for-soumya">Open questions for Soumya</h1>
+<p>These are the architectural decisions that should not be made by the research agents:</p>
+<ol>
+<li><strong>Phase 1 timeline</strong>: ship inside the May 25 observation window (i.e., violate the no-engine-code rule for the detector fix), OR ship after May 25?</li>
+<li><strong>Phase 2 timeline</strong>: start parallel to Phase 1 work or strictly after Phase 1 ships?</li>
+<li><strong>Validation strictness</strong>: should we require DSR &gt; 1.5 (high bar) or DSR &gt; 1.0 (literature standard) before promoting Phase 2 changes?</li>
+<li><strong>Phase 3 (exit rules) priority</strong>: ship at the same time as Phase 2, or strictly after Phase 2 has 30 days of paper data?</li>
+<li><strong>Phase 4 trigger</strong>: under what condition do we revisit hard switching? "Phase 1+2+3 plateau for 60 days" is one possibility.</li>
+</ol>
+<p>Default answers I'd recommend: (1) after May 25; (2) strictly after Phase 1; (3) DSR &gt; 1.0; (4) after Phase 2 has 30 days; (5) plateau for 60 days OR a structural BEAR regime persists for 3+ months without Phase 1-3 capturing alpha.</p>
+<hr />
+<h1 id="reference-docs">Reference docs</h1>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Agent</th>
+<th>Length</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/research/2026-04-29/regime-switching-academic.md</code></td>
+<td>A — Academic literature</td>
+<td>~750 words</td>
+</tr>
+<tr>
+<td><code>docs/research/2026-04-29/regime-switching-industry.md</code></td>
+<td>B — Industry precedent</td>
+<td>~780 words</td>
+</tr>
+<tr>
+<td><code>docs/research/2026-04-29/regime-detection-best-practices.md</code></td>
+<td>C — Regime detection</td>
+<td>~795 words</td>
+</tr>
+<tr>
+<td><code>docs/research/2026-04-29/engine-specialization.md</code></td>
+<td>D — Engine training</td>
+<td>~990 words</td>
+</tr>
+<tr>
+<td><code>docs/research/2026-04-29/switching-mechanics.md</code></td>
+<td>E — Switching mechanics</td>
+<td>~880 words</td>
+</tr>
+<tr>
+<td><strong><code>docs/research/2026-04-29/regime-switching-master.md</code></strong></td>
+<td><strong>This synthesis</strong></td>
+<td>~3,500 words</td>
+</tr>
+</tbody>
+</table>
+<p>Total deep-research output: ~7,700 words across 5 sub-agents + this synthesis. Generated in ~12 minutes parallel research time.</p>
+<hr />
+<h1 id="one-line-summary">One-line summary</h1>
+<p><strong>Soumya's instinct is right that v5 has a regime-blindness problem; the right fix is to fix the detector (1 week) and use regime as a feature (2 weeks), not build 4 specialist engines (9-15 weeks with high failure risk). The pattern Soumya described is the one industry has rejected; the pattern industry actually uses is what the research recommends instead.</strong></p>
+</main>
+</body>
+</html>

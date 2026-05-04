@@ -1,0 +1,54 @@
+id: 2026-04-17_004
+title: "State saves must be atomic per-trade, not per-cycle"
+observed_date: 2026-04-17
+observed_by: claude-session
+
+observation: |
+  v5 crashed at 10:28 IST (NaN bug). Before the crash, v5 had already:
+    1. Hit GODFRYPHLP target (+Rs 487 win)
+    2. Flipped KALYANKJIL to HOLD (exit -Rs 17)
+    3. Deployed UNITDSPR new position
+
+  After crash + restart, v5 restored state from positions_active.json.
+  That file was written at the end of the PREVIOUS 10-minute cycle,
+  before any of today's morning trades. So v5 rolled back to the pre-trade
+  state: GODFRYPHLP still open @2092.80, KALYANKJIL still open, no UNITDSPR.
+
+  Net effect: Rs 487 of realized win was lost. The trade happened in memory
+  but was never persisted.
+
+evidence:
+  crash_time: "10:28:56"
+  crash_cause: "NaN price in signal → int(NaN) ValueError"
+  trades_lost:
+    - {symbol: GODFRYPHLP, action: target_hit, pnl: +487, saved_before_crash: false}
+    - {symbol: KALYANKJIL, action: signal_flip_exit, pnl: -17, saved_before_crash: false}
+    - {symbol: UNITDSPR, action: new_deployment, saved_before_crash: false}
+
+proposed_rule: |
+  Change state save strategy from "end of scan cycle" to "after every state-changing action":
+    - After each target hit / stoploss hit / signal_flip exit → save state
+    - After each new position deployment → save state
+    - After each trailing SL update → save state
+
+  Implementation:
+    def save_state_atomic(state, path):
+        tmp = f"{path}.tmp"
+        with open(tmp, "w") as f: json.dump(state, f)
+        os.replace(tmp, path)  # atomic on POSIX
+
+  Call save_state_atomic() in every mutation site, not just at cycle end.
+
+requires_backtest: false
+rationale: "This is crash recovery, not strategy. No backtest needed."
+
+potential_risk: |
+  - Slight IO overhead (multiple JSON writes per scan instead of one).
+    Measured: v5 closes/opens ~5 positions per scan. Worst case 5 writes
+    per scan instead of 1. JSON file is <10 KB. Overhead: ~50ms per scan.
+  - Atomic rename is reliable on APFS/ext4, but not on FAT. Our disk is APFS.
+
+status: accepted_merged
+reviewed_by: "soumya (via claude-session)"
+review_decision: "accept"
+review_notes: "Merged 2026-04-18. atomic_write_json() added to signal_guards.py. All 5 engines patched. Uses tempfile + os.replace for POSIX-atomic writes."

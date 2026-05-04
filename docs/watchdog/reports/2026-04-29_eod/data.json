@@ -1,0 +1,141 @@
+{
+  "date": "2026-04-29",
+  "generated_at": "2026-04-29T15:35:33.212419",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 0.0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 18044.14,
+      "trades": 71,
+      "wins": 56,
+      "losses": 15,
+      "longs": 43,
+      "shorts": 28,
+      "win_rate": 78.9,
+      "open_positions": 1,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 15358.47,
+      "trades": 67,
+      "wins": 52,
+      "losses": 15,
+      "longs": 38,
+      "shorts": 29,
+      "win_rate": 77.6,
+      "open_positions": 2,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 14682.41,
+      "trades": 59,
+      "wins": 44,
+      "losses": 15,
+      "longs": 32,
+      "shorts": 27,
+      "win_rate": 74.6,
+      "open_positions": 2,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_7",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 26788.79,
+      "trades": 69,
+      "wins": 63,
+      "losses": 6,
+      "longs": 54,
+      "shorts": 15,
+      "win_rate": 91.3,
+      "open_positions": 3,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 3
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENT"
+    ],
+    "v5|v5_6": [
+      "ADANIENT"
+    ],
+    "v5|v5_7": [
+      "ADANIENT"
+    ],
+    "v5_classic|v5_6": [
+      "ADANIENT"
+    ],
+    "v5_classic|v5_7": [
+      "ADANIENT"
+    ],
+    "v5_6|v5_7": [
+      "ADANIENT"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_7</b> with Rs +26,789 across 69 trades (91.3% win).",
+    "Laggard: <b>v4</b> with Rs +0 across 0 trades (0.0% win).",
+    "v5 trade-throttling fix <b>worked</b>: v5 did 71 trades today vs 59 for v5.6 (yesterday v5 was stuck at 10).",
+    "P&L gap: v5 is ahead by Rs 3,362. Investigate overlap matrix to see where they diverged.",
+    "<b>v5_7</b>: 91.3% win rate \u2014 excellent. Scale this engine up if P&L is positive."
+  ]
+}

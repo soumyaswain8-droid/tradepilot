@@ -1,0 +1,142 @@
+{
+  "date": "2026-04-30",
+  "generated_at": "2026-04-30T15:35:34.464165",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 0.0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -16734.72,
+      "trades": 22,
+      "wins": 3,
+      "losses": 19,
+      "longs": 22,
+      "shorts": 0,
+      "win_rate": 13.6,
+      "open_positions": 1,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -14343.76,
+      "trades": 23,
+      "wins": 5,
+      "losses": 18,
+      "longs": 22,
+      "shorts": 1,
+      "win_rate": 21.7,
+      "open_positions": 2,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -13314.8,
+      "trades": 19,
+      "wins": 7,
+      "losses": 12,
+      "longs": 18,
+      "shorts": 1,
+      "win_rate": 36.8,
+      "open_positions": 4,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_7",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -15014.84,
+      "trades": 24,
+      "wins": 6,
+      "losses": 18,
+      "longs": 23,
+      "shorts": 1,
+      "win_rate": 25.0,
+      "open_positions": 1,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 1
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "SUNPHARMA"
+    ],
+    "v5|v5_6": [
+      "SUNPHARMA"
+    ],
+    "v5_classic|v5_6": [
+      "ITC",
+      "SUNPHARMA"
+    ],
+    "v5_classic|v5_7": [
+      "ITC"
+    ],
+    "v5_6|v5_7": [
+      "ITC"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v4</b> with Rs +0 across 0 trades (0.0% win).",
+    "Laggard: <b>v5</b> with Rs -16,735 across 22 trades (13.6% win).",
+    "v5 trade-throttling fix <b>worked</b>: v5 did 22 trades today vs 19 for v5.6 (yesterday v5 was stuck at 10).",
+    "P&L gap: v5.6 is ahead by Rs 3,420. Investigate overlap matrix to see where they diverged.",
+    "<b>v5</b>: 13.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 21.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_6</b>: 36.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_7</b>: 25.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -1,0 +1,558 @@
+#!/usr/bin/env python3
+"""Render the cloud migration plan as a book-grade PDF."""
+import asyncio
+import subprocess
+from datetime import datetime
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = ROOT / "docs" / "reports" / "2026-04-20-cloud-migration-plan"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+CHART_DIR = OUT_DIR / "charts"
+CHART_DIR.mkdir(exist_ok=True)
+
+# ═══════════════════════════ CHARTS ═══════════════════════════
+
+# VPS cost comparison
+fig, ax = plt.subplots(figsize=(9, 4.5), dpi=160)
+providers = ["Hetzner\nCX21", "DigitalOcean\nBLR", "AWS\nt3.medium", "Oracle\nAmpere Free"]
+costs = [500, 860, 2800, 0]
+latencies = [120, 20, 15, 80]
+colors = ["#16a34a", "#4f46e5", "#dc2626", "#f59e0b"]
+bars = ax.bar(providers, costs, color=colors, edgecolor="white", linewidth=2)
+for b, c, l in zip(bars, costs, latencies):
+    ax.text(b.get_x() + b.get_width()/2, b.get_height() + 60,
+            f"₹{c}/mo\n~{l}ms", ha="center", fontsize=10, fontweight="bold")
+ax.set_ylabel("Monthly Cost (INR)", fontsize=11)
+ax.set_title("VPS Providers — Cost vs Latency to NSE Mumbai", fontsize=13, fontweight="bold")
+ax.set_ylim(0, max(costs) * 1.3)
+ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+plt.tight_layout()
+plt.savefig(CHART_DIR / "vps_comparison.png", dpi=160, bbox_inches="tight")
+plt.close()
+
+# 5-phase timeline
+fig, ax = plt.subplots(figsize=(10, 3.5), dpi=160)
+phases = ["Phase 1\nData Layer", "Phase 2\nProvision", "Phase 3\nDeploy", "Phase 4\nParallel Run", "Phase 5\nCutover"]
+days = [2, 1, 1, 1, 1]
+start = [0, 2, 3, 4, 5]
+colors_p = ["#16a34a", "#4f46e5", "#4f46e5", "#f59e0b", "#dc2626"]
+for i, (p, d, s, c) in enumerate(zip(phases, days, start, colors_p)):
+    ax.barh(i, d, left=s, color=c, edgecolor="white", linewidth=2, height=0.6)
+    ax.text(s + d/2, i, p, ha="center", va="center", fontsize=9.5, color="white", fontweight="bold")
+ax.set_yticks([]); ax.set_xticks(range(0, 8))
+ax.set_xticklabels(["Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon", ""], fontsize=10)
+ax.set_xlim(-0.5, 7)
+ax.set_ylim(-0.7, len(phases) - 0.3)
+ax.invert_yaxis()
+ax.set_title("5-Phase Migration Plan — 1 Week Calendar", fontsize=12, fontweight="bold")
+for s in ("top", "right", "left"): ax.spines[s].set_visible(False)
+ax.grid(axis="x", alpha=0.3)
+plt.tight_layout()
+plt.savefig(CHART_DIR / "migration_timeline.png", dpi=160, bbox_inches="tight")
+plt.close()
+
+# Before/after problem-solved
+fig, ax = plt.subplots(figsize=(10, 5), dpi=160)
+issues = ["Laptop\nsleep kills", "Yahoo 429\nrate limits", "Manual\n08:30 start", "Lid-open\nin bag", "Market-hours\nlock-in", "Home\nWiFi risk"]
+before = [10, 9, 8, 7, 6, 5]
+after = [1, 2, 1, 1, 1, 1]
+x = np.arange(len(issues))
+w = 0.35
+ax.bar(x - w/2, before, w, label="On Laptop (today)", color="#dc2626", edgecolor="white")
+ax.bar(x + w/2, after, w, label="On VPS (after)", color="#16a34a", edgecolor="white")
+ax.set_xticks(x)
+ax.set_xticklabels(issues, fontsize=9.5)
+ax.set_ylabel("Pain Score (higher = worse)", fontsize=11)
+ax.set_title("Problem Resolution — 6 Pain Points Addressed by Migration", fontsize=12, fontweight="bold")
+ax.legend(loc="upper right", fontsize=10)
+ax.set_ylim(0, 12)
+ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+plt.tight_layout()
+plt.savefig(CHART_DIR / "problems_solved.png", dpi=160, bbox_inches="tight")
+plt.close()
+
+# ═══════════════════════════ HTML ═══════════════════════════
+
+html = """<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TradePilot Cloud Migration Plan</title>
+<style>
+@page { size: 7in 10in; margin: 0.9in 0.7in 0.9in 0.8in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Charter, Georgia, serif; font-size: 10.5pt; line-height: 1.55; color: #1e1b4b; }
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif; font-weight: 600; }
+h1 { font-size: 26pt; margin: 0 0 0.4rem 0; }
+h2 { font-size: 17pt; margin: 0.8rem 0 0.5rem 0; color: #1e1b4b; }
+h3 { font-size: 13pt; margin: 0.6rem 0 0.3rem 0; color: #312e81; }
+h4 { font-size: 11pt; margin: 0.4rem 0 0.3rem 0; color: #4f46e5; }
+p { margin-bottom: 0.5rem; }
+
+.cover {
+  height: 9.5in;
+  background: linear-gradient(180deg, #ffffff, #dbeafe, #93c5fd, #60a5fa, #3b82f6);
+  padding: 1.7in 0.5in 0.5in;
+  text-align: center;
+  page-break-after: always;
+  border-radius: 8px;
+  position: relative;
+}
+.cover .badge { display: inline-block; background: #1e40af; color: white; padding: 5px 16px; border-radius: 999px; font-size: 8.5pt; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.cover h1 { font-size: 42pt; color: #1e1b4b; line-height: 1.05; }
+.cover .subtitle { font-size: 13pt; color: #1e40af; margin: 1rem 0; font-style: italic; }
+.cover .big-quote { font-size: 14pt; color: #1e1b4b; margin: 2rem 1rem; line-height: 1.4; font-weight: 600; }
+.cover .stats { display: flex; justify-content: space-around; margin-top: 2rem; }
+.cover .stat { background: rgba(255,255,255,0.6); padding: 0.8rem; border-radius: 8px; }
+.cover .stat .num { font-size: 24pt; font-weight: bold; color: #1e40af; font-family: 'Avenir Next'; }
+.cover .stat .lbl { font-size: 9pt; color: #1e3a8a; margin-top: 3px; }
+.cover .tagline { position: absolute; bottom: 0.5in; left: 0; right: 0; color: #1e1b4b; font-size: 10pt; font-style: italic; padding: 0 1in; }
+
+.report-meta {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem;
+  background: #f8fafc; padding: 0.7rem 1rem; border-left: 4px solid #4f46e5;
+  border-radius: 4px; margin: 0.7rem 0;
+  font-family: 'Avenir Next', sans-serif; font-size: 9.5pt;
+}
+.report-meta b { color: #4f46e5; }
+
+.chart-block { margin: 0.7rem 0; page-break-inside: avoid; }
+.chart-block img { width: 100%; border-radius: 6px; border: 1px solid #e5e7eb; }
+.chart-caption { font-size: 9pt; color: #6b7280; text-align: center; font-style: italic; margin-top: 0.25rem; }
+
+.callout {
+  background: #eff6ff; border-left: 4px solid #4f46e5;
+  padding: 0.8rem 1rem; margin: 0.7rem 0; border-radius: 4px;
+  page-break-inside: avoid;
+}
+.callout.green { background: #d1fae5; border-color: #16a34a; }
+.callout.amber { background: #fef3c7; border-color: #f59e0b; }
+.callout.red { background: #fee2e2; border-color: #dc2626; }
+.callout h3 { margin-top: 0; color: #1e40af; }
+.callout.green h3 { color: #065f46; }
+.callout.amber h3 { color: #78350f; }
+.callout.red h3 { color: #991b1b; }
+
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 0.5rem 0; page-break-inside: avoid; }
+th { background: #f1f5f9; padding: 0.4rem 0.6rem; text-align: left; font-weight: 600; font-family: 'Avenir Next', sans-serif; border-bottom: 2px solid #4f46e5; }
+td { padding: 0.3rem 0.6rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+td.num { text-align: right; font-family: 'Avenir Next'; }
+.pick { background: #d1fae5; }
+.pick td:first-child::after { content: " ← pick"; color: #065f46; font-weight: 600; font-size: 8.5pt; }
+
+code { font-family: 'Courier New', monospace; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 9pt; color: #be185d; }
+
+.arch-box {
+  background: linear-gradient(135deg, #eef2ff, #c7d2fe);
+  border: 2px solid #4f46e5; border-radius: 8px;
+  padding: 1rem; margin: 0.8rem 0; page-break-inside: avoid;
+  font-family: 'Courier New', monospace; font-size: 9pt;
+  line-height: 1.6; white-space: pre; color: #1e1b4b;
+}
+
+.phase-card {
+  border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.7rem 0.9rem;
+  margin: 0.5rem 0; background: white; page-break-inside: avoid;
+  border-left: 4px solid #4f46e5;
+}
+.phase-card .hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.3rem; }
+.phase-card .num { font-family: 'Avenir Next'; font-weight: bold; color: #4f46e5; font-size: 13pt; }
+.phase-card .when { font-size: 8.5pt; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; color: #4b5563; font-weight: 600; }
+.phase-card .title { font-size: 11pt; font-weight: 600; color: #1e1b4b; }
+.phase-card .work { font-size: 9.5pt; color: #4b5563; margin-top: 0.3rem; }
+.phase-card .risk { font-size: 9pt; color: #78350f; margin-top: 0.3rem; }
+.phase-card .risk b { color: #92400e; }
+
+.page-break { page-break-before: always; }
+
+.back-cover {
+  background: linear-gradient(135deg, #1e1b4b, #1e40af, #3b82f6);
+  color: white; padding: 1.3in 0.6in 0.8in; text-align: center;
+  page-break-before: always; border-radius: 8px;
+}
+.back-cover h2 { color: white; font-size: 22pt; margin-bottom: 1rem; }
+.back-cover p { font-size: 10.5pt; color: #c7d2fe; margin: 0.3rem 0; line-height: 1.5; }
+.back-cover .big { font-size: 14pt; color: white; font-style: italic; margin: 1rem 0 1.5rem; }
+.back-cover .footer { font-size: 9pt; color: #a5b4fc; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); }
+</style></head><body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">MIGRATION PLAN</div>
+  <h1>Laptop<br>→ Cloud.</h1>
+  <div class="subtitle">Moving TradePilot from a laptop in a bag to always-on infrastructure</div>
+  <div class="big-quote">"Yahoo rate-limits, sleep bugs, and manual morning starts are symptoms of the same disease:<br>the wrong host."</div>
+  <div class="stats">
+    <div class="stat"><div class="num">5</div><div class="lbl">Phase plan</div></div>
+    <div class="stat"><div class="num">7</div><div class="lbl">Days end-to-end</div></div>
+    <div class="stat"><div class="num">₹860</div><div class="lbl">Monthly cost</div></div>
+    <div class="stat"><div class="num">6</div><div class="lbl">Pain points solved</div></div>
+  </div>
+  <div class="tagline">TradePilot cloud migration · authored 2026-04-20 · target Go-Live 2026-04-27</div>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<h2>Why Now</h2>
+<div class="report-meta">
+  <div><b>Author</b></div><div>Soumya Swain · soumya@sidewall.in</div>
+  <div><b>Trigger</b></div><div>Yahoo Finance 429 rate limits blocked Monday morning retrain. Second infrastructure failure in 7 days.</div>
+  <div><b>Goal</b></div><div>Deterministic daily runs, no manual pre-flight, no sleep bugs</div>
+  <div><b>Recommendation</b></div><div>DigitalOcean Bangalore droplet + Shoonya broker API + systemd services</div>
+  <div><b>Timeline</b></div><div>1 week from decision, parallel-run cutover (zero-risk)</div>
+  <div><b>Monthly cost</b></div><div>₹860 VPS + ₹0 Shoonya (free with trading account) = <b>₹860/month</b></div>
+</div>
+
+<div class="callout red">
+  <h3>🔥 The repeating pattern</h3>
+  <p>Apr 17: Laptop slept in bag while markets were open — all 5 paper-trade engines died.<br>
+  Apr 20: Yahoo returned HTTP 429 during morning retrain — 10 minutes of scrambling before market open.<br>
+  These are not bugs in our code. They are fundamental limits of the platform: <b>a laptop is the wrong host for a 24/7 trading system.</b></p>
+</div>
+
+<h2>Target Architecture</h2>
+
+<div class="arch-box">┌─────────────────────────────────────────────────────────┐
+│  DigitalOcean VPS · Bangalore · 2 vCPU / 2 GB / 50 GB   │
+│  ┌─────────────┐   ┌──────────────┐   ┌───────────────┐ │
+│  │  Cron 08:30 │→ │ pipeline.sh  │→ │  7 Python engs │ │
+│  │  daily IST  │  │ + retrain    │  │  + Rust engine │ │
+│  └─────────────┘  └──────────────┘  │  + Flask UI    │ │
+│                                      └───────────────┘ │
+│       systemd restart=always         Telegram alerts    │
+│            │                                │           │
+│            ▼                                ▼           │
+│  ┌──────────────────────┐      ┌────────────────────┐  │
+│  │ Shoonya Broker API   │      │  You, anywhere     │  │
+│  │  (primary data feed) │      │  iPhone / Laptop   │  │
+│  └──────────────────────┘      └────────────────────┘  │
+│  ┌──────────────────────┐                              │
+│  │ Yahoo Finance        │                              │
+│  │  (fallback only)     │                              │
+│  └──────────────────────┘                              │
+└─────────────────────────────────────────────────────────┘</div>
+
+<div class="chart-block">
+  <img src="charts/problems_solved.png"/>
+  <div class="chart-caption">6 pain points are either eliminated or dramatically reduced by the cloud move</div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>VPS Provider Comparison</h2>
+
+<div class="chart-block">
+  <img src="charts/vps_comparison.png"/>
+  <div class="chart-caption">Cost vs latency to NSE Mumbai. Bangalore-hosted DigitalOcean is the sweet spot.</div>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Provider</th><th>Specs</th><th>Mumbai Latency</th><th class="num">Cost/mo</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Hetzner CX21</td><td>3 vCPU, 4 GB</td><td>~120 ms</td><td class="num">₹500</td>
+      <td>EU-based. Great value, higher latency hurts intraday data refresh</td>
+    </tr>
+    <tr class="pick">
+      <td>DigitalOcean BLR</td><td>2 vCPU, 2 GB</td><td>&lt;20 ms</td><td class="num">₹860</td>
+      <td>Bangalore. Right abstraction level. Simple UX. Predictable pricing</td>
+    </tr>
+    <tr>
+      <td>AWS t3.medium</td><td>2 vCPU, 4 GB</td><td>&lt;15 ms</td><td class="num">₹2,800</td>
+      <td>Mumbai region. 3× cost for complexity you don't need</td>
+    </tr>
+    <tr>
+      <td>Oracle Ampere Free</td><td>4 vCPU, 24 GB</td><td>~80 ms</td><td class="num">₹0</td>
+      <td>Actually free. ARM arch (Rust rebuild needed). Risk: account cancellation</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout green">
+  <h3>Why DigitalOcean wins</h3>
+  <p><b>Latency:</b> &lt;20 ms to NSE means Yahoo/Shoonya calls return in under half a second — critical during the 9:15-9:20 opening volatility.<br>
+  <b>Cost predictability:</b> Fixed ₹860/mo. No AWS surprise bills from bandwidth or API calls.<br>
+  <b>Simplicity:</b> 5-minute droplet provisioning. One-click snapshots. Clean dashboard. You won't need to hire a DevOps.<br>
+  <b>SSH-first:</b> Same workflow as laptop — git pull, systemd restart, done.</p>
+</div>
+
+<div class="page-break"></div>
+
+<h2>5-Phase Plan — 1 Week</h2>
+
+<div class="chart-block">
+  <img src="charts/migration_timeline.png"/>
+  <div class="chart-caption">One week from green-light to cutover. Phase 4 (Fri) is parallel-run — zero-risk verification.</div>
+</div>
+
+<div class="phase-card">
+  <div class="hdr">
+    <span class="num">Phase 1</span>
+    <span class="when">Tuesday – Wednesday</span>
+  </div>
+  <div class="title">Data Layer Fix — Shoonya Primary, Yahoo Fallback</div>
+  <div class="work">
+    Modify <code>prototype/v4/composite_scorer.py</code> to prefer Shoonya WebSocket when available,
+    fall back to <code>yfinance</code> if Shoonya disconnects. Existing <code>scripts/shoonya-download.py</code>
+    already proves connectivity works. Add retry-with-exponential-backoff for Yahoo calls.
+  </div>
+  <div class="risk"><b>Risk:</b> Low. Shoonya integration is isolated. Yahoo stays as safety net.</div>
+</div>
+
+<div class="phase-card">
+  <div class="hdr">
+    <span class="num">Phase 2</span>
+    <span class="when">Wednesday</span>
+  </div>
+  <div class="title">Provision VPS</div>
+  <div class="work">
+    Sign up DigitalOcean. Create Bangalore droplet (2 vCPU / 2 GB / 50 GB, Ubuntu 24.04).
+    SSH key auth (no passwords). UFW firewall (allow only 22 + 5050 + 8080 + Cloudflare tunnel).
+    Fail2ban. Install Python 3.11, Rust, PostgreSQL 15, systemd.
+  </div>
+  <div class="risk"><b>Risk:</b> Low. Standard provisioning. ~2 hours total.</div>
+</div>
+
+<div class="phase-card">
+  <div class="hdr">
+    <span class="num">Phase 3</span>
+    <span class="when">Thursday</span>
+  </div>
+  <div class="title">Code Deploy + Systemd Services</div>
+  <div class="work">
+    <code>git clone</code> repo. <code>rsync</code> ML models (<code>prototype/v4/models/archive/*</code>) + CSV data.
+    <code>cargo build --release</code> Rust engine. Write systemd unit files for each engine
+    (Restart=always, User=tradepilot, EnvironmentFile=.env). Enable cron for
+    <code>run-v5-tomorrow.sh</code> at 08:30 IST.
+  </div>
+  <div class="risk"><b>Risk:</b> Medium. Rust compile takes ~4 min. Systemd units need careful dependency ordering.</div>
+</div>
+
+<div class="phase-card">
+  <div class="hdr">
+    <span class="num">Phase 4</span>
+    <span class="when">Friday</span>
+  </div>
+  <div class="title">Parallel Run</div>
+  <div class="work">
+    Both laptop AND VPS run the same market day. Telegram alerts from both distinguish source.
+    At EOD, compare P&L engine-by-engine — should be identical. If P&L diverges &gt;1%, investigate.
+  </div>
+  <div class="risk"><b>Risk:</b> Low. Paper trading only, no real money. Divergence is diagnostic, not damaging.</div>
+</div>
+
+<div class="phase-card">
+  <div class="hdr">
+    <span class="num">Phase 5</span>
+    <span class="when">Following Monday</span>
+  </div>
+  <div class="title">Cutover</div>
+  <div class="work">
+    Laptop engines stopped permanently. VPS is primary. Laptop kept as cold backup for 2 weeks
+    (can restart for emergency recovery). Monitor VPS Telegram feed for first week — if
+    uptime stays above 99%, decommission laptop completely.
+  </div>
+  <div class="risk"><b>Risk:</b> Low. Rollback is just restarting laptop. No data loss — position state syncs nightly.</div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>Key Design Decisions</h2>
+
+<h3>1. Data source</h3>
+<table>
+  <thead><tr><th>Option</th><th>Reliability</th><th>Cost</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>Yahoo Finance (current)</td><td>Low — 429 rate limits</td><td>Free</td><td>Fallback only</td></tr>
+    <tr class="pick"><td>Shoonya broker API</td><td>High — official NSE feed</td><td>Free w/ account</td><td>Primary</td></tr>
+    <tr><td>Paid vendor (Truedata, etc)</td><td>Highest</td><td>₹2000+/mo</td><td>Overkill for paper trading</td></tr>
+  </tbody>
+</table>
+
+<h3>2. Storage</h3>
+<p>Keep position state in JSON files (simple, atomic writes already applied in learning #004).
+DevPilot PostgreSQL stays on VPS for analytics. Nightly <code>pg_dump</code> to a backup disk.
+ML model archive (<code>prototype/v4/models/archive/YYYY-MM-DD/</code>) remains the rollback truth.</p>
+
+<h3>3. Process manager</h3>
+<p>Replace <code>nohup + custom watchdog</code> with systemd. Each engine is a <code>.service</code> file
+with <code>Restart=always</code>. Systemd handles: crash-restart, log rotation, startup ordering,
+dependency graph, user/group isolation. Zero custom monitoring code needed.</p>
+
+<div class="callout amber">
+  <h3>Why not Docker?</h3>
+  <p>Tempting, but unnecessary complexity for this workload. Docker adds ~300 MB per container,
+  image rebuild per deploy, and extra layer of debugging. Native systemd with Python venv is
+  simpler for 7-process workload. Reconsider when we add horizontal scaling or multi-tenant.</p>
+</div>
+
+<h3>4. Remote access</h3>
+<p>Three channels:</p>
+<table>
+  <thead><tr><th>Channel</th><th>Use case</th><th>Setup</th></tr></thead>
+  <tbody>
+    <tr><td>SSH</td><td>Live debugging, deploys</td><td>SSH keys on iPhone/laptop, 5 min</td></tr>
+    <tr><td>Flask dashboard</td><td>Mobile viewing of status/P&L</td><td>Cloudflare Tunnel → free subdomain</td></tr>
+    <tr><td>Telegram</td><td>Push alerts</td><td>Already working</td></tr>
+  </tbody>
+</table>
+
+<h3>5. Secrets</h3>
+<p><code>.env</code> file on VPS with <code>0600</code> permissions. Contains Telegram bot token,
+Shoonya API creds, DB password. Never committed to git. systemd loads via
+<code>EnvironmentFile=/home/tradepilot/.env</code>. Rotate Shoonya password quarterly.</p>
+
+<div class="page-break"></div>
+
+<h2>Before / After Pain Matrix</h2>
+
+<table>
+  <thead><tr><th>Problem today</th><th>Root cause</th><th>Resolution on VPS</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Laptop sleep kills engines</td>
+      <td>macOS clamshell firmware event</td>
+      <td>VPS runs 24/7. No physical lid.</td>
+    </tr>
+    <tr>
+      <td>Yahoo HTTP 429 during morning retrain</td>
+      <td>Laptop IP shared with other yfinance users</td>
+      <td>Shoonya official feed. Different host, different IP if needed.</td>
+    </tr>
+    <tr>
+      <td>Manual 08:30 IST start every day</td>
+      <td>No scheduling on laptop</td>
+      <td>systemd timer fires automatically. You sleep in.</td>
+    </tr>
+    <tr>
+      <td>Lid-open-in-bag gymnastics</td>
+      <td>No VPS to run on</td>
+      <td>Laptop freed for coding. No gymnastics.</td>
+    </tr>
+    <tr>
+      <td>Home WiFi drop kills live session</td>
+      <td>Single network dependency</td>
+      <td>Data center uplink 99.99%. Your WiFi is just for dashboard viewing.</td>
+    </tr>
+    <tr>
+      <td>Location lock — only works from Mumbai desk</td>
+      <td>Physical machine</td>
+      <td>SSH from phone anywhere. Push alerts reach you in meetings.</td>
+    </tr>
+    <tr>
+      <td>Battery life / heat stress</td>
+      <td>Laptop isn't designed for 6-hour CPU sessions</td>
+      <td>VPS has proper cooling and power. Laptop gets its life back.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Cost-Benefit</h2>
+
+<div class="callout green">
+  <h3>Annual math</h3>
+  <p><b>Direct cost:</b> ₹860/mo × 12 = <b>₹10,320/year</b> for the VPS.<br>
+  <b>Data:</b> Shoonya is ₹0. Yahoo as fallback is ₹0.<br>
+  <b>Time savings:</b> 10 min/day of manual pre-flight × 250 trading days = 41 hours of your life back.<br>
+  <b>Trade loss prevention:</b> Apr 17's laptop-sleep event lost ~Rs 500 of realized wins. One prevented incident pays for 7 months of VPS.<br>
+  <b>Psychological:</b> No more bag-gymnastics. No more pre-market anxiety. Priceless.</p>
+</div>
+
+<h2>What You Need To Decide</h2>
+
+<table>
+  <thead><tr><th>Decision</th><th>Options</th><th>Default</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Provider</td>
+      <td>DigitalOcean BLR / Hetzner / AWS / Oracle</td>
+      <td>DigitalOcean BLR ₹860/mo</td>
+    </tr>
+    <tr>
+      <td>Shoonya API access</td>
+      <td>Use existing account / Open new / Skip for now</td>
+      <td>Use existing (you have one)</td>
+    </tr>
+    <tr>
+      <td>Go-Live day</td>
+      <td>Next Monday / Delay by 1 week / Don't migrate</td>
+      <td>Next Monday (Apr 27)</td>
+    </tr>
+    <tr>
+      <td>Keep laptop as backup?</td>
+      <td>2 weeks / 1 month / Decommission immediately</td>
+      <td>2 weeks cold backup</td>
+    </tr>
+    <tr>
+      <td>Paid data vendor?</td>
+      <td>None (Shoonya) / Truedata / TrueBars</td>
+      <td>None — revisit after 3 months</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Next Concrete Steps</h2>
+
+<ol style="margin-left: 1.5rem; line-height: 1.7; font-size: 10.5pt;">
+  <li><b>Today:</b> Approve or modify this plan</li>
+  <li><b>Tomorrow:</b> Sign up DigitalOcean · Get Shoonya API creds from your broker</li>
+  <li><b>Wednesday:</b> I spin up the VPS, run Phase 1 Shoonya integration locally first</li>
+  <li><b>Thursday-Friday:</b> Phase 3 deploy + Phase 4 parallel run</li>
+  <li><b>Next Monday:</b> Cutover. VPS is primary. You sleep in on Tuesday.</li>
+</ol>
+
+<!-- BACK COVER -->
+<div class="back-cover">
+  <h2>Stop Fighting the Host.</h2>
+  <p>The laptop is a great dev machine. It is not a trading platform.</p>
+  <p>Every hour spent keeping it alive — caffeinate hacks, lid-open bags,
+  sudo pmset incantations — is an hour not spent on strategy.</p>
+  <div class="big">"The best trading infrastructure is the one you stop noticing."</div>
+  <p>Approve the plan. One week later, you'll never touch run-v5-tomorrow.sh on your laptop again.</p>
+  <div class="footer">
+    TradePilot Cloud Migration Plan · Soumya Swain · soumya@sidewall.in<br>
+    Authored 2026-04-20 · Target Go-Live 2026-04-27
+  </div>
+</div>
+
+</body></html>
+"""
+
+html_path = OUT_DIR / "cloud-migration-plan.html"
+pdf_path = OUT_DIR / "cloud-migration-plan.pdf"
+html_path.write_text(html)
+
+async def render():
+    from pyppeteer import launch
+    browser = await launch(
+        executablePath="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        headless=True,
+        handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False,
+        args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox',
+              '--disable-web-security', '--allow-file-access-from-files']
+    )
+    page = await browser.newPage()
+    await page.goto(f"file://{html_path.resolve()}", waitUntil='networkidle0', timeout=60000)
+    await asyncio.sleep(2)
+    await page.pdf({
+        'path': str(pdf_path),
+        'printBackground': True,
+        'preferCSSPageSize': True,
+        'displayHeaderFooter': False,
+        'margin': {'top': '0', 'right': '0', 'bottom': '0', 'left': '0'}
+    })
+    await browser.close()
+
+asyncio.get_event_loop().run_until_complete(render())
+
+from pypdf import PdfReader
+r = PdfReader(pdf_path)
+print(f"HTML: {html_path}")
+print(f"PDF:  {pdf_path}")
+print(f"Pages: {len(r.pages)}")
+print(f"Size:  {pdf_path.stat().st_size // 1024} KB")
+subprocess.run(["open", str(pdf_path)])

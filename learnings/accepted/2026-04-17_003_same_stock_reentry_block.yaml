@@ -1,0 +1,60 @@
+id: 2026-04-17_003
+title: "Block same-stock re-entry after stoploss"
+observed_date: 2026-04-17
+observed_by: claude-session
+
+observation: |
+  v5 shorted ENRIN three times on the same day, hitting stoploss each time:
+      09:51  SHORT ENRIN @~2901 → stoploss -Rs 1,098
+      ~11:50 SHORT ENRIN @3032.70 → stoploss -Rs 1,314
+      ~12:36 SHORT ENRIN @3029.50 → stoploss -Rs 1,154
+  Total damage on single stock: -Rs 3,566 across 3 trades.
+
+  The signal generator kept firing ENRIN SHORT because the regime/score
+  didn't change. No circuit breaker for "stop trying this stock after N losses".
+
+evidence:
+  stock: ENRIN
+  trades: 3
+  losses: 3
+  total_pnl: -3566
+  time_spans: "09:51 to 12:36 (~3 hours)"
+  each_trade_worsened: true  # Each subsequent short entered at a higher price
+
+proposed_rule: |
+  Per-stock per-day circuit breaker:
+    - After 1 stoploss on a stock in a direction (LONG or SHORT), block
+      further entries on that stock in that direction for the day.
+    - Allow opposite direction (if system flips to LONG, that's valid).
+
+  Implementation: maintain a `blocked_same_day` set keyed by (symbol, direction).
+  Add check in deploy_signals before entering new position.
+
+requires_backtest: true
+backtest_scope:
+  - Apr 10 to Apr 17
+  - Question: how many trades would have been blocked?
+  - Question: would some "comeback" trades have been missed (i.e., lose once, win second time)?
+  - Check each blocked trade's alternative outcome
+
+potential_risk: |
+  - Some stocks do legitimately fake out then run. Blocking second entry
+    after first SL would miss those. Backtest must quantify this.
+  - Consider: relax to "2 losses then block" instead of "1 loss then block"
+    if backtest shows single-loss block is too aggressive.
+
+status: accepted_merged
+reviewed_by: "soumya (via claude-session)"
+review_decision: "accept_lenient"
+review_notes: "ACCEPTED on 2026-04-20 with LENIENT policy (max_sl=2). Backtest: strict (1-SL) +Rs 2,157, lenient (2-SL) +Rs 1,722. Both positive. Lenient chosen because: only 4 false positives vs 14 (strict); v5 specifically prefers lenient (+Rs 1,256 vs -Rs 160); still catches Apr 17 ENRIN cascades (all had 3 SLs). Universal policy for all engines."
+backtest_result:
+  strict_1sl:
+    net_pnl_impact: 2157
+    trades_blocked: 28
+    false_positive_winners_blocked: 14
+  lenient_2sl:
+    net_pnl_impact: 1722
+    trades_blocked: 4
+    false_positive_winners_blocked: 0
+  chosen_policy: "lenient_2sl"
+  universal_across_engines: true

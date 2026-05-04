@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>TradePilot EOD Comparison — 2026-04-28</title>
+<style>
+@page { size: A4; margin: 18mm 14mm; }
+* { box-sizing: border-box; }
+body { font-family: Charter, Georgia, 'Times New Roman', serif; font-size: 11pt;
+       color: #111; line-height: 1.55; margin: 0; padding: 0; background: #fff; }
+h1, h2, h3 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif;
+              margin: 0.6em 0 0.3em; }
+h1 { font-size: 26pt; color: #1e1b4b; border-bottom: 3px solid #4f46e5; padding-bottom: 6px; }
+h2 { font-size: 16pt; color: #312e81; margin-top: 1.4em; }
+h3 { font-size: 13pt; color: #4338ca; }
+.cover { text-align: center; padding: 40px 0 20px; background: linear-gradient(180deg, #fff, #eef2ff); border-radius: 8px; margin-bottom: 22px; }
+.cover .badge { display: inline-block; background: #4f46e5; color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 10pt; font-weight: 600; letter-spacing: 1px; }
+.cover h1 { border: none; margin-top: 14px; }
+.cover .subtitle { color: #475569; font-style: italic; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 10.5pt; }
+thead th { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff;
+           padding: 8px 10px; text-align: left; font-family: 'Avenir Next', sans-serif; }
+td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
+tr.row-win td { background: #f0fdf4; }
+tr.row-loss td { background: #fef2f2; }
+tr.row-lead td { background: #fff7ed; font-weight: 600; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.green { color: #15803d; font-weight: 600; }
+.red { color: #b91c1c; font-weight: 600; }
+.muted { color: #64748b; }
+.insight { background: #eff6ff; border-left: 4px solid #2563eb; padding: 10px 14px;
+            margin: 8px 0; border-radius: 4px; }
+.insight.warn { background: #fff7ed; border-left-color: #f59e0b; }
+.insight.good { background: #f0fdf4; border-left-color: #16a34a; }
+.chart { text-align: center; margin: 1em 0; }
+.chart img { max-width: 100%; border: 1px solid #e2e8f0; border-radius: 6px;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.small { font-size: 9pt; }
+.page-break { page-break-before: always; }
+.kpi-row { display: flex; gap: 10px; margin: 10px 0; }
+.kpi { flex: 1; padding: 14px; border-radius: 8px; text-align: center;
+        background: #f8fafc; border: 1px solid #e2e8f0; }
+.kpi .label { font-size: 9pt; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+.kpi .value { font-size: 20pt; font-weight: 700; margin-top: 4px; }
+.kpi.pos .value { color: #15803d; }
+.kpi.neg .value { color: #b91c1c; }
+.footer { text-align: center; color: #64748b; font-size: 9pt; margin-top: 2em;
+           padding-top: 12px; border-top: 1px solid #e5e7eb; }
+</style></head>
+<body>
+<div class="cover">
+  <span class="badge">TRADEPILOT · EOD REPORT</span>
+  <h1>Engine Comparison — 2026-04-28</h1>
+  <div class="subtitle">Side-by-side performance across 6 engines · generated 15:35:10</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi pos"><div class="label">Today's Winner</div>
+    <div class="value">v5</div>
+    <div class="small">Rs +4,897 · 88 trades · 64.8% wins</div>
+  </div>
+  <div class="kpi"><div class="label">Total Engines</div>
+    <div class="value">6</div>
+    <div class="small">Profitable: 4 · Negative: 2</div>
+  </div>
+  <div class="kpi"><div class="label">Best Single Trade</div>
+    <div class="value">Rs +0</div>
+    <div class="small">- · -</div>
+  </div>
+</div>
+
+<h2>1. Scoreboard</h2>
+<table><thead><tr>
+  <th>Rank</th><th>Engine</th><th class="num">Trades</th><th class="num">Win %</th>
+  <th class="num">Avg Win</th><th class="num">Avg Loss</th><th class="num">Net P&L</th>
+</tr></thead><tbody>
+<tr class="row-lead">
+  <td>1</td>
+  <td><b>v5</b></td>
+  <td class="num">88</td>
+  <td class="num">64.8%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +4,897</td>
+</tr>
+<tr class="row-win">
+  <td>2</td>
+  <td><b>v5_7</b></td>
+  <td class="num">79</td>
+  <td class="num">59.5%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +4,487</td>
+</tr>
+<tr class="row-win">
+  <td>3</td>
+  <td><b>v5_6</b></td>
+  <td class="num">76</td>
+  <td class="num">61.8%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +3,773</td>
+</tr>
+<tr class="row-win">
+  <td>4</td>
+  <td><b>v5_classic</b></td>
+  <td class="num">66</td>
+  <td class="num">57.6%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +1,677</td>
+</tr>
+<tr class="row-loss">
+  <td>5</td>
+  <td><b>v4</b></td>
+  <td class="num">0</td>
+  <td class="num">0.0%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +0</td>
+</tr>
+<tr class="row-loss">
+  <td>6</td>
+  <td><b>v5_3</b></td>
+  <td class="num">0</td>
+  <td class="num">0.0%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +0</td>
+</tr>
+<tr><td>-</td><td>v5_2</td><td colspan="5" class="muted">no_data</td></tr>
+</tbody></table>
+
+<div class="chart"><img src="charts/scoreboard.png" alt="Scoreboard"></div>
+
+<div class="page-break"></div>
+<h2>2. P&L Timeline</h2>
+<p class="muted">How each engine's profit evolved through the day (30-min snapshots).</p>
+<div class="chart"><img src="charts/pnl_timeline.png" alt="PnL Timeline"></div>
+
+<h2>3. Win Rate vs Trade Count</h2>
+<p class="muted">Bubble size = absolute P&L. Top-right is the sweet spot.</p>
+<div class="chart"><img src="charts/winrate_bubble.png" alt="Win Rate vs Trades"></div>
+
+<div class="page-break"></div>
+<h2>4. Exit Reason Mix</h2>
+<p class="muted">What ended each trade — reveals whether stops, targets, or flips dominate.</p>
+<div class="chart"><img src="charts/exit_mix.png" alt="Exit Mix"></div>
+
+<h2>5. Trade Overlap Matrix</h2>
+<p class="muted">Number of symbols both engines touched today. High overlap with very different P&L = you've found the part of the logic that matters.</p>
+<table><thead><tr><th>Pair</th><th class='num'>Shared symbols</th><th class='num'>P&L gap (a - b)</th><th>Sample</th></tr></thead><tbody><tr><td><b>v5_classic</b> vs <b>v5_7</b></td><td class='num'>3</td><td class='num'>Rs -2,810</td><td class='small muted'>COFORGE, RELIANCE, SUNPHARMA</td></tr>
+<tr><td><b>v5_classic</b> vs <b>v5_6</b></td><td class='num'>2</td><td class='num'>Rs -2,095</td><td class='small muted'>RELIANCE, SUNPHARMA</td></tr>
+<tr><td><b>v5_6</b> vs <b>v5_7</b></td><td class='num'>2</td><td class='num'>Rs -715</td><td class='small muted'>RELIANCE, SUNPHARMA</td></tr>
+<tr><td><b>v5</b> vs <b>v5_classic</b></td><td class='num'>1</td><td class='num'>Rs +3,220</td><td class='small muted'>SUNPHARMA</td></tr>
+<tr><td><b>v5</b> vs <b>v5_6</b></td><td class='num'>1</td><td class='num'>Rs +1,124</td><td class='small muted'>SUNPHARMA</td></tr>
+<tr><td><b>v5</b> vs <b>v5_7</b></td><td class='num'>1</td><td class='num'>Rs +410</td><td class='small muted'>SUNPHARMA</td></tr></tbody></table>
+
+<div class="page-break"></div>
+<h2>6. Tonight's Tune-ups (auto-surfaced)</h2>
+<p class="muted">Patterns the watchdog surfaced from today's data. Treat as starting points, not conclusions.</p>
+<div class="insight good">Winner: <b>v5</b> with Rs +4,897 across 88 trades (64.8% win).</div>
+<div class="insight warn">Laggard: <b>v5_3</b> with Rs +0 across 0 trades (0.0% win).</div>
+<div class="insight good">v5 trade-throttling fix <b>worked</b>: v5 did 88 trades today vs 76 for v5.6 (yesterday v5 was stuck at 10).</div>
+<div class="insight">P&L gap: v5 is ahead by Rs 1,124. Investigate overlap matrix to see where they diverged.</div>
+<div class="insight warn"><b>v5_classic</b>: 57.6% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_7</b>: 59.5% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+
+<h2>7. Per-Engine Detail</h2>
+
+<h3>v4 — Rs +0 · 0 trades · 0.0%</h3>
+<p class="small muted">Regime: ? · open positions at EOD: 0 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5 — Rs +4,897 · 88 trades · 64.8%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 1 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5_classic — Rs +1,677 · 66 trades · 57.6%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 4 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5_3 — Rs +0 · 0 trades · 0.0%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 0 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5_6 — Rs +3,773 · 76 trades · 61.8%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 2 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5_7 — Rs +4,487 · 79 trades · 59.5%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 3 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<div class="footer">TradePilot watchdog · report 2026-04-28 · no commits made · uncommitted engine diffs preserved on main</div>
+</body></html>

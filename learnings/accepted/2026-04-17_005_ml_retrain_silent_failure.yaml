@@ -1,0 +1,65 @@
+id: 2026-04-17_005
+title: "ML retrain has been silently failing for 8 days"
+observed_date: 2026-04-17
+observed_by: claude-session
+
+observation: |
+  The ML retrain step in run-v5-tomorrow.sh has been crashing silently every
+  morning from 2026-04-11 through 2026-04-17. The script ran, logged
+  "Building training dataset...", then crashed with:
+      ValueError: Missing column provided to 'parse_dates': 'Date'
+  The run-v5-tomorrow.sh wrapper redirects output to logs/ml-retrain.log
+  and does not check exit code, so downstream steps continued as if training
+  succeeded. The lgbm_intraday.txt file dated 2026-04-10 was never replaced.
+
+  Impact on v5 performance:
+      Apr 10 (fresh model): +Rs 40,480
+      Apr 13 (3 days stale): +Rs 14,303
+      Apr 15 (5 days stale): +Rs 49,713 (outlier — trending market)
+      Apr 16 (6 days stale): +Rs 17,295
+      Apr 17 (7 days stale): -Rs 1,482  ← first losing day
+
+  Root cause of retrain failure: mixed CSV schemas. Some intraday files
+  had column "Datetime", some had "Date", some had unnamed first column.
+  ml_engine.py hardcoded parse_dates=["Date"] and crashed on non-standard files.
+
+evidence:
+  model_file_timestamp: "2026-04-10 09:29:59"
+  days_stale_on_apr_17: 7
+  csv_files_with_wrong_schema:
+    - "132 files with Datetime column (needed Date)"
+    - "19 files with unnamed first column (,Open,High,Low,...)"
+    - "2 files with Price column (yfinance multiindex artifact)"
+  fix_applied: "Normalized all 2399 daily + 201 intraday CSVs to Date column"
+  successful_retrain: "2026-04-18 — archived as models/archive/2026-04-18/"
+
+proposed_rule: |
+  Three-layer defense for ML retrain:
+
+  1. SCHEMA NORMALIZATION at CSV write time:
+     In run-v5-tomorrow.sh data refresh, always rename df.columns[0] to "Date"
+     regardless of what yfinance returned. One line fix.
+
+  2. MODEL FRESHNESS GUARD in v5 engine:
+     On startup, check os.path.getmtime(MODEL_PATH). If age > 3 days,
+     refuse to trade and alert via Telegram. Don't silently trade with
+     stale ML.
+
+  3. RETRAIN FAIL-LOUD in run-v5-tomorrow.sh:
+     After python3 -m prototype.v4.ml_engine --train, check exit code.
+     If nonzero, send Telegram alert AND mark the day as "ML_STALE" in the
+     session metadata. Optionally halt all engines.
+
+requires_backtest: false
+rationale: "These are operational guards, not strategy changes."
+
+potential_risk: |
+  - Freshness guard could false-positive on a legitimate weekend (2+ days without
+    retrain). Solution: 3-day threshold accommodates weekends.
+  - Fail-loud on retrain crash could wake user in middle of night. Solution:
+    only alert during business hours (before 09:00 IST).
+
+status: accepted_merged
+reviewed_by: "soumya (via claude-session)"
+review_decision: "accept"
+review_notes: "Merged 2026-04-18. Three-part: (1) CSV normalization done same day, (2) freshness guard check_model_freshness() added to engine main(), (3) run-v5-tomorrow.sh already fail-loud. All 3 live."

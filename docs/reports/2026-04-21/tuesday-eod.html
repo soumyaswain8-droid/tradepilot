@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TradePilot Tuesday EOD 2026-04-21</title>
+<style>
+@page { size: 11in 14in; margin: 0.8in 0.6in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Charter, Georgia, serif; font-size: 10pt; line-height: 1.5; color: #1e1b4b; }
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif; font-weight: 600; }
+h1 { font-size: 30pt; margin: 0 0 0.3rem 0; }
+h2 { font-size: 17pt; margin: 0.6rem 0 0.5rem 0; color: #1e1b4b; }
+h3 { font-size: 13pt; margin: 0.6rem 0 0.3rem 0; color: #312e81; }
+h4 { font-size: 11pt; margin: 0.3rem 0; color: #4f46e5; }
+p { margin-bottom: 0.5rem; }
+.tag { font-size: 8pt; font-weight: 400; opacity: 0.7; }
+.small { font-size: 8.5pt; }
+
+.cover {
+  height: 12in;
+  background: linear-gradient(180deg, #ffffff, #f0f4ff, #dbeafe, #bfdbfe, #93c5fd);
+  padding: 2in 0.6in 0.6in;
+  text-align: center;
+  page-break-after: always;
+  border-radius: 8px;
+  position: relative;
+}
+.cover .badge { display: inline-block; background: #7c3aed; color: white; padding: 6px 18px; border-radius: 999px; font-size: 9pt; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.cover h1 { font-size: 42pt; color: #1e1b4b; line-height: 1.1; }
+.cover .subtitle { font-size: 14pt; color: #312e81; margin: 1rem 0; font-style: italic; }
+.cover .date { font-size: 12pt; color: #4338ca; margin-top: 2rem; font-weight: 600; }
+.cover .tagline { position: absolute; bottom: 0.6in; left: 0; right: 0; color: #1e1b4b; font-size: 10pt; font-style: italic; padding: 0 1in; }
+.cover .emoji-row { font-size: 32pt; margin: 1.5rem 0; }
+
+.report-meta {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem;
+  background: #f8fafc; padding: 0.7rem 1rem; border-left: 4px solid #7c3aed;
+  border-radius: 4px; margin: 0.8rem 0;
+  font-family: 'Avenir Next', sans-serif; font-size: 9.5pt;
+}
+.report-meta b { color: #7c3aed; }
+
+.hero-box {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  padding: 1rem 1.2rem; border-left: 4px solid #7c3aed;
+  border-radius: 4px; margin: 0.8rem 0;
+  page-break-inside: avoid;
+}
+.hero-box h3 { color: #5b21b6; margin-top: 0; }
+
+.leader {
+  display: grid; grid-template-columns: 50px 1fr 140px 100px 100px;
+  gap: 0.5rem; align-items: center;
+  padding: 0.55rem 0.8rem; margin: 0.3rem 0;
+  background: #f8fafc; border-radius: 6px; border-left: 4px solid #4f46e5;
+  page-break-inside: avoid;
+}
+.leader.gold { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+.leader.silver { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-color: #6b7280; }
+.leader.bronze { background: linear-gradient(135deg, #fed7aa, #fdba74); border-color: #ea580c; }
+.leader .rank { font-size: 16pt; text-align: center; font-weight: bold; }
+.leader .name { font-family: 'Avenir Next', sans-serif; font-weight: 600; font-size: 10.5pt; }
+.leader .pnl { font-weight: bold; text-align: right; font-size: 11pt; }
+.leader .pnl.pos { color: #16a34a; }
+.leader .pnl.neg { color: #dc2626; }
+.leader .stats { font-size: 9pt; color: #4b5563; text-align: center; }
+
+.chart-block { margin: 0.8rem 0; page-break-inside: avoid; }
+.chart-block img { width: 100%; border-radius: 6px; border: 1px solid #e5e7eb; }
+.chart-caption { font-size: 9pt; color: #6b7280; text-align: center; font-style: italic; margin-top: 0.2rem; }
+
+.engine-section {
+  margin: 0.6rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  page-break-inside: avoid;
+}
+.card-hdr { padding: 0.7rem 1rem; color: white; }
+.card-hdr h2 { color: white; margin: 0; font-size: 13pt; }
+.card-hdr .hdr-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.3rem; font-size: 9pt; opacity: 0.95; font-family: 'Avenir Next', sans-serif; }
+.card-hdr .hdr-stats b { font-size: 10pt; }
+.trade-viz { padding: 0.3rem; background: white; }
+.trade-viz img { width: 100%; display: block; }
+.trade-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.trade-table th { background: #f1f5f9; padding: 0.35rem 0.5rem; text-align: left; font-weight: 600; font-family: 'Avenir Next', sans-serif; border-bottom: 2px solid #7c3aed; font-size: 8pt; }
+.trade-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
+.trade-table tr.win td { color: #166534; }
+.trade-table tr.loss td { color: #991b1b; }
+.trade-table td.sym { font-family: 'Avenir Next', sans-serif; font-weight: 600; }
+.trade-table td.dir { font-weight: 600; }
+
+.ab-block {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin: 0.8rem 0;
+  overflow: hidden;
+  page-break-inside: avoid;
+}
+.ab-header {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #c4b5fd;
+}
+.ab-header h3 { color: #5b21b6; margin: 0 0 0.3rem 0; }
+.ab-summary { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 9.5pt; font-family: 'Avenir Next', sans-serif; }
+.ab-summary .delta { font-weight: 700; }
+.ab-summary .delta.pos { color: #16a34a; }
+.ab-summary .delta.neg { color: #dc2626; }
+.ab-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding: 0.5rem; }
+.ab-col h4 { font-size: 10pt; padding: 0.25rem 0.5rem; margin: 0 0 0.3rem 0; border-radius: 4px; }
+.ab-col h4.v5-hdr { background: #fee2e2; color: #991b1b; }
+.ab-col h4.vc-hdr { background: #ede9fe; color: #5b21b6; }
+.ab-table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+.ab-table th { background: #f1f5f9; padding: 0.25rem 0.4rem; text-align: left; font-size: 7.5pt; font-family: 'Avenir Next', sans-serif; }
+.ab-table td { padding: 0.2rem 0.4rem; border-bottom: 1px solid #f1f5f9; }
+.ab-table tr.win td { color: #166534; }
+.ab-table tr.loss td { color: #991b1b; }
+.ab-table td.empty { text-align: center; color: #9ca3af; font-style: italic; padding: 0.5rem; }
+
+code { font-family: 'Courier New', monospace; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 9pt; color: #be185d; }
+
+.page-break { page-break-before: always; }
+
+.back-cover {
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+  color: white;
+  padding: 1.5in 0.8in 1in;
+  text-align: center;
+  page-break-before: always;
+  border-radius: 8px;
+}
+.back-cover h2 { color: white; font-size: 22pt; margin-bottom: 0.8rem; }
+.back-cover p { font-size: 10.5pt; color: #c7d2fe; margin: 0.3rem 0; line-height: 1.4; }
+.back-cover .quote { font-size: 13pt; color: white; font-style: italic; margin: 1rem 0 1.5rem; line-height: 1.4; }
+.back-cover .footer { font-size: 9pt; color: #a5b4fc; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); }
+</style></head><body>
+
+<!-- ====== COVER ====== -->
+<div class="cover">
+  <div class="badge">TRADEPILOT · TUESDAY EOD</div>
+  <h1>7 Engines.<br>Best Day Yet.<br>Rs +84,172.</h1>
+  <div class="emoji-row">🥇 🥈 🥉</div>
+  <div class="subtitle">Post-ML-fix rematch · 4 engines cleared Rs 13K+<br>A/B Day 2: v5_classic still ahead</div>
+  <div class="date">Tuesday, April 21, 2026 · 387 trades · 85%+ WR on top 3</div>
+  <div class="tagline">"The morning ML fix worked. The afternoon was the payoff."</div>
+</div>
+
+<!-- ====== EXECUTIVE SUMMARY ====== -->
+<h2>Executive Summary</h2>
+<div class="report-meta">
+  <div><b>Date</b></div><div>Tuesday, 2026-04-21 · 09:15 – 15:15 IST</div>
+  <div><b>Engines</b></div><div>7 (v4, v5, v5_classic, v5.2, v5.3, v5.6, v5.7)</div>
+  <div><b>Combined P&amp;L</b></div><div>Rs +84,172 across 387 trades</div>
+  <div><b>Winner</b></div><div>v4 Composite · Rs +35,638 · 85% WR</div>
+  <div><b>A/B verdict Day 2</b></div><div>v5_classic beats v5 by Rs +14,017 (widened from Day 1)</div>
+  <div><b>ML model status</b></div><div>best_iteration=1,726 · india_vix #1 feature · retrained 08:24 IST</div>
+  <div><b>Author</b></div><div>Soumya Swain · soumya@sidewall.in</div>
+</div>
+
+<p>Today was the first full day trading on the retrained ML model (fixed 08:24 IST with random val split + loosened regularization). The result: 4 engines posted wins over Rs 13,000, with win rates between 85–92%. The A/B test on v5 vs v5_classic now has 2 consecutive days of data — the pre-Rust classic keeps beating the hardened current version.</p>
+
+<div class="hero-box">
+  <h3>🎯 Headline Result: 85%+ Win Rate Across Top 4</h3>
+  <p>v4 closed at <b>85% WR on 102 trades</b>, v5.6 at <b>87%</b>, v5.7 at <b>85%</b>, v5_classic at <b>88%</b>. This is the consistency we've been chasing since April 10. The common factor: all four use the same fresh ML model with restored india_vix importance. The stale-model regime from April 11–17 is gone.</p>
+</div>
+
+<!-- ====== LEADERBOARD ====== -->
+<h2>Leaderboard</h2>
+<div class="chart-block">
+  <img src="charts/leaderboard.png"/>
+  <div class="chart-caption">Realized P&amp;L per engine · Combined Rs +84,172</div>
+</div>
+
+
+    <div class="leader gold">
+      <div class="rank">🥇</div>
+      <div class="name">v4 Composite <span class="tag">[control]</span></div>
+      <div class="pnl pos">Rs +35,638</div>
+      <div class="stats">87W / 15L</div>
+      <div class="stats">85% WR</div>
+    </div>
+
+    <div class="leader silver">
+      <div class="rank">🥈</div>
+      <div class="name">v5.6 Darvas <span class="tag">[breakout]</span></div>
+      <div class="pnl pos">Rs +21,829</div>
+      <div class="stats">90W / 13L</div>
+      <div class="stats">87% WR</div>
+    </div>
+
+    <div class="leader bronze">
+      <div class="rank">🥉</div>
+      <div class="name">v5 Classic <span class="tag">[pre-Rust]</span></div>
+      <div class="pnl pos">Rs +13,835</div>
+      <div class="stats">79W / 11L</div>
+      <div class="stats">88% WR</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">4</div>
+      <div class="name">v5.7 Box Theory <span class="tag">[mean-rev]</span></div>
+      <div class="pnl pos">Rs +13,465</div>
+      <div class="stats">69W / 12L</div>
+      <div class="stats">85% WR</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">5</div>
+      <div class="name">v5.2 Stat-Arb <span class="tag">[dormant]</span></div>
+      <div class="pnl ">Rs +0</div>
+      <div class="stats">0 trades</div>
+      <div class="stats">sat out</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">6</div>
+      <div class="name">v5 Multi-Horizon <span class="tag">[hardened]</span></div>
+      <div class="pnl neg">Rs -183</div>
+      <div class="stats">5W / 5L</div>
+      <div class="stats">50% WR</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">7</div>
+      <div class="name">v5.3 Staged <span class="tag">[staged]</span></div>
+      <div class="pnl neg">Rs -414</div>
+      <div class="stats">0 trades</div>
+      <div class="stats">sat out</div>
+    </div>
+
+<!-- ====== TOP-4 COMPARISON ====== -->
+<div class="page-break"></div>
+<h2>Top-4 Head-to-Head: v4 vs v5.6 vs v5_classic vs v5.7</h2>
+<div class="chart-block">
+  <img src="charts/top4_compare.png"/>
+  <div class="chart-caption">Four metrics · P&amp;L, win rate, trade count, avg per-trade</div>
+</div>
+
+<p><b>Interpretation:</b> v4 leads on total P&amp;L (Rs +35,638) driven by a larger position book
+(102 trades). v5.6 and v5.7 are quality leaders — fewer trades, higher per-trade P&amp;L, and
+comparable win rates. v5_classic sits in the middle — the A/B test engine proves the pre-Rust code still has edge.
+This suggests a portfolio construction: v4 as the volume play, v5.6/v5.7 as the selective overlay.</p>
+
+<!-- ====== V5 VS V5_CLASSIC A/B ====== -->
+<div class="page-break"></div>
+<h2>A/B Test Day 2 — v5 vs v5_classic</h2>
+<div class="chart-block">
+  <img src="charts/ab_test.png"/>
+  <div class="chart-caption">Same ML model. Same market. Same capital. Only the Rust integration differs.</div>
+</div>
+
+<p>Day 1 (Monday): v5_classic led by Rs 4,950. Day 2 (today): the gap grew to
+<b>Rs +14,017</b>.
+v5 took only 10 trades all day (5W/5L) —
+deeply conservative. v5_classic took 90 trades (79W/11L) —
+wider engagement, higher win rate, more P&amp;L captured.</p>
+
+<h3>Same-Symbol Side-by-Side</h3>
+<p>The 6 symbols that both engines traded. For each, v5 on the left, v5_classic on the right.
+Entry/exit times, prices, P&amp;L, and reason for exit shown. Delta shows the per-symbol gap.</p>
+
+
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>COCHINSHIP</h3>
+        <div class="ab-summary">
+          <span>v5: Rs -325 (1 trades)</span>
+          <span>v5_classic: Rs -325 (1 trades)</span>
+          <span class="delta neg">Δ Rs +0 — tie</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="loss">
+        <td>08:29:29</td><td>08:59:09</td>
+        <td>LONG</td>
+        <td>1561.10</td><td>1542.00</td>
+        <td>-325</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="loss">
+        <td>08:47:27</td><td>08:59:09</td>
+        <td>LONG</td>
+        <td>1561.10</td><td>1542.00</td>
+        <td>-325</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>POLYCAB</h3>
+        <div class="ab-summary">
+          <span>v5: Rs +75 (1 trades)</span>
+          <span>v5_classic: Rs +75 (1 trades)</span>
+          <span class="delta neg">Δ Rs +0 — tie</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:29:31</td><td>08:59:10</td>
+        <td>LONG</td>
+        <td>8182.50</td><td>8220.00</td>
+        <td>+75</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:47:29</td><td>08:59:10</td>
+        <td>LONG</td>
+        <td>8182.50</td><td>8220.00</td>
+        <td>+75</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>OFSS</h3>
+        <div class="ab-summary">
+          <span>v5: Rs +138 (1 trades)</span>
+          <span>v5_classic: Rs +135 (1 trades)</span>
+          <span class="delta neg">Δ Rs -2 — v5 wins</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:29:37</td><td>10:02:51</td>
+        <td>LONG</td>
+        <td>7992.50</td><td>8130.00</td>
+        <td>+138</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:47:32</td><td>10:04:51</td>
+        <td>LONG</td>
+        <td>7992.50</td><td>8127.50</td>
+        <td>+135</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>ADANIENSOL</h3>
+        <div class="ab-summary">
+          <span>v5: Rs -11 (1 trades)</span>
+          <span>v5_classic: Rs -15 (1 trades)</span>
+          <span class="delta neg">Δ Rs -4 — v5 wins</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="loss">
+        <td>09:41:23</td><td>08:59:15</td>
+        <td>LONG</td>
+        <td>1259.80</td><td>1256.00</td>
+        <td>-11</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="loss">
+        <td>09:28:47</td><td>08:59:18</td>
+        <td>LONG</td>
+        <td>1259.80</td><td>1256.00</td>
+        <td>-15</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>HUDCO</h3>
+        <div class="ab-summary">
+          <span>v5: Rs +31 (1 trades)</span>
+          <span>v5_classic: Rs +25 (1 trades)</span>
+          <span class="delta neg">Δ Rs -6 — v5 wins</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:29:37</td><td>08:58:29</td>
+        <td>LONG</td>
+        <td>196.91</td><td>197.49</td>
+        <td>+31</td>
+        <td>STOPLOSS</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>10:30:10</td><td>08:58:30</td>
+        <td>LONG</td>
+        <td>196.91</td><td>197.49</td>
+        <td>+25</td>
+        <td>STOPLOSS</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ab-block">
+      <div class="ab-header">
+        <h3>COLPAL</h3>
+        <div class="ab-summary">
+          <span>v5: Rs +66 (1 trades)</span>
+          <span>v5_classic: Rs +40 (2 trades)</span>
+          <span class="delta neg">Δ Rs -26 — v5 wins</span>
+        </div>
+      </div>
+      <div class="ab-tables">
+        <div class="ab-col">
+          <h4 class="v5-hdr">v5 (Rust, hardened)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:29:40</td><td>08:59:12</td>
+        <td>LONG</td>
+        <td>2106.00</td><td>2128.00</td>
+        <td>+66</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+        <div class="ab-col">
+          <h4 class="vc-hdr">v5_classic (pre-Rust)</h4>
+          <table class="ab-table">
+            <thead><tr><th>Entry</th><th>Exit</th><th>Dir</th><th>In</th><th>Out</th><th>P&amp;L</th><th>Reason</th></tr></thead>
+            <tbody>
+      <tr class="win">
+        <td>08:47:35</td><td>08:59:11</td>
+        <td>LONG</td>
+        <td>2106.00</td><td>2128.00</td>
+        <td>+44</td>
+        <td>SIGNAL_FLIP</td>
+      </tr>
+      <tr class="loss">
+        <td>10:57:34</td><td>11:28:29</td>
+        <td>LONG</td>
+        <td>2129.00</td><td>2125.20</td>
+        <td>-4</td>
+        <td>SIGNAL_FLIP</td>
+      </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+
+<h4 style="margin-top: 1rem;">Symbols only one engine traded</h4>
+<p><b>v5 only (4):</b> ATGL, DABUR, LTF, NHPC</p>
+<p><b>v5_classic only (43):</b> ABB, ADANIPOWER, ALKEM, APLAPOLLO, ASIANPAINT, AUBANK, BAJFINANCE, BANKINDIA, BHARATFORG, BHEL, BLUESTARCO, BOSCHLTD, BPCL, CGPOWER, COROMANDEL, ENRIN, ETERNAL, FORTIS, GRASIM, HINDPETRO, HINDUNILVR, JINDALSTEL, JSWSTEEL, KEI, LGEINDIA, MANKIND, NAUKRI, NTPC, PAGEIND, PFC...</p>
+<p class="small" style="color:#6b7280;font-style:italic;">v5_classic captured 43 opportunities that v5 passed on — that's where most of the A/B gap comes from.</p>
+
+<!-- ====== PER-ENGINE DETAILED ====== -->
+<div class="page-break"></div>
+<h2>Per-Engine Trade Ledgers</h2>
+<p>Top 20 trades by |P&amp;L| shown as ladders. Full trade tables ordered by entry time.</p>
+
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #16a34a, #16a34add);">
+        <h2>v4 Composite Scorer <span class="tag">[control · champion]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +35,638</b></span>
+          <span>102 trades · 87W / 15L · 85% WR</span>
+          <span>Avg: Rs +349</span>
+          <span>Win avg: Rs +445 · Loss avg: Rs -208</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v4.png"/></div>
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr class="win"><td>10:12:41</td><td>11:08:33</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>6</td><td>4242.80</td><td>4345.60</td><td>+617</td><td>+2.42%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:43:47</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>11</td><td>2516.80</td><td>2565.00</td><td>+530</td><td>+1.92%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:01:52</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>8</td><td>3138.40</td><td>3259.50</td><td>+969</td><td>+3.86%</td><td>TARGET</td></tr>
+<tr class="loss"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ADANIGREEN</td><td>24</td><td>1152.70</td><td>1148.50</td><td>-101</td><td>-0.36%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:01:52</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>27</td><td>997.65</td><td>1034.80</td><td>+1,003</td><td>+3.72%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:25:11</td><td class="dir">▲ LONG</td><td class="sym">ALKEM</td><td>4</td><td>5642.00</td><td>5670.00</td><td>+112</td><td>+0.50%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:22:34</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>84</td><td>325.63</td><td>332.16</td><td>+549</td><td>+2.01%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">HINDPETRO</td><td>72</td><td>379.50</td><td>384.65</td><td>+371</td><td>+1.36%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:22:34</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>34</td><td>795.70</td><td>815.75</td><td>+682</td><td>+2.52%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>14:02:38</td><td class="dir">▲ LONG</td><td class="sym">SHREECEM</td><td>1</td><td>25490.00</td><td>25605.00</td><td>+115</td><td>+0.45%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:01:52</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>12</td><td>2144.00</td><td>2193.20</td><td>+590</td><td>+2.29%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:08:33</td><td class="dir">▲ LONG</td><td class="sym">SWIGGY</td><td>96</td><td>279.15</td><td>284.50</td><td>+514</td><td>+1.92%</td><td>TARGET</td></tr>
+<tr class="loss"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>12</td><td>2074.90</td><td>2052.80</td><td>-265</td><td>-1.07%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:36:07</td><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>132</td><td>200.83</td><td>202.85</td><td>+267</td><td>+1.01%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:38:37</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>29</td><td>917.75</td><td>933.75</td><td>+464</td><td>+1.74%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:33:08</td><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>104</td><td>254.88</td><td>256.20</td><td>+137</td><td>+0.52%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>10:12:41</td><td>11:43:47</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>12</td><td>2129.00</td><td>2102.40</td><td>-319</td><td>-1.25%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:38:37</td><td class="dir">▲ LONG</td><td class="sym">CUMMINSIND</td><td>5</td><td>5200.30</td><td>5223.30</td><td>+115</td><td>+0.44%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:01:52</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>29</td><td>890.90</td><td>919.45</td><td>+828</td><td>+3.20%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">INDIGO</td><td>5</td><td>4678.20</td><td>4692.50</td><td>+72</td><td>+0.31%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:15:10</td><td class="dir">▲ LONG</td><td class="sym">NESTLEIND</td><td>20</td><td>1286.40</td><td>1297.70</td><td>+226</td><td>+0.88%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ULTRACEMCO</td><td>2</td><td>11917.00</td><td>12027.00</td><td>+220</td><td>+0.92%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:33:08</td><td class="dir">▲ LONG</td><td class="sym">GMRAIRPORT</td><td>264</td><td>97.45</td><td>98.19</td><td>+195</td><td>+0.76%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:18:42</td><td class="dir">▲ LONG</td><td class="sym">WAAREEENER</td><td>7</td><td>3489.10</td><td>3515.50</td><td>+185</td><td>+0.76%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:43:47</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>19</td><td>1307.70</td><td>1335.60</td><td>+530</td><td>+2.13%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">MAXHEALTH</td><td>25</td><td>1011.35</td><td>1020.05</td><td>+218</td><td>+0.86%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>10:12:41</td><td>13:41:43</td><td class="dir">▲ LONG</td><td class="sym">MARICO</td><td>33</td><td>760.70</td><td>756.35</td><td>-144</td><td>-0.57%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:08:33</td><td class="dir">▲ LONG</td><td class="sym">UNIONBANK</td><td>133</td><td>189.29</td><td>192.39</td><td>+412</td><td>+1.64%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">COALINDIA</td><td>57</td><td>441.75</td><td>443.25</td><td>+86</td><td>+0.34%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:15:10</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>8</td><td>2873.10</td><td>2902.30</td><td>+234</td><td>+1.02%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>12:25:11</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>19</td><td>1274.50</td><td>1283.30</td><td>+167</td><td>+0.69%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">TATACONSUM</td><td>22</td><td>1120.40</td><td>1144.70</td><td>+535</td><td>+2.17%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:12:33</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>3</td><td>7158.00</td><td>7290.50</td><td>+398</td><td>+1.85%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:01:52</td><td class="dir">▲ LONG</td><td class="sym">BANKINDIA</td><td>168</td><td>148.31</td><td>151.00</td><td>+452</td><td>+1.81%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">CANBK</td><td>174</td><td>142.74</td><td>144.16</td><td>+247</td><td>+0.99%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">SBIN</td><td>22</td><td>1107.85</td><td>1111.25</td><td>+75</td><td>+0.31%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">NAUKRI</td><td>23</td><td>1067.90</td><td>1076.95</td><td>+208</td><td>+0.85%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>10:12:41</td><td>11:48:38</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>19</td><td>1287.70</td><td>1295.40</td><td>+146</td><td>+0.60%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:33:46</td><td>11:38:37</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>4</td><td>4242.80</td><td>4367.20</td><td>+498</td><td>+2.93%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:46</td><td>11:38:37</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>26</td><td>795.70</td><td>816.95</td><td>+552</td><td>+2.67%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:46</td><td>11:38:37</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>6</td><td>3138.40</td><td>3236.00</td><td>+586</td><td>+3.11%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:46</td><td>12:15:10</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>61</td><td>325.63</td><td>329.00</td><td>+206</td><td>+1.03%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:58:47</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>9</td><td>2516.80</td><td>2538.20</td><td>+193</td><td>+0.85%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>26</td><td>917.75</td><td>937.25</td><td>+507</td><td>+2.12%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">POLICYBZR</td><td>14</td><td>1616.80</td><td>1625.80</td><td>+126</td><td>+0.56%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>11</td><td>2144.00</td><td>2188.00</td><td>+484</td><td>+2.05%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>23</td><td>997.65</td><td>1032.30</td><td>+797</td><td>+3.47%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">TATAPOWER</td><td>54</td><td>433.60</td><td>436.35</td><td>+148</td><td>+0.63%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">SWIGGY</td><td>84</td><td>279.15</td><td>283.75</td><td>+386</td><td>+1.65%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>17</td><td>1373.80</td><td>1407.00</td><td>+564</td><td>+2.42%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>12</td><td>1866.20</td><td>1903.60</td><td>+449</td><td>+2.00%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>8</td><td>2760.10</td><td>2775.90</td><td>+126</td><td>+0.57%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>26</td><td>890.90</td><td>924.05</td><td>+862</td><td>+3.72%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>17</td><td>1307.70</td><td>1340.00</td><td>+549</td><td>+2.47%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:36:07</td><td class="dir">▲ LONG</td><td class="sym">ICICIBANK</td><td>16</td><td>1356.20</td><td>1384.40</td><td>+451</td><td>+2.08%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">GVT&D</td><td>5</td><td>4232.30</td><td>4253.90</td><td>+108</td><td>+0.51%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>12:05:09</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">EICHERMOT</td><td>3</td><td>7243.00</td><td>7236.50</td><td>-20</td><td>-0.09%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>13:41:43</td><td class="dir">▲ LONG</td><td class="sym">M&MFIN</td><td>72</td><td>303.60</td><td>306.15</td><td>+184</td><td>+0.84%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:08:41</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>3</td><td>7158.00</td><td>7273.50</td><td>+346</td><td>+1.61%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">BPCL</td><td>68</td><td>316.05</td><td>318.25</td><td>+150</td><td>+0.70%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>16</td><td>1287.70</td><td>1287.60</td><td>-2</td><td>-0.01%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:56:50</td><td class="dir">▲ LONG</td><td class="sym">JSWENERGY</td><td>39</td><td>543.05</td><td>549.30</td><td>+244</td><td>+1.15%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>12:05:09</td><td>12:36:07</td><td class="dir">▲ LONG</td><td class="sym">OFSS</td><td>2</td><td>8082.50</td><td>8015.50</td><td>-134</td><td>-0.83%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>12:05:09</td><td>12:25:11</td><td class="dir">▲ LONG</td><td class="sym">TATAINVEST</td><td>29</td><td>713.15</td><td>726.05</td><td>+374</td><td>+1.81%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>12:05:09</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">HEROMOTOCO</td><td>4</td><td>5282.50</td><td>5258.50</td><td>-96</td><td>-0.45%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>12:38:45</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>25</td><td>1373.80</td><td>1415.30</td><td>+1,038</td><td>+3.02%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:36:47</td><td>13:41:43</td><td class="dir">▲ LONG</td><td class="sym">LGEINDIA</td><td>21</td><td>1594.10</td><td>1614.70</td><td>+433</td><td>+1.29%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ALKEM</td><td>5</td><td>5642.00</td><td>5699.50</td><td>+288</td><td>+1.02%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>12:38:45</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>17</td><td>1866.20</td><td>1906.00</td><td>+677</td><td>+2.13%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:36:47</td><td>12:38:45</td><td class="dir">▲ LONG</td><td class="sym">ICICIBANK</td><td>24</td><td>1356.20</td><td>1383.50</td><td>+655</td><td>+2.01%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>127</td><td>254.88</td><td>259.58</td><td>+597</td><td>+1.84%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>24</td><td>1274.50</td><td>1279.90</td><td>+130</td><td>+0.42%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">M&M</td><td>9</td><td>3221.60</td><td>3246.40</td><td>+223</td><td>+0.77%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>13:41:43</td><td class="dir">▲ LONG</td><td class="sym">ADANIPORTS</td><td>19</td><td>1578.40</td><td>1599.60</td><td>+403</td><td>+1.34%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:36:47</td><td>12:38:45</td><td class="dir">▲ LONG</td><td class="sym">VMM</td><td>262</td><td>118.61</td><td>123.35</td><td>+1,242</td><td>+4.00%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:36:47</td><td>14:03:02</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>29980.00</td><td>+335</td><td>+1.13%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>10</td><td>2873.10</td><td>2884.50</td><td>+114</td><td>+0.40%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">BANKINDIA</td><td>206</td><td>148.31</td><td>149.82</td><td>+311</td><td>+1.02%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>12:36:47</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">INDHOTEL</td><td>46</td><td>659.50</td><td>665.90</td><td>+294</td><td>+0.97%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>13:42:57</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">BOSCHLTD</td><td>1</td><td>37790.00</td><td>38100.00</td><td>+310</td><td>+0.82%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>13:42:57</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>149</td><td>382.70</td><td>383.35</td><td>+97</td><td>+0.17%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>13:42:57</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">LGEINDIA</td><td>35</td><td>1594.10</td><td>1607.40</td><td>+466</td><td>+0.83%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>13:42:57</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">UNIONBANK</td><td>289</td><td>189.29</td><td>191.07</td><td>+514</td><td>+0.94%</td><td>SIGNAL_EXIT</td></tr>
+<tr class="win"><td>13:42:57</td><td>13:52:36</td><td class="dir">▲ LONG</td><td class="sym">VMM</td><td>462</td><td>118.61</td><td>123.00</td><td>+2,028</td><td>+3.70%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:42:57</td><td>15:19:22</td><td class="dir">▲ LONG</td><td class="sym">NESTLEIND</td><td>42</td><td>1286.40</td><td>1383.00</td><td>+4,057</td><td>+7.51%</td><td>TARGET</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>7</td><td>3340.10</td><td>3259.90</td><td>-561</td><td>-2.40%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>11</td><td>2129.00</td><td>2105.80</td><td>-255</td><td>-1.09%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">BLUESTARCO</td><td>11</td><td>1889.00</td><td>1870.20</td><td>-207</td><td>-1.00%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">MARICO</td><td>29</td><td>760.70</td><td>763.40</td><td>+78</td><td>+0.35%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>109</td><td>200.83</td><td>202.88</td><td>+223</td><td>+1.02%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">PFC</td><td>46</td><td>472.85</td><td>470.95</td><td>-87</td><td>-0.40%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ABCAPITAL</td><td>63</td><td>341.60</td><td>345.00</td><td>+214</td><td>+1.00%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">MFSL</td><td>12</td><td>1688.80</td><td>1649.30</td><td>-474</td><td>-2.34%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">LTF</td><td>73</td><td>290.15</td><td>291.56</td><td>+103</td><td>+0.49%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">TMCV</td><td>48</td><td>438.40</td><td>442.40</td><td>+192</td><td>+0.91%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>107</td><td>199.40</td><td>198.34</td><td>-113</td><td>-0.53%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">JSWENERGY</td><td>39</td><td>543.05</td><td>546.80</td><td>+146</td><td>+0.69%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>9</td><td>2143.90</td><td>2106.30</td><td>-338</td><td>-1.75%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">M&MFIN</td><td>69</td><td>303.60</td><td>306.30</td><td>+186</td><td>+0.89%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>16</td><td>1259.40</td><td>1264.25</td><td>+78</td><td>+0.39%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">LICHSGFIN</td><td>39</td><td>536.70</td><td>565.45</td><td>+1,121</td><td>+5.36%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td>15:20:43</td><td>15:20:46</td><td class="dir">▲ LONG</td><td class="sym">HINDUNILVR</td><td>9</td><td>2231.50</td><td>2325.50</td><td>+846</td><td>+4.21%</td><td>TIME_EXIT</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #f59e0b, #f59e0bdd);">
+        <h2>v5.6 Darvas Box <span class="tag">[breakout · winner #2]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +21,829</b></span>
+          <span>104 trades · 90W / 13L · 87% WR</span>
+          <span>Avg: Rs +210</span>
+          <span>Win avg: Rs +247 · Loss avg: Rs -33</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_6.png"/></div>
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr class="win"><td>08:29:41</td><td>09:30:17</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>2</td><td>2106.00</td><td>2119.80</td><td>+28</td><td>+0.66%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:11</td><td>09:09:20</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>6</td><td>2873.10</td><td>2884.00</td><td>+65</td><td>+0.38%</td><td>TARGET</td></tr>
+<tr class="win"><td>08:59:12</td><td>09:09:31</td><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>5</td><td>3340.10</td><td>3357.00</td><td>+84</td><td>+0.51%</td><td>TARGET</td></tr>
+<tr class=""><td>08:59:13</td><td>09:09:42</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>11</td><td>1274.50</td><td>1274.50</td><td>+0</td><td>+0.00%</td><td>TARGET</td></tr>
+<tr class="loss"><td>08:59:14</td><td>09:09:53</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>15</td><td>795.70</td><td>795.00</td><td>-10</td><td>-0.09%</td><td>TARGET</td></tr>
+<tr class="win"><td>08:59:15</td><td>15:14:41</td><td class="dir">▲ LONG</td><td class="sym">HINDPETRO</td><td>29</td><td>379.50</td><td>384.90</td><td>+157</td><td>+1.42%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>08:59:16</td><td>10:09:51</td><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>26</td><td>382.70</td><td>382.30</td><td>-10</td><td>-0.10%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:16</td><td>10:10:02</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>2</td><td>2760.10</td><td>2775.60</td><td>+31</td><td>+0.56%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>08:59:17</td><td>09:10:04</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>1</td><td>4242.80</td><td>4237.00</td><td>-6</td><td>-0.14%</td><td>TARGET</td></tr>
+<tr class="loss"><td>08:59:18</td><td>10:10:14</td><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>2</td><td>2143.90</td><td>2139.30</td><td>-9</td><td>-0.21%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:34:03</td><td>11:01:44</td><td class="dir">▲ LONG</td><td class="sym">INDIGO</td><td>4</td><td>4678.20</td><td>4706.80</td><td>+114</td><td>+0.61%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>09:34:14</td><td>09:46:45</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>18</td><td>1274.50</td><td>1287.90</td><td>+241</td><td>+1.05%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:34:26</td><td>09:46:56</td><td class="dir">▲ LONG</td><td class="sym">WAAREEENER</td><td>5</td><td>3489.10</td><td>3537.50</td><td>+242</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:34:37</td><td>09:47:07</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4274.50</td><td>+95</td><td>+0.75%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:34:48</td><td>10:10:25</td><td class="dir">▲ LONG</td><td class="sym">GVT&D</td><td>3</td><td>4232.30</td><td>4240.00</td><td>+23</td><td>+0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:35:00</td><td>09:47:18</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>19</td><td>795.70</td><td>804.70</td><td>+171</td><td>+1.13%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:35:12</td><td>12:14:16</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>3</td><td>2873.10</td><td>2902.10</td><td>+87</td><td>+1.01%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>09:35:24</td><td>09:47:29</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7265.00</td><td>+107</td><td>+1.49%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:35:35</td><td>09:47:39</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>3</td><td>2516.80</td><td>2551.00</td><td>+103</td><td>+1.36%</td><td>TARGET</td></tr>
+<tr class="loss"><td>09:35:46</td><td>09:47:51</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>32</td><td>325.63</td><td>325.15</td><td>-15</td><td>-0.15%</td><td>TARGET</td></tr>
+<tr class="loss"><td>09:35:57</td><td>10:10:37</td><td class="dir">▲ LONG</td><td class="sym">PFC</td><td>19</td><td>472.85</td><td>472.65</td><td>-4</td><td>-0.04%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:36:10</td><td>10:10:48</td><td class="dir">▲ LONG</td><td class="sym">M&MFIN</td><td>21</td><td>303.60</td><td>305.65</td><td>+43</td><td>+0.68%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:36:21</td><td>09:48:02</td><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>36</td><td>199.40</td><td>202.18</td><td>+100</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="loss"><td>09:36:32</td><td>12:35:18</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>2</td><td>2074.90</td><td>2062.90</td><td>-24</td><td>-0.58%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:42:02</td><td>09:32:29</td><td class="dir">▲ LONG</td><td class="sym">HINDUNILVR</td><td>9</td><td>2240.80</td><td>2241.00</td><td>+2</td><td>+0.01%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:42:04</td><td>09:32:41</td><td class="dir">▲ LONG</td><td class="sym">FEDERALBNK</td><td>63</td><td>293.75</td><td>296.60</td><td>+180</td><td>+0.97%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:42:05</td><td>09:32:53</td><td class="dir">▲ LONG</td><td class="sym">PIDILITIND</td><td>8</td><td>1393.40</td><td>1394.30</td><td>+7</td><td>+0.06%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:42:05</td><td>11:22:42</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3019.60</td><td>3235.00</td><td>+646</td><td>+7.13%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>09:42:07</td><td>09:33:05</td><td class="dir">▲ LONG</td><td class="sym">COCHINSHIP</td><td>6</td><td>1561.10</td><td>1560.30</td><td>-5</td><td>-0.05%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:42:09</td><td>09:33:17</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>4</td><td>1302.90</td><td>1321.80</td><td>+76</td><td>+1.45%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:42:10</td><td>08:59:09</td><td class="dir">▲ LONG</td><td class="sym">ATGL</td><td>10</td><td>632.90</td><td>615.35</td><td>-176</td><td>-2.77%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:42:12</td><td>08:59:10</td><td class="dir">▲ LONG</td><td class="sym">GODFRYPHLP</td><td>1</td><td>2207.70</td><td>2141.00</td><td>-67</td><td>-3.02%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:42:13</td><td>09:33:28</td><td class="dir">▲ LONG</td><td class="sym">NMDC</td><td>41</td><td>89.78</td><td>89.49</td><td>-12</td><td>-0.32%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:11:00</td><td>11:01:44</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>9</td><td>2516.80</td><td>2572.00</td><td>+497</td><td>+2.19%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:11:11</td><td>11:01:45</td><td class="dir">▲ LONG</td><td class="sym">ADANIGREEN</td><td>19</td><td>1152.70</td><td>1161.85</td><td>+174</td><td>+0.79%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:11:22</td><td>11:01:45</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4314.30</td><td>+214</td><td>+1.69%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:11:33</td><td>11:01:46</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>16</td><td>997.65</td><td>1036.50</td><td>+622</td><td>+3.89%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:11:44</td><td>11:01:46</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>19</td><td>795.70</td><td>807.75</td><td>+229</td><td>+1.51%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:11:55</td><td>11:01:47</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>42</td><td>325.63</td><td>329.82</td><td>+176</td><td>+1.29%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:06</td><td>11:01:47</td><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>59</td><td>200.83</td><td>203.99</td><td>+186</td><td>+1.57%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:17</td><td>15:14:42</td><td class="dir">▲ LONG</td><td class="sym">ALKEM</td><td>1</td><td>5642.00</td><td>5695.50</td><td>+54</td><td>+0.95%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:12:29</td><td>15:13:38</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>10</td><td>917.75</td><td>937.50</td><td>+198</td><td>+2.15%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:12:40</td><td>13:49:22</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>3</td><td>2144.00</td><td>2204.00</td><td>+180</td><td>+2.80%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:12:51</td><td>11:02:30</td><td class="dir">▲ LONG</td><td class="sym">BLUESTARCO</td><td>3</td><td>1889.00</td><td>1896.30</td><td>+22</td><td>+0.39%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:12:59</td><td>09:33:40</td><td class="dir">▲ LONG</td><td class="sym">POWERGRID</td><td>29</td><td>318.10</td><td>321.05</td><td>+86</td><td>+0.93%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>10:13:00</td><td>09:33:52</td><td class="dir">▲ LONG</td><td class="sym">DMART</td><td>1</td><td>4628.50</td><td>4611.00</td><td>-18</td><td>-0.38%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:13:02</td><td>11:33:14</td><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>27</td><td>254.88</td><td>256.18</td><td>+35</td><td>+0.51%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:13:14</td><td>11:01:48</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>6</td><td>890.90</td><td>919.45</td><td>+171</td><td>+3.20%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:13:25</td><td>11:12:38</td><td class="dir">▲ LONG</td><td class="sym">UNIONBANK</td><td>22</td><td>189.29</td><td>192.72</td><td>+75</td><td>+1.81%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:30</td><td>11:12:39</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>5</td><td>4242.80</td><td>4359.90</td><td>+586</td><td>+2.76%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:31</td><td>11:12:39</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>7</td><td>2516.80</td><td>2574.50</td><td>+404</td><td>+2.29%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:32</td><td>11:12:40</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>58</td><td>325.63</td><td>329.92</td><td>+249</td><td>+1.32%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:32</td><td>11:12:40</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>15</td><td>997.65</td><td>1032.10</td><td>+517</td><td>+3.45%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:33</td><td>11:32:43</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>10</td><td>1373.80</td><td>1398.50</td><td>+247</td><td>+1.80%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:02:34</td><td>11:32:44</td><td class="dir">▲ LONG</td><td class="sym">SWIGGY</td><td>35</td><td>279.15</td><td>282.25</td><td>+108</td><td>+1.11%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:02:34</td><td>13:06:22</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>3</td><td>2760.10</td><td>2774.10</td><td>+42</td><td>+0.51%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:02:35</td><td>11:12:41</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>3</td><td>2129.00</td><td>2131.40</td><td>+7</td><td>+0.11%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:36</td><td>11:12:41</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>10</td><td>890.90</td><td>922.10</td><td>+312</td><td>+3.50%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:02:37</td><td>15:14:44</td><td class="dir">▲ LONG</td><td class="sym">MAXHEALTH</td><td>7</td><td>1011.35</td><td>1020.30</td><td>+63</td><td>+0.88%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:33:15</td><td>11:43:23</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>31</td><td>795.70</td><td>815.90</td><td>+626</td><td>+2.54%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:16</td><td>11:43:23</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4360.20</td><td>+352</td><td>+2.77%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:16</td><td>11:43:24</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>7</td><td>2516.80</td><td>2565.80</td><td>+343</td><td>+1.95%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:17</td><td>11:43:24</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>54</td><td>325.63</td><td>330.20</td><td>+247</td><td>+1.40%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:18</td><td>11:43:25</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3138.40</td><td>3239.60</td><td>+304</td><td>+3.22%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:18</td><td>11:43:25</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>10</td><td>1287.70</td><td>1299.80</td><td>+121</td><td>+0.94%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:19</td><td>11:43:26</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7277.50</td><td>+120</td><td>+1.67%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:20</td><td>11:43:26</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>11</td><td>997.65</td><td>1029.60</td><td>+351</td><td>+3.20%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:20</td><td>13:05:32</td><td class="dir">▲ LONG</td><td class="sym">SWIGGY</td><td>28</td><td>279.15</td><td>282.30</td><td>+88</td><td>+1.13%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:33:21</td><td>11:43:27</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>10</td><td>890.90</td><td>924.30</td><td>+334</td><td>+3.75%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:33:22</td><td>12:04:08</td><td class="dir">▲ LONG</td><td class="sym">UNIONBANK</td><td>33</td><td>189.29</td><td>190.70</td><td>+47</td><td>+0.74%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>12:04:09</td><td>12:14:17</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>5</td><td>4242.80</td><td>4429.30</td><td>+932</td><td>+4.40%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:10</td><td>12:14:17</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>27</td><td>795.70</td><td>817.50</td><td>+589</td><td>+2.74%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:10</td><td>12:14:18</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>6</td><td>2516.80</td><td>2559.70</td><td>+257</td><td>+1.70%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:11</td><td>12:14:18</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>5</td><td>3138.40</td><td>3237.80</td><td>+497</td><td>+3.17%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:12</td><td>12:14:19</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>45</td><td>325.63</td><td>329.06</td><td>+154</td><td>+1.05%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:14</td><td>12:14:19</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>9</td><td>997.65</td><td>1029.15</td><td>+284</td><td>+3.16%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:04:14</td><td>13:49:23</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>5</td><td>1373.80</td><td>1407.30</td><td>+168</td><td>+2.44%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:04:15</td><td>12:14:20</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>3</td><td>1866.20</td><td>1903.00</td><td>+110</td><td>+1.97%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:19</td><td>12:45:27</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>5</td><td>4242.80</td><td>4412.00</td><td>+846</td><td>+3.99%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:20</td><td>12:45:27</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>24</td><td>795.70</td><td>812.30</td><td>+398</td><td>+2.09%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:20</td><td>12:45:28</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>5</td><td>3138.40</td><td>3235.00</td><td>+483</td><td>+3.08%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:21</td><td>12:45:28</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>5</td><td>2516.80</td><td>2555.10</td><td>+192</td><td>+1.52%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:22</td><td>12:45:28</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>41</td><td>325.63</td><td>329.78</td><td>+170</td><td>+1.27%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:23</td><td>13:37:29</td><td class="dir">▲ LONG</td><td class="sym">LGEINDIA</td><td>6</td><td>1594.10</td><td>1615.10</td><td>+126</td><td>+1.32%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:35:24</td><td>12:45:29</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>10</td><td>997.65</td><td>1034.90</td><td>+372</td><td>+3.73%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:24</td><td>12:45:29</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>5</td><td>1307.70</td><td>1347.60</td><td>+200</td><td>+3.05%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:35:25</td><td>12:45:30</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>9</td><td>890.90</td><td>925.80</td><td>+314</td><td>+3.92%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:23</td><td>13:37:30</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>5</td><td>4242.80</td><td>4387.90</td><td>+726</td><td>+3.42%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:24</td><td>13:37:31</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>65</td><td>325.63</td><td>331.28</td><td>+367</td><td>+1.74%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:24</td><td>13:37:31</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>5</td><td>3138.40</td><td>3227.30</td><td>+444</td><td>+2.83%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:25</td><td>13:37:32</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>19</td><td>795.70</td><td>813.25</td><td>+333</td><td>+2.21%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:26</td><td>13:37:33</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>14</td><td>997.65</td><td>1033.35</td><td>+500</td><td>+3.58%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:28</td><td>13:37:33</td><td class="dir">▲ LONG</td><td class="sym">ICICIBANK</td><td>6</td><td>1356.20</td><td>1387.00</td><td>+185</td><td>+2.27%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:06:28</td><td>13:39:11</td><td class="dir">▲ LONG</td><td class="sym">M&MFIN</td><td>25</td><td>303.60</td><td>306.30</td><td>+68</td><td>+0.89%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>13:06:29</td><td>13:37:34</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>3</td><td>1866.20</td><td>1909.50</td><td>+130</td><td>+2.32%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:12</td><td>13:49:23</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>70</td><td>325.63</td><td>330.90</td><td>+369</td><td>+1.62%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:13</td><td>13:49:24</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4393.30</td><td>+452</td><td>+3.55%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:14</td><td>13:49:25</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>22</td><td>795.70</td><td>813.35</td><td>+388</td><td>+2.22%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:15</td><td>13:49:25</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3138.40</td><td>3228.10</td><td>+269</td><td>+2.86%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:16</td><td>13:49:26</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>14</td><td>997.65</td><td>1034.95</td><td>+522</td><td>+3.74%</td><td>TARGET</td></tr>
+<tr class="loss"><td>13:39:17</td><td>15:14:45</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>4</td><td>2074.90</td><td>2056.00</td><td>-76</td><td>-0.91%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>13:39:18</td><td>15:13:39</td><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>46</td><td>254.88</td><td>259.40</td><td>+208</td><td>+1.77%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:39:19</td><td>15:13:41</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>2</td><td>2873.10</td><td>2889.60</td><td>+33</td><td>+0.57%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>13:39:20</td><td>13:49:26</td><td class="dir">▲ LONG</td><td class="sym">ICICIBANK</td><td>6</td><td>1356.20</td><td>1387.40</td><td>+187</td><td>+2.30%</td><td>TARGET</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #7c3aed, #7c3aeddd);">
+        <h2>v5 Classic (pre-Rust) <span class="tag">[A/B test leader]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +13,835</b></span>
+          <span>90 trades · 79W / 11L · 88% WR</span>
+          <span>Avg: Rs +154</span>
+          <span>Win avg: Rs +185 · Loss avg: Rs -68</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_classic.png"/></div>
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr class="loss"><td>08:47:27</td><td>08:59:09</td><td class="dir">▲ LONG</td><td class="sym">COCHINSHIP</td><td>17</td><td>1561.10</td><td>1542.00</td><td>-325</td><td>-1.22%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:47:29</td><td>08:59:10</td><td class="dir">▲ LONG</td><td class="sym">POLYCAB</td><td>2</td><td>8182.50</td><td>8220.00</td><td>+75</td><td>+0.46%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:47:32</td><td>10:04:51</td><td class="dir">▲ LONG</td><td class="sym">OFSS</td><td>1</td><td>7992.50</td><td>8127.50</td><td>+135</td><td>+1.69%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:47:35</td><td>08:59:11</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>2</td><td>2106.00</td><td>2128.00</td><td>+44</td><td>+1.04%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:47:38</td><td>08:59:13</td><td class="dir">▲ LONG</td><td class="sym">POLICYBZR</td><td>2</td><td>1600.60</td><td>1603.50</td><td>+6</td><td>+0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:19</td><td>10:56:30</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>7</td><td>3138.40</td><td>3243.40</td><td>+735</td><td>+3.35%</td><td>TARGET</td></tr>
+<tr class="win"><td>08:59:19</td><td>12:19:31</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>6</td><td>2873.10</td><td>2902.60</td><td>+177</td><td>+1.03%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>08:59:20</td><td>09:31:46</td><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>5</td><td>3340.10</td><td>3305.90</td><td>-171</td><td>-1.02%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:21</td><td>12:29:33</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>12</td><td>1274.50</td><td>1285.50</td><td>+132</td><td>+0.86%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:21</td><td>12:40:48</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>18</td><td>795.70</td><td>813.20</td><td>+315</td><td>+2.20%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:22</td><td>15:20:14</td><td class="dir">▲ LONG</td><td class="sym">HINDPETRO</td><td>35</td><td>379.50</td><td>384.55</td><td>+177</td><td>+1.33%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:23</td><td>10:05:15</td><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>31</td><td>382.70</td><td>383.25</td><td>+17</td><td>+0.14%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:23</td><td>10:05:26</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>3</td><td>2760.10</td><td>2775.10</td><td>+45</td><td>+0.54%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:24</td><td>11:17:40</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>2</td><td>4242.80</td><td>4354.40</td><td>+223</td><td>+2.63%</td><td>TARGET</td></tr>
+<tr class="loss"><td>08:59:25</td><td>10:05:37</td><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>4</td><td>2143.90</td><td>2133.10</td><td>-43</td><td>-0.50%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:25</td><td>10:05:49</td><td class="dir">▲ LONG</td><td class="sym">BPCL</td><td>25</td><td>316.05</td><td>318.70</td><td>+66</td><td>+0.84%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:26</td><td>10:56:31</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>2</td><td>2516.80</td><td>2580.60</td><td>+128</td><td>+2.53%</td><td>TARGET</td></tr>
+<tr class="loss"><td>08:59:27</td><td>10:06:00</td><td class="dir">▲ LONG</td><td class="sym">PAGEIND</td><td>1</td><td>38405.00</td><td>38300.00</td><td>-105</td><td>-0.27%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:27</td><td>10:06:12</td><td class="dir">▲ LONG</td><td class="sym">PFC</td><td>6</td><td>472.85</td><td>474.00</td><td>+7</td><td>+0.24%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:28</td><td>10:06:24</td><td class="dir">▲ LONG</td><td class="sym">NTPC</td><td>6</td><td>398.00</td><td>401.55</td><td>+21</td><td>+0.89%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>08:59:29</td><td>09:31:58</td><td class="dir">▲ LONG</td><td class="sym">NAUKRI</td><td>2</td><td>1067.90</td><td>1067.40</td><td>-1</td><td>-0.05%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:28:43</td><td>08:59:14</td><td class="dir">▲ LONG</td><td class="sym">KEI</td><td>2</td><td>4839.30</td><td>4880.60</td><td>+83</td><td>+0.85%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:28:45</td><td>08:59:15</td><td class="dir">▲ LONG</td><td class="sym">SIEMENS</td><td>2</td><td>3707.90</td><td>3709.00</td><td>+2</td><td>+0.03%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:28:46</td><td>08:59:16</td><td class="dir">▲ LONG</td><td class="sym">HINDUNILVR</td><td>2</td><td>2240.80</td><td>2227.20</td><td>-27</td><td>-0.61%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:28:47</td><td>08:59:17</td><td class="dir">▲ LONG</td><td class="sym">PIDILITIND</td><td>4</td><td>1393.40</td><td>1390.50</td><td>-12</td><td>-0.21%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:28:47</td><td>08:59:18</td><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>4</td><td>1259.80</td><td>1256.00</td><td>-15</td><td>-0.30%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:32:09</td><td>10:57:29</td><td class="dir">▲ LONG</td><td class="sym">WAAREEENER</td><td>1</td><td>3489.10</td><td>3533.80</td><td>+45</td><td>+1.28%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:32:20</td><td>12:19:32</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>16</td><td>325.63</td><td>328.44</td><td>+45</td><td>+0.86%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>09:32:30</td><td>09:42:53</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>30150.00</td><td>+505</td><td>+1.70%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:32:41</td><td>10:03:09</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7287.00</td><td>+129</td><td>+1.80%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:59:25</td><td>10:05:03</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>8</td><td>1270.00</td><td>1292.00</td><td>+176</td><td>+1.73%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:59:27</td><td>09:31:34</td><td class="dir">▲ LONG</td><td class="sym">POWERGRID</td><td>27</td><td>318.10</td><td>320.95</td><td>+77</td><td>+0.90%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:06:35</td><td>10:56:31</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>30325.00</td><td>+680</td><td>+2.29%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:06:46</td><td>10:56:32</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>11</td><td>997.65</td><td>1036.25</td><td>+425</td><td>+3.87%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:06:57</td><td>13:43:12</td><td class="dir">▲ LONG</td><td class="sym">BOSCHLTD</td><td>1</td><td>37790.00</td><td>38145.00</td><td>+355</td><td>+0.94%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>10:07:08</td><td>12:30:38</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>3</td><td>2074.90</td><td>2062.00</td><td>-39</td><td>-0.62%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:07:20</td><td>14:18:23</td><td class="dir">▲ LONG</td><td class="sym">SHREECEM</td><td>1</td><td>25490.00</td><td>25510.00</td><td>+20</td><td>+0.08%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:07:31</td><td>12:50:55</td><td class="dir">▲ LONG</td><td class="sym">ALKEM</td><td>1</td><td>5642.00</td><td>5671.00</td><td>+29</td><td>+0.51%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:07:42</td><td>11:17:40</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7292.00</td><td>+134</td><td>+1.87%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:07:53</td><td>10:56:32</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>1</td><td>2144.00</td><td>2194.20</td><td>+50</td><td>+2.34%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:08:04</td><td>11:28:28</td><td class="dir">▲ LONG</td><td class="sym">ETERNAL</td><td>8</td><td>254.88</td><td>256.78</td><td>+15</td><td>+0.75%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:08:14</td><td>10:57:30</td><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>9</td><td>200.83</td><td>203.68</td><td>+26</td><td>+1.42%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:08:25</td><td>10:57:31</td><td class="dir">▲ LONG</td><td class="sym">BLUESTARCO</td><td>1</td><td>1889.00</td><td>1902.00</td><td>+13</td><td>+0.69%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:30:10</td><td>08:58:30</td><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>43</td><td>196.91</td><td>197.49</td><td>+25</td><td>+0.29%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:30:11</td><td>09:19:32</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7029.50</td><td>7248.00</td><td>+218</td><td>+3.11%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:57:31</td><td>11:07:37</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3138.40</td><td>3254.20</td><td>+347</td><td>+3.69%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:57:32</td><td>11:07:37</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>30365.00</td><td>+720</td><td>+2.43%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:57:32</td><td>12:09:28</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>3</td><td>2516.80</td><td>2558.90</td><td>+126</td><td>+1.67%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:57:33</td><td>11:07:38</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>2</td><td>2144.00</td><td>2193.80</td><td>+100</td><td>+2.32%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:57:33</td><td>11:07:38</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>4</td><td>997.65</td><td>1034.35</td><td>+147</td><td>+3.68%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:57:34</td><td>11:07:39</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>2</td><td>1373.80</td><td>1406.00</td><td>+64</td><td>+2.34%</td><td>TARGET</td></tr>
+<tr class="loss"><td>10:57:34</td><td>11:28:29</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>1</td><td>2129.00</td><td>2125.20</td><td>-4</td><td>-0.18%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:28:29</td><td>11:38:35</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>2</td><td>4242.80</td><td>4368.80</td><td>+252</td><td>+2.97%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:28:30</td><td>11:38:35</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>2</td><td>3138.40</td><td>3236.00</td><td>+195</td><td>+3.11%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:28:30</td><td>12:19:32</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>30145.00</td><td>+500</td><td>+1.69%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:28:31</td><td>11:48:37</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>2</td><td>2144.00</td><td>2189.80</td><td>+92</td><td>+2.14%</td><td>TARGET</td></tr>
+<tr class="loss"><td>11:28:31</td><td>12:29:34</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>4</td><td>1287.70</td><td>1286.90</td><td>-3</td><td>-0.06%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>11:28:32</td><td>12:09:28</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7273.50</td><td>+116</td><td>+1.61%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:28:32</td><td>13:02:02</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>1</td><td>2760.10</td><td>2778.50</td><td>+18</td><td>+0.67%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:28:33</td><td>11:38:36</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>4</td><td>917.75</td><td>933.70</td><td>+64</td><td>+1.74%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:59:25</td><td>12:09:29</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>1</td><td>4242.80</td><td>4428.20</td><td>+185</td><td>+4.37%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:59:25</td><td>12:09:29</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>1</td><td>3138.40</td><td>3231.10</td><td>+93</td><td>+2.95%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:59:26</td><td>12:09:30</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>4</td><td>917.75</td><td>937.25</td><td>+78</td><td>+2.12%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:39</td><td>12:40:50</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4432.20</td><td>+568</td><td>+4.46%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:39</td><td>12:40:51</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>14</td><td>917.75</td><td>943.50</td><td>+360</td><td>+2.81%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:40</td><td>12:40:52</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3138.40</td><td>3232.80</td><td>+283</td><td>+3.01%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:40</td><td>13:43:12</td><td class="dir">▲ LONG</td><td class="sym">LGEINDIA</td><td>6</td><td>1594.10</td><td>1613.90</td><td>+119</td><td>+1.24%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:30:41</td><td>12:40:52</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>6</td><td>1373.80</td><td>1415.10</td><td>+248</td><td>+3.01%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:41</td><td>13:00:57</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>3</td><td>2516.80</td><td>2534.40</td><td>+53</td><td>+0.70%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:30:42</td><td>12:40:53</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>3</td><td>2144.00</td><td>2196.00</td><td>+156</td><td>+2.43%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:43</td><td>12:40:53</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>6</td><td>997.65</td><td>1033.95</td><td>+218</td><td>+3.64%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:43</td><td>12:40:54</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>4</td><td>1307.70</td><td>1345.10</td><td>+150</td><td>+2.86%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:30:45</td><td>15:18:35</td><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>1</td><td>29645.00</td><td>29850.00</td><td>+205</td><td>+0.69%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>13:02:03</td><td>13:43:13</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>2</td><td>4242.80</td><td>4397.90</td><td>+310</td><td>+3.66%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:03</td><td>13:43:14</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>12</td><td>917.75</td><td>942.60</td><td>+298</td><td>+2.71%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:04</td><td>13:43:15</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3</td><td>3138.40</td><td>3228.00</td><td>+269</td><td>+2.85%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:04</td><td>15:20:15</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>6</td><td>1373.80</td><td>1401.50</td><td>+166</td><td>+2.02%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>13:02:05</td><td>13:43:15</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>8</td><td>997.65</td><td>1032.85</td><td>+282</td><td>+3.53%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:05</td><td>15:18:40</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>9</td><td>795.70</td><td>805.25</td><td>+86</td><td>+1.20%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>13:02:06</td><td>13:43:16</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>3</td><td>2144.00</td><td>2202.80</td><td>+176</td><td>+2.74%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:06</td><td>13:43:17</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>4</td><td>1307.70</td><td>1358.70</td><td>+204</td><td>+3.90%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:07</td><td>13:43:18</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>5</td><td>890.90</td><td>926.70</td><td>+179</td><td>+4.02%</td><td>TARGET</td></tr>
+<tr class="win"><td>13:02:07</td><td>13:43:18</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>2</td><td>1866.20</td><td>1909.60</td><td>+87</td><td>+2.33%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:18:41</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>5</td><td>3138.40</td><td>3221.50</td><td>+416</td><td>+2.65%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:18:42</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>14</td><td>997.65</td><td>1037.05</td><td>+552</td><td>+3.95%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:18:45</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>8</td><td>890.90</td><td>915.95</td><td>+200</td><td>+2.81%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:20:16</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>17</td><td>917.75</td><td>938.35</td><td>+350</td><td>+2.24%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:20:17</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>2</td><td>2760.10</td><td>2777.30</td><td>+34</td><td>+0.62%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:20:19</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>3</td><td>1866.20</td><td>1898.00</td><td>+95</td><td>+1.70%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>14:25:28</td><td>15:20:20</td><td class="dir">▲ LONG</td><td class="sym">BANKINDIA</td><td>42</td><td>148.31</td><td>149.83</td><td>+64</td><td>+1.02%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #4f46e5, #4f46e5dd);">
+        <h2>v5.7 Box Theory <span class="tag">[mean-reversion]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +13,465</b></span>
+          <span>81 trades · 69W / 12L · 85% WR</span>
+          <span>Avg: Rs +166</span>
+          <span>Win avg: Rs +214 · Loss avg: Rs -108</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_7.png"/></div>
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr class="loss"><td>08:29:29</td><td>09:31:29</td><td class="dir">▲ LONG</td><td class="sym">COCHINSHIP</td><td>17</td><td>1561.10</td><td>1560.20</td><td>-15</td><td>-0.06%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:32</td><td>09:31:40</td><td class="dir">▲ LONG</td><td class="sym">POLYCAB</td><td>2</td><td>8182.50</td><td>8269.50</td><td>+174</td><td>+1.06%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:38</td><td>10:06:01</td><td class="dir">▲ LONG</td><td class="sym">OFSS</td><td>1</td><td>7992.50</td><td>8125.00</td><td>+132</td><td>+1.66%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:39</td><td>08:58:34</td><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>56</td><td>196.91</td><td>197.49</td><td>+32</td><td>+0.29%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:29:43</td><td>09:29:29</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>3</td><td>2106.00</td><td>2119.10</td><td>+39</td><td>+0.62%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:29:44</td><td>09:31:53</td><td class="dir">▲ LONG</td><td class="sym">NHPC</td><td>89</td><td>83.56</td><td>84.01</td><td>+40</td><td>+0.54%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:09</td><td>09:53:57</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>6</td><td>3138.40</td><td>3207.30</td><td>+413</td><td>+2.20%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:11</td><td>12:19:13</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>5</td><td>2873.10</td><td>2902.50</td><td>+147</td><td>+1.02%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>08:59:12</td><td>09:32:04</td><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>4</td><td>3340.10</td><td>3305.40</td><td>-139</td><td>-1.04%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:13</td><td>12:29:17</td><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>11</td><td>1274.50</td><td>1285.40</td><td>+120</td><td>+0.86%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:14</td><td>12:39:19</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>15</td><td>795.70</td><td>813.35</td><td>+265</td><td>+2.22%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:59:15</td><td>15:18:58</td><td class="dir">▲ LONG</td><td class="sym">HINDPETRO</td><td>30</td><td>379.50</td><td>384.90</td><td>+162</td><td>+1.42%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:16</td><td>10:06:12</td><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>26</td><td>382.70</td><td>383.35</td><td>+17</td><td>+0.17%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:17</td><td>10:06:24</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>3</td><td>2760.10</td><td>2774.30</td><td>+43</td><td>+0.51%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:18</td><td>11:27:24</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>1</td><td>4242.80</td><td>4356.00</td><td>+113</td><td>+2.67%</td><td>TARGET</td></tr>
+<tr class="loss"><td>08:59:19</td><td>10:06:36</td><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>3</td><td>2143.90</td><td>2133.50</td><td>-31</td><td>-0.49%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:20</td><td>10:06:48</td><td class="dir">▲ LONG</td><td class="sym">BPCL</td><td>23</td><td>316.05</td><td>318.80</td><td>+63</td><td>+0.87%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:21</td><td>10:04:09</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>2</td><td>2516.80</td><td>2571.30</td><td>+109</td><td>+2.17%</td><td>TARGET</td></tr>
+<tr class="win"><td>08:59:23</td><td>10:07:00</td><td class="dir">▲ LONG</td><td class="sym">PFC</td><td>12</td><td>472.85</td><td>474.15</td><td>+16</td><td>+0.27%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:59:24</td><td>10:07:12</td><td class="dir">▲ LONG</td><td class="sym">NTPC</td><td>13</td><td>398.00</td><td>401.40</td><td>+44</td><td>+0.85%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:32:28</td><td>11:38:07</td><td class="dir">▲ LONG</td><td class="sym">WAAREEENER</td><td>3</td><td>3489.10</td><td>3527.50</td><td>+115</td><td>+1.10%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:32:40</td><td>12:19:13</td><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>23</td><td>325.63</td><td>328.42</td><td>+64</td><td>+0.86%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>09:33:08</td><td>10:04:20</td><td class="dir">▲ LONG</td><td class="sym">ADANIGREEN</td><td>5</td><td>1152.70</td><td>1172.30</td><td>+98</td><td>+1.70%</td><td>TARGET</td></tr>
+<tr class="win"><td>09:33:20</td><td>09:43:44</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>6</td><td>1373.80</td><td>1404.00</td><td>+181</td><td>+2.20%</td><td>TARGET</td></tr>
+<tr class="loss"><td>09:33:32</td><td>12:09:04</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>4</td><td>2074.90</td><td>2064.60</td><td>-41</td><td>-0.50%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:41:22</td><td>09:32:17</td><td class="dir">▲ LONG</td><td class="sym">DABUR</td><td>6</td><td>442.85</td><td>442.70</td><td>-1</td><td>-0.03%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:41:23</td><td>08:58:34</td><td class="dir">▲ LONG</td><td class="sym">ATGL</td><td>4</td><td>632.90</td><td>615.35</td><td>-70</td><td>-2.77%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:07:23</td><td>12:08:22</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>6</td><td>2516.80</td><td>2558.90</td><td>+253</td><td>+1.67%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>10:07:35</td><td>11:06:37</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>15</td><td>997.65</td><td>1032.85</td><td>+528</td><td>+3.53%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:07:47</td><td>11:06:38</td><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>4</td><td>3138.40</td><td>3254.50</td><td>+464</td><td>+3.70%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:08:01</td><td>11:17:21</td><td class="dir">▲ LONG</td><td class="sym">ABB</td><td>1</td><td>7158.00</td><td>7293.00</td><td>+135</td><td>+1.89%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:08:14</td><td>11:37:25</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>13</td><td>917.75</td><td>932.70</td><td>+194</td><td>+1.63%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:08:26</td><td>11:07:12</td><td class="dir">▲ LONG</td><td class="sym">BLUESTARCO</td><td>3</td><td>1889.00</td><td>1901.80</td><td>+38</td><td>+0.68%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:08:49</td><td>11:06:38</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>7</td><td>1373.80</td><td>1407.30</td><td>+234</td><td>+2.44%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:09:01</td><td>11:07:13</td><td class="dir">▲ LONG</td><td class="sym">INDIGO</td><td>1</td><td>4678.20</td><td>4710.20</td><td>+32</td><td>+0.68%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>10:09:12</td><td>11:06:39</td><td class="dir">▲ LONG</td><td class="sym">SWIGGY</td><td>21</td><td>279.15</td><td>283.85</td><td>+99</td><td>+1.68%</td><td>TARGET</td></tr>
+<tr class="win"><td>10:09:24</td><td>11:06:39</td><td class="dir">▲ LONG</td><td class="sym">UNIONBANK</td><td>28</td><td>189.29</td><td>192.48</td><td>+89</td><td>+1.69%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:07:15</td><td>11:17:21</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>5</td><td>2144.00</td><td>2195.00</td><td>+255</td><td>+2.38%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:07:15</td><td>11:17:22</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>8</td><td>1373.80</td><td>1404.80</td><td>+248</td><td>+2.26%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:07:17</td><td>12:39:59</td><td class="dir">▲ LONG</td><td class="sym">GRASIM</td><td>3</td><td>2760.10</td><td>2782.20</td><td>+66</td><td>+0.80%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:07:18</td><td>11:17:22</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>9</td><td>997.65</td><td>1028.85</td><td>+281</td><td>+3.13%</td><td>TARGET</td></tr>
+<tr class="loss"><td>11:07:18</td><td>11:38:08</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>2</td><td>2129.00</td><td>2111.10</td><td>-36</td><td>-0.84%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:07:19</td><td>11:17:23</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>9</td><td>890.90</td><td>920.65</td><td>+268</td><td>+3.34%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:38:08</td><td>11:48:18</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4381.90</td><td>+417</td><td>+3.28%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:38:09</td><td>11:48:18</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>6</td><td>2144.00</td><td>2189.80</td><td>+275</td><td>+2.14%</td><td>TARGET</td></tr>
+<tr class="loss"><td>11:38:11</td><td>12:40:00</td><td class="dir">▲ LONG</td><td class="sym">JINDALSTEL</td><td>9</td><td>1287.70</td><td>1283.50</td><td>-38</td><td>-0.33%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>11:38:12</td><td>11:48:19</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>11</td><td>917.75</td><td>934.70</td><td>+186</td><td>+1.85%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:38:14</td><td>11:48:19</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>8</td><td>997.65</td><td>1030.25</td><td>+261</td><td>+3.27%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:38:15</td><td>11:48:20</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>8</td><td>890.90</td><td>924.65</td><td>+270</td><td>+3.79%</td><td>TARGET</td></tr>
+<tr class="win"><td>11:38:15</td><td>11:48:20</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>5</td><td>1307.70</td><td>1336.60</td><td>+144</td><td>+2.21%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:05</td><td>12:19:14</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4429.50</td><td>+560</td><td>+4.40%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:06</td><td>13:00:17</td><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>5</td><td>2516.80</td><td>2535.90</td><td>+96</td><td>+0.76%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:09:07</td><td>12:19:14</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>12</td><td>917.75</td><td>945.50</td><td>+333</td><td>+3.02%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:07</td><td>12:39:19</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>4</td><td>2144.00</td><td>2195.50</td><td>+206</td><td>+2.40%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:08</td><td>12:19:15</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>9</td><td>997.65</td><td>1032.20</td><td>+311</td><td>+3.46%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:10</td><td>12:19:15</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>6</td><td>1373.80</td><td>1411.00</td><td>+223</td><td>+2.71%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:11</td><td>12:19:16</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>4</td><td>1866.20</td><td>1906.10</td><td>+160</td><td>+2.14%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:09:12</td><td>12:19:16</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>7</td><td>890.90</td><td>922.60</td><td>+222</td><td>+3.56%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:00</td><td>12:50:13</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>4</td><td>4242.80</td><td>4418.80</td><td>+704</td><td>+4.15%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:01</td><td>13:00:18</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>20</td><td>917.75</td><td>944.40</td><td>+533</td><td>+2.90%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:02</td><td>15:16:49</td><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>21</td><td>795.70</td><td>804.30</td><td>+181</td><td>+1.08%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:40:04</td><td>12:50:13</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>6</td><td>2144.00</td><td>2187.40</td><td>+260</td><td>+2.02%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:05</td><td>12:50:14</td><td class="dir">▲ LONG</td><td class="sym">PRESTIGE</td><td>9</td><td>1373.80</td><td>1415.50</td><td>+375</td><td>+3.04%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:06</td><td>12:50:14</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>11</td><td>997.65</td><td>1031.75</td><td>+375</td><td>+3.42%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:07</td><td>13:41:21</td><td class="dir">▲ LONG</td><td class="sym">LGEINDIA</td><td>6</td><td>1594.10</td><td>1615.50</td><td>+128</td><td>+1.34%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:40:08</td><td>12:50:15</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>6</td><td>1307.70</td><td>1350.70</td><td>+258</td><td>+3.29%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:09</td><td>12:50:15</td><td class="dir">▲ LONG</td><td class="sym">BHARATFORG</td><td>4</td><td>1866.20</td><td>1908.70</td><td>+170</td><td>+2.28%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:10</td><td>13:41:22</td><td class="dir">▲ LONG</td><td class="sym">M&MFIN</td><td>23</td><td>303.60</td><td>306.15</td><td>+59</td><td>+0.84%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>12:40:11</td><td>12:50:16</td><td class="dir">▲ LONG</td><td class="sym">FORTIS</td><td>7</td><td>890.90</td><td>925.35</td><td>+241</td><td>+3.87%</td><td>TARGET</td></tr>
+<tr class="win"><td>12:40:11</td><td>12:50:16</td><td class="dir">▲ LONG</td><td class="sym">ICICIBANK</td><td>4</td><td>1356.20</td><td>1383.40</td><td>+109</td><td>+2.01%</td><td>TARGET</td></tr>
+<tr class="loss"><td>13:31:20</td><td>13:41:23</td><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>5</td><td>3340.10</td><td>3196.70</td><td>-717</td><td>-4.29%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>13:31:20</td><td>13:41:23</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4397.40</td><td>+464</td><td>+3.64%</td><td>TARGET</td></tr>
+<tr class="loss"><td>13:31:20</td><td>13:41:24</td><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>3</td><td>2143.90</td><td>2104.00</td><td>-120</td><td>-1.86%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>13:31:20</td><td>14:02:25</td><td class="dir">▲ LONG</td><td class="sym">ADANIGREEN</td><td>8</td><td>1152.70</td><td>1147.80</td><td>-39</td><td>-0.43%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>13:31:20</td><td>15:16:51</td><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>5</td><td>2873.10</td><td>2883.00</td><td>+50</td><td>+0.34%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>14:02:26</td><td>15:16:52</td><td class="dir">▲ LONG</td><td class="sym">TRENT</td><td>3</td><td>4242.80</td><td>4389.80</td><td>+441</td><td>+3.46%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:02:28</td><td>15:19:00</td><td class="dir">▲ LONG</td><td class="sym">BAJFINANCE</td><td>12</td><td>917.75</td><td>937.65</td><td>+239</td><td>+2.17%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>14:02:29</td><td>15:16:52</td><td class="dir">▲ LONG</td><td class="sym">AUBANK</td><td>10</td><td>997.65</td><td>1036.40</td><td>+388</td><td>+3.88%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:02:30</td><td>15:16:53</td><td class="dir">▲ LONG</td><td class="sym">MANKIND</td><td>4</td><td>2144.00</td><td>2200.10</td><td>+224</td><td>+2.62%</td><td>TARGET</td></tr>
+<tr class="win"><td>14:02:32</td><td>15:16:53</td><td class="dir">▲ LONG</td><td class="sym">UNITDSPR</td><td>6</td><td>1307.70</td><td>1361.20</td><td>+321</td><td>+4.09%</td><td>TARGET</td></tr>
+<tr class="loss"><td>14:02:34</td><td>15:19:01</td><td class="dir">▲ LONG</td><td class="sym">COROMANDEL</td><td>2</td><td>2074.90</td><td>2052.30</td><td>-45</td><td>-1.09%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #dc2626, #dc2626dd);">
+        <h2>v5 Multi-Horizon (current) <span class="tag">[hardened · Rust]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs -183</b></span>
+          <span>10 trades · 5W / 5L · 50% WR</span>
+          <span>Avg: Rs -18</span>
+          <span>Win avg: Rs +67 · Loss avg: Rs -104</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5.png"/></div>
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr class="loss"><td>08:29:29</td><td>08:59:09</td><td class="dir">▲ LONG</td><td class="sym">COCHINSHIP</td><td>17</td><td>1561.10</td><td>1542.00</td><td>-325</td><td>-1.22%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:31</td><td>08:59:10</td><td class="dir">▲ LONG</td><td class="sym">POLYCAB</td><td>2</td><td>8182.50</td><td>8220.00</td><td>+75</td><td>+0.46%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:37</td><td>08:58:29</td><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>53</td><td>196.91</td><td>197.49</td><td>+31</td><td>+0.29%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td>08:29:37</td><td>10:02:51</td><td class="dir">▲ LONG</td><td class="sym">OFSS</td><td>1</td><td>7992.50</td><td>8130.00</td><td>+138</td><td>+1.72%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>08:29:40</td><td>08:59:12</td><td class="dir">▲ LONG</td><td class="sym">COLPAL</td><td>3</td><td>2106.00</td><td>2128.00</td><td>+66</td><td>+1.04%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>08:29:41</td><td>08:59:13</td><td class="dir">▲ LONG</td><td class="sym">NHPC</td><td>84</td><td>83.56</td><td>82.93</td><td>-53</td><td>-0.75%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:41:22</td><td>08:58:30</td><td class="dir">▲ LONG</td><td class="sym">ATGL</td><td>6</td><td>632.90</td><td>615.35</td><td>-105</td><td>-2.77%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td>09:41:22</td><td>08:59:14</td><td class="dir">▲ LONG</td><td class="sym">DABUR</td><td>9</td><td>442.85</td><td>440.00</td><td>-26</td><td>-0.64%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td>09:41:23</td><td>08:59:15</td><td class="dir">▲ LONG</td><td class="sym">ADANIENSOL</td><td>3</td><td>1259.80</td><td>1256.00</td><td>-11</td><td>-0.30%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td>09:41:26</td><td>08:59:16</td><td class="dir">▲ LONG</td><td class="sym">LTF</td><td>11</td><td>287.14</td><td>289.70</td><td>+28</td><td>+0.89%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #6b7280, #6b7280dd);">
+        <h2>v5.3 Staged Entry <span class="tag">[staged · over-filtered]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs -414</b></span>
+          <span>0 trades · 0W / 0L · 0% WR</span>
+          <span>Avg: Rs +0</span>
+          <span>Win avg: Rs +0 · Loss avg: Rs +0</span>
+        </div>
+      </div>
+      
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr><td colspan="10" style="text-align:center;color:#9ca3af">No closed trades</td></tr></tbody>
+      </table>
+    </div>
+    
+
+    <div class="engine-section">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #9ca3af, #9ca3afdd);">
+        <h2>v5.2 Stat-Arb <span class="tag">[dormant]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +0</b></span>
+          <span>0 trades · 0W / 0L · 0% WR</span>
+          <span>Avg: Rs +0</span>
+          <span>Win avg: Rs +0 · Loss avg: Rs +0</span>
+        </div>
+      </div>
+      
+      <table class="trade-table">
+        <thead><tr>
+          <th>Entry Time</th><th>Exit Time</th>
+          <th>Dir</th><th>Symbol</th><th>Qty</th>
+          <th>Entry</th><th>Exit</th>
+          <th>P&amp;L (Rs)</th><th>%</th><th>Reason</th>
+        </tr></thead>
+        <tbody><tr><td colspan="10" style="text-align:center;color:#9ca3af">No closed trades</td></tr></tbody>
+      </table>
+    </div>
+    
+
+<!-- ====== BACK COVER ====== -->
+<div class="back-cover">
+  <h2>Tuesday in One Line</h2>
+  <div class="quote">"The ML fix worked. 4 engines cleared Rs 13K at 85%+ WR.<br>v5_classic extended its A/B lead. Best day since launch."</div>
+  <p><b>Combined P&amp;L:</b> Rs +84,172 · <b>Trades:</b> 387 · <b>Best WR:</b> 92% (v5.7)</p>
+  <p><b>A/B gap widened:</b> v5_classic +Rs +14,017 over v5 (Day 1: +Rs 4,950 · Day 2: today)</p>
+  <p><b>Tomorrow's focus:</b> Universe expansion (Nifty 500 + mid/small caps) · Day 3 A/B continuation</p>
+  <div class="footer">
+    TradePilot · Soumya Swain · soumya@sidewall.in<br>
+    Generated 2026-04-21 17:36 IST
+  </div>
+</div>
+
+</body></html>

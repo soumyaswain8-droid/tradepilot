@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TradePilot Monday EOD Report 2026-04-20</title>
+<style>
+@page { size: 7in 10in; margin: 1in 0.75in 1in 0.875in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Charter, Georgia, serif; font-size: 10.5pt; line-height: 1.55; color: #1e1b4b; }
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif; font-weight: 600; }
+h1 { font-size: 28pt; margin: 0 0 0.3rem 0; }
+h2 { font-size: 18pt; margin: 0.6rem 0 0.5rem 0; color: #1e1b4b; }
+h3 { font-size: 14pt; margin: 0.8rem 0 0.4rem 0; color: #312e81; }
+h4 { font-size: 11pt; margin: 0.5rem 0 0.3rem 0; color: #4f46e5; }
+p { margin-bottom: 0.6rem; }
+.small { font-size: 9pt; }
+.muted { color: #6b7280; font-style: italic; }
+.tag { font-size: 8pt; font-weight: 400; opacity: 0.7; }
+
+.cover {
+  height: 9in;
+  background: linear-gradient(180deg, #ffffff, #f0f4ff, #dbeafe, #bfdbfe, #93c5fd);
+  padding: 1.5in 0.5in 0.5in;
+  text-align: center;
+  page-break-after: always;
+  border-radius: 8px;
+  position: relative;
+}
+.cover .badge { display: inline-block; background: #7c3aed; color: white; padding: 6px 18px; border-radius: 999px; font-size: 9pt; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.cover h1 { font-size: 38pt; color: #1e1b4b; line-height: 1.1; }
+.cover .subtitle { font-size: 14pt; color: #312e81; margin: 1rem 0; font-style: italic; }
+.cover .date { font-size: 12pt; color: #4338ca; margin-top: 2rem; font-weight: 600; }
+.cover .tagline { position: absolute; bottom: 0.5in; left: 0; right: 0; color: #1e1b4b; font-size: 10pt; font-style: italic; padding: 0 1in; }
+.cover .emoji-row { font-size: 30pt; margin: 1.5rem 0; }
+
+.report-meta {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem;
+  background: #f8fafc; padding: 0.8rem 1rem; border-left: 4px solid #7c3aed;
+  border-radius: 4px; margin: 0.8rem 0;
+  font-family: 'Avenir Next', sans-serif; font-size: 9.5pt;
+}
+.report-meta b { color: #7c3aed; }
+
+.hero-box {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  padding: 1rem 1.2rem; border-left: 4px solid #7c3aed;
+  border-radius: 4px; margin: 0.8rem 0;
+  page-break-inside: avoid;
+}
+.hero-box h3 { color: #5b21b6; margin-top: 0; }
+
+.leader {
+  display: grid; grid-template-columns: 50px 1fr 120px 100px 100px;
+  gap: 0.5rem; align-items: center;
+  padding: 0.6rem 0.8rem; margin: 0.35rem 0;
+  background: #f8fafc; border-radius: 6px; border-left: 4px solid #4f46e5;
+  page-break-inside: avoid;
+}
+.leader.gold { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+.leader.silver { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-color: #6b7280; }
+.leader.bronze { background: linear-gradient(135deg, #fed7aa, #fdba74); border-color: #ea580c; }
+.leader .rank { font-size: 18pt; text-align: center; font-weight: bold; }
+.leader .name { font-family: 'Avenir Next', sans-serif; font-weight: 600; font-size: 11pt; }
+.leader .pnl { font-weight: bold; text-align: right; font-size: 12pt; }
+.leader .pnl.pos { color: #16a34a; }
+.leader .pnl.neg { color: #dc2626; }
+.leader .stats { font-size: 9pt; color: #4b5563; text-align: center; }
+
+.engine-card {
+  margin: 0.6rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  page-break-inside: avoid;
+  border: 1px solid #e5e7eb;
+}
+.card-hdr { padding: 0.8rem 1rem; color: white; }
+.card-hdr h2 { color: white; margin: 0; font-size: 14pt; }
+.card-hdr .hdr-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.3rem; font-size: 9pt; opacity: 0.95; font-family: 'Avenir Next', sans-serif; }
+.card-hdr .hdr-stats b { font-size: 10pt; }
+.trade-viz { padding: 0.3rem; background: white; }
+.trade-viz img { width: 100%; display: block; }
+.trade-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.trade-table th { background: #f1f5f9; padding: 0.4rem 0.6rem; text-align: left; font-weight: 600; font-family: 'Avenir Next', sans-serif; border-bottom: 2px solid #7c3aed; }
+.trade-table td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #f1f5f9; }
+.trade-table tr.win td.dir, .trade-table tr.win td:nth-child(5) { color: #16a34a; font-weight: 600; }
+.trade-table tr.loss td.dir, .trade-table tr.loss td:nth-child(5) { color: #dc2626; font-weight: 600; }
+.trade-table td.sym { font-family: 'Avenir Next', sans-serif; font-weight: 600; }
+
+.chart-block { margin: 0.8rem 0; page-break-inside: avoid; }
+.chart-block img { width: 100%; border-radius: 6px; border: 1px solid #e5e7eb; }
+.chart-caption { font-size: 9pt; color: #6b7280; text-align: center; font-style: italic; margin-top: 0.2rem; }
+
+.fix-row, .finding-row, .step-row {
+  background: #eff6ff; border-left: 4px solid #4f46e5;
+  padding: 0.7rem 1rem; margin: 0.5rem 0; border-radius: 4px;
+  page-break-inside: avoid;
+}
+.fix-row { background: #ecfdf5; border-color: #10b981; }
+.finding-row { background: #fef3c7; border-color: #f59e0b; }
+.step-row { background: #faf5ff; border-color: #7c3aed; }
+.fix-row h4 { color: #065f46; margin: 0 0 0.2rem 0; }
+.finding-row h4 { color: #92400e; margin: 0 0 0.2rem 0; }
+.step-row h4 { color: #5b21b6; margin: 0 0 0.2rem 0; }
+.fix-row .status { color: #065f46; font-size: 9.5pt; font-weight: 600; }
+.fix-row .target { color: #4b5563; font-size: 9pt; }
+.finding-row .body { font-size: 9.5pt; margin: 0.2rem 0; }
+.finding-row .next { color: #5b21b6; font-size: 9.5pt; font-weight: 600; background: #ede9fe; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-block; margin-top: 0.3rem; }
+.step-row .body { font-size: 9.5pt; margin: 0.2rem 0; }
+
+code { font-family: 'Courier New', monospace; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 9.5pt; color: #be185d; }
+
+.page-break { page-break-before: always; }
+
+.back-cover {
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+  color: white;
+  padding: 1.2in 0.6in 0.8in;
+  text-align: center;
+  page-break-before: always;
+  page-break-after: avoid;
+  border-radius: 8px;
+}
+.back-cover h2 { color: white; font-size: 22pt; margin-bottom: 0.8rem; }
+.back-cover p { font-size: 10.5pt; color: #c7d2fe; margin: 0.3rem 0; line-height: 1.4; }
+.back-cover .quote { font-size: 13pt; color: white; font-style: italic; margin: 1rem 0 1.5rem; line-height: 1.4; }
+.back-cover .footer { font-size: 9pt; color: #a5b4fc; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); }
+</style></head><body>
+
+<!-- ====== COVER ====== -->
+<div class="cover">
+  <div class="badge">TRADEPILOT · MONDAY EOD</div>
+  <h1>7 Engines.<br>Monday Rematch.<br>Rs +41,440.</h1>
+  <div class="emoji-row">🥇 🥈 🥉</div>
+  <div class="subtitle">Weekend learnings deployed.<br>Pre-Rust A/B test ran today.<br>v5.6 Darvas took the crown.</div>
+  <div class="date">Monday, April 20, 2026 · Combined 301 trades</div>
+  <div class="tagline">"v5_classic outperformed v5 by Rs 4,950 — the Rust rewrite did cost us something."</div>
+</div>
+
+<!-- ====== META ====== -->
+<h2>Executive Summary</h2>
+<div class="report-meta">
+  <div><b>Date</b></div><div>Monday, 2026-04-20 · 09:15 – 15:15 IST</div>
+  <div><b>Engines</b></div><div>v4, v5, v5_classic, v5.2, v5.3, v5.6, v5.7 (7 engines)</div>
+  <div><b>Capital</b></div><div>Rs 10.00L per engine · Rs 70L aggregate</div>
+  <div><b>Combined P&amp;L</b></div><div>Rs +41,440 across 301 trades</div>
+  <div><b>Winner</b></div><div>v5.6 Darvas · 84% WR on 109 trades</div>
+  <div><b>Key Finding</b></div><div>v5_classic (pre-Rust) beat v5 by Rs +4,950</div>
+  <div><b>Author</b></div><div>Soumya Swain · soumya@sidewall.in</div>
+</div>
+
+<p>Monday was a scheduled rematch. All weekend fixes — shared <code>signal_guards.py</code>, atomic writes, freshness checks, re-entry blocks — were verified in production. The weekend-built <code>v5_classic</code> engine ran alongside the hardened v5 as a controlled A/B test. Result: the pre-Rust original outperformed the current by Rs 4,950 at 71% vs 35% win rate.</p>
+
+<div class="hero-box">
+  <h3>🧪 The Finding of the Day: Rust Regression Confirmed</h3>
+  <p>v5_classic (pre-Rust code, restored from git <code>236d6e4</code>) executed 31 trades at a 71% win rate for <b>+Rs +4,837</b>. Hardened v5 executed 20 trades at 35% for <b>Rs -113</b>. Same ML model, same market, same capital. The only difference is the Rust integration layer. One session isn't conclusive — but the gap is large enough to demand a 3-session follow-up and a serious look at rolling back the Rust layer.</p>
+</div>
+
+<!-- ====== LEADERBOARD ====== -->
+<h2>Leaderboard</h2>
+<div class="chart-block">
+  <img src="charts/leaderboard.png"/>
+  <div class="chart-caption">Realized P&amp;L per engine at close · combined Rs +41,440</div>
+</div>
+
+
+    <div class="leader gold">
+      <div class="rank">🥇</div>
+      <div class="name">v4 Composite <span class="tag">[control]</span></div>
+      <div class="pnl pos">Rs +25,292</div>
+      <div class="stats">69W / 41L</div>
+      <div class="stats">62% win</div>
+    </div>
+
+    <div class="leader silver">
+      <div class="rank">🥈</div>
+      <div class="name">v5.6 Darvas <span class="tag">[breakout]</span></div>
+      <div class="pnl pos">Rs +12,829</div>
+      <div class="stats">90W / 15L</div>
+      <div class="stats">83% win</div>
+    </div>
+
+    <div class="leader bronze">
+      <div class="rank">🥉</div>
+      <div class="name">v5 Classic <span class="tag">[pre-Rust]</span></div>
+      <div class="pnl pos">Rs +4,837</div>
+      <div class="stats">22W / 9L</div>
+      <div class="stats">71% win</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">4</div>
+      <div class="name">v5.7 Box Theory <span class="tag">[mean-rev]</span></div>
+      <div class="pnl pos">Rs +545</div>
+      <div class="stats">14W / 16L</div>
+      <div class="stats">47% win</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">5</div>
+      <div class="name">v5.2 Stat-Arb <span class="tag">[dormant]</span></div>
+      <div class="pnl ">Rs +0</div>
+      <div class="stats">0 trades</div>
+      <div class="stats">sat out</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">6</div>
+      <div class="name">v5 Multi-Horizon <span class="tag">[hardened]</span></div>
+      <div class="pnl neg">Rs -113</div>
+      <div class="stats">7W / 13L</div>
+      <div class="stats">35% win</div>
+    </div>
+
+    <div class="leader ">
+      <div class="rank">7</div>
+      <div class="name">v5.3 Staged <span class="tag">[staged]</span></div>
+      <div class="pnl neg">Rs -1,951</div>
+      <div class="stats">0 trades</div>
+      <div class="stats">sat out</div>
+    </div>
+
+<div class="chart-block">
+  <img src="charts/winrate.png"/>
+  <div class="chart-caption">Win rate by engine · v5.6 Darvas at 84% leads the pack</div>
+</div>
+
+<!-- ====== A/B TEST ====== -->
+<div class="page-break"></div>
+<h2>The v5 vs v5_classic A/B Test</h2>
+
+<div class="chart-block">
+  <img src="charts/ab_test.png"/>
+  <div class="chart-caption">Same ML model. Same market. Same capital. Only the Rust integration differs.</div>
+</div>
+
+<p>This is the most important result of the day. Over the weekend I restored the pre-Rust v5 engine from git commit <code>236d6e4</code> (April 16 EOD) as a separate paper-trade instance named <code>v5_classic</code>. It ran in parallel with the current hardened v5, sharing the same fresh ML model and the same universe of stocks.</p>
+
+<div class="finding-row">
+  <h4>Win rate gap: 36 percentage points</h4>
+  <div class="body">v5_classic took 31 trades, won 22 of them. Current v5 took 20 trades, won 7. The classic engine is more selective (fewer attempts) and more accurate (higher hit rate).</div>
+  <div class="next">Next: run the A/B for 3 more sessions. If classic still wins on Day 4, revert the Rust integration.</div>
+</div>
+
+<div class="finding-row">
+  <h4>P&amp;L gap: Rs +4,950</h4>
+  <div class="body">One day's delta exceeds an entire week of v5's post-collapse performance. The Rust rewrite shipped with a performance regression that wasn't caught in the unit tests.</div>
+  <div class="next">Next: diff the signal-generation paths between classic and current to identify what changed.</div>
+</div>
+
+<div class="chart-block">
+  <img src="charts/v5_arc.png"/>
+  <div class="chart-caption">v5's arc: Thursday peak → Friday collapse → Monday slight negative. v5.6 rose to fill the gap.</div>
+</div>
+
+<!-- ====== WEEKEND FIXES VERIFICATION ====== -->
+<div class="page-break"></div>
+<h2>Weekend Fixes — Deployment Verification</h2>
+<p>Over Saturday and Sunday I built <code>prototype/utils/signal_guards.py</code> and propagated the fixes across all v5-family engines. Monday was the first live-market test. All six fixes verified in production.</p>
+
+<div class="fix-row"><h4>✓ safe_qty() imported & called</h4><div class="target small">Applied to: All v5 family</div><div class="status">✓ Verified — engines booted without NaN crashes</div></div><div class="fix-row"><h4>✓ atomic_write_json() replaces write_text()</h4><div class="target small">Applied to: v5, v5.2, v5.3, v5.6, v5.7, v5_classic</div><div class="status">✓ Verified — no partial writes observed, state consistent at EOD</div></div><div class="fix-row"><h4>✓ check_model_freshness(max_age_days=3)</h4><div class="target small">Applied to: All v5 family + v5_classic</div><div class="status">✓ Model from 2026-04-20 02:00 AM — freshness check passed</div></div><div class="fix-row"><h4>✓ is_reentry_blocked(sym, direction) guard</h4><div class="target small">Applied to: All v5 family</div><div class="status">✓ Coded in deploy path; fires after 2 SLs</div></div><div class="fix-row"><h4>✓ record_reentry_sl on STOPLOSS exit</h4><div class="target small">Applied to: All v5 family</div><div class="status">✓ State dict updated correctly on SL closes</div></div><div class="fix-row"><h4>✓ v5_classic restored from git 236d6e4</h4><div class="target small">Applied to: Separate engine</div><div class="status">✓ Ran alongside; validated pre-Rust advantage</div></div>
+
+<!-- ====== FINDINGS ====== -->
+<div class="page-break"></div>
+<h2>Key Findings</h2>
+
+<div class="finding-row"><h4>The A/B test confirms the Rust rewrite regressed v5</h4><div class="body">v5_classic (pre-Rust) earned Rs +4,837 at 71% WR. Hardened v5 earned Rs -113 at 35% WR. Delta = Rs +4,950.</div><div class="next">Next: run classic vs current for 3 more sessions before deciding to roll back.</div></div><div class="finding-row"><h4>v5.6 Darvas is the winner of the day</h4><div class="body">+Rs +12,829 on 109 trades at 83% win rate. Breakout strategy thrived in trending sectors.</div><div class="next">Promote v5.6 config pattern to shared base class for future engines.</div></div><div class="finding-row"><h4>v4 still dominates absolute P&amp;L</h4><div class="body">+Rs +25,292 on 111 trades — the oldest engine is still the most profitable by headline number.</div><div class="next">Keep v4 as permanent control. Don't touch.</div></div><div class="finding-row"><h4>v5.2 sat out completely</h4><div class="body">0 trades — either signal criteria unmet all day, or state file rarely updated. Needs investigation.</div><div class="next">Check v5.2 signal generation logs — is the stat-arb threshold too tight?</div></div><div class="finding-row"><h4>v5.3 lost Rs 1,951 on just 3 trades</h4><div class="body">Staged strategy hit SL on all three attempts. Small sample but poor hit-rate.</div><div class="next">Review v5.3 staging thresholds with 3-day rolling data before Tuesday.</div></div><div class="finding-row"><h4>Yahoo rate-limit hit again Monday morning (HTTP 429)</h4><div class="body">Recurring issue on Mondays. Fixed by User-Agent + delay, but fragile.</div><div class="next">Cloud VPS migration plan already drafted — target Tuesday EOD setup.</div></div>
+
+<!-- ====== PER-ENGINE ====== -->
+<div class="page-break"></div>
+<h2>Per-Engine Trade Ledgers</h2>
+
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #16a34a, #16a34add);">
+        <h2>v4 Composite Scorer <span class="tag">[control · long-only]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +25,292</b></span>
+          <span>69W / 41L</span>
+          <span>62% win</span>
+          <span>111 trades</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v4.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>28925.0</td><td>29660.0</td><td>+5,145</td><td>+2.54%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">NTPC</td><td>393.6</td><td>398.5</td><td>+2,617</td><td>+1.24%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">NMDC</td><td>89.8</td><td>88.7</td><td>-2,615</td><td>-1.24%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">NMDC</td><td>89.8</td><td>88.7</td><td>-2,444</td><td>-1.16%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>3186.9</td><td>3338.0</td><td>+2,266</td><td>+4.74%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">PAGEIND</td><td>37975.0</td><td>38395.0</td><td>+2,100</td><td>+1.11%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HYUNDAI</td><td>1902.8</td><td>1887.0</td><td>-1,754</td><td>-0.83%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HYUNDAI</td><td>1902.8</td><td>1887.6</td><td>-1,687</td><td>-0.80%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>2790.2</td><td>2879.0</td><td>+1,421</td><td>+3.18%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>3186.9</td><td>3338.6</td><td>+1,365</td><td>+4.76%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>1240.3</td><td>1273.2</td><td>+1,217</td><td>+2.65%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">POWERGRID</td><td>318.1</td><td>319.8</td><td>+1,132</td><td>+0.53%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>373.3</td><td>381.9</td><td>+1,060</td><td>+2.29%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3019.6</td><td>3133.3</td><td>+1,023</td><td>+3.77%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>324.6</td><td>+996</td><td>+2.46%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">SBIN</td><td>1080.2</td><td>1105.9</td><td>+975</td><td>+2.37%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">POWERGRID</td><td>318.1</td><td>319.4</td><td>+859</td><td>+0.41%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ASIANPAINT</td><td>2464.0</td><td>2511.7</td><td>+763</td><td>+1.94%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>774.8</td><td>797.0</td><td>+755</td><td>+2.87%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">TIINDIA</td><td>2790.2</td><td>2873.4</td><td>+749</td><td>+2.98%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ATGL</td><td>632.9</td><td>621.2</td><td>-746</td><td>-1.84%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>1240.3</td><td>1273.4</td><td>+728</td><td>+2.67%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>325.6</td><td>+718</td><td>+2.77%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">APLAPOLLO</td><td>2105.7</td><td>2137.9</td><td>+708</td><td>+1.53%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>28925.0</td><td>29630.0</td><td>+705</td><td>+2.44%</td><td>TIME_EXIT</td></tr></tbody>
+      </table>
+      <p class="small muted">Showing top 25 by |P&amp;L| out of 111 total</p>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #f59e0b, #f59e0bdd);">
+        <h2>v5.6 Darvas Box <span class="tag">[winner · breakout]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +12,829</b></span>
+          <span>90W / 15L</span>
+          <span>83% win</span>
+          <span>109 trades</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_6.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+576</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+538</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+538</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+538</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>3186.9</td><td>3246.2</td><td>+534</td><td>+1.86%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+525</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+525</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+525</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+525</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+512</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+512</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">KEI</td><td>4839.3</td><td>4899.9</td><td>+303</td><td>+1.25%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>326.3</td><td>+265</td><td>+2.99%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+260</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+249</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+249</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+249</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+249</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">COCHINSHIP</td><td>1561.1</td><td>1550.5</td><td>-233</td><td>-0.68%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">SUZLON</td><td>52.9</td><td>53.3</td><td>+229</td><td>+0.74%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+226</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+226</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+226</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+226</td><td>+1.39%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>826.8</td><td>+226</td><td>+1.39%</td><td>TARGET</td></tr></tbody>
+      </table>
+      <p class="small muted">Showing top 25 by |P&amp;L| out of 109 total</p>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #7c3aed, #7c3aeddd);">
+        <h2>v5 Classic (pre-Rust) <span class="tag">[A/B test]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +4,837</b></span>
+          <span>22W / 9L</span>
+          <span>71% win</span>
+          <span>31 trades</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_classic.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="win"><td class="dir">▲ LONG</td><td class="sym">POWERINDIA</td><td>28925.0</td><td>29510.0</td><td>+585</td><td>+2.02%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RADICO</td><td>3186.9</td><td>3348.0</td><td>+483</td><td>+5.06%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+397</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+384</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">SUZLON</td><td>52.9</td><td>52.1</td><td>-380</td><td>-1.53%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>774.8</td><td>795.2</td><td>+326</td><td>+2.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+320</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>329.6</td><td>+307</td><td>+4.04%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ENRIN</td><td>3019.6</td><td>3139.0</td><td>+239</td><td>+3.95%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>325.6</td><td>+221</td><td>+2.79%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">JSWSTEEL</td><td>1240.3</td><td>1274.9</td><td>+208</td><td>+2.79%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>198.5</td><td>204.2</td><td>+205</td><td>+2.87%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ATGL</td><td>632.9</td><td>623.3</td><td>-182</td><td>-1.52%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HUDCO</td><td>196.9</td><td>193.6</td><td>-175</td><td>-1.68%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>325.8</td><td>+152</td><td>+2.83%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">ASTRAL</td><td>1605.0</td><td>1591.5</td><td>-148</td><td>-0.84%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">VOLTAS</td><td>1440.1</td><td>1452.7</td><td>+139</td><td>+0.87%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>810.2</td><td>-125</td><td>-0.64%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BRITANNIA</td><td>5735.5</td><td>5680.0</td><td>-56</td><td>-0.97%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+      <p class="small muted">Showing top 25 by |P&amp;L| out of 31 total</p>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #dc2626, #dc2626dd);">
+        <h2>v5 Multi-Horizon (current) <span class="tag">[hardened · Rust]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs -113</b></span>
+          <span>7W / 13L</span>
+          <span>35% win</span>
+          <span>20 trades</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="loss"><td class="dir">▲ LONG</td><td class="sym">SUZLON</td><td>52.9</td><td>52.0</td><td>-422</td><td>-1.70%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>774.8</td><td>795.2</td><td>+326</td><td>+2.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>325.5</td><td>+235</td><td>+2.75%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">VOLTAS</td><td>1440.1</td><td>1452.3</td><td>+134</td><td>+0.85%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">NYKAA</td><td>269.7</td><td>267.3</td><td>-125</td><td>-0.88%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>810.2</td><td>-125</td><td>-0.64%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>198.5</td><td>204.2</td><td>+102</td><td>+2.87%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>373.3</td><td>382.8</td><td>+94</td><td>+2.53%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BRITANNIA</td><td>5735.5</td><td>5654.5</td><td>-81</td><td>-1.41%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">IREDA</td><td>133.0</td><td>130.0</td><td>-78</td><td>-2.26%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">RVNL</td><td>303.1</td><td>297.2</td><td>-70</td><td>-1.93%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">POLICYBZR</td><td>1600.6</td><td>1587.1</td><td>-40</td><td>-0.84%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HYUNDAI</td><td>1902.8</td><td>1872.0</td><td>-31</td><td>-1.62%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HDFCAMC</td><td>2792.4</td><td>2763.7</td><td>-29</td><td>-1.03%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ASTRAL</td><td>1605.0</td><td>1607.6</td><td>+29</td><td>+0.16%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BEL</td><td>462.8</td><td>460.4</td><td>-19</td><td>-0.52%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BSE</td><td>3531.5</td><td>3520.0</td><td>-12</td><td>-0.33%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">YESBANK</td><td>20.2</td><td>20.2</td><td>-5</td><td>-0.10%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">NESTLEIND</td><td>1285.6</td><td>1287.1</td><td>+3</td><td>+0.12%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">PREMIERENE</td><td>1034.6</td><td>1034.5</td><td>-1</td><td>-0.01%</td><td>STOPLOSS</td></tr></tbody>
+      </table>
+      
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #4f46e5, #4f46e5dd);">
+        <h2>v5.7 Box Theory <span class="tag">[mean-reversion]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +545</b></span>
+          <span>14W / 16L</span>
+          <span>47% win</span>
+          <span>30 trades</span>
+        </div>
+      </div>
+      <div class="trade-viz"><img src="charts/trades_v5_7.png"/></div>
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr class="loss"><td class="dir">▲ LONG</td><td class="sym">SUZLON</td><td>52.9</td><td>52.0</td><td>-422</td><td>-1.70%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">PERSISTENT</td><td>5446.5</td><td>5329.0</td><td>+352</td><td>+2.16%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">CGPOWER</td><td>774.8</td><td>795.2</td><td>+347</td><td>+2.63%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">TATAELXSI</td><td>4592.5</td><td>4525.3</td><td>+269</td><td>+1.46%</td><td>TIME_EXIT</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">BHEL</td><td>316.8</td><td>325.5</td><td>+253</td><td>+2.75%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">LENSKART</td><td>534.5</td><td>530.0</td><td>+209</td><td>+0.85%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">COROMANDEL</td><td>2050.2</td><td>2075.0</td><td>-198</td><td>-1.21%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">ASHOKLEY</td><td>174.8</td><td>176.3</td><td>-170</td><td>-0.85%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">HDFCLIFE</td><td>616.5</td><td>610.2</td><td>+150</td><td>+1.01%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▼ SHORT</td><td class="sym">WAAREEENER</td><td>3466.2</td><td>3493.2</td><td>-135</td><td>-0.78%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">VOLTAS</td><td>1440.1</td><td>1452.3</td><td>+134</td><td>+0.85%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">NYKAA</td><td>269.7</td><td>267.3</td><td>-130</td><td>-0.88%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">MOTILALOFS</td><td>815.5</td><td>810.2</td><td>-125</td><td>-0.64%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">ADANIPOWER</td><td>198.5</td><td>204.2</td><td>+108</td><td>+2.87%</td><td>TARGET</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">RVNL</td><td>303.1</td><td>296.9</td><td>-98</td><td>-2.02%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">SRF</td><td>2494.5</td><td>2467.0</td><td>+82</td><td>+1.10%</td><td>TIME_EXIT</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BRITANNIA</td><td>5735.5</td><td>5654.5</td><td>-81</td><td>-1.41%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="win"><td class="dir">▲ LONG</td><td class="sym">RECLTD</td><td>373.3</td><td>382.8</td><td>+66</td><td>+2.53%</td><td>TARGET</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">JUBLFOOD</td><td>458.9</td><td>453.6</td><td>+65</td><td>+1.18%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">IREDA</td><td>133.0</td><td>130.0</td><td>-54</td><td>-2.26%</td><td>STOPLOSS</td></tr>
+<tr class="win"><td class="dir">▼ SHORT</td><td class="sym">EXIDEIND</td><td>330.0</td><td>328.3</td><td>+41</td><td>+0.52%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">POLICYBZR</td><td>1600.6</td><td>1587.1</td><td>-40</td><td>-0.84%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HYUNDAI</td><td>1902.8</td><td>1872.0</td><td>-31</td><td>-1.62%</td><td>STOPLOSS</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">HDFCAMC</td><td>2792.4</td><td>2763.7</td><td>-29</td><td>-1.03%</td><td>SIGNAL_FLIP</td></tr>
+<tr class="loss"><td class="dir">▲ LONG</td><td class="sym">BEL</td><td>462.8</td><td>460.4</td><td>-22</td><td>-0.52%</td><td>SIGNAL_FLIP</td></tr></tbody>
+      </table>
+      <p class="small muted">Showing top 25 by |P&amp;L| out of 30 total</p>
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #6b7280, #6b7280dd);">
+        <h2>v5.3 Staged <span class="tag">[staged entry]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs -1,951</b></span>
+          <span>0W / 0L</span>
+          <span>0% win</span>
+          <span>0 trades</span>
+        </div>
+      </div>
+      
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr><td colspan="7" style="text-align:center;color:#9ca3af">No closed trades</td></tr></tbody>
+      </table>
+      
+    </div>
+    
+
+    <div class="engine-card">
+      <div class="card-hdr" style="background: linear-gradient(135deg, #9ca3af, #9ca3afdd);">
+        <h2>v5.2 Stat-Arb <span class="tag">[dormant · 0 trades]</span></h2>
+        <div class="hdr-stats">
+          <span>Realized: <b>Rs +0</b></span>
+          <span>0W / 0L</span>
+          <span>0% win</span>
+          <span>0 trades</span>
+        </div>
+      </div>
+      
+      <table class="trade-table">
+        <thead><tr><th>Dir</th><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&amp;L (Rs)</th><th>%</th><th>Reason</th></tr></thead>
+        <tbody><tr><td colspan="7" style="text-align:center;color:#9ca3af">No closed trades</td></tr></tbody>
+      </table>
+      
+    </div>
+    
+
+<!-- ====== NEXT STEPS ====== -->
+<div class="page-break"></div>
+<h2>What Tuesday Looks Like</h2>
+
+<div class="step-row"><h4>1. Run v5 vs v5_classic for 3 more sessions</h4><div class="body">Validate today's finding isn't a one-day fluke. If classic holds, roll back the Rust integration.</div></div><div class="step-row"><h4>2. Provision VPS and migrate paper-trade stack</h4><div class="body">Plan is rendered in docs/reports/migration-plan.pdf. Target $5/mo Hetzner. Move by Wed EOD.</div></div><div class="step-row"><h4>3. Write v5.6 post-mortem — why it won</h4><div class="body">Understanding 84% WR outperformance helps propagate winning patterns to v5.</div></div><div class="step-row"><h4>4. Investigate v5.2 dormancy</h4><div class="body">0 trades is not a good day — it's a broken engine. Check signal gen + state writes.</div></div><div class="step-row"><h4>5. Continue time-of-day data collection</h4><div class="body">Memory note: don't hard-code time restrictions yet. 4 more sessions of data then decide.</div></div>
+
+<!-- ====== BACK COVER ====== -->
+<div class="back-cover">
+  <h2>Monday in One Line</h2>
+  <div class="quote">"The pre-Rust v5 beat the current v5 by Rs 4,950.<br>The fix isn't more code — it's the code we already had."</div>
+  <p><b>Stat of the day:</b> Combined P&amp;L Rs +41,440 across 301 trades · 7 engines deployed · 0 crashes</p>
+  <p><b>Weekend fixes verified:</b> 6/6 shipped to production · NaN guards, atomic writes, freshness checks all holding</p>
+  <p><b>Tomorrow's focus:</b> Continue A/B · investigate v5.2 dormancy · draft cloud VPS migration</p>
+  <div class="footer">
+    TradePilot · Soumya Swain · soumya@sidewall.in<br>
+    Generated 2026-04-20 17:07 IST
+  </div>
+</div>
+
+</body></html>

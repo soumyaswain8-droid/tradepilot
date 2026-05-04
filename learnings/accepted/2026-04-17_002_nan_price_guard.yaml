@@ -1,0 +1,54 @@
+id: 2026-04-17_002
+title: "NaN price guard missing in 5 engine scripts"
+observed_date: 2026-04-17
+observed_by: claude-session
+
+observation: |
+  On 2026-04-17, v5, v5.6, v5.7 all crashed with identical error:
+      ValueError: cannot convert float NaN to integer
+      at line: qty = max(1, int(min(sized, budget) / price))
+
+  Root cause: Yahoo Finance occasionally returns NaN price for a stock
+  (halted trading, API hiccup, delisted symbol). The guard clause
+  `if price <= 0: continue` does NOT catch NaN because NaN<=0 evaluates
+  to False in Python (all NaN comparisons return False).
+
+  The bug exists in 5 files (copy-paste propagation):
+  - scripts/v5-paper-trade.py  (line 354)
+  - scripts/v5_4-paper-trade.py (line 341)
+  - scripts/v5_5-paper-trade.py (line 356)
+  - scripts/v5_6-paper-trade.py (line 361)
+  - scripts/v5_7-paper-trade.py (line 374)
+
+  Temporary fix applied: changed `if price <= 0` to `if not (price > 0)`
+  which correctly catches NaN (NaN > 0 is False, so `not False` = True,
+  so continue triggers).
+
+impact:
+  engines_crashed: [v5, v5.6, v5.7]
+  trades_lost: "v5 lost ~Rs 487 realized win from pre-crash GODFRYPHLP target hit"
+  market_time_lost: "~15 minutes per engine while bug was diagnosed and patched"
+
+proposed_rule: |
+  Create shared utility: prototype/utils/signal_guards.py
+    def safe_qty(budget, price, min_qty=1):
+        if not (price > 0): return None  # Catches NaN, None, 0, negative
+        if not (budget > 0): return None
+        q = int(min(budget, budget) / price)  # Simplified
+        return max(min_qty, q) if q > 0 else None
+
+  Then replace all 5 occurrences with:
+      qty = safe_qty(budget, price)
+      if qty is None: continue
+
+  This centralizes the guard logic — future bugs fixed in one place.
+
+requires_backtest: false
+rationale: "This is a defensive guard, not a strategy change. No backtest needed."
+
+potential_risk: none
+
+status: accepted_merged
+reviewed_by: "soumya (via claude-session)"
+review_decision: "accept"
+review_notes: "Merged 2026-04-18. Created prototype/utils/signal_guards.py with safe_qty(); refactored all 5 engines to use it. Syntax-verified. No backtest needed."

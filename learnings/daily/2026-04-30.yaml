@@ -1,0 +1,49 @@
+combined_pnl: -93963.04473339081
+date: '2026-04-30'
+insights:
+- ⚠ Combined P&L Rs -93,963 is -269% vs baseline. Investigate.
+- ● v5 vs v5_classic gap Rs +2,391 (narrowing but not closed).
+- ⚠ v4 win rate dropped to 15% (6W/34L). Below 60% is abnormal.
+- ⚠ v5_6 win rate dropped to 37% (7W/12L). Below 60% is abnormal.
+- ⚠ v5_7 win rate dropped to 25% (6W/18L). Below 60% is abnormal.
+- ⚠ v5_classic win rate dropped to 22% (5W/18L). Below 60% is abnormal.
+- ⚠ v5 trade count 22 vs baseline 68. May be throttled — check rejection logs.
+- ⚠ v5_6 trade count 19 vs baseline 64. May be throttled — check rejection logs.
+- ⚠ v5_7 trade count 24 vs baseline 65. May be throttled — check rejection logs.
+- ⚠ v5_classic trade count 23 vs baseline 58. May be throttled — check rejection logs.
+- '● Week 2 target not yet hit: v5 Rs -16,735 < Rs 18,000. Need: P&L scales linearly
+  with position size?'
+per_engine:
+  v4:
+    losses: 34
+    pnl: -34554.926167106634
+    trades: 40
+    wins: 6
+    wr: 15.0
+  v5:
+    losses: 19
+    pnl: -16734.720182228084
+    trades: 22
+    wins: 3
+    wr: 13.636363636363635
+  v5_6:
+    losses: 12
+    pnl: -13314.798115196225
+    trades: 19
+    wins: 7
+    wr: 36.84210526315789
+  v5_7:
+    losses: 18
+    pnl: -15014.840215682983
+    trades: 24
+    wins: 6
+    wr: 25.0
+  v5_classic:
+    losses: 18
+    pnl: -14343.760053176879
+    trades: 23
+    wins: 5
+    wr: 21.73913043478261
+phase_change: Position size 15% → 20% of pool budget
+phase_week: 2
+storage: local-only per project rule

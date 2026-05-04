@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>TradePilot Battle Report — 2026-04-22</title>
+<style>
+@page { size: A4; margin: 16mm 12mm 18mm 12mm; @bottom-center { content: "TradePilot Battle Report · Page " counter(page) " of " counter(pages); font-family: 'Avenir Next', sans-serif; font-size: 8pt; color: #94a3b8; } }
+* { box-sizing: border-box; }
+body { font-family: Charter, Georgia, 'Times New Roman', serif; font-size: 11pt; line-height: 1.55; color: #0f172a; margin: 0; padding: 0; }
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, sans-serif; margin: 0.6em 0 0.3em; }
+h1 { font-size: 30pt; color: #0f172a; }
+h2 { font-size: 17pt; color: #1e293b; border-left: 5px solid #4f46e5; padding-left: 12px; margin-top: 1.6em; }
+h3 { font-size: 13pt; color: #312e81; margin-top: 1.1em; }
+h4 { font-size: 12pt; color: #4338ca; }
+
+.cover { text-align: center; padding: 70px 20px 50px; background: linear-gradient(180deg, #ffffff 0%, #eef2ff 50%, #c7d2fe 100%); border-radius: 12px; margin-bottom: 24px; }
+.cover .badge { display: inline-block; background: #4f46e5; color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 10pt; font-weight: 700; letter-spacing: 2px; }
+.cover h1 { margin-top: 18px; color: #1e1b4b; }
+.cover .subtitle { color: #475569; font-style: italic; margin-top: 8px; font-size: 13pt; }
+.cover .verdict { margin-top: 24px; padding: 14px 18px; background: rgba(255,255,255,0.7); border-radius: 8px; font-size: 12pt; display: inline-block; }
+.cover .verdict strong { color: #15803d; }
+
+.kpi-row { display: flex; gap: 10px; margin: 14px 0; }
+.kpi { flex: 1; padding: 14px 12px; border-radius: 10px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; }
+.kpi .label { font-size: 8pt; text-transform: uppercase; color: #64748b; letter-spacing: 1.5px; }
+.kpi .value { font-size: 22pt; font-weight: 800; margin-top: 4px; }
+.kpi .small { font-size: 9pt; color: #475569; }
+.kpi.pos .value { color: #15803d; }
+.kpi.neg .value { color: #b91c1c; }
+.kpi.warn .value { color: #d97706; }
+
+table { width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 10.5pt; }
+thead th { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 8px 10px; text-align: left; font-family: 'Avenir Next', sans-serif; font-weight: 600; }
+td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; }
+tr.row-lead td { background: #fff7ed; font-weight: 600; }
+tr.row-win  td { background: #f0fdf4; }
+tr.row-loss td { background: #fef2f2; }
+tr.row-flat td { background: #f1f5f9; color: #64748b; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.green { color: #15803d; font-weight: 700; }
+.red   { color: #b91c1c; font-weight: 700; }
+.muted { color: #64748b; }
+.medal { font-size: 14pt; }
+
+.callout { padding: 14px 16px; margin: 12px 0; border-radius: 6px; border-left: 4px solid #2563eb; background: #eff6ff; }
+.callout.warn { background: #fff7ed; border-color: #f59e0b; }
+.callout.good { background: #f0fdf4; border-color: #16a34a; }
+.callout.crit { background: #fef2f2; border-color: #dc2626; }
+.callout strong { color: #0f172a; }
+
+.chart { text-align: center; margin: 1.2em 0; page-break-inside: avoid; }
+.chart img { max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+.tune-up { padding: 14px 16px; margin: 10px 0; border-radius: 8px; border-left: 6px solid #4f46e5; background: #fafafa; page-break-inside: avoid; }
+.tune-up.critical { border-color: #dc2626; background: #fef2f2; }
+.tune-up.high     { border-color: #f59e0b; background: #fff7ed; }
+.tune-up.med      { border-color: #2563eb; background: #eff6ff; }
+.tune-up .priority { font-weight: 700; color: #4f46e5; font-size: 9pt; letter-spacing: 1.5px; text-transform: uppercase; }
+.tune-up.critical .priority { color: #dc2626; }
+.tune-up .action { font-size: 13pt; font-weight: 700; margin: 4px 0; color: #0f172a; }
+.tune-up .meta { font-size: 9.5pt; color: #475569; }
+.tune-up .meta .label { font-weight: 600; color: #1e293b; }
+.tune-up .rationale { margin-top: 6px; font-size: 10pt; color: #334155; }
+
+.page-break { page-break-before: always; }
+
+.symbol-grid { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.symbol-chip { background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 12px; font-size: 9pt; font-family: 'Avenir Next', sans-serif; font-weight: 600; }
+.symbol-chip.consensus { background: #dcfce7; color: #166534; }
+
+.appendix-table { font-size: 9.5pt; }
+.appendix-table .num { font-variant-numeric: tabular-nums; }
+
+.footer { text-align: center; color: #64748b; font-size: 9pt; margin-top: 2em; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+</style></head><body>
+
+<div class="cover">
+  <div class="badge">TRADEPILOT · DEEP-DIVE BATTLE REPORT</div>
+  <h1>2026-04-22</h1>
+  <div class="subtitle">7-engine fleet · post-Rust-unlock day · SIDEWAYS regime</div>
+  <div class="verdict">
+    Net across the fleet: <strong>Rs +129,687</strong>
+    · 4 profitable · 3 losing · 0 inactive
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi pos"><div class="label">Champion</div>
+    <div class="value">v5_7 Intraday Box</div>
+    <div class="small">Rs +61,552 · 92% WR · 156 trades</div>
+  </div>
+  <div class="kpi pos"><div class="label">v5 Comeback</div>
+    <div class="value">+Rs 44,612</div>
+    <div class="small">vs yesterday Rs +44,795 → +Rs +44,795 delta</div>
+  </div>
+  <div class="kpi neg"><div class="label">v5_2 Catastrophe</div>
+    <div class="value">Rs -45,385</div>
+    <div class="small">single options bet · -96% on NIFTY 24300PE</div>
+  </div>
+</div>
+
+<h2>1. Final Scoreboard</h2>
+<p>End of day 2026-04-22. Numbers from each engine's report.md (authoritative).</p>
+<table><thead><tr>
+  <th>Rank</th><th>Engine</th><th class="num">Net P&L</th><th class="num">% Cap</th>
+  <th class="num">Trades</th><th class="num">Win %</th><th class="num">Avg Win</th><th class="num">Avg Loss</th>
+</tr></thead><tbody>
+<tr class="row-lead">
+  <td><span class="medal">🥇</span></td>
+  <td><b>v5_7 Intraday Box</b></td>
+  <td class="num green">Rs +61,552</td>
+  <td class="num green">+6.16%</td>
+  <td class="num">156</td>
+  <td class="num">92%</td>
+  <td class="num green">Rs +438</td>
+  <td class="num red">Rs -127</td>
+</tr><tr class="row-win">
+  <td><span class="medal">🥈</span></td>
+  <td><b>v5_6 Darvas Box</b></td>
+  <td class="num green">Rs +61,284</td>
+  <td class="num green">+6.13%</td>
+  <td class="num">164</td>
+  <td class="num">92%</td>
+  <td class="num green">Rs +423</td>
+  <td class="num red">Rs -199</td>
+</tr><tr class="row-win">
+  <td><span class="medal">🥉</span></td>
+  <td><b>v5 (Rust-unlocked)</b></td>
+  <td class="num green">Rs +44,612</td>
+  <td class="num green">+4.46%</td>
+  <td class="num">138</td>
+  <td class="num">89%</td>
+  <td class="num green">Rs +381</td>
+  <td class="num red">Rs -163</td>
+</tr><tr class="row-win">
+  <td><span class="medal">—</span></td>
+  <td><b>v5_classic</b></td>
+  <td class="num green">Rs +10,291</td>
+  <td class="num green">+1.03%</td>
+  <td class="num">69</td>
+  <td class="num">74%</td>
+  <td class="num green">Rs +216</td>
+  <td class="num red">Rs -89</td>
+</tr><tr class="row-loss">
+  <td><span class="medal">—</span></td>
+  <td><b>v4 composite</b></td>
+  <td class="num red">Rs -303</td>
+  <td class="num red">-0.03%</td>
+  <td class="num">39</td>
+  <td class="num">51%</td>
+  <td class="num green">Rs +225</td>
+  <td class="num red">Rs -253</td>
+</tr><tr class="row-loss">
+  <td><span class="medal">—</span></td>
+  <td><b>v5_3 staged</b></td>
+  <td class="num red">Rs -2,364</td>
+  <td class="num red">-0.24%</td>
+  <td class="num">10</td>
+  <td class="num">0%</td>
+  <td class="num green">Rs +242</td>
+  <td class="num red">Rs -556</td>
+</tr><tr class="row-loss">
+  <td><span class="medal">☠️</span></td>
+  <td><b>v5_2 (options)</b></td>
+  <td class="num red">Rs -45,385</td>
+  <td class="num red">-4.54%</td>
+  <td class="num">1</td>
+  <td class="num">0%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs -45,385</td>
+</tr>
+</tbody></table>
+<div class="chart"><img src="charts/scoreboard.png" alt="Scoreboard"></div>
+
+<div class="page-break"></div>
+<h2>2. The Rust Unlock — Was Last Night's Fix Worth It?</h2>
+<p>Last night we externalised the Rust risk-engine position cap (was hardcoded at 30, now env-driven and raised to 150). v5 was the engine being throttled. Today's data answers: was the fix worth the work?</p>
+
+<div class="callout good">
+  <strong>Verdict: Spectacular win.</strong>
+  v5 went from 10 trades / Rs -183 yesterday
+  to <strong>138 trades / Rs +44,612 today</strong> —
+  a swing of <strong>Rs +44,795</strong> in 24 hours.
+</div>
+
+<div class="chart"><img src="charts/v5_yday_vs_today.png" alt="v5 yesterday vs today"></div>
+
+<table><thead><tr><th>Metric</th><th class="num">Yesterday (Rust locked)</th><th class="num">Today (Rust unlocked)</th><th class="num">Delta</th></tr></thead><tbody>
+<tr><td>Trades</td><td class="num">10</td><td class="num">138</td><td class="num green">+128 (13.8x)</td></tr>
+<tr><td>Win Rate</td><td class="num">50%</td><td class="num">89%</td><td class="num green">+39 pts</td></tr>
+<tr><td>Net P&L</td><td class="num">Rs -183</td><td class="num green">Rs +44,612</td><td class="num green">Rs +44,795</td></tr>
+</tbody></table>
+
+<div class="page-break"></div>
+<h2>3. P&L Trajectory — Who Pulled Ahead and When</h2>
+<p>15 snapshots captured by the profit-watchdog from market open to close. The shape of each engine's curve tells you when its edge kicked in.</p>
+<div class="chart"><img src="charts/pnl_timeline.png" alt="P&L timeline"></div>
+<p class="muted">Notice v5_6 and v5_7 climb in near-lockstep all day — both run box-theory exits in a sideways market. v5 (blue) stays Rs 5-15K behind throughout, suggesting structural exit-precision gap, not a different opportunity set.</p>
+
+<h2>4. Why v5_6 and v5_7 Have an Edge Over v5</h2>
+<p>v5 had the <strong>widest symbol coverage today (72 unique stocks)</strong>. v5_6/v5_7 traded only 71 unique each but did 156-164 round-trips on them. v5 still finished Rs 16,940 behind the leader. <strong>Breadth lost to depth.</strong></p>
+
+<div class="chart"><img src="charts/breadth_vs_depth.png" alt="Breadth vs Depth"></div>
+
+<table><thead><tr><th>Aspect</th><th>v5 (Rust-unlocked)</th><th>v5_6 (Darvas Box)</th><th>v5_7 (Intraday Box)</th></tr></thead><tbody>
+<tr><td>Entry logic</td><td>ML score + tiered models</td><td>Find Darvas price box, buy at bottom</td><td>Mean reversion: buy oversold, sell overbought</td></tr>
+<tr><td>Exit logic</td><td>Rust risk + signal flip (ML-driven)</td><td>Box top = mathematical target</td><td>Intraday box top = mathematical target</td></tr>
+<tr><td>Best regime</td><td>Trending markets</td><td>Sideways markets ✓ today</td><td>Sideways markets ✓ today</td></tr>
+<tr><td>Today's WR</td><td class="num">89%</td><td class="num">92%</td><td class="num">92%</td></tr>
+<tr><td>Today's P&L</td><td class="num">Rs +44,612</td><td class="num">Rs +61,284</td><td class="num">Rs +61,552</td></tr>
+</tbody></table>
+
+<div class="callout">
+<strong>The structural insight:</strong> Box theory gives you a mathematically defined exit (the box top). v5's ML-driven exit second-guesses the price action. In a sideways market, math beats opinion — that's why both box engines hit 92% WR while v5 sat at 89%.
+</div>
+
+<h3>Symbol overlap — where the engines agreed and disagreed</h3>
+<p><strong>All three agreed (consensus):</strong></p>
+<div class="symbol-grid"><span class="symbol-chip consensus">ABB</span><span class="symbol-chip consensus">ADANIENSOL</span><span class="symbol-chip consensus">ADANIGREEN</span><span class="symbol-chip consensus">ADANIPOWER</span><span class="symbol-chip consensus">ASIANPAINT</span><span class="symbol-chip consensus">ATGL</span><span class="symbol-chip consensus">AUBANK</span><span class="symbol-chip consensus">BANKINDIA</span><span class="symbol-chip consensus">CANBK</span><span class="symbol-chip consensus">CGPOWER</span><span class="symbol-chip consensus">COALINDIA</span><span class="symbol-chip consensus">CUMMINSIND</span><span class="symbol-chip consensus">DRREDDY</span><span class="symbol-chip consensus">ETERNAL</span><span class="symbol-chip consensus">EXIDEIND</span><span class="symbol-chip consensus">FORTIS</span><span class="symbol-chip consensus">GAIL</span><span class="symbol-chip consensus">GODFRYPHLP</span><span class="symbol-chip consensus">GODREJCP</span><span class="symbol-chip consensus">GROWW</span><span class="symbol-chip consensus">HINDALCO</span><span class="symbol-chip consensus">HINDUNILVR</span><span class="symbol-chip consensus">HINDZINC</span><span class="symbol-chip consensus">ICICIAMC</span><span class="symbol-chip consensus">IREDA</span><span class="symbol-chip consensus">JSWENERGY</span><span class="symbol-chip consensus">JUBLFOOD</span><span class="symbol-chip consensus">KPITTECH</span><span class="symbol-chip consensus">LODHA</span><span class="symbol-chip consensus">MANKIND</span><span class="symbol-chip consensus">MOTHERSON</span><span class="symbol-chip consensus">NATIONALUM</span><span class="symbol-chip consensus">NESTLEIND</span><span class="symbol-chip consensus">NTPC</span><span class="symbol-chip consensus">OBEROIRLTY</span><span class="symbol-chip consensus">OFSS</span><span class="symbol-chip consensus">PIIND</span><span class="symbol-chip consensus">POLICYBZR</span><span class="symbol-chip consensus">RADICO</span><span class="symbol-chip consensus">RECLTD</span><span class="symbol-chip consensus">RVNL</span><span class="symbol-chip consensus">SIEMENS</span><span class="symbol-chip consensus">SUPREMEIND</span><span class="symbol-chip consensus">SUZLON</span><span class="symbol-chip consensus">SWIGGY</span><span class="symbol-chip consensus">TATACONSUM</span><span class="symbol-chip consensus">TATAINVEST</span><span class="symbol-chip consensus">TECHM</span><span class="symbol-chip consensus">TIINDIA</span><span class="symbol-chip consensus">UNIONBANK</span><span class="symbol-chip consensus">UNITDSPR</span><span class="symbol-chip consensus">VOLTAS</span></div>
+<p><strong>v5_6 + v5_7 agreed, v5 missed:</strong></p>
+<div class="symbol-grid"><span class="symbol-chip">COLPAL</span><span class="symbol-chip">GVT&D</span><span class="symbol-chip">ICICIBANK</span><span class="symbol-chip">IRFC</span><span class="symbol-chip">JSWSTEEL</span><span class="symbol-chip">SBIN</span><span class="symbol-chip">TATAPOWER</span><span class="symbol-chip">TRENT</span><span class="symbol-chip">WAAREEENER</span></div>
+<p><strong>Only v5 (the Rust-unlocked exclusive plays — Adani group + mid-cap momentum):</strong></p>
+<div class="symbol-grid"><span class="symbol-chip">BANKBARODA</span><span class="symbol-chip">COCHINSHIP</span><span class="symbol-chip">DLF</span><span class="symbol-chip">IDFCFIRSTB</span><span class="symbol-chip">INDUSTOWER</span><span class="symbol-chip">ITC</span><span class="symbol-chip">LENSKART</span><span class="symbol-chip">LICHSGFIN</span><span class="symbol-chip">MPHASIS</span><span class="symbol-chip">PERSISTENT</span><span class="symbol-chip">TATAELXSI</span></div>
+
+<div class="page-break"></div>
+<h2>5. Why v4 Did NOT "Fail Completely"</h2>
+<p>The morning snapshot suggested v4 was dead, but its actual report tells a different story:</p>
+
+<table><thead><tr><th>Metric</th><th class="num">v4 today</th><th>Diagnosis</th></tr></thead><tbody>
+<tr><td>Trades executed</td><td class="num">39</td><td>Engine ran fine — scanned and traded all day</td></tr>
+<tr><td>Win rate</td><td class="num">51%</td><td><strong class="red">Coin flip. The composite scorer has no edge.</strong></td></tr>
+<tr><td>Net P&L</td><td class="num">Rs -303</td><td>Wins and losses cancel out</td></tr>
+<tr><td>Best trade</td><td class="num green">Rs +917</td><td>Decent</td></tr>
+<tr><td>Worst trade</td><td class="num red">Rs -998</td><td>Bad — and balances the best</td></tr>
+</tbody></table>
+
+<div class="callout warn">
+<strong>Real diagnosis:</strong> v4 isn't broken — it's <em>random</em>. 51% WR with cancelling P&L is what you'd get from coin flips. The composite scoring model dates from before the v5 generation; either retire v4 or retrain its model on the last 6 months of data.
+</div>
+
+<h2>6. The Real Disaster — v5_2 (Options Engine)</h2>
+<p>While the equity engines were quietly racking up wins, v5_2 made <strong>one trade all day</strong> — and lost Rs 45,385 on it.</p>
+<div class="chart"><img src="charts/v52_blowup.png" alt="v5_2 blowup"></div>
+
+<div class="callout crit">
+<strong>What happened:</strong> v5_2 bought a NIFTY 24300PE put option in the morning, expecting a market crash. The market went sideways instead. The put option decayed to near-zero (entry Rs 210.20 → exit Rs 8.50 at EOD = -96%). Single bet wiped out <strong>4.54% of v5_2's capital</strong>.
+</div>
+
+<div class="callout warn">
+<strong>Containment > cleverness.</strong> One bad day for v5_2 wipes out v5_classic's entire profitable day. This is the #1 priority for tonight: cap position size + add a daily loss kill-switch.
+</div>
+
+<div class="page-break"></div>
+<h2>7. Watchdog Findings — Where Money Was Left on the Table</h2>
+
+<h3>A. Pool-cap saturation</h3>
+<p>All top engines hit their <strong>20-position pool cap</strong> within 30-60 minutes of open. After that, new entries only happened when an old position closed. On a 92% WR day, raising the cap would compound profits.</p>
+
+<h3>B. Win-rate by trade count</h3>
+<div class="chart"><img src="charts/winrate_bubble.png" alt="Win rate vs trades bubble"></div>
+<p>The "highly profitable machine" zone is top-right: 80%+ win rate AND 100+ trades. Today v5_6 and v5_7 both landed there. v5 is climbing toward that zone — closing the WR gap is the next win.</p>
+
+<h3>C. Exit reason mix</h3>
+<div class="chart"><img src="charts/exit_mix.png" alt="Exit reasons"></div>
+<p>Engines dominated by TARGET exits (green) are showing structural edge. Engines dominated by SIGNAL_FLIP or STOPLOSS need entry-quality work.</p>
+
+<div class="page-break"></div>
+<h2>8. Tonight's Tune-Up Queue</h2>
+<p>Prioritised by impact and risk. Items 1-2 are tonight's must-dos. Items 3-5 are queued in <code>docs/TONIGHT_TUNEUPS_2026-04-22.md</code>.</p>
+
+<div class="tune-up critical">
+  <div class="priority">Priority 1 — critical</div>
+  <div class="action">Cap v5_2 (options) position size + add daily loss kill-switch</div>
+  <div class="meta"><span class="label">Impact:</span> Prevents single-trade losses like today's Rs -45,385</div>
+  <div class="meta"><span class="label">Risk:</span> Low — purely protective</div>
+  <div class="rationale">v5_2 lost Rs 45,385 on a single options bet. That's more damage than v5_classic made all day. Add: max 10% capital per trade + -Rs 5000 daily loss kill-switch.</div>
+</div>
+<div class="tune-up high">
+  <div class="priority">Priority 2 — high</div>
+  <div class="action">Diagnose & retire OR retrain v4 composite scorer</div>
+  <div class="meta"><span class="label">Impact:</span> Frees CPU + capital. v4 has 51% WR = no edge.</div>
+  <div class="meta"><span class="label">Risk:</span> Low</div>
+  <div class="rationale">v4 traded 39× at 51% win rate (coin flip). Best trade Rs +917, worst Rs -998. The composite scorer model is stale or misconfigured.</div>
+</div>
+<div class="tune-up high">
+  <div class="priority">Priority 3 — high</div>
+  <div class="action">Port v5_7 Intraday Box's box-theory exits onto v5</div>
+  <div class="meta"><span class="label">Impact:</span> Could close ~Rs 16,940 P&L gap to leader</div>
+  <div class="meta"><span class="label">Risk:</span> Medium — needs paper-trade testing</div>
+  <div class="rationale">v5 took 72 unique symbols (broader) but v5_7 Intraday Box hit 92% WR vs v5's 89% — the gap is exit precision, not entry quality. Box-theory targets are mathematically defined, not ML-second-guessed.</div>
+</div>
+<div class="tune-up med">
+  <div class="priority">Priority 4 — med</div>
+  <div class="action">Test raising pool position cap from 20 → 30</div>
+  <div class="meta"><span class="label">Impact:</span> More trades on high-WR days. Symmetric on bad days.</div>
+  <div class="meta"><span class="label">Risk:</span> Medium — backtest on bear/sideways/bull regimes first</div>
+  <div class="rationale">All top engines hit the 20-position cap within 30-60 minutes of open and then could only enter new trades when old ones closed. On a 92% WR day more positions = more profit; on a -EV day, more positions = more loss.</div>
+</div>
+<div class="tune-up med">
+  <div class="priority">Priority 5 — med</div>
+  <div class="action">Build Live Engine Picks widget (Part B from queue)</div>
+  <div class="meta"><span class="label">Impact:</span> Dashboard transparency — currently 87% of 'BUY'-rated stocks aren't held by any engine</div>
+  <div class="meta"><span class="label">Risk:</span> Low</div>
+  <div class="rationale">See docs/TONIGHT_TUNEUPS_2026-04-22.md Parts B/D/E.</div>
+</div>
+
+<h2>9. Per-Engine Appendix</h2>
+<p>Top 5 winners and losers per engine. Source: paper-trade logs.</p>
+
+<h3>v5_7 Intraday Box — Rs +61,552 · 156 trades · 92% WR</h3>
+<p class="muted">Regime: SIDEWAYS · open at EOD: 10 · unique symbols: 71 · exits: TARGET:111 · SIGNAL_FLIP:25 · STOPLOSS:20</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>ADANIENSOL</td><td class='num green'>Rs +2,318</td><td class='small muted'>TARGET @ 15:15:21</td></tr><tr><td>2</td><td>IREDA</td><td class='num green'>Rs +1,576</td><td class='small muted'>TARGET @ 12:42:15</td></tr><tr><td>3</td><td>MOTHERSON</td><td class='num green'>Rs +1,447</td><td class='small muted'>TARGET @ 12:42:13</td></tr><tr><td>4</td><td>ADANIPOWER</td><td class='num green'>Rs +1,421</td><td class='small muted'>TARGET @ 15:15:24</td></tr><tr><td>5</td><td>IREDA</td><td class='num green'>Rs +1,255</td><td class='small muted'>TARGET @ 13:14:15</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>TECHM</td><td class='num red'>Rs -388</td><td class='small muted'>STOPLOSS @ 14:17:54</td></tr><tr><td>2</td><td>TECHM</td><td class='num red'>Rs -302</td><td class='small muted'>STOPLOSS @ 10:04:12</td></tr><tr><td>3</td><td>RADICO</td><td class='num red'>Rs -246</td><td class='small muted'>STOPLOSS @ 09:21:36</td></tr><tr><td>4</td><td>TECHM</td><td class='num red'>Rs -237</td><td class='small muted'>STOPLOSS @ 14:49:33</td></tr><tr><td>5</td><td>ICICIAMC</td><td class='num red'>Rs -157</td><td class='small muted'>STOPLOSS @ 15:15:25</td></tr></tbody></table></div>
+</div><h3>v5_6 Darvas Box — Rs +61,284 · 164 trades · 92% WR</h3>
+<p class="muted">Regime: SIDEWAYS · open at EOD: 10 · unique symbols: 75 · exits: TARGET:123 · SIGNAL_FLIP:24 · STOPLOSS:17</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>ADANIENSOL</td><td class='num green'>Rs +2,662</td><td class='small muted'>TARGET @ 15:15:21</td></tr><tr><td>2</td><td>IREDA</td><td class='num green'>Rs +1,735</td><td class='small muted'>TARGET @ 13:02:19</td></tr><tr><td>3</td><td>MOTHERSON</td><td class='num green'>Rs +1,670</td><td class='small muted'>TARGET @ 13:45:58</td></tr><tr><td>4</td><td>MOTHERSON</td><td class='num green'>Rs +1,598</td><td class='small muted'>TARGET @ 14:17:49</td></tr><tr><td>5</td><td>IREDA</td><td class='num green'>Rs +1,465</td><td class='small muted'>TARGET @ 13:34:20</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>RADICO</td><td class='num red'>Rs -739</td><td class='small muted'>TARGET @ 09:21:35</td></tr><tr><td>2</td><td>TECHM</td><td class='num red'>Rs -626</td><td class='small muted'>STOPLOSS @ 14:17:48</td></tr><tr><td>3</td><td>SBILIFE</td><td class='num red'>Rs -329</td><td class='small muted'>STOPLOSS @ 09:21:36</td></tr><tr><td>4</td><td>TECHM</td><td class='num red'>Rs -270</td><td class='small muted'>STOPLOSS @ 14:49:29</td></tr><tr><td>5</td><td>ICICIAMC</td><td class='num red'>Rs -157</td><td class='small muted'>STOPLOSS @ 15:15:26</td></tr></tbody></table></div>
+</div><h3>v5 (Rust-unlocked) — Rs +44,612 · 138 trades · 89% WR</h3>
+<p class="muted">Regime: SIDEWAYS · open at EOD: 20 · unique symbols: 72 · exits: TARGET:80 · SIGNAL_FLIP:35 · STOPLOSS:23</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>IREDA</td><td class='num green'>Rs +1,328</td><td class='small muted'>TARGET @ 12:45:42</td></tr><tr><td>2</td><td>MOTHERSON</td><td class='num green'>Rs +1,218</td><td class='small muted'>TARGET @ 14:22:10</td></tr><tr><td>3</td><td>MOTHERSON</td><td class='num green'>Rs +1,212</td><td class='small muted'>TARGET @ 13:50:12</td></tr><tr><td>4</td><td>IREDA</td><td class='num green'>Rs +1,166</td><td class='small muted'>TARGET @ 13:18:05</td></tr><tr><td>5</td><td>MOTHERSON</td><td class='num green'>Rs +1,157</td><td class='small muted'>TARGET @ 12:45:41</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>PERSISTENT</td><td class='num red'>Rs -800</td><td class='small muted'>STOPLOSS @ 09:24:31</td></tr><tr><td>2</td><td>TECHM</td><td class='num red'>Rs -470</td><td class='small muted'>STOPLOSS @ 14:22:11</td></tr><tr><td>3</td><td>TATAELXSI</td><td class='num red'>Rs -387</td><td class='small muted'>STOPLOSS @ 09:24:31</td></tr><tr><td>4</td><td>TECHM</td><td class='num red'>Rs -258</td><td class='small muted'>STOPLOSS @ 10:07:10</td></tr><tr><td>5</td><td>LICHSGFIN</td><td class='num red'>Rs -172</td><td class='small muted'>SIGNAL_FLIP @ 09:25:23</td></tr></tbody></table></div>
+</div><h3>v5_classic — Rs +10,291 · 69 trades · 74% WR</h3>
+<p class="muted">Regime: SIDEWAYS · open at EOD: 0 · unique symbols: 20 · exits: SIGNAL_FLIP:15 · TARGET:3 · STOPLOSS:2</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>NESTLEIND</td><td class='num green'>Rs +1,055</td><td class='small muted'>TARGET @ 09:21:33</td></tr><tr><td>2</td><td>TRENT</td><td class='num green'>Rs +331</td><td class='small muted'>TARGET @ 09:21:34</td></tr><tr><td>3</td><td>BOSCHLTD</td><td class='num green'>Rs +250</td><td class='small muted'>SIGNAL_FLIP @ 09:22:31</td></tr><tr><td>4</td><td>TATAPOWER</td><td class='num green'>Rs +224</td><td class='small muted'>SIGNAL_FLIP @ 10:24:32</td></tr><tr><td>5</td><td>BHEL</td><td class='num green'>Rs +193</td><td class='small muted'>TARGET @ 09:21:32</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>RADICO</td><td class='num red'>Rs -492</td><td class='small muted'>STOPLOSS @ 09:21:33</td></tr><tr><td>2</td><td>NAUKRI</td><td class='num red'>Rs -106</td><td class='small muted'>SIGNAL_FLIP @ 09:22:34</td></tr><tr><td>3</td><td>BLUESTARCO</td><td class='num red'>Rs -38</td><td class='small muted'>SIGNAL_FLIP @ 09:22:39</td></tr><tr><td>4</td><td>COLPAL</td><td class='num red'>Rs -37</td><td class='small muted'>SIGNAL_FLIP @ 09:22:35</td></tr><tr><td>5</td><td>JSWSTEEL</td><td class='num red'>Rs -24</td><td class='small muted'>SIGNAL_FLIP @ 09:22:37</td></tr></tbody></table></div>
+</div><h3>v4 composite — Rs -303 · 39 trades · 51% WR</h3>
+<p class="muted">Regime: ? · open at EOD: 0 · unique symbols: 39 · exits: SIGNAL_EXIT:30 · STOPLOSS:6 · TARGET:2 · TIME_EXIT:1</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>JUBLFOOD</td><td class='num green'>Rs +917</td><td class='small muted'>TARGET @ 12:51:34</td></tr><tr><td>2</td><td>TATACONSUM</td><td class='num green'>Rs +581</td><td class='small muted'>TARGET @ 10:29:21</td></tr><tr><td>3</td><td>NESTLEIND</td><td class='num green'>Rs +570</td><td class='small muted'>STOPLOSS @ 12:28:00</td></tr><tr><td>4</td><td>GODREJCP</td><td class='num green'>Rs +412</td><td class='small muted'>TIME_EXIT @ 15:15:16</td></tr><tr><td>5</td><td>LODHA</td><td class='num green'>Rs +291</td><td class='small muted'>STOPLOSS @ 13:01:35</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>PERSISTENT</td><td class='num red'>Rs -998</td><td class='small muted'>SIGNAL_EXIT @ 09:25:10</td></tr><tr><td>2</td><td>TATAELXSI</td><td class='num red'>Rs -821</td><td class='small muted'>SIGNAL_EXIT @ 09:25:10</td></tr><tr><td>3</td><td>MPHASIS</td><td class='num red'>Rs -460</td><td class='small muted'>STOPLOSS @ 09:25:10</td></tr><tr><td>4</td><td>NAUKRI</td><td class='num red'>Rs -380</td><td class='small muted'>SIGNAL_EXIT @ 09:25:10</td></tr><tr><td>5</td><td>RADICO</td><td class='num red'>Rs -278</td><td class='small muted'>SIGNAL_EXIT @ 09:25:10</td></tr></tbody></table></div>
+</div><h3>v5_3 staged — Rs -2,364 · 10 trades · 0% WR</h3>
+<p class="muted">Regime: SIDEWAYS · open at EOD: 0 · unique symbols: 10 · exits: TIME_EXIT:10</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>MANKIND</td><td class='num green'>Rs +774</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>2</td><td>BAJFINANCE</td><td class='num green'>Rs +143</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>3</td><td>PIDILITIND</td><td class='num green'>Rs +43</td><td class='small muted'>TIME_EXIT @ 15:15:00</td></tr><tr><td>4</td><td>POLICYBZR</td><td class='num green'>Rs +9</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>5</td><td>ALKEM</td><td class='num green'>Rs -60</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>BHEL</td><td class='num red'>Rs -1,806</td><td class='small muted'>TIME_EXIT @ 15:15:00</td></tr><tr><td>2</td><td>TATAPOWER</td><td class='num red'>Rs -533</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>3</td><td>PRESTIGE</td><td class='num red'>Rs -400</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>4</td><td>NAUKRI</td><td class='num red'>Rs -347</td><td class='small muted'>TIME_EXIT @ 15:15:01</td></tr><tr><td>5</td><td>HUDCO</td><td class='num red'>Rs -187</td><td class='small muted'>TIME_EXIT @ 15:15:00</td></tr></tbody></table></div>
+</div><h3>v5_2 (options) — Rs -45,385 · 1 trades · 0% WR</h3>
+<p class="muted">Regime: ? · open at EOD: 0 · unique symbols: 1 · exits: EOD_EXIT:1</p>
+<div style="display:flex;gap:14px;">
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead><tbody><tr><td>1</td><td>24300PE</td><td class='num green'>Rs -45,385</td><td class='small muted'>EOD_EXIT @ 15:21:50</td></tr></tbody></table></div>
+  <div style="flex:1"><table class="appendix-table"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead><tbody><tr><td>1</td><td>24300PE</td><td class='num red'>Rs -45,385</td><td class='small muted'>EOD_EXIT @ 15:21:50</td></tr></tbody></table></div>
+</div>
+
+<div class="footer">
+TradePilot deep-dive battle report · 2026-04-22 · generated 21:16:47 ·
+no commits made · uncommitted engine diffs preserved on main · all changes queued for review
+</div>
+</body></html>

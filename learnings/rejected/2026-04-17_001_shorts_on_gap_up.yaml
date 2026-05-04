@@ -1,0 +1,52 @@
+id: 2026-04-17_001
+title: "Shorts lose heavily on gap-up days"
+observed_date: 2026-04-17
+observed_by: claude-session
+
+observation: |
+  All three engines that shorted (v5, v5.6, v5.7) lost money on their short
+  positions on 2026-04-17. The market opened with Nifty gap UP +0.38%. Despite
+  regime being labelled SIDEWAYS, shorts fought the intraday trend and hit
+  stoplosses. v5 re-entered ENRIN short 3 times and lost 3 times.
+
+evidence:
+  v5_shorts:
+    - {symbol: ENRIN, entry: 3001.10, exit: stoploss, pnl: -1098}
+    - {symbol: ENRIN, entry: 3032.70, exit: stoploss, pnl: -1314}
+    - {symbol: ENRIN, entry: 3029.50, exit: stoploss, pnl: -1154}
+    - {symbol: JIOFIN, entry: 242.79, exit: stoploss, pnl: -181}
+    - {symbol: TMPV, entry: 358.40, exit: stoploss, pnl: -151}
+    - {symbol: JIOFIN, entry: 242.53, exit: stoploss, pnl: -137}
+  v5_shorts_total_pnl: -4035
+  v5_long_pnl_same_day: +2408
+  regime_labelled: SIDEWAYS
+  nifty_gap_pct: 0.38
+
+proposed_rule: |
+  Before market open, check Nifty gap vs previous close.
+  If gap_pct > +0.2% (bullish bias), disable all short entries for the day.
+  If gap_pct < -0.2% (bearish bias), disable all long entries for the day.
+  Between -0.2% and +0.2% (neutral gap), allow both directions.
+
+requires_backtest: true
+backtest_scope:
+  - Apr 10 to Apr 17 (5 trading days)
+  - Check: how would each engine have performed with this filter?
+  - Especially interested in Apr 13 (BEAR regime) where shorts would have been valid
+
+potential_risk: |
+  - On strongly trending days, this filter works well (protects shorts on gap-up).
+  - On choppy/whipsaw days where gap reverses intraday, this filter blocks valid
+    shorts. Need to verify backtest covers both regimes.
+
+status: rejected
+reviewed_by: "soumya (via claude-session)"
+review_decision: "reject"
+review_notes: "REJECTED on 2026-04-20 after backtest. Filter would have cost Rs 40,791 across Apr 10-17. Apr 10 +0.44% gap: SHORTS won Rs 26,487 (12/13). Apr 13 -1.92% gap: LONGS won Rs 14,304 (80/93). v5's edge is mean reversion, not trend following. Apr 17 gap was only -0.13% so filter wouldn't have triggered anyway. Rule based on flawed premise."
+backtest_result:
+  net_pnl_impact: -40791
+  blocked_winners: 106
+  blocked_trades_gain_missed: 42037
+  blocked_trades_losses_avoided: 1246
+  tested_thresholds_pct: [0.15, 0.2, 0.3]
+  conclusion: "rule-premise-wrong"

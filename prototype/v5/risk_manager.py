@@ -48,9 +48,29 @@ RECOVERY_LADDER = [(3, 0.25), (7, 0.50), (14, 0.75)]  # (day_threshold, mult)
 RECOVERY_EARLY_RESTORE_DAYS = 5  # consecutive profitable days to skip to 100%
 
 MAX_POSITIONS_TOTAL = 20
+# #1 FIX (Option B partition): reserve slots per direction so SHORTs aren't starved
+# by LONG-biased score-desc queue order in the first morning scan.
+# Regime-aware defaults: BEAR favours SHORTs, BULL favours LONGs.
+# Invariant: MAX_LONG + MAX_SHORT should equal MAX_POSITIONS_TOTAL.
+REGIME_SLOT_SPLIT = {
+    "BULL":     {"long": 18, "short": 2},
+    "SIDEWAYS": {"long": 15, "short": 5},
+    "BEAR":     {"long": 8,  "short": 12},
+}
 MAX_SAME_SECTOR = 3
 KELLY_CAP = 0.25  # max 25% of pool per position
 CORRELATION_THRESHOLD = 0.7
+
+# Baseline kill-switch + position-size cap (promoted from v5_2 on 2026-05-01 after VEDL incident).
+# Set to None to disable a guard. All RiskManager instances inherit these.
+BASELINE_DAILY_LOSS_KILL_RS = -5000      # session realised+unrealised P&L floor; below = no new entries
+BASELINE_MAX_POSITION_PCT   = 0.10        # max 10% of pool capital per single trade
+
+# Default location for the symbol blacklist (auto-loaded on init).
+BLACKLIST_PATH = Path(__file__).resolve().parents[1] / "data" / "blacklist.json"
+# Default location for corporate-action calendar (ex-date filter, auto-loaded on init).
+CORP_ACTIONS_PATH = Path(__file__).resolve().parents[1] / "data" / "corp_actions.json"
+CORP_ACTION_BAN_DAYS = 7  # how long to keep a stock banned around its ex-date
 
 
 @dataclass
@@ -96,16 +116,144 @@ class RiskManager:
         self.risk_events: List[dict] = []
         # Daily stats
         self.daily_stats = {"trades": 0, "wins": 0, "losses": 0, "pnl": 0.0, "max_dd": 0.0}
+        # Session P&L for baseline kill-switch (scripts call set_session_pnl)
+        self.session_pnl_rs: float = 0.0
+        self.kill_switch_tripped: bool = False
+        self.kill_switch_at: str = ""
+
+        # Auto-load blacklist + corp-action ex-date filter so every variant inherits
+        try:
+            self.load_blacklist_file()
+        except Exception as e:
+            self.risk_events.append({"event": "BLACKLIST_LOAD_FAILED", "error": str(e)[:120]})
+        try:
+            self.load_corp_actions_file()
+        except Exception as e:
+            self.risk_events.append({"event": "CORP_ACTIONS_LOAD_FAILED", "error": str(e)[:120]})
+
+    # --- Tonight (2026-05-01) baseline-protection helpers ---
+
+    def load_blacklist_file(self, path: Optional[Path] = None) -> int:
+        """Merge static blacklist JSON into stock_bans. Returns count loaded."""
+        p = Path(path) if path else BLACKLIST_PATH
+        if not p.exists():
+            return 0
+        data = json.loads(p.read_text())
+        bans = data.get("bans", {})
+        loaded = 0
+        today = date.today().isoformat()
+        for sym, entry in bans.items():
+            until = entry.get("until", "")
+            if until and until >= today:
+                self.stock_bans[sym] = {
+                    "reason": entry.get("reason", "blacklisted"),
+                    "until": until,
+                    "source": "blacklist.json",
+                }
+                loaded += 1
+        return loaded
+
+    def load_corp_actions_file(self, path: Optional[Path] = None) -> int:
+        """Read corp-action calendar; ban any stock whose ex-date is within window. Returns count banned."""
+        p = Path(path) if path else CORP_ACTIONS_PATH
+        if not p.exists():
+            return 0
+        data = json.loads(p.read_text())
+        events = data.get("events", [])
+        loaded = 0
+        today = date.today()
+        for ev in events:
+            sym = ev.get("symbol")
+            ex_date_str = ev.get("ex_date", "")
+            if not sym or not ex_date_str:
+                continue
+            try:
+                ex_date = date.fromisoformat(ex_date_str)
+            except ValueError:
+                continue
+            # Ban from ex-date until ex-date + CORP_ACTION_BAN_DAYS
+            ban_end = ex_date + timedelta(days=CORP_ACTION_BAN_DAYS)
+            if today <= ban_end and today >= ex_date - timedelta(days=1):
+                # Existing manual ban with longer until takes precedence
+                existing = self.stock_bans.get(sym)
+                if existing and existing.get("until", "") >= ban_end.isoformat():
+                    continue
+                self.stock_bans[sym] = {
+                    "reason": f"Corp action ({ev.get('action_type', 'unspecified')}) ex-date {ex_date_str}: {ev.get('note', '')}",
+                    "until": ban_end.isoformat(),
+                    "source": "corp_actions.json",
+                }
+                loaded += 1
+        return loaded
+
+    def set_session_pnl(self, total_pnl_rs: float) -> bool:
+        """Scripts call this with realised+unrealised session P&L on each tick.
+        Returns True if kill-switch is now tripped (no new entries should be opened).
+        Once tripped, stays tripped for the day (sticky)."""
+        self.session_pnl_rs = float(total_pnl_rs)
+        if BASELINE_DAILY_LOSS_KILL_RS is None:
+            return False
+        if self.kill_switch_tripped:
+            return True
+        if self.session_pnl_rs <= BASELINE_DAILY_LOSS_KILL_RS:
+            self.kill_switch_tripped = True
+            self.kill_switch_at = datetime.now().isoformat()
+            self.risk_events.append({
+                "time": datetime.now().strftime("%H:%M:%S"),
+                "event": "KILL_SWITCH_TRIPPED",
+                "session_pnl": round(self.session_pnl_rs, 2),
+                "threshold": BASELINE_DAILY_LOSS_KILL_RS,
+            })
+            return True
+        return False
+
+    def check_position_size(self, cost_or_margin: float, pool_name: str) -> Tuple[bool, str]:
+        """Return (allowed, reason). Refuses if cost exceeds BASELINE_MAX_POSITION_PCT of pool capital."""
+        if BASELINE_MAX_POSITION_PCT is None or cost_or_margin <= 0:
+            return True, "OK"
+        pool = self.pm.pools.get(pool_name)
+        if not pool:
+            return True, "OK"
+        cap = pool.capital * BASELINE_MAX_POSITION_PCT
+        if cost_or_margin > cap:
+            return False, (
+                f"Position size Rs {cost_or_margin:,.0f} > "
+                f"{int(BASELINE_MAX_POSITION_PCT*100)}% of {pool_name} capital "
+                f"(Rs {cap:,.0f})"
+            )
+        return True, "OK"
 
     # --- Core decision functions ---
 
-    def check_can_trade(self, pool_name: str, symbol: str) -> Tuple[bool, str]:
-        """Pre-trade gate. Returns (allowed, reason)."""
+    def check_can_trade(self, pool_name: str, symbol: str,
+                        position_type: Optional[str] = None) -> Tuple[bool, str]:
+        """Pre-trade gate. Returns (allowed, reason).
+
+        #1 FIX: accepts optional position_type ("LONG" | "SHORT") so the 20-slot cap can be
+        partitioned by direction — prevents LONG signals from starving SHORTs in the morning
+        rescore when both compete for the same global cap.
+        """
         # ALL-STOP check
         if self.portfolio_breaker.active:
             return False, f"ALL-STOP active (tier {self.portfolio_breaker.tier}): {self.portfolio_breaker.reason}"
 
-        # Pool breaker check
+        # Baseline daily-loss kill-switch (shared across all variants since 2026-05-01).
+        # Auto-poll the pool aggregate so scripts don't need to call set_session_pnl explicitly.
+        if BASELINE_DAILY_LOSS_KILL_RS is not None and not self.kill_switch_tripped:
+            try:
+                agg = sum(getattr(p, "daily_pnl", 0.0) or 0.0 for p in self.pm.pools.values())
+                if agg <= BASELINE_DAILY_LOSS_KILL_RS:
+                    self.set_session_pnl(agg)  # trips and logs
+            except Exception:
+                pass
+        if self.kill_switch_tripped:
+            return False, (
+                f"BASELINE kill-switch active — session P&L Rs {self.session_pnl_rs:+,.0f} "
+                f"<= floor Rs {BASELINE_DAILY_LOSS_KILL_RS:+,.0f} (tripped {self.kill_switch_at})"
+            )
+
+        # Pool breaker check — try to auto-clear expired tier-1 cooldowns first (#7 FIX)
+        self._maybe_clear_expired_tier1(pool_name)
         pb = self.pool_breakers.get(pool_name)
         if pb and pb.active:
             return False, f"Pool {pool_name} breaker active (tier {pb.tier}): {pb.reason}"
@@ -124,8 +272,18 @@ class RiskManager:
             else:
                 del self.stock_bans[symbol]  # expired
 
-        # Max total positions
-        total_pos = sum(len(p.positions) for p in self.pm.pools.values())
+        # Max total positions + #1 FIX partition check
+        all_positions = [pos for p in self.pm.pools.values() for pos in p.positions]
+        total_pos = len(all_positions)
+        if position_type in ("LONG", "SHORT"):
+            split = REGIME_SLOT_SPLIT.get(self.regime, REGIME_SLOT_SPLIT["SIDEWAYS"])
+            cap_long, cap_short = split["long"], split["short"]
+            long_count = sum(1 for pos in all_positions if pos.get("position_type") != "SHORT")
+            short_count = total_pos - long_count
+            if position_type == "LONG" and long_count >= cap_long:
+                return False, f"LONG slot cap reached ({long_count}/{cap_long} in {self.regime}) — SHORTs reserved"
+            if position_type == "SHORT" and short_count >= cap_short:
+                return False, f"SHORT slot cap reached ({short_count}/{cap_short} in {self.regime})"
         if total_pos >= MAX_POSITIONS_TOTAL:
             return False, f"Max {MAX_POSITIONS_TOTAL} total positions reached ({total_pos})"
 
@@ -302,9 +460,39 @@ class RiskManager:
     # --- Internal helpers ---
 
     def _check_tier_1(self, pool_name: str):
-        """Tier 1: 5 consecutive losses in any pool -> pause pool rest of day."""
+        """Tier 1: 5 consecutive losses in any pool -> 30-min cooldown (was: rest-of-day block).
+        #7 FIX: switched from hard block to time-boxed cooldown — blocking good picks for the
+        rest of the session (e.g., TATACONSUM today) was costing ~₹500/day in missed entries.
+        """
         if self.pool_consec_losses[pool_name] >= 5:
-            self._fire_pool_breaker(pool_name, 1, "5 consecutive losses")
+            self._fire_pool_breaker(pool_name, 1, "5 consecutive losses (30-min cooldown)")
+
+    def _maybe_clear_expired_tier1(self, pool_name: str) -> bool:
+        """#7 FIX: clear tier-1 breaker if 30-min cooldown has expired. Returns True if cleared."""
+        pb = self.pool_breakers.get(pool_name)
+        if not pb or not pb.active or pb.tier != 1:
+            return False
+        # Tier-1 cooldowns encode paused_until as ISO datetime (has 'T'); date-only strings pass through.
+        if "T" not in (pb.paused_until or ""):
+            return False
+        try:
+            expires = datetime.fromisoformat(pb.paused_until)
+        except (ValueError, TypeError):
+            return False
+        if datetime.now() < expires:
+            return False
+        # Cooldown expired — clear breaker + unpause pool + reset consec losses
+        pb.active, pb.tier, pb.reason, pb.paused_until = False, 0, "", ""
+        self.pool_consec_losses[pool_name] = 0
+        pool = self.pm.pools.get(pool_name)
+        if pool:
+            pool.paused = False
+        self.risk_events.append({
+            "time": datetime.now().strftime("%H:%M:%S"),
+            "event": "TIER_1_COOLDOWN_EXPIRED", "pool": pool_name,
+            "detail": "Auto-cleared after 30-min cooldown",
+        })
+        return True
 
     def _check_tier_2(self, symbol: str):
         """Tier 2: 3 consecutive losses on same stock -> ban stock for the day."""
@@ -337,8 +525,13 @@ class RiskManager:
         pb = self.pool_breakers.get(pool_name)
         if not pb or (pb.active and pb.tier >= tier):
             return
-        now_str = datetime.now().strftime("%H:%M:%S")
-        pause_until = (date.today() + timedelta(days=1)).isoformat()
+        now = datetime.now()
+        now_str = now.strftime("%H:%M:%S")
+        # #7 FIX: tier-1 uses 30-min cooldown (ISO datetime), tier-2+ keeps rest-of-day block (ISO date).
+        if tier == 1:
+            pause_until = (now + timedelta(minutes=30)).isoformat()
+        else:
+            pause_until = (date.today() + timedelta(days=1)).isoformat()
         pb.active, pb.tier, pb.triggered_at, pb.reason = True, tier, now_str, reason
         pb.paused_until = pause_until
         # Also pause in pool_manager

@@ -1,0 +1,13 @@
+{
+  "_doc": "Symbol blacklist read by RiskManager.load_blacklist_file() on init. All variants inherit. Date format: YYYY-MM-DD inclusive.",
+  "_format": "{ <SYMBOL>: { 'until': YYYY-MM-DD, 'reason': str, 'added_by': str, 'added_on': YYYY-MM-DD } }",
+  "_updated": "2026-05-01",
+  "bans": {
+    "VEDL": {
+      "until": "2026-05-07",
+      "reason": "Demerger ex-date 2026-04-30 (1:1 into 5 entities). Price feed will be noisy for ~1 week as demerged ISINs settle.",
+      "added_by": "tradepilot-rca-2026-04-30",
+      "added_on": "2026-05-01"
+    }
+  }
+}

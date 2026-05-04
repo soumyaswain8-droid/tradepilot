@@ -1,0 +1,20 @@
+{
+  "_doc": "Corporate-action calendar consumed by RiskManager.load_corp_actions_file(). Any stock with ex-date inside [today-1, today+CORP_ACTION_BAN_DAYS] is auto-banned.",
+  "_format": "{ events: [{ symbol, ex_date: YYYY-MM-DD, action_type, note }] }",
+  "_source": "Manually curated; auto-fetcher in scripts/fetch_corp_actions.py refreshes from NSE/BSE when run.",
+  "_updated": "2026-05-01",
+  "events": [
+    {
+      "symbol": "VEDL",
+      "ex_date": "2026-04-30",
+      "action_type": "DEMERGER",
+      "note": "1:1 demerger into 5 entities (Vedanta Ltd residual + Aluminium + Talwandi Sabo Power + Malco Energy + Iron & Steel). Price feed treats redistribution as a 64% drop."
+    }
+  ],
+  "_known_demerger_children_to_blacklist_when_listed": [
+    "VEDLAL (Vedanta Aluminium Metal)",
+    "TSPL (Talwandi Sabo Power)",
+    "MALCO (Malco Energy)",
+    "VEDLIS (Vedanta Iron & Steel)"
+  ]
+}

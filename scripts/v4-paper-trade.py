@@ -55,6 +55,13 @@ NIFTY_BEAR_THRESHOLD = -0.5     # If Nifty < this % by 10 AM, go defensive
 BEAR_MODE_SIZE_MULT = 0.50      # Position size in bear mode
 MAX_DAILY_LOSS_PCT = 3.0        # Kill switch: stop all trading if daily loss exceeds this %
 
+# 2026-05-04 MVP guards (audit response — reusing v5's corp_actions.json data, not its multi-pool RiskManager).
+# These are absolute Rs floors that fire BEFORE the existing %-based caps. Set to None to disable individually.
+ABS_POSITION_SL_RS    = -25_000   # Force-close any single position when unrealized P&L hits this floor
+ABS_DAILY_KILL_RS     =  -5_000   # Halt all NEW entries when realized P&L hits this floor (sticky)
+CORP_ACTIONS_PATH     = PROJECT_ROOT / "prototype" / "data" / "corp_actions.json"
+CORP_ACTION_BAN_DAYS  = 7         # Ban window: ex_date - 1 day through ex_date + N days
+
 
 def log(msg):
     ts = datetime.now().strftime("%H:%M:%S")
@@ -249,6 +256,16 @@ def check_circuit_breaker(state):
             log(f"  ** CIRCUIT BREAKER ACTIVATED ** {state['consecutive_losses']} consecutive losses — NO NEW ENTRIES")
         return True
 
+    # 1b. 2026-05-04 MVP: absolute Rs daily kill switch (fires before %-based check below)
+    if ABS_DAILY_KILL_RS is not None and state.get("realized_pnl", 0) <= ABS_DAILY_KILL_RS:
+        if not state.get("circuit_breaker_active"):
+            state["circuit_breaker_active"] = True
+            state["risk_events"].append(
+                f"{datetime.now().strftime('%H:%M')} ABS_RS_KILL: realized Rs {state['realized_pnl']:+,.0f} <= floor Rs {ABS_DAILY_KILL_RS:+,.0f}"
+            )
+            log(f"  ** ABS Rs KILL SWITCH ** Realized P&L Rs {state['realized_pnl']:+,.0f} <= floor Rs {ABS_DAILY_KILL_RS:+,.0f} — NO NEW ENTRIES")
+        return True
+
     # 2. Max daily loss kill switch
     daily_loss_pct = abs(state["realized_pnl"]) / state["daily_pool"] * 100
     if state["realized_pnl"] < 0 and daily_loss_pct >= MAX_DAILY_LOSS_PCT:
@@ -326,6 +343,39 @@ def record_entry(state, symbol):
     state["stock_entry_count"][symbol] = state["stock_entry_count"].get(symbol, 0) + 1
 
 
+def load_corp_action_bans():
+    """Read prototype/data/corp_actions.json and return {symbol: reason_str} for stocks
+    currently inside the [ex_date - 1, ex_date + CORP_ACTION_BAN_DAYS] window.
+
+    Mirrors prototype/v5/risk_manager.py:load_corp_actions_file so v4 and v5 ban the same
+    symbols on the same days without v4 needing v5's multi-pool RiskManager. Single source
+    of truth = the JSON file."""
+    if CORP_ACTIONS_PATH is None or not CORP_ACTIONS_PATH.exists():
+        return {}
+    try:
+        data = json.loads(CORP_ACTIONS_PATH.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    today = datetime.now().date()
+    bans = {}
+    for ev in data.get("events", []):
+        sym = ev.get("symbol")
+        ex_date_str = ev.get("ex_date", "")
+        if not sym or not ex_date_str:
+            continue
+        try:
+            ex_date = datetime.strptime(ex_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        ban_end = ex_date + timedelta(days=CORP_ACTION_BAN_DAYS)
+        if (ex_date - timedelta(days=1)) <= today <= ban_end:
+            bans[sym] = (
+                f"Corp action ({ev.get('action_type', '?')}) ex-date {ex_date_str}: "
+                f"{ev.get('note', '')[:80]}"
+            )
+    return bans
+
+
 def deploy_into_buys(state):
     """Deploy available cash into v4 BUY signals using Kelly sizing."""
     if state["cash"] < 10000:
@@ -344,11 +394,19 @@ def deploy_into_buys(state):
         log("  No BUY signals from v4. Will scan again next cycle."); return
     held = {p["symbol"] for p in state["positions"] if p["status"] == "open"}
 
-    # Filter: already held + re-entry cap
+    # 2026-05-04 MVP: corp-action ex-date ban (would have blocked VEDL on 2026-04-30)
+    corp_bans = load_corp_action_bans()
+    if corp_bans:
+        log(f"  Corp-action bans active today: {', '.join(sorted(corp_bans.keys()))}")
+
+    # Filter: already held + corp-action ban + re-entry cap
     new_buys = []
     for b in buys:
         sym = b["symbol"]
         if sym in held:
+            continue
+        if sym in corp_bans:
+            log(f"  {sym}: SKIPPED ({corp_bans[sym][:80]})")
             continue
         if not can_enter_stock(state, sym):
             log(f"  {sym}: SKIPPED (max {MAX_REENTRY_PER_STOCK} re-entries reached)")
@@ -451,6 +509,11 @@ def scan_and_react(state):
                 elif new_dir != pos.get("v4_direction"):
                     pos["v4_direction"] = new_dir
                     pos["v4_score"] = sd.get("score", pos.get("v4_score", 0))
+            # 2026-05-04 MVP: absolute Rs SL — fires before % targets so a single position
+            # can't bleed past ABS_POSITION_SL_RS regardless of % SL distance or v4 direction
+            if not reason and ABS_POSITION_SL_RS is not None and pnl_rs <= ABS_POSITION_SL_RS:
+                reason = "ABS_RS_SL"
+                log(f"  {sym}: ABS Rs SL hit — unrealized Rs {pnl_rs:+,.0f} <= floor Rs {ABS_POSITION_SL_RS:+,.0f}")
             if not reason and price >= pos["target_price"]: reason = "TARGET"
             if not reason and price <= pos["sl_price"]: reason = "STOPLOSS"
             if not reason and pnl_pct >= TRAILING_TRIGGER_PCT:
@@ -659,6 +722,9 @@ def push_to_devpilot(state):
 
 def run():
     """Deploy and monitor. Runs until market close."""
+    # 2026-05-04 MVP guards: surface corp-action bans + abs Rs floors at startup
+    _bans_at_boot = load_corp_action_bans()
+    _bans_str = ", ".join(sorted(_bans_at_boot.keys())) if _bans_at_boot else "none"
     log(f"{'='*65}\n  v4 PAPER TRADING ENGINE | Rs {DAILY_POOL:,.0f} | Kelly-weighted\n"
         f"  Scan {SCAN_INTERVAL_MIN}min | Rescore {RESCORE_INTERVAL_MIN}min | "
         f"Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
@@ -667,7 +733,11 @@ def run():
         f"    Max re-entry: {MAX_REENTRY_PER_STOCK} per stock per day\n"
         f"    VIX > {VIX_HIGH_THRESHOLD}: position size -> {VIX_SIZE_MULTIPLIER:.0%}\n"
         f"    Nifty < {NIFTY_BEAR_THRESHOLD}%: position size -> {BEAR_MODE_SIZE_MULT:.0%}\n"
-        f"    Daily loss kill switch: {MAX_DAILY_LOSS_PCT}%\n{'='*65}")
+        f"    Daily loss kill switch: {MAX_DAILY_LOSS_PCT}%\n"
+        f"  MVP GUARDS (2026-05-04):\n"
+        f"    Abs position SL: Rs {ABS_POSITION_SL_RS:+,.0f}\n"
+        f"    Abs daily kill : Rs {ABS_DAILY_KILL_RS:+,.0f}\n"
+        f"    Corp-action bans: {_bans_str}\n{'='*65}")
     state = load_state()
     n_open = sum(1 for p in state["positions"] if p["status"] == "open")
     if n_open == 0 and state["cash"] > 10000:

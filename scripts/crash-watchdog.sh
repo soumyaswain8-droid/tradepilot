@@ -1,0 +1,158 @@
+#!/bin/bash
+# TradePilot crash watchdog — market-hours-aware, heartbeat-based engine monitor.
+#
+# Design (2026-04-21, v3):
+#   - Only acts during 09:00–15:30 IST (silent outside)
+#   - Liveness check: each engine writes to docs/paper-trades/{engine}/{DATE}.json
+#     during its scan loop. If mtime is older than HEARTBEAT_MAX_AGE_SEC → dead.
+#   - No port checks (engines are background loops, not HTTP servers)
+#   - No pgrep self-match bug (we check output files, not process lists)
+#   - v5_3 whitelisted post-14:45 (exits by design)
+#   - First scan after open = grace period (engines take ~30s to warm up)
+#
+# Usage:
+#   ./scripts/crash-watchdog.sh           # foreground
+#   nohup ./scripts/crash-watchdog.sh > /tmp/watchdog.log 2>&1 &
+
+set -u
+
+ROOT="/Users/soumyaswain/Documents/tinker/projects/tradepilot"
+cd "$ROOT"
+
+# ------- Market hours (IST) -------
+MARKET_OPEN_MIN=$((9 * 60))         # 09:00 (engines can warm up before 09:15 open)
+MARKET_CLOSE_MIN=$((15 * 60 + 30))  # 15:30
+EOD_CUTOFF_MIN=$((14 * 60 + 45))    # v5_3 allowed to exit after 14:45
+
+# ------- Heartbeat threshold (fallback only) -------
+# Primary liveness check is pgrep (process-based). This mtime threshold is the
+# secondary check: if process is gone AND file hasn't been updated in this long,
+# engine is confirmed dead.
+HEARTBEAT_MAX_AGE_SEC=2700
+
+# ------- Engine registry: (name|output_file|launch_cmd) -------
+# output_file = heartbeat (engine writes to this during each scan)
+# launch_cmd = how to restart if crashed
+TODAY=$(date +%Y-%m-%d)
+declare -a ENGINES=(
+  # Active engines (6) — v4 re-instated, v6 NEW as of 2026-04-28 EOD.
+  "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
+  "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
+  "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
+  "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
+  "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"
+  "v6|scripts/v6-paper-trade.py|docs/paper-trades/v6/${TODAY}.json|python3 scripts/v6-paper-trade.py"
+  "v5_8|scripts/v5_8-paper-trade.py|docs/paper-trades/v5_8/${TODAY}.json|python3 scripts/v5_8-paper-trade.py"
+  # Still retired (uncomment if re-enabled in launch-market.sh):
+  # "v5_3|scripts/v5_3-paper-trade.py|docs/paper-trades/v5_3/${TODAY}.json|python3 scripts/v5_3-paper-trade.py"
+)
+# v5_2 still retired — F&O engine that exits intentionally.
+
+EOD_EXIT_WHITELIST=()
+
+# ------- Telegram -------
+send_alert() {
+  local msg="$1"
+  if [ -f .env ]; then
+    local token
+    local chat
+    token=$(grep '^TELEGRAM_BOT_TOKEN=' .env | cut -d= -f2 | tr -d '"')
+    chat=$(grep '^TELEGRAM_CHAT_ID=' .env | cut -d= -f2 | tr -d '"')
+    if [ -n "$token" ] && [ -n "$chat" ]; then
+      curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" \
+        --data-urlencode "chat_id=${chat}" \
+        --data-urlencode "text=${msg}" \
+        --max-time 5 > /dev/null 2>&1
+    fi
+  fi
+}
+
+now_min() {
+  # Force base-10 to avoid "08/09 = invalid octal" bug
+  echo $((10#$(date +%H) * 60 + 10#$(date +%M)))
+}
+
+in_market_hours() {
+  local nm=$(now_min)
+  [ "$nm" -ge "$MARKET_OPEN_MIN" ] && [ "$nm" -le "$MARKET_CLOSE_MIN" ]
+}
+
+past_eod_cutoff() {
+  [ "$(now_min)" -ge "$EOD_CUTOFF_MIN" ]
+}
+
+is_whitelisted_eod() {
+  local name="$1"
+  for w in "${EOD_EXIT_WHITELIST[@]}"; do
+    [ "$w" = "$name" ] && return 0
+  done
+  return 1
+}
+
+# Returns 0 if engine is alive, 1 otherwise.
+# Primary check: is the exact script path running as a python3 process?
+# Fallback: has its heartbeat file been updated in the last N seconds?
+# (This catches case where process is running but wedged — rare but possible)
+is_alive() {
+  local script_path="$1"
+  local hb_file="$2"
+
+  # Primary: process existence by exact script path match (no self-match risk
+  # because watchdog's own script is "scripts/crash-watchdog.sh", never "paper-trade.py")
+  if pgrep -f "$script_path" > /dev/null 2>&1; then
+    return 0
+  fi
+
+  # Fallback: fresh heartbeat file (engine may be between scans)
+  if [ -f "$hb_file" ]; then
+    local mtime
+    local now_ts
+    mtime=$(stat -f "%m" "$hb_file" 2>/dev/null || echo 0)
+    now_ts=$(date +%s)
+    local age=$((now_ts - mtime))
+    [ "$age" -lt "$HEARTBEAT_MAX_AGE_SEC" ] && return 0
+  fi
+
+  return 1
+}
+
+# First-pass grace period — engines need time to warm up on morning start
+FIRST_SCAN_DONE=false
+GRACE_UNTIL_MIN=$((9 * 60 + 20))  # no restart alerts before 09:20
+
+echo "[$(date '+%H:%M:%S')] crash-watchdog v3 started (heartbeat-based, market hours 09:00–15:30 IST)"
+send_alert "🐕 Watchdog v3 online. Heartbeat-based. Will monitor 7 engines 09:00–15:30 IST."
+
+while true; do
+  if ! in_market_hours; then
+    sleep 60
+    continue
+  fi
+
+  # Grace period — let engines start up without spamming alerts
+  if [ "$(now_min)" -lt "$GRACE_UNTIL_MIN" ]; then
+    sleep 60
+    continue
+  fi
+
+  for entry in "${ENGINES[@]}"; do
+    IFS='|' read -r name script_path hb_file cmd <<< "$entry"
+
+    if is_alive "$script_path" "$hb_file"; then
+      continue
+    fi
+
+    # Not alive — check if this is expected EOD exit
+    if is_whitelisted_eod "$name" && past_eod_cutoff; then
+      continue
+    fi
+
+    # Genuine crash during market hours — restart
+    echo "[$(date '+%H:%M:%S')] CRASH: $name process gone + heartbeat stale — restarting"
+    send_alert "🚨 $name crashed — restarting"
+    nohup $cmd > "/tmp/${name}.log" 2>&1 &
+    sleep 3
+  done
+
+  sleep 60
+done

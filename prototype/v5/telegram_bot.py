@@ -42,21 +42,37 @@ _WINDOW_SECS = 60
 _send_timestamps: deque = deque()
 
 
+def _read_dotenv() -> dict:
+    # Engines spawn via `nohup python3` which doesn't auto-load .env.
+    # Read the file directly so TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID reach the sender.
+    env_file = Path(__file__).resolve().parents[2] / ".env"
+    if not env_file.exists():
+        return {}
+    try:
+        return dict(
+            line.split("=", 1)
+            for line in env_file.read_text().splitlines()
+            if "=" in line and not line.startswith("#")
+        )
+    except (IOError, ValueError):
+        return {}
+
+
 def _load_config() -> dict:
-    # Priority: environment variables > config file
+    # Priority: environment variables > .env file > config file
     config = _DEFAULT_CONFIG.copy()
     if CONFIG_PATH.exists():
         try:
             config.update(json.loads(CONFIG_PATH.read_text()))
         except (json.JSONDecodeError, IOError):
             pass
-    # Environment variables override file config (secure approach)
-    env_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    env_chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if env_token and env_token != "SET_VIA_ENV_VAR":
-        config["bot_token"] = env_token
-    if env_chat and env_chat != "SET_VIA_ENV_VAR":
-        config["chat_id"] = env_chat
+    dotenv = _read_dotenv()
+    token = os.environ.get("TELEGRAM_BOT_TOKEN") or dotenv.get("TELEGRAM_BOT_TOKEN", "").strip().strip('"')
+    chat = os.environ.get("TELEGRAM_CHAT_ID") or dotenv.get("TELEGRAM_CHAT_ID", "").strip().strip('"')
+    if token and token != "SET_VIA_ENV_VAR":
+        config["bot_token"] = token
+    if chat and chat != "SET_VIA_ENV_VAR":
+        config["chat_id"] = chat
     return config
 
 

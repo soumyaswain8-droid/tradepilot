@@ -90,6 +90,12 @@ def landing():
     """Premium landing page for client demos."""
     return render_template("landing.html")
 
+
+@app.route("/dashboard")
+def dashboard():
+    """Live trading desk — macOS-style multi-panel dashboard."""
+    return render_template("dashboard.html")
+
 @app.route("/api/preloaded-scores")
 def api_preloaded():
     """Serve pre-computed scores (instant, no API delay)."""

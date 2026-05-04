@@ -80,17 +80,25 @@ _INTRADAY_DIR = _DATA_DIR / "intraday"
 LGBM_PARAMS = {
     "objective": "regression",
     "metric": "mae",
-    "num_leaves": 15,             # Simpler trees (less overfit on small data)
-    "max_depth": 4,               # Shallower
-    "min_child_samples": 50,      # Was 100, reduced for better signal capture
-    "reg_alpha": 0.5,             # Stronger L1 regularization
-    "reg_lambda": 2.0,            # Stronger L2 regularization
+    "num_leaves": 15,
+    "max_depth": 4,
+    "min_child_samples": 50,
+    "reg_alpha": 0.3,             # Was 0.5 — partial loosen for Nifty-200 dataset (middle ground)
+    "reg_lambda": 1.0,            # Was 2.0 — partial loosen for Nifty-200 dataset (middle ground)
     "subsample": 0.6,
     "colsample_bytree": 0.6,
-    "learning_rate": 0.05,        # Was 0.01, higher to allow more iterations
+    "learning_rate": 0.05,
     "n_estimators": 2000,
     "verbose": -1,
 }
+
+# Early stopping rounds — increased from 50, middle ground (not 200)
+EARLY_STOPPING_ROUNDS = 100
+
+# Reject model if best_iteration is below this floor — guards against silent
+# regressions like 2026-04-21's best_iter=2 incident (sequential split landed
+# on a different regime). Healthy retrains hit 1500-3000+. 100 is the floor.
+MIN_BEST_ITERATION = 100
 
 
 # ---------------------------------------------------------------------------
@@ -497,7 +505,7 @@ def walk_forward_validation(dataset: pd.DataFrame,
         model.fit(
             X_train, y_train,
             eval_set=[(X_test, y_test)],
-            callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(0)],
+            callbacks=[lgb.early_stopping(EARLY_STOPPING_ROUNDS, verbose=False), lgb.log_evaluation(0)],
         )
 
         y_pred = model.predict(X_test)
@@ -589,24 +597,48 @@ def train_and_save(dataset: pd.DataFrame = None) -> dict:
     X = dataset[TRAINING_FEATURES].values
     y = dataset["target"].values
 
-    # Use last 10% as validation for early stopping
-    split_idx = int(len(dataset) * 0.9)
-    X_train, X_val = X[:split_idx], X[split_idx:]
-    y_train, y_val = y[:split_idx], y[split_idx:]
+    # Random 10% validation for early stopping
+    # Previously used last-10% sequential, which landed on a recent regime
+    # and early-stopped at iteration 2. Random split gives a representative
+    # validation signal across the full training period.
+    # Walk-forward validation (above) provides the time-series-clean metrics;
+    # this split only gates early stopping of the final model.
+    from sklearn.model_selection import train_test_split
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.1, random_state=42, shuffle=True
+    )
+    logger.info(f"Train split: {len(X_train):,} rows · Val split: {len(X_val):,} rows (random)")
 
     model = lgb.LGBMRegressor(**LGBM_PARAMS)
     model.fit(
         X_train, y_train,
         eval_set=[(X_val, y_val)],
-        callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(0)],
+        callbacks=[lgb.early_stopping(EARLY_STOPPING_ROUNDS, verbose=False), lgb.log_evaluation(0)],
     )
 
     # Feature importance
     importance = dict(zip(TRAINING_FEATURES, model.feature_importances_.tolist()))
     importance = dict(sorted(importance.items(), key=lambda x: x[1], reverse=True))
 
-    # Save model
-    model.booster_.save_model(str(MODEL_PATH))
+    # Quality guardrail — reject degenerate models BEFORE they overwrite the live one.
+    # A best_iteration < MIN_BEST_ITERATION means early stopping fired before the
+    # model meaningfully learned the signal. Shipping such a model produces near-random
+    # predictions and silently destroys engine P&L (see 2026-04-21 best_iter=2 incident).
+    best_iter = model.best_iteration_
+    if best_iter < MIN_BEST_ITERATION:
+        raise RuntimeError(
+            f"REFUSING TO SAVE: best_iteration={best_iter} < MIN_BEST_ITERATION={MIN_BEST_ITERATION}. "
+            f"Model is degenerate. Live model at {MODEL_PATH} is untouched. "
+            f"Investigate training data and hyperparameters before retrying."
+        )
+
+    # Atomic candidate → live promote. Write to .candidate first; only rename to
+    # live paths after the metadata write also succeeds. If anything fails midway,
+    # the live model is preserved.
+    candidate_model = MODEL_PATH.with_suffix(MODEL_PATH.suffix + ".candidate")
+    candidate_meta = META_PATH.with_suffix(META_PATH.suffix + ".candidate")
+
+    model.booster_.save_model(str(candidate_model))
 
     # Save metadata
     meta = {
@@ -617,7 +649,7 @@ def train_and_save(dataset: pd.DataFrame = None) -> dict:
         "features": TRAINING_FEATURES,
         "n_features": len(TRAINING_FEATURES),
         "lgbm_params": LGBM_PARAMS,
-        "best_iteration": model.best_iteration_,
+        "best_iteration": best_iter,
         "walk_forward": {
             "mean_ic": wf_results.get("mean_ic", 0),
             "ic_positive_pct": wf_results.get("ic_positive_pct", 0),
@@ -628,10 +660,14 @@ def train_and_save(dataset: pd.DataFrame = None) -> dict:
         "feature_importance": importance,
     }
 
-    with open(META_PATH, "w") as f:
+    with open(candidate_meta, "w") as f:
         json.dump(meta, f, indent=2)
 
-    logger.info(f"\nModel saved: {MODEL_PATH}")
+    # Both candidates written successfully — atomic promote.
+    candidate_model.replace(MODEL_PATH)
+    candidate_meta.replace(META_PATH)
+
+    logger.info(f"\nModel saved: {MODEL_PATH} (best_iter={best_iter}, guardrail passed)")
     logger.info(f"Metadata saved: {META_PATH}")
     logger.info(f"Top 5 features: {list(importance.keys())[:5]}")
 

@@ -29,6 +29,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_2"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT))
+from prototype.utils.signal_guards import atomic_write_json
 
 LOG_FILE = LOG_DIR / "v5_2-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -103,7 +104,7 @@ def load_carry_forward() -> dict:
 
 
 def save_carry_forward(state: dict):
-    CARRY_FILE.write_text(json.dumps(state, indent=2, default=str))
+    atomic_write_json(CARRY_FILE, state)
 
 
 def load_today_state() -> dict:
@@ -134,7 +135,7 @@ def load_today_state() -> dict:
 
 def save_today_state(state: dict):
     today_file = TRADE_DIR / f"{date.today().isoformat()}.json"
-    today_file.write_text(json.dumps(state, indent=2, default=str))
+    atomic_write_json(today_file, state)
 
 
 # ═══════════════════════════ NIFTY PRICE ═══════════════════════════
@@ -470,6 +471,23 @@ def print_summary():
 
 # ═══════════════════════════ MAIN LOOP ═══════════════════════════
 
+def _wait_for_market_open():
+    """#6 FIX: block until 09:15:30 IST so we don't execute on stale pre-open data.
+    The 2026-04-24 phantom trade (entry @24,353.55 / exit @24,156.05 in 147ms for +Rs 30,604)
+    happened because entry used regime_detector.nifty_close (yesterday's close) while exit
+    used get_nifty_live() (last Thursday 1m bar) — two different stale datapoints.
+    """
+    import datetime as _dt
+    open_t = _dt.time(9, 15, 30)
+    while _dt.datetime.now().time() < open_t:
+        remaining = (_dt.datetime.combine(_dt.date.today(), open_t) - _dt.datetime.now()).total_seconds()
+        if remaining > 60:
+            log(f"  Pre-market gate: sleeping {int(remaining)}s until 09:15:30 IST")
+            time.sleep(min(remaining, 60))
+        else:
+            time.sleep(max(remaining, 1))
+
+
 def run_autopilot():
     """Main auto-pilot loop: detect regime, deploy options, monitor, settle."""
     log("=" * 60)
@@ -484,31 +502,42 @@ def run_autopilot():
         print_status(state)
         return
 
+    # #6 FIX: gate execution until market is actually open — prevents phantom fills on stale data
+    _wait_for_market_open()
+
     # Step 1: Detect regime
     log("[1/4] Detecting market regime...")
     if detect_regime:
         try:
             regime_result = detect_regime()
             state["regime"] = regime_result.get("regime", "SIDEWAYS")
-            state["nifty_price"] = regime_result.get("nifty_close", 0)
+            # #6 FIX: ignore regime_detector.nifty_close (stale daily close) — always use live 1m quote
+            # to keep entry and exit on the same data source. Avoids the "phantom trade" scenario.
+            state["nifty_price"] = 0  # force fresh fetch below
             vix_ind = regime_result.get("indicators", {}).get("india_vix", {})
             state["vix"] = vix_ind.get("value", 18.0)
             if state["vix"] is None or (isinstance(state["vix"], float) and state["vix"] != state["vix"]):
                 state["vix"] = 18.0
-            log(f"  Regime: {state['regime']} | Nifty: {state['nifty_price']} | VIX: {state['vix']}")
+            log(f"  Regime: {state['regime']} | VIX: {state['vix']}")
         except Exception as e:
             log(f"  [WARN] Regime detection failed: {e}")
             state["regime"] = "SIDEWAYS"
             state["vix"] = get_vix_live()
-            state["nifty_price"] = get_nifty_live()
+            state["nifty_price"] = 0
+
     else:
         state["regime"] = "SIDEWAYS"
         state["vix"] = get_vix_live()
-        state["nifty_price"] = get_nifty_live() or 23500
+        state["nifty_price"] = 0
 
-    # Refresh Nifty live if regime gave stale data
-    if state["nifty_price"] == 0:
-        state["nifty_price"] = get_nifty_live() or 23500
+    # #6 FIX: single live-price fetch (same source entry + exit will use)
+    live = get_nifty_live()
+    if live and live > 0:
+        state["nifty_price"] = live
+        log(f"  Nifty (live 1m): {live}")
+    else:
+        state["nifty_price"] = 23500  # safe default only if yfinance totally down
+        log(f"  [WARN] get_nifty_live unavailable — using default {state['nifty_price']}")
 
     save_today_state(state)
 

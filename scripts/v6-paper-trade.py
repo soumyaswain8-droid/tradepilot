@@ -1,39 +1,34 @@
 #!/usr/bin/env python3
 """
-TradePilot v5.6 Paper Trading Engine — Darvas Box Theory + Regime Flip
+TradePilot v6 Paper Trading Engine — "v4 raw signals + Track A bolt-on"
 ========================================================================
-Everything from v5.5 (regime-aware exit logic) PLUS:
-  - Darvas Box scoring (0-100) added to signal evaluation
-  - Dynamic SL at box floor (instead of fixed %)
-  - Dynamic target at ceiling + box range
-  - BREAKOUT signals get priority deployment
-  - BREAKDOWN signals trigger immediate exit
-  - Staircase bonus (ascending boxes = higher conviction)
+Created 2026-04-28 to test EOD RCA hypothesis: v4 (raw) made +Rs 26K with 71% WR;
+v5 (wrapped) made +Rs 4.9K with 65% WR on the same day. v5's signal_engine wrapper
+mechanically forces SHORTs in BEAR regime regardless of stock weakness — v4 has
+no such gate and stays LONG-only on green tapes. v6 = v4's raw scoring path +
+Track A's defensive layer (SHORT_BLOCK, WINNER_RE_ARM, FLAT_EXIT, cost modeling).
 
-Darvas Box scoring:
-  80-100: Active breakout above ceiling — STRONG BUY
-  60-79:  Testing ceiling — WATCH/light position
-  40-59:  Consolidating inside box — NEUTRAL
-  20-39:  Near floor — CAUTION
-  0-19:   Below floor — AVOID/EXIT
+Differences from v5:
+  - Calls v4's composite_scorer DIRECTLY (no signal_engine.generate_signals wrapper)
+  - BUY emitted for any stock with score >= 60 (no top-percentile cap)
+  - SHORT emitted only if score <= 35 AND change_pct < -0.5 (actual weakness)
+  - Inherits Track A: SHORT_BLOCK, WINNER_RE_ARM, FLAT_FORCE_EXIT, cost modeling
+  - Inherits #1 SHORT-arm slot partition from v5/risk_manager (15/5, 8/12, 18/2)
 
-Usage:
-    python3 scripts/v5_6-paper-trade.py              # Full auto-pilot
-    python3 scripts/v5_6-paper-trade.py --status      # All pools + positions
-    python3 scripts/v5_6-paper-trade.py --summary     # P&L summary
+Usage: python3 scripts/v6-paper-trade.py
 """
-import json, sys, time, warnings, importlib
+import json, os, sys, time, warnings, importlib
 from datetime import datetime, timedelta
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
 PROJECT_ROOT = Path(__file__).parent.parent
-TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_6"
+TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v6"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
 from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
-LOG_FILE = LOG_DIR / "v5_6-paper-trade.log"
+LOG_FILE = LOG_DIR / "v6-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -43,13 +38,84 @@ SCAN_INTERVAL_MIN, RESCORE_INTERVAL_MIN = 10, 30
 FORCE_EXIT_HOUR, FORCE_EXIT_MIN = 15, 15
 POOL_NAMES = ["INTRADAY", "SWING", "POSITIONAL", "INVESTMENT"]
 
+# ═════════ TRACK A — Phase 1 tactical fixes (per IMPLEMENTATION_BRIEF_2026-04-27.md) ═════════
+# All four constants below are tunable via env vars so we can dial without code edits.
+
+# Task 1.1 — BULLISH_PREMARKET_SHORT_BLOCK
+SHORT_BLOCK_GAP_PCT    = float(os.environ.get("SHORT_BLOCK_GAP_PCT", "0.5"))
+SHORT_BLOCK_WINDOW_MIN = int(os.environ.get("SHORT_BLOCK_WINDOW_MIN", "60"))
+
+# Task 1.2 — WINNER_RE_ARM
+WINNER_REARM_MAX = int(os.environ.get("WINNER_REARM_MAX", "3"))
+
+# Task 1.3 — TIME_EXIT_TIGHTENING
+FLAT_EXIT_THRESHOLD_PCT = float(os.environ.get("FLAT_EXIT_THRESHOLD_PCT", "0.3"))
+FLAT_EXIT_WINDOW_START  = os.environ.get("FLAT_EXIT_WINDOW_START", "13:30")
+FLAT_EXIT_WINDOW_END    = os.environ.get("FLAT_EXIT_WINDOW_END",   "14:00")
+
+# Task 1.4 — Cost modeling (Indian retail intraday: brokerage + STT + slippage)
+COST_BPS_ROUND_TRIP = float(os.environ.get("COST_BPS_ROUND_TRIP", "12"))
+
+
+def cost_for_trade(qty: int, entry_price: float, exit_price: float) -> float:
+    """Round-trip cost in INR using avg notional × bps. ~12 bps default."""
+    notional_avg = qty * (entry_price + exit_price) / 2
+    return notional_avg * (COST_BPS_ROUND_TRIP / 10000)
+
+
+def _short_block_active(state) -> bool:
+    """Task 1.1: True iff (premarket BULLISH) AND (gap up > threshold) AND (in first N min)."""
+    pm = state.get("premarket", {}) or {}
+    overall = pm.get("overall", {}) or {}
+    bias_bullish = str(overall.get("bias", "")).upper() == "BULLISH"
+    gap = pm.get("gap_prediction", {}) or {}
+    gap_up = (str(gap.get("direction", "")).upper() == "UP" and
+              float(gap.get("magnitude_pct", 0) or 0) > SHORT_BLOCK_GAP_PCT)
+    now = datetime.now()
+    minutes_since_open = (now.hour - 9) * 60 + now.minute - 15
+    in_window = 0 <= minutes_since_open < SHORT_BLOCK_WINDOW_MIN
+    return bias_bullish and gap_up and in_window
+
+
+def mark_rearmable(state, symbol: str, direction: str, max_rearms: int = None) -> dict:
+    """Task 1.2: When a position exits with TARGET, allow up to N re-entries today."""
+    if max_rearms is None:
+        max_rearms = WINNER_REARM_MAX
+    rearm = state.setdefault("rearmable", {})
+    if symbol not in rearm:
+        rearm[symbol] = {
+            "direction": direction,
+            "remaining": max_rearms,
+            "expires_at_minute": (15 - 9) * 60,  # 15:00 IST cutoff
+        }
+    return rearm[symbol]
+
+
+def consume_rearm(state, symbol: str, direction: str) -> bool:
+    """Task 1.2: True if a re-arm slot is available for (symbol, direction); consumes it."""
+    rearm = state.get("rearmable", {}).get(symbol)
+    if not rearm or rearm["direction"] != direction or rearm["remaining"] <= 0:
+        return False
+    rearm["remaining"] -= 1
+    return True
+
+
+def _in_flat_exit_window(now=None) -> bool:
+    """Task 1.3: True iff current time is in the FLAT_EXIT window (default 13:30-14:00 IST)."""
+    now = now or datetime.now()
+    cur = (now.hour, now.minute)
+    sh, sm = (int(x) for x in FLAT_EXIT_WINDOW_START.split(":"))
+    eh, em = (int(x) for x in FLAT_EXIT_WINDOW_END.split(":"))
+    return (sh, sm) <= cur < (eh, em)
+# ═════════ end Track A constants/helpers ═════════
+
 # ═══════════════════════════ IMPORTS (graceful) ═══════════════════════════
 _mods = {}
 _mod_imports = {
     "regime": ("prototype.v5.regime_detector", "detect_regime"),
     "premarket": ("prototype.v5.premarket_intel", "get_premarket_intel"),
     "pools": ("prototype.v5.pool_manager", "PoolManager"),
-    "signals": ("prototype.v5.signal_engine", "generate_signals"),
+    # v6 deliberately does NOT load v5.signal_engine — it generates its own signals below
     "risk": ("prototype.v5.risk_manager", "RiskManager"),
 }
 
@@ -60,6 +126,77 @@ for _key, (_mod_path, _attr) in _mod_imports.items():
     except (ImportError, AttributeError) as e:
         _mods[_key] = None
         print(f"[WARN] {_key}: {e}")
+
+
+# ═══════════════════════════ v6 SIGNAL GENERATOR (direct, no wrapper) ═══════════════════════════
+# v6's hypothesis: v4's composite_scorer is good. v5's signal_engine wrapper makes it worse
+# by mechanically forcing 20% of stocks to be SHORTs in BEAR regime regardless of weakness.
+# v6 bypasses that wrapper entirely and uses absolute-score thresholds.
+V6_BUY_MIN_SCORE   = float(os.environ.get("V6_BUY_MIN_SCORE", "60"))    # need at least this to BUY
+V6_SHORT_MAX_SCORE = float(os.environ.get("V6_SHORT_MAX_SCORE", "35"))  # need at most this to SHORT
+V6_SHORT_MIN_NEG_CHANGE = float(os.environ.get("V6_SHORT_MIN_NEG_CHANGE", "-0.5"))  # AND must be down this much
+
+
+def v6_generate_signals(regime: str = None):
+    """v6's signal generator — v4 composite_scorer with absolute thresholds (no percentile gate).
+
+    Returns list of signal dicts (BUY / SELL / HOLD) compatible with v5's deploy/scan loop.
+    """
+    from prototype.v4.composite_scorer import score_all_stocks
+    if regime is None:
+        regime = "SIDEWAYS"
+    regime = regime.upper().replace("NEUTRAL", "SIDEWAYS")
+    v4_results = score_all_stocks(regime_override=regime)
+    if not v4_results:
+        return []
+    signals = []
+    n_buy = n_sell = n_hold = 0
+    for stock in v4_results:
+        score = stock.get("score", 50)
+        change_pct = stock.get("change_pct", 0)
+        price = stock.get("price", 0)
+        sl_pct = stock.get("stopLoss", 1.5)
+        tgt_pct = stock.get("target", 2.0)
+        if score >= V6_BUY_MIN_SCORE:
+            direction, pos_type = "BUY", "LONG"
+            sl = round(price * (1 - sl_pct/100), 2)
+            tgt = round(price * (1 + tgt_pct/100), 2)
+            n_buy += 1
+        elif score <= V6_SHORT_MAX_SCORE and change_pct < V6_SHORT_MIN_NEG_CHANGE:
+            direction, pos_type = "SELL", "SHORT"
+            sl = round(price * (1 + sl_pct/100), 2)
+            tgt = round(price * (1 - tgt_pct/100), 2)
+            n_sell += 1
+        else:
+            direction, pos_type = "HOLD", "NONE"
+            sl = round(price * (1 - sl_pct/100), 2)
+            tgt = round(price * (1 + tgt_pct/100), 2)
+            n_hold += 1
+        if direction == "SELL":
+            pool = "INTRADAY"
+        elif direction == "HOLD":
+            pool = "NONE"
+        elif regime == "BULL" and score >= 70:
+            pool = "INTRADAY"
+        else:
+            pool = "SWING" if score >= 60 else "INVESTMENT"
+        signals.append({
+            "symbol": stock["symbol"], "direction": direction,
+            "score": score, "pool": pool,
+            "entry_price": round(price, 2), "sl_price": sl, "target_price": tgt,
+            "riskReward": stock.get("riskReward", 0.0),
+            "position_type": pos_type, "regime": regime,
+            "reasons": stock.get("reasons", []),
+            "price": price, "change_pct": change_pct,
+            "trend": stock.get("trend", ""), "volatility": stock.get("volatility", ""),
+            "engine": "v6",
+        })
+    print(f"[v6 signals] BUY={n_buy} SELL={n_sell} HOLD={n_hold} | regime={regime}", flush=True)
+    return signals
+
+
+# Wire v6's generator into the _mods dict that the rest of the engine uses
+_mods["signals"] = v6_generate_signals
 
 # Comparator needs multiple imports
 try:
@@ -127,7 +264,7 @@ def get_vix():
 
 MULTI_DAY_POOLS = {"SWING", "POSITIONAL", "INVESTMENT"}
 ACTIVE_POS_FILE = TRADE_DIR / "positions_active.json"
-CARRY_FORWARD_FILE = TRADE_DIR / "carry_forward_v5_6.json"
+CARRY_FORWARD_FILE = TRADE_DIR / "carry_forward_v6.json"
 
 
 def _get_carry_forward_balance():
@@ -143,7 +280,7 @@ def _get_carry_forward_balance():
     return TOTAL_CAPITAL
 
 
-def _save_carry_forward_v5(state):
+def _save_carry_forward_v6(state):
     """Save today's closing balance for tomorrow."""
     pnl = state.get("summary", {}).get("total_pnl", 0)
     closing = TOTAL_CAPITAL + pnl  # Use starting capital + cumulative pnl
@@ -173,7 +310,7 @@ def _state_file():
 
 def fresh_state(capital=None):
     cap = capital or TOTAL_CAPITAL
-    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": "v5.6-darvas-box",
+    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": "v6",
             "started_at": datetime.now().strftime("%H:%M:%S"),
             "total_capital": cap, "regime": "SIDEWAYS",
             "premarket": {}, "risk_state": {},
@@ -321,9 +458,11 @@ def _tg_alert(msg):
     except Exception:
         pass
 
-
-import os as _os_tgnoise
-TELEGRAM_TRADE_NOISE = _os_tgnoise.environ.get("TELEGRAM_TRADE_NOISE", "0") == "1"
+# 2026-04-28: per-trade Telegram alerts silenced by default to reduce noise.
+# Set TELEGRAM_TRADE_NOISE=1 to re-enable (was firing ~400 messages/day across 4 engines).
+# Critical alerts (_tg_alert) for regime change, alpha hunter, daily summary, crash watchdog
+# remain unaffected. Digest still sends every 2 hours via telegram-digest.sh.
+TELEGRAM_TRADE_NOISE = os.environ.get("TELEGRAM_TRADE_NOISE", "0") == "1"
 
 def _tg_entry(trade):
     if not TELEGRAM_TRADE_NOISE:
@@ -352,18 +491,45 @@ def deploy_signals(state, pm, rm, signals):
     count = 0
     rust_validated = 0
 
-    # v5.5: Skip Rust validation — Rust engine is shared and v5 fills the position slots.
-    # v5.5 runs Python-only until we have per-engine Rust instances.
-    rust_available = False
+    # Try to connect to Rust engine for validation
+    try:
+        from prototype.v5.rust_bridge import validate_signal_via_rust, sync_positions_from_state
+        rust_available = True
+        # Sync Rust's position count with ours BEFORE deploying — prevents drift lockout
+        if sync_positions_from_state(state):
+            log("  [rust-sync] drift corrected")
+    except ImportError:
+        rust_available = False
+
+    # Task 1.1 — BULLISH_PREMARKET_SHORT_BLOCK (added 2026-04-28)
+    # When premarket bias is BULLISH and gap up > threshold, suppress all SELL/SHORT
+    # signals for the first N min after market open. On 04-27 this would have blocked
+    # all 36 SHORTs that bled into the rising tape.
+    if _short_block_active(state):
+        allowed_dirs = ("BUY",)
+        log(f"  [SHORT_BLOCK] Bullish premarket + gap-up > {SHORT_BLOCK_GAP_PCT}% — "
+            f"suppressing SELL signals for first {SHORT_BLOCK_WINDOW_MIN} min")
+    else:
+        allowed_dirs = ("BUY", "SELL")
 
     # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.
-    for sig in sorted([s for s in signals if s["direction"] in ("BUY", "SELL")],
+    for sig in sorted([s for s in signals if s["direction"] in allowed_dirs],
                       key=lambda s: -float(s.get("score", 0))):
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
-        if sym in held or pool_name not in state["pools"] or pool_name == "NONE": continue
+        if pool_name not in state["pools"] or pool_name == "NONE":
+            continue
+        # Task 1.2 — WINNER_RE_ARM (added 2026-04-28)
+        # If symbol is already held, normally we skip. With re-arm: same-direction
+        # re-entry is allowed if a TARGET hit consumed the original (up to 3 per stock per day).
+        already_held = sym in held
+        rearm_ok = consume_rearm(state, sym, sig["direction"]) if already_held else False
+        if already_held and not rearm_ok:
+            continue
+        if rearm_ok:
+            log(f"  [RE-ARM] {sym}: deploying re-entry on {sig['direction']}")
+        # #1 FIX: pass position_type so the slot-partition cap can fire per-direction
+        _pt = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
         if rm:
-            # #1 FIX: pass position_type so the slot-partition cap can fire per-direction
-            _pt = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
             ok, reason = rm.check_can_trade(pool_name, sym, _pt)
             if not ok: log(f"  {sym}: BLOCKED ({reason})"); continue
         pool = pm.pools.get(pool_name)
@@ -379,7 +545,7 @@ def deploy_signals(state, pm, rm, signals):
 
         if qty is None: continue
         cost = qty * price
-        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%) — Darvas-supplied SL still takes priority via sig.get default
+        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%) — v5 was stopped out of CIPLA/DRREDDY right before they rallied on 04-24
         _gap = abs(float(state.get("premarket", {}).get("gap_prediction", {}).get("magnitude_pct", 0) or 0))
         _sl_pct = 0.0225 if _gap > 0.5 else 0.015
         sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
@@ -388,46 +554,6 @@ def deploy_signals(state, pm, rm, signals):
         if is_reentry_blocked(state, sym, pos_type):  # learning 2026-04-17_003: 2-SL same-day block
             log(f"  {sym}: BLOCKED (reentry cap: 2 SL in {pos_type} today)")
             continue
-
-        # ═══ v5.6 DARVAS BOX ENHANCEMENT ═══
-        # Override SL/target with box-based levels, boost sizing for breakouts
-        darvas_data = None
-        try:
-            from prototype.v5_6.darvas_box import score_box_breakout
-            darvas_data = score_box_breakout(sym)
-        except Exception:
-            pass
-
-        if darvas_data and darvas_data.get("darvas_score", 0) > 0:
-            dscore = darvas_data["darvas_score"]
-            dsignal = darvas_data.get("signal", "NEUTRAL")
-
-            # BREAKOUT: use box floor as SL, box ceiling + range as target
-            if dsignal == "BREAKOUT" and darvas_data.get("dynamic_sl", 0) > 0:
-                box_sl = darvas_data["dynamic_sl"]
-                box_tgt = darvas_data["dynamic_target"]
-                if sig["direction"] == "BUY" and box_sl < price:
-                    sl = box_sl  # Dynamic SL at box floor
-                    tgt = box_tgt  # Target at ceiling + range
-                    # Boost position size for high-conviction breakouts
-                    if dscore >= 80:
-                        qty = max(1, int(qty * 1.3))  # 30% bigger position
-                    log(f"  {sym}: DARVAS BREAKOUT (score={dscore}) SL={sl:.2f} TGT={tgt:.2f}")
-
-            # BREAKDOWN: skip this stock entirely
-            elif dsignal == "BREAKDOWN":
-                log(f"  {sym}: DARVAS BREAKDOWN (score={dscore}) — SKIPPING")
-                continue
-
-            # CEILING_TEST: normal size, but tighter SL
-            elif dsignal == "CEILING_TEST" and darvas_data.get("box_floor", 0) > 0:
-                box_sl = darvas_data["dynamic_sl"]
-                if sig["direction"] == "BUY" and box_sl < price:
-                    sl = box_sl
-
-            # Store darvas data for tracking
-            sig["darvas_score"] = dscore
-            sig["darvas_signal"] = dsignal
 
         # ═══ RUST ENGINE VALIDATION ═══
         # If Rust engine is running, validate through it first.
@@ -478,24 +604,39 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
     else:
         pnl = (exit_price - pos["entry_price"]) * pos["qty"]
         pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * 100
+    # Task 1.4: realistic Indian retail cost. pnl_gross stays as the reported number
+    # for backwards compat with prior reports; pnl_net + cost added as new fields.
+    cost = cost_for_trade(pos["qty"], pos["entry_price"], exit_price)
+    pnl_gross = pnl
+    pnl_net = pnl - cost
     if pm: pm.close_position(pool_name, sym, exit_price, reason)
     if rm: rm.record_trade_result(pool_name, sym, pnl)
+    if reason == "STOPLOSS":  # learning 2026-04-17_003: track SL for same-day reentry block
+        record_reentry_sl(state, sym, pos.get("position_type", "LONG"))
+    # Task 1.2: WINNER_RE_ARM — only on TARGET exits, never STOPLOSS / TIME_EXIT / FLAT_FORCE_EXIT
+    if reason == "TARGET":
+        direction = "SELL" if is_short else "BUY"
+        slot = mark_rearmable(state, sym, direction)
+        log(f"  {sym}: TARGET hit — re-armable for {direction} ({slot['remaining']}/{WINNER_REARM_MAX} slots remaining)")
     state["pools"][pool_name]["closed"].append({
         "symbol": sym, "entry_price": pos["entry_price"], "exit_price": round(exit_price, 2),
         "qty": pos["qty"], "entry_time": pos["entry_time"],
         "exit_time": datetime.now().strftime("%H:%M:%S"),
         "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason,
+        "pnl_gross": round(pnl_gross, 2), "pnl_net": round(pnl_net, 2), "cost": round(cost, 2),
         "position_type": pos.get("position_type", "LONG"), "pool": pool_name})
     state["pools"][pool_name]["pnl"] += pnl
     state["pools"][pool_name]["positions"] = [
         p for p in state["pools"][pool_name]["positions"] if p["symbol"] != sym]
     s = state["summary"]
     s["total_pnl"] += pnl; s["trades"] += 1
+    s["total_pnl_net"] = s.get("total_pnl_net", 0) + pnl_net
+    s["total_cost"]    = s.get("total_cost", 0) + cost
     s["wins" if pnl > 0 else "losses"] += 1
     s["shorts" if is_short else "longs"] = s.get("shorts" if is_short else "longs", 0) + 1
     tag = ("WIN" if pnl > 0 else "LOSS") + f" {'SHORT' if is_short else 'LONG'}"
     log(f"  >> {tag} {sym} x{pos['qty']} @{exit_price:.2f} ({reason}) "
-        f"P&L: Rs {pnl:+,.0f} ({pnl_pct:+.2f}%) [{pool_name}]")
+        f"P&L: Rs {pnl:+,.0f} ({pnl_pct:+.2f}%) net Rs {pnl_net:+,.0f} cost Rs {cost:.0f} [{pool_name}]")
     _tg_exit({"symbol": sym, "pnl": pnl, "pnl_pct": pnl_pct, "reason": reason,
               "entry_price": pos["entry_price"], "exit_price": exit_price,
               "position_type": pos.get("position_type", "LONG"), "pool": pool_name,
@@ -511,6 +652,7 @@ def scan_positions(state, pm, rm):
     prices = get_prices_batch(list({p["symbol"] for _, p in all_pos}))
     unrealized, to_close = 0, []
     log(f"\n{'='*65}\n  SCAN #{state['summary']['scan_count']} | {len(all_pos)} positions\n{'='*65}")
+    flat_window_active = _in_flat_exit_window()
     for pool_name, pos in all_pos:
         sym, entry = pos["symbol"], pos["entry_price"]
         if sym not in prices: log(f"  {sym}: no price"); continue
@@ -524,6 +666,13 @@ def scan_positions(state, pm, rm):
             if px > pos.get("peak_price", entry): pos["peak_price"] = round(px, 2)
         unrealized += pnl_rs
         reason = None
+        # Task 1.3 — TIME_EXIT_TIGHTENING (added 2026-04-28)
+        # In the post-lunch window, force-exit any flat position (|pnl_pct| < 0.3%)
+        # to free the slot for fresher signals.
+        if flat_window_active and abs(pnl_pct) < FLAT_EXIT_THRESHOLD_PCT:
+            reason = "FLAT_FORCE_EXIT"
+            log(f"  {sym}: FLAT_FORCE_EXIT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
+            to_close.append((pool_name, pos, px, reason)); continue
         if is_short:
             if px >= pos["sl_price"]: reason = "STOPLOSS"
             elif px <= pos["target_price"]: reason = "TARGET"
@@ -559,13 +708,13 @@ def scan_positions(state, pm, rm):
 # ═══════════════════════════ RESCORE ═══════════════════════════
 
 def _held_for_min(pos, min_minutes):
-    """#5 helper: True when position held LESS than min_minutes (exit should be suppressed)."""
+    """#5 helper: return True when position held LESS than min_minutes (i.e., exit should be suppressed)."""
     try:
         et = datetime.strptime(pos.get("entry_time", ""), "%H:%M:%S").replace(
             year=datetime.now().year, month=datetime.now().month, day=datetime.now().day)
         return (datetime.now() - et).total_seconds() < min_minutes * 60
     except (ValueError, TypeError):
-        return False
+        return False  # if we can't tell, allow normal exit
 
 
 def _should_rescore(state):
@@ -582,42 +731,17 @@ def rescore_and_redeploy(state, pm, rm):
     if not _should_rescore(state) or not generate_signals: return
     state["summary"]["rescore_count"] += 1
     state["last_rescore_time"] = datetime.now().strftime("%H:%M:%S")
-    regime = state.get("regime", "SIDEWAYS")
-    log(f"\n  RESCORE #{state['summary']['rescore_count']} (regime={regime})")
-    try: new_sigs = generate_signals(regime)
+    log(f"\n  RESCORE #{state['summary']['rescore_count']}")
+    try: new_sigs = generate_signals(state.get("regime", "SIDEWAYS"))
     except Exception as e: log(f"  Rescore failed: {e}"); return
     new_map = {s["symbol"]: s for s in new_sigs}
     state["last_signals"] = new_sigs
-
-    # ═══ v5.5 REGIME-AWARE SIGNAL_FLIP LOGIC ═══
-    # BULL:     Only exit LONG on SELL (HOLD = keep riding the trend)
-    # SIDEWAYS: Exit LONG on SELL or HOLD (defensive, same as v5)
-    # BEAR:     Exit LONG on SELL or HOLD (defensive, same as v5)
-    # Shorts:   Always exit on BUY (regardless of regime)
-
     for pn, pd in state["pools"].items():
         for pos in list(pd["positions"]):
             sym, is_short = pos["symbol"], pos.get("position_type") == "SHORT"
             nd = new_map.get(sym, {}).get("direction", "HOLD")
-
-            # Carry-forward grace period: skip first rescore for overnight positions
-            if state["summary"]["rescore_count"] == 1 and pos.get("entry_date") != datetime.now().strftime("%Y-%m-%d"):
-                if nd == "HOLD":
-                    log(f"  {sym}: HOLD signal but carry-forward grace — keeping")
-                    continue
-
-            if is_short:
-                # Shorts always exit on BUY signal
-                exit_it = nd == "BUY"
-            else:
-                # Longs: regime-dependent exit
-                if regime == "BULL":
-                    exit_it = nd == "SELL"  # Only exit on explicit SELL in BULL
-                    if nd == "HOLD":
-                        log(f"  {sym}: HOLD in BULL regime — keeping position (v5.5)")
-                else:
-                    exit_it = nd in ("SELL", "HOLD")  # Same as v5 in SIDEWAYS/BEAR
-            # #5 FIX: 60-min minimum hold before SIGNAL_FLIP
+            exit_it = (not is_short and nd in ("SELL", "HOLD")) or (is_short and nd == "BUY")
+            # #5 FIX: 60-min minimum hold before SIGNAL_FLIP — prevents rescore whipsaw
             if exit_it and _held_for_min(pos, 60):
                 log(f"  {sym}: flip suppressed (held <60min since {pos.get('entry_time','?')})")
                 exit_it = False
@@ -654,7 +778,7 @@ def print_status(state):
     C = {"BULL": "\033[92m", "BEAR": "\033[91m", "SIDEWAYS": "\033[93m"}
     R = "\033[0m"
     print(f"\n{'='*65}")
-    print(f"  v5.6 DARVAS-BOX  |  {state.get('date','today')}  |  Capital: {_fmt(TOTAL_CAPITAL)}")
+    print(f"  v5 PAPER TRADING  |  {state.get('date','today')}  |  Capital: {_fmt(TOTAL_CAPITAL)}")
     print(f"  Regime: {C.get(regime,'')}{regime}{R}  |  VIX: {vix:.1f}  |  "
           f"Gap: {gap.get('direction','?')} {gap.get('magnitude_pct',0):+.2f}%")
     print(f"{'='*65}")
@@ -738,13 +862,13 @@ def push_to_devpilot(state):
         cur = conn.cursor()
         cur.execute(
             "INSERT INTO learnings (project,category,title,content,source,tags,active,created_at,updated_at) "
-            "VALUES (%s,%s,%s,%s,'v5-paper-trade',%s,true,NOW(),NOW())",
+            "VALUES (%s,%s,%s,%s,'v6-paper-trade',%s,true,NOW(),NOW())",
             ("tradepilot", "paper-trade",
              f"v5 {today}: {_fmt(s.get('total_pnl',0))} ({pp:+.2f}%) | {s.get('trades',0)}t | {wr:.0f}%w",
-             json.dumps({"engine": "v5.6-darvas-box", "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
+             json.dumps({"engine": "v6", "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
                          "pnl": s.get("total_pnl", 0), "trades": s.get("trades", 0),
                          "wins": s.get("wins", 0), "longs": s.get("longs", 0), "shorts": s.get("shorts", 0)}),
-             ["paper-trade", "v5", today, state.get("regime", "").lower()]))
+             ["paper-trade", "v6", today, state.get("regime", "").lower()]))
         conn.commit(); cur.close(); conn.close(); log("  Saved to DevPilot DB")
     except Exception as e: log(f"  DevPilot push failed: {e}")
 
@@ -753,7 +877,7 @@ def push_to_devpilot(state):
 
 def run():
     check_model_freshness(max_age_days=3)  # learning #005: refuse stale ML
-    log(f"{'='*65}\n  v5.6 DARVAS-BOX ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
+    log(f"{'='*65}\n  v5 ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
         f"  Scan {SCAN_INTERVAL_MIN}m | Rescore {RESCORE_INTERVAL_MIN}m | Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
         f"  Pools: INTRADAY(30%) SWING(25%) POSITIONAL(25%) INVESTMENT(15%)\n{'='*65}")
     state = load_state()
@@ -804,7 +928,7 @@ def run():
         save_state(state)
     log(f"\n{'='*65}\n  END OF DAY\n{'='*65}")
     print_status(state); generate_report(state); push_to_devpilot(state)
-    _save_carry_forward_v5(state)
+    _save_carry_forward_v6(state)
     # Send daily summary via Telegram
     s = state.get("summary", {})
     pnl = s.get("total_pnl", 0)

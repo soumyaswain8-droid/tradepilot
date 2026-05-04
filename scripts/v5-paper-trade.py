@@ -12,7 +12,7 @@ Usage:
     python3 scripts/v5-paper-trade.py --compare     # Run v4 vs v5 comparator
     python3 scripts/v5-paper-trade.py --premarket   # Show pre-market analysis only
 """
-import json, sys, time, warnings, importlib
+import json, os, sys, time, warnings, importlib
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -22,6 +22,7 @@ TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
+from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
 LOG_FILE = LOG_DIR / "v5-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
@@ -31,6 +32,77 @@ TRAILING_TRIGGER_PCT, TRAILING_STEP_PCT = 1.0, 0.5
 SCAN_INTERVAL_MIN, RESCORE_INTERVAL_MIN = 10, 30
 FORCE_EXIT_HOUR, FORCE_EXIT_MIN = 15, 15
 POOL_NAMES = ["INTRADAY", "SWING", "POSITIONAL", "INVESTMENT"]
+
+# ═════════ TRACK A — Phase 1 tactical fixes (per IMPLEMENTATION_BRIEF_2026-04-27.md) ═════════
+# All four constants below are tunable via env vars so we can dial without code edits.
+
+# Task 1.1 — BULLISH_PREMARKET_SHORT_BLOCK
+SHORT_BLOCK_GAP_PCT    = float(os.environ.get("SHORT_BLOCK_GAP_PCT", "0.5"))
+SHORT_BLOCK_WINDOW_MIN = int(os.environ.get("SHORT_BLOCK_WINDOW_MIN", "60"))
+
+# Task 1.2 — WINNER_RE_ARM
+WINNER_REARM_MAX = int(os.environ.get("WINNER_REARM_MAX", "3"))
+
+# Task 1.3 — TIME_EXIT_TIGHTENING
+FLAT_EXIT_THRESHOLD_PCT = float(os.environ.get("FLAT_EXIT_THRESHOLD_PCT", "0.3"))
+FLAT_EXIT_WINDOW_START  = os.environ.get("FLAT_EXIT_WINDOW_START", "13:30")
+FLAT_EXIT_WINDOW_END    = os.environ.get("FLAT_EXIT_WINDOW_END",   "14:00")
+
+# Task 1.4 — Cost modeling (Indian retail intraday: brokerage + STT + slippage)
+COST_BPS_ROUND_TRIP = float(os.environ.get("COST_BPS_ROUND_TRIP", "12"))
+
+
+def cost_for_trade(qty: int, entry_price: float, exit_price: float) -> float:
+    """Round-trip cost in INR using avg notional × bps. ~12 bps default."""
+    notional_avg = qty * (entry_price + exit_price) / 2
+    return notional_avg * (COST_BPS_ROUND_TRIP / 10000)
+
+
+def _short_block_active(state) -> bool:
+    """Task 1.1: True iff (premarket BULLISH) AND (gap up > threshold) AND (in first N min)."""
+    pm = state.get("premarket", {}) or {}
+    overall = pm.get("overall", {}) or {}
+    bias_bullish = str(overall.get("bias", "")).upper() == "BULLISH"
+    gap = pm.get("gap_prediction", {}) or {}
+    gap_up = (str(gap.get("direction", "")).upper() == "UP" and
+              float(gap.get("magnitude_pct", 0) or 0) > SHORT_BLOCK_GAP_PCT)
+    now = datetime.now()
+    minutes_since_open = (now.hour - 9) * 60 + now.minute - 15
+    in_window = 0 <= minutes_since_open < SHORT_BLOCK_WINDOW_MIN
+    return bias_bullish and gap_up and in_window
+
+
+def mark_rearmable(state, symbol: str, direction: str, max_rearms: int = None) -> dict:
+    """Task 1.2: When a position exits with TARGET, allow up to N re-entries today."""
+    if max_rearms is None:
+        max_rearms = WINNER_REARM_MAX
+    rearm = state.setdefault("rearmable", {})
+    if symbol not in rearm:
+        rearm[symbol] = {
+            "direction": direction,
+            "remaining": max_rearms,
+            "expires_at_minute": (15 - 9) * 60,  # 15:00 IST cutoff
+        }
+    return rearm[symbol]
+
+
+def consume_rearm(state, symbol: str, direction: str) -> bool:
+    """Task 1.2: True if a re-arm slot is available for (symbol, direction); consumes it."""
+    rearm = state.get("rearmable", {}).get(symbol)
+    if not rearm or rearm["direction"] != direction or rearm["remaining"] <= 0:
+        return False
+    rearm["remaining"] -= 1
+    return True
+
+
+def _in_flat_exit_window(now=None) -> bool:
+    """Task 1.3: True iff current time is in the FLAT_EXIT window (default 13:30-14:00 IST)."""
+    now = now or datetime.now()
+    cur = (now.hour, now.minute)
+    sh, sm = (int(x) for x in FLAT_EXIT_WINDOW_START.split(":"))
+    eh, em = (int(x) for x in FLAT_EXIT_WINDOW_END.split(":"))
+    return (sh, sm) <= cur < (eh, em)
+# ═════════ end Track A constants/helpers ═════════
 
 # ═══════════════════════════ IMPORTS (graceful) ═══════════════════════════
 _mods = {}
@@ -193,7 +265,7 @@ def _save_active_positions(state):
         "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "positions": positions,
     }
-    ACTIVE_POS_FILE.write_text(json.dumps(data, indent=2, default=str))
+    atomic_write_json(ACTIVE_POS_FILE, data)
 
 def _check_position_aging(state):
     """Warn about positions held too long."""
@@ -240,7 +312,7 @@ def load_state():
     return s
 
 def save_state(s):
-    _state_file().write_text(json.dumps(s, indent=2, default=str))
+    atomic_write_json(_state_file(), s)
     # Always persist multi-day positions separately
     _save_active_positions(s)
 
@@ -310,7 +382,15 @@ def _tg_alert(msg):
     except Exception:
         pass
 
+# 2026-04-28: per-trade Telegram alerts silenced by default to reduce noise.
+# Set TELEGRAM_TRADE_NOISE=1 to re-enable (was firing ~400 messages/day across 4 engines).
+# Critical alerts (_tg_alert) for regime change, alpha hunter, daily summary, crash watchdog
+# remain unaffected. Digest still sends every 2 hours via telegram-digest.sh.
+TELEGRAM_TRADE_NOISE = os.environ.get("TELEGRAM_TRADE_NOISE", "0") == "1"
+
 def _tg_entry(trade):
+    if not TELEGRAM_TRADE_NOISE:
+        return
     try:
         from prototype.v5.telegram_bot import alert_entry
         alert_entry(trade)
@@ -318,6 +398,8 @@ def _tg_entry(trade):
         pass
 
 def _tg_exit(trade):
+    if not TELEGRAM_TRADE_NOISE:
+        return
     try:
         from prototype.v5.telegram_bot import alert_exit
         alert_exit(trade)
@@ -335,30 +417,67 @@ def deploy_signals(state, pm, rm, signals):
 
     # Try to connect to Rust engine for validation
     try:
-        from prototype.v5.rust_bridge import validate_signal_via_rust
+        from prototype.v5.rust_bridge import validate_signal_via_rust, sync_positions_from_state
         rust_available = True
+        # Sync Rust's position count with ours BEFORE deploying — prevents drift lockout
+        if sync_positions_from_state(state):
+            log("  [rust-sync] drift corrected")
     except ImportError:
         rust_available = False
 
-    for sig in [s for s in signals if s["direction"] in ("BUY", "SELL")]:
+    # Task 1.1 — BULLISH_PREMARKET_SHORT_BLOCK (added 2026-04-28)
+    # When premarket bias is BULLISH and gap up > threshold, suppress all SELL/SHORT
+    # signals for the first N min after market open. On 04-27 this would have blocked
+    # all 36 SHORTs that bled into the rising tape.
+    if _short_block_active(state):
+        allowed_dirs = ("BUY",)
+        log(f"  [SHORT_BLOCK] Bullish premarket + gap-up > {SHORT_BLOCK_GAP_PCT}% — "
+            f"suppressing SELL signals for first {SHORT_BLOCK_WINDOW_MIN} min")
+    else:
+        allowed_dirs = ("BUY", "SELL")
+
+    # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.
+    for sig in sorted([s for s in signals if s["direction"] in allowed_dirs],
+                      key=lambda s: -float(s.get("score", 0))):
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
-        if sym in held or pool_name not in state["pools"] or pool_name == "NONE": continue
+        if pool_name not in state["pools"] or pool_name == "NONE":
+            continue
+        # Task 1.2 — WINNER_RE_ARM (added 2026-04-28)
+        # If symbol is already held, normally we skip. With re-arm: same-direction
+        # re-entry is allowed if a TARGET hit consumed the original (up to 3 per stock per day).
+        already_held = sym in held
+        rearm_ok = consume_rearm(state, sym, sig["direction"]) if already_held else False
+        if already_held and not rearm_ok:
+            continue
+        if rearm_ok:
+            log(f"  [RE-ARM] {sym}: deploying re-entry on {sig['direction']}")
+        # #1 FIX: pass position_type so the slot-partition cap can fire per-direction
+        _pt = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
         if rm:
-            ok, reason = rm.check_can_trade(pool_name, sym)
+            ok, reason = rm.check_can_trade(pool_name, sym, _pt)
             if not ok: log(f"  {sym}: BLOCKED ({reason})"); continue
         pool = pm.pools.get(pool_name)
         if not pool: continue
         budget = pm.get_pool_budget(pool_name)
         if budget < 10000: continue
         price = sig.get("entry_price", sig.get("price", 0))
-        if price <= 0: continue
         base = budget * 0.15
+
         sized = rm.get_position_size(pool_name, base) if rm else base
-        qty = max(1, int(min(sized, budget) / price))
+
+        qty = safe_qty(budget, price, sized=sized)
+
+        if qty is None: continue
         cost = qty * price
-        sl = sig.get("sl_price", price * (0.985 if sig["direction"] == "BUY" else 1.015))
+        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%) — v5 was stopped out of CIPLA/DRREDDY right before they rallied on 04-24
+        _gap = abs(float(state.get("premarket", {}).get("gap_prediction", {}).get("magnitude_pct", 0) or 0))
+        _sl_pct = 0.0225 if _gap > 0.5 else 0.015
+        sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
         tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
         pos_type = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
+        if is_reentry_blocked(state, sym, pos_type):  # learning 2026-04-17_003: 2-SL same-day block
+            log(f"  {sym}: BLOCKED (reentry cap: 2 SL in {pos_type} today)")
+            continue
 
         # ═══ RUST ENGINE VALIDATION ═══
         # If Rust engine is running, validate through it first.
@@ -409,24 +528,39 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
     else:
         pnl = (exit_price - pos["entry_price"]) * pos["qty"]
         pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * 100
+    # Task 1.4: realistic Indian retail cost. pnl_gross stays as the reported number
+    # for backwards compat with prior reports; pnl_net + cost added as new fields.
+    cost = cost_for_trade(pos["qty"], pos["entry_price"], exit_price)
+    pnl_gross = pnl
+    pnl_net = pnl - cost
     if pm: pm.close_position(pool_name, sym, exit_price, reason)
     if rm: rm.record_trade_result(pool_name, sym, pnl)
+    if reason == "STOPLOSS":  # learning 2026-04-17_003: track SL for same-day reentry block
+        record_reentry_sl(state, sym, pos.get("position_type", "LONG"))
+    # Task 1.2: WINNER_RE_ARM — only on TARGET exits, never STOPLOSS / TIME_EXIT / FLAT_FORCE_EXIT
+    if reason == "TARGET":
+        direction = "SELL" if is_short else "BUY"
+        slot = mark_rearmable(state, sym, direction)
+        log(f"  {sym}: TARGET hit — re-armable for {direction} ({slot['remaining']}/{WINNER_REARM_MAX} slots remaining)")
     state["pools"][pool_name]["closed"].append({
         "symbol": sym, "entry_price": pos["entry_price"], "exit_price": round(exit_price, 2),
         "qty": pos["qty"], "entry_time": pos["entry_time"],
         "exit_time": datetime.now().strftime("%H:%M:%S"),
         "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason,
+        "pnl_gross": round(pnl_gross, 2), "pnl_net": round(pnl_net, 2), "cost": round(cost, 2),
         "position_type": pos.get("position_type", "LONG"), "pool": pool_name})
     state["pools"][pool_name]["pnl"] += pnl
     state["pools"][pool_name]["positions"] = [
         p for p in state["pools"][pool_name]["positions"] if p["symbol"] != sym]
     s = state["summary"]
     s["total_pnl"] += pnl; s["trades"] += 1
+    s["total_pnl_net"] = s.get("total_pnl_net", 0) + pnl_net
+    s["total_cost"]    = s.get("total_cost", 0) + cost
     s["wins" if pnl > 0 else "losses"] += 1
     s["shorts" if is_short else "longs"] = s.get("shorts" if is_short else "longs", 0) + 1
     tag = ("WIN" if pnl > 0 else "LOSS") + f" {'SHORT' if is_short else 'LONG'}"
     log(f"  >> {tag} {sym} x{pos['qty']} @{exit_price:.2f} ({reason}) "
-        f"P&L: Rs {pnl:+,.0f} ({pnl_pct:+.2f}%) [{pool_name}]")
+        f"P&L: Rs {pnl:+,.0f} ({pnl_pct:+.2f}%) net Rs {pnl_net:+,.0f} cost Rs {cost:.0f} [{pool_name}]")
     _tg_exit({"symbol": sym, "pnl": pnl, "pnl_pct": pnl_pct, "reason": reason,
               "entry_price": pos["entry_price"], "exit_price": exit_price,
               "position_type": pos.get("position_type", "LONG"), "pool": pool_name,
@@ -442,6 +576,7 @@ def scan_positions(state, pm, rm):
     prices = get_prices_batch(list({p["symbol"] for _, p in all_pos}))
     unrealized, to_close = 0, []
     log(f"\n{'='*65}\n  SCAN #{state['summary']['scan_count']} | {len(all_pos)} positions\n{'='*65}")
+    flat_window_active = _in_flat_exit_window()
     for pool_name, pos in all_pos:
         sym, entry = pos["symbol"], pos["entry_price"]
         if sym not in prices: log(f"  {sym}: no price"); continue
@@ -455,6 +590,13 @@ def scan_positions(state, pm, rm):
             if px > pos.get("peak_price", entry): pos["peak_price"] = round(px, 2)
         unrealized += pnl_rs
         reason = None
+        # Task 1.3 — TIME_EXIT_TIGHTENING (added 2026-04-28)
+        # In the post-lunch window, force-exit any flat position (|pnl_pct| < 0.3%)
+        # to free the slot for fresher signals.
+        if flat_window_active and abs(pnl_pct) < FLAT_EXIT_THRESHOLD_PCT:
+            reason = "FLAT_FORCE_EXIT"
+            log(f"  {sym}: FLAT_FORCE_EXIT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
+            to_close.append((pool_name, pos, px, reason)); continue
         if is_short:
             if px >= pos["sl_price"]: reason = "STOPLOSS"
             elif px <= pos["target_price"]: reason = "TARGET"
@@ -489,6 +631,16 @@ def scan_positions(state, pm, rm):
 
 # ═══════════════════════════ RESCORE ═══════════════════════════
 
+def _held_for_min(pos, min_minutes):
+    """#5 helper: return True when position held LESS than min_minutes (i.e., exit should be suppressed)."""
+    try:
+        et = datetime.strptime(pos.get("entry_time", ""), "%H:%M:%S").replace(
+            year=datetime.now().year, month=datetime.now().month, day=datetime.now().day)
+        return (datetime.now() - et).total_seconds() < min_minutes * 60
+    except (ValueError, TypeError):
+        return False  # if we can't tell, allow normal exit
+
+
 def _should_rescore(state):
     last = state.get("last_rescore_time")
     if not last: return True
@@ -513,6 +665,10 @@ def rescore_and_redeploy(state, pm, rm):
             sym, is_short = pos["symbol"], pos.get("position_type") == "SHORT"
             nd = new_map.get(sym, {}).get("direction", "HOLD")
             exit_it = (not is_short and nd in ("SELL", "HOLD")) or (is_short and nd == "BUY")
+            # #5 FIX: 60-min minimum hold before SIGNAL_FLIP — prevents rescore whipsaw
+            if exit_it and _held_for_min(pos, 60):
+                log(f"  {sym}: flip suppressed (held <60min since {pos.get('entry_time','?')})")
+                exit_it = False
             if exit_it:
                 log(f"  {sym}: flipped to {nd} -> exit {'SHORT' if is_short else 'LONG'}")
                 px = get_prices_batch([sym])
@@ -644,6 +800,7 @@ def push_to_devpilot(state):
 # ═══════════════════════════ MAIN LOOP ═══════════════════════════
 
 def run():
+    check_model_freshness(max_age_days=3)  # learning #005: refuse stale ML
     log(f"{'='*65}\n  v5 ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
         f"  Scan {SCAN_INTERVAL_MIN}m | Rescore {RESCORE_INTERVAL_MIN}m | Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
         f"  Pools: INTRADAY(30%) SWING(25%) POSITIONAL(25%) INVESTMENT(15%)\n{'='*65}")

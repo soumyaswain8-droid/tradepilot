@@ -1,26 +1,19 @@
 #!/usr/bin/env python3
 """
-TradePilot v5.6 Paper Trading Engine — Darvas Box Theory + Regime Flip
-========================================================================
-Everything from v5.5 (regime-aware exit logic) PLUS:
-  - Darvas Box scoring (0-100) added to signal evaluation
-  - Dynamic SL at box floor (instead of fixed %)
-  - Dynamic target at ceiling + box range
-  - BREAKOUT signals get priority deployment
-  - BREAKDOWN signals trigger immediate exit
-  - Staircase bonus (ascending boxes = higher conviction)
-
-Darvas Box scoring:
-  80-100: Active breakout above ceiling — STRONG BUY
-  60-79:  Testing ceiling — WATCH/light position
-  40-59:  Consolidating inside box — NEUTRAL
-  20-39:  Near floor — CAUTION
-  0-19:   Below floor — AVOID/EXIT
+TradePilot v5-CLASSIC Paper Trading Engine (pre-Rust, pre-safeguards)
+This is the ORIGINAL v5 from commit 236d6e4 (Apr 16 morning), when v5 was making +Rs 49,713/day (Apr 15) and +Rs 17,295 (Apr 16).
+Kept unchanged except: (1) separate state directory (2) NaN guard for crash safety
+Purpose: A/B credibility test against current hardened v5
+====================================
+Multi-pool (Rs 50L), regime-aware, long+short. Runs ALONGSIDE v4 for comparison.
+4 pools: INTRADAY(30%) SWING(25%) POSITIONAL(25%) INVESTMENT(15%) + 5% reserve
 
 Usage:
-    python3 scripts/v5_6-paper-trade.py              # Full auto-pilot
-    python3 scripts/v5_6-paper-trade.py --status      # All pools + positions
-    python3 scripts/v5_6-paper-trade.py --summary     # P&L summary
+    python3 scripts/v5-paper-trade.py              # Full auto-pilot
+    python3 scripts/v5-paper-trade.py --status      # All pools + positions
+    python3 scripts/v5-paper-trade.py --summary     # P&L summary
+    python3 scripts/v5-paper-trade.py --compare     # Run v4 vs v5 comparator
+    python3 scripts/v5-paper-trade.py --premarket   # Show pre-market analysis only
 """
 import json, sys, time, warnings, importlib
 from datetime import datetime, timedelta
@@ -28,12 +21,11 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 PROJECT_ROOT = Path(__file__).parent.parent
-TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_6"
+TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_classic"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
-from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
-LOG_FILE = LOG_DIR / "v5_6-paper-trade.log"
+LOG_FILE = LOG_DIR / "v5_classic-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -127,7 +119,7 @@ def get_vix():
 
 MULTI_DAY_POOLS = {"SWING", "POSITIONAL", "INVESTMENT"}
 ACTIVE_POS_FILE = TRADE_DIR / "positions_active.json"
-CARRY_FORWARD_FILE = TRADE_DIR / "carry_forward_v5_6.json"
+CARRY_FORWARD_FILE = TRADE_DIR / "carry_forward_v5_classic.json"
 
 
 def _get_carry_forward_balance():
@@ -173,7 +165,7 @@ def _state_file():
 
 def fresh_state(capital=None):
     cap = capital or TOTAL_CAPITAL
-    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": "v5.6-darvas-box",
+    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": "v5_classic",
             "started_at": datetime.now().strftime("%H:%M:%S"),
             "total_capital": cap, "regime": "SIDEWAYS",
             "premarket": {}, "risk_state": {},
@@ -204,7 +196,7 @@ def _save_active_positions(state):
         "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "positions": positions,
     }
-    atomic_write_json(ACTIVE_POS_FILE, data)
+    ACTIVE_POS_FILE.write_text(json.dumps(data, indent=2, default=str))
 
 def _check_position_aging(state):
     """Warn about positions held too long."""
@@ -251,7 +243,7 @@ def load_state():
     return s
 
 def save_state(s):
-    atomic_write_json(_state_file(), s)
+    _state_file().write_text(json.dumps(s, indent=2, default=str))
     # Always persist multi-day positions separately
     _save_active_positions(s)
 
@@ -350,12 +342,6 @@ def deploy_signals(state, pm, rm, signals):
     if not pm or not signals: return 0
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
-    rust_validated = 0
-
-    # v5.5: Skip Rust validation — Rust engine is shared and v5 fills the position slots.
-    # v5.5 runs Python-only until we have per-engine Rust instances.
-    rust_available = False
-
     # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.
     for sig in sorted([s for s in signals if s["direction"] in ("BUY", "SELL")],
                       key=lambda s: -float(s.get("score", 0))):
@@ -371,80 +357,17 @@ def deploy_signals(state, pm, rm, signals):
         budget = pm.get_pool_budget(pool_name)
         if budget < 10000: continue
         price = sig.get("entry_price", sig.get("price", 0))
+        if not (price > 0): continue  # NaN-safe (only patch)
         base = budget * 0.15
-
         sized = rm.get_position_size(pool_name, base) if rm else base
-
-        qty = safe_qty(budget, price, sized=sized)
-
-        if qty is None: continue
+        qty = max(1, int(min(sized, budget) / price))
         cost = qty * price
-        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%) — Darvas-supplied SL still takes priority via sig.get default
+        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%)
         _gap = abs(float(state.get("premarket", {}).get("gap_prediction", {}).get("magnitude_pct", 0) or 0))
         _sl_pct = 0.0225 if _gap > 0.5 else 0.015
         sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
         tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
         pos_type = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
-        if is_reentry_blocked(state, sym, pos_type):  # learning 2026-04-17_003: 2-SL same-day block
-            log(f"  {sym}: BLOCKED (reentry cap: 2 SL in {pos_type} today)")
-            continue
-
-        # ═══ v5.6 DARVAS BOX ENHANCEMENT ═══
-        # Override SL/target with box-based levels, boost sizing for breakouts
-        darvas_data = None
-        try:
-            from prototype.v5_6.darvas_box import score_box_breakout
-            darvas_data = score_box_breakout(sym)
-        except Exception:
-            pass
-
-        if darvas_data and darvas_data.get("darvas_score", 0) > 0:
-            dscore = darvas_data["darvas_score"]
-            dsignal = darvas_data.get("signal", "NEUTRAL")
-
-            # BREAKOUT: use box floor as SL, box ceiling + range as target
-            if dsignal == "BREAKOUT" and darvas_data.get("dynamic_sl", 0) > 0:
-                box_sl = darvas_data["dynamic_sl"]
-                box_tgt = darvas_data["dynamic_target"]
-                if sig["direction"] == "BUY" and box_sl < price:
-                    sl = box_sl  # Dynamic SL at box floor
-                    tgt = box_tgt  # Target at ceiling + range
-                    # Boost position size for high-conviction breakouts
-                    if dscore >= 80:
-                        qty = max(1, int(qty * 1.3))  # 30% bigger position
-                    log(f"  {sym}: DARVAS BREAKOUT (score={dscore}) SL={sl:.2f} TGT={tgt:.2f}")
-
-            # BREAKDOWN: skip this stock entirely
-            elif dsignal == "BREAKDOWN":
-                log(f"  {sym}: DARVAS BREAKDOWN (score={dscore}) — SKIPPING")
-                continue
-
-            # CEILING_TEST: normal size, but tighter SL
-            elif dsignal == "CEILING_TEST" and darvas_data.get("box_floor", 0) > 0:
-                box_sl = darvas_data["dynamic_sl"]
-                if sig["direction"] == "BUY" and box_sl < price:
-                    sl = box_sl
-
-            # Store darvas data for tracking
-            sig["darvas_score"] = dscore
-            sig["darvas_signal"] = dsignal
-
-        # ═══ RUST ENGINE VALIDATION ═══
-        # If Rust engine is running, validate through it first.
-        # Rust catches: missing SL, SL direction errors, daily loss limits,
-        # order size limits, position limits, time restrictions.
-        # If Rust is offline, fall back to Python-only (current behavior).
-        if rust_available:
-            rust_sig = {**sig, "qty": qty, "sl_price": sl, "target_price": tgt,
-                        "entry_price": price, "pool": pool_name}
-            rust_ok, rust_msg = validate_signal_via_rust(rust_sig)
-            if rust_ok is False:
-                log(f"  {sym}: RUST REJECTED ({rust_msg})")
-                continue
-            elif rust_ok is True:
-                rust_validated += 1
-            # rust_ok is None = Rust offline, proceed with Python-only
-
         if not pm.deploy(pool_name, sym, qty, price, sl, tgt): continue
         state["pools"][pool_name]["positions"].append({
             "symbol": sym, "entry_price": round(price, 2), "qty": qty,
@@ -462,9 +385,7 @@ def deploy_signals(state, pm, rm, signals):
                     "entry_price": price, "sl_price": sl, "target_price": tgt,
                     "qty": qty, "pool": pool_name, "score": sig.get("score", 0),
                     "regime": state.get("regime", "?")})
-    if count:
-        rust_note = f" ({rust_validated} Rust-validated)" if rust_validated else " (Python-only mode)"
-        log(f"  Deployed {count} positions{rust_note}")
+    if count: log(f"  Deployed {count} positions")
     return count
 
 
@@ -582,41 +503,16 @@ def rescore_and_redeploy(state, pm, rm):
     if not _should_rescore(state) or not generate_signals: return
     state["summary"]["rescore_count"] += 1
     state["last_rescore_time"] = datetime.now().strftime("%H:%M:%S")
-    regime = state.get("regime", "SIDEWAYS")
-    log(f"\n  RESCORE #{state['summary']['rescore_count']} (regime={regime})")
-    try: new_sigs = generate_signals(regime)
+    log(f"\n  RESCORE #{state['summary']['rescore_count']}")
+    try: new_sigs = generate_signals(state.get("regime", "SIDEWAYS"))
     except Exception as e: log(f"  Rescore failed: {e}"); return
     new_map = {s["symbol"]: s for s in new_sigs}
     state["last_signals"] = new_sigs
-
-    # ═══ v5.5 REGIME-AWARE SIGNAL_FLIP LOGIC ═══
-    # BULL:     Only exit LONG on SELL (HOLD = keep riding the trend)
-    # SIDEWAYS: Exit LONG on SELL or HOLD (defensive, same as v5)
-    # BEAR:     Exit LONG on SELL or HOLD (defensive, same as v5)
-    # Shorts:   Always exit on BUY (regardless of regime)
-
     for pn, pd in state["pools"].items():
         for pos in list(pd["positions"]):
             sym, is_short = pos["symbol"], pos.get("position_type") == "SHORT"
             nd = new_map.get(sym, {}).get("direction", "HOLD")
-
-            # Carry-forward grace period: skip first rescore for overnight positions
-            if state["summary"]["rescore_count"] == 1 and pos.get("entry_date") != datetime.now().strftime("%Y-%m-%d"):
-                if nd == "HOLD":
-                    log(f"  {sym}: HOLD signal but carry-forward grace — keeping")
-                    continue
-
-            if is_short:
-                # Shorts always exit on BUY signal
-                exit_it = nd == "BUY"
-            else:
-                # Longs: regime-dependent exit
-                if regime == "BULL":
-                    exit_it = nd == "SELL"  # Only exit on explicit SELL in BULL
-                    if nd == "HOLD":
-                        log(f"  {sym}: HOLD in BULL regime — keeping position (v5.5)")
-                else:
-                    exit_it = nd in ("SELL", "HOLD")  # Same as v5 in SIDEWAYS/BEAR
+            exit_it = (not is_short and nd in ("SELL", "HOLD")) or (is_short and nd == "BUY")
             # #5 FIX: 60-min minimum hold before SIGNAL_FLIP
             if exit_it and _held_for_min(pos, 60):
                 log(f"  {sym}: flip suppressed (held <60min since {pos.get('entry_time','?')})")
@@ -654,7 +550,7 @@ def print_status(state):
     C = {"BULL": "\033[92m", "BEAR": "\033[91m", "SIDEWAYS": "\033[93m"}
     R = "\033[0m"
     print(f"\n{'='*65}")
-    print(f"  v5.6 DARVAS-BOX  |  {state.get('date','today')}  |  Capital: {_fmt(TOTAL_CAPITAL)}")
+    print(f"  v5 PAPER TRADING  |  {state.get('date','today')}  |  Capital: {_fmt(TOTAL_CAPITAL)}")
     print(f"  Regime: {C.get(regime,'')}{regime}{R}  |  VIX: {vix:.1f}  |  "
           f"Gap: {gap.get('direction','?')} {gap.get('magnitude_pct',0):+.2f}%")
     print(f"{'='*65}")
@@ -679,18 +575,6 @@ def print_status(state):
         w = sum(1 for t in all_cl if t["pnl"] > 0)
         print(f"\n  CLOSED: {len(all_cl)} trades ({w}W/{len(all_cl)-w}L) | {_fmt(s.get('total_pnl',0))}")
     elif not total_open: print("\n  No trades yet")
-    # Rust engine status
-    try:
-        from prototype.v5.rust_bridge import check_rust_risk
-        rust = check_rust_risk()
-        if rust:
-            killed = " ** KILLED **" if rust.get("killed") else ""
-            print(f"\n  RUST ENGINE: Online | Daily P&L: Rs {rust.get('daily_pnl','0')} | "
-                  f"Positions: {rust.get('positions_count',0)} | Deploy: {rust.get('deployment_pct','0')}%{killed}")
-        else:
-            print(f"\n  RUST ENGINE: Offline (Python-only mode)")
-    except Exception:
-        print(f"\n  RUST ENGINE: Not configured")
     print(f"{'='*65}")
 
 def print_summary(state):
@@ -741,7 +625,7 @@ def push_to_devpilot(state):
             "VALUES (%s,%s,%s,%s,'v5-paper-trade',%s,true,NOW(),NOW())",
             ("tradepilot", "paper-trade",
              f"v5 {today}: {_fmt(s.get('total_pnl',0))} ({pp:+.2f}%) | {s.get('trades',0)}t | {wr:.0f}%w",
-             json.dumps({"engine": "v5.6-darvas-box", "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
+             json.dumps({"engine": "v5_classic", "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
                          "pnl": s.get("total_pnl", 0), "trades": s.get("trades", 0),
                          "wins": s.get("wins", 0), "longs": s.get("longs", 0), "shorts": s.get("shorts", 0)}),
              ["paper-trade", "v5", today, state.get("regime", "").lower()]))
@@ -752,8 +636,7 @@ def push_to_devpilot(state):
 # ═══════════════════════════ MAIN LOOP ═══════════════════════════
 
 def run():
-    check_model_freshness(max_age_days=3)  # learning #005: refuse stale ML
-    log(f"{'='*65}\n  v5.6 DARVAS-BOX ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
+    log(f"{'='*65}\n  v5 ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
         f"  Scan {SCAN_INTERVAL_MIN}m | Rescore {RESCORE_INTERVAL_MIN}m | Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
         f"  Pools: INTRADAY(30%) SWING(25%) POSITIONAL(25%) INVESTMENT(15%)\n{'='*65}")
     state = load_state()

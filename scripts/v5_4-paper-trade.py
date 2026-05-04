@@ -31,6 +31,7 @@ TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_4"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
+from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
 LOG_FILE = LOG_DIR / "v5_4-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
@@ -194,9 +195,8 @@ def _save_active_positions(state):
     for pool_name in MULTI_DAY_POOLS:
         pos_list = state["pools"].get(pool_name, {}).get("positions", [])
         if pos_list: positions[pool_name] = pos_list
-    ACTIVE_POS_FILE.write_text(json.dumps(
-        {"saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "positions": positions},
-        indent=2, default=str))
+    atomic_write_json(ACTIVE_POS_FILE,
+        {"saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "positions": positions})
 
 
 def load_state():
@@ -221,7 +221,7 @@ def load_state():
 
 
 def save_state(s):
-    _state_file().write_text(json.dumps(s, indent=2, default=str))
+    atomic_write_json(_state_file(), s)
     _save_active_positions(s)
 
 
@@ -338,11 +338,13 @@ def deploy_signals(state, pm, rm, signals):
         if budget < 10000: continue
 
         price = sig.get("entry_price", sig.get("price", 0))
-        if price <= 0: continue
-
         base = budget * 0.15
+
         sized = rm.get_position_size(pool_name, base) if rm else base
-        qty = max(1, int(min(sized, budget) / price))
+
+        qty = safe_qty(budget, price, sized=sized)
+
+        if qty is None: continue
         cost = qty * price
         sl = sig.get("sl_price", price * (0.985 if not is_short else 1.015))
         tgt = sig.get("target_price", price * (1.02 if not is_short else 0.98))
@@ -635,6 +637,7 @@ def generate_report(state):
 # ═══════════════════════════ MAIN LOOP ═══════════════════════════
 
 def run():
+    check_model_freshness(max_age_days=3)  # learning #005: refuse stale ML
     log(f"{'='*65}\n  v5.4 BI-DIRECTIONAL ENGINE | {_fmt(TOTAL_CAPITAL)}\n"
         f"  Long+Short | Regime-Weighted | Scan {SCAN_INTERVAL_MIN}m | Rescore {RESCORE_INTERVAL_MIN}m\n"
         f"  Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d} | Short pools: {', '.join(SHORT_ALLOWED_POOLS)}\n{'='*65}")

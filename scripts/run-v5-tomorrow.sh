@@ -33,13 +33,23 @@ for idx in ['^NSEI', '^INDIAVIX']:
         d.columns = d.columns.droplevel(1)
     d.to_csv(DATA_DIR / f'{idx}.csv')
 
+def normalize_first_col(df):
+    # Force first column to be named 'Date' regardless of yfinance quirks
+    if df.index.name or len(df.index) > 0:
+        df = df.reset_index()
+    cols = list(df.columns)
+    if cols[0] != 'Date':
+        df = df.rename(columns={cols[0]: 'Date'})
+    return df
+
 # Batch stocks
 data = yf.download(NIFTY_50_YF, period='2y', auto_adjust=False, threads=True, progress=False)
 if hasattr(data.columns, 'levels') and len(data.columns.levels) > 1:
     for sym_yf, sym in zip(NIFTY_50_YF, NIFTY_50_SYMBOLS):
         try:
             stock = data.xs(sym_yf, level=1, axis=1)
-            stock.to_csv(DATA_DIR / f'{sym}_NS.csv')
+            stock = normalize_first_col(stock)
+            stock.to_csv(DATA_DIR / f'{sym}_NS.csv', index=False)
         except: pass
 
 # 5-min intraday
@@ -50,8 +60,7 @@ for sym_yf, sym in zip(NIFTY_50_YF, NIFTY_50_SYMBOLS):
         if hasattr(df.columns, 'droplevel') and isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.droplevel(1)
         if len(df) > 0:
-            df = df.reset_index()
-            if 'Datetime' in df.columns: df = df.rename(columns={'Datetime': 'Date'})
+            df = normalize_first_col(df)
             df.to_csv(INTRA_DIR / f'{sym}_5m.csv', index=False)
             count += 1
     except: pass
@@ -59,9 +68,36 @@ print(f'Data refreshed: {count}/50 stocks')
 " > logs/data-refresh.log 2>&1
 echo "  Done (see logs/data-refresh.log)"
 
-# 1. Retrain ML model
+# 1. Retrain ML model (fail-loud if it crashes)
 echo "[1/7] Retraining ML model..."
 python3 -m prototype.v4.ml_engine --train > logs/ml-retrain.log 2>&1
+RETRAIN_EXIT=$?
+if [ $RETRAIN_EXIT -ne 0 ]; then
+    echo "  ❌ ML RETRAIN FAILED (exit $RETRAIN_EXIT). See logs/ml-retrain.log"
+    # Telegram alert (non-fatal if .env or curl missing)
+    TOKEN=$(grep -E '^TELEGRAM_BOT_TOKEN=' .env 2>/dev/null | cut -d= -f2-)
+    CHAT=$(grep -E '^TELEGRAM_CHAT_ID=' .env 2>/dev/null | cut -d= -f2-)
+    if [ -n "$TOKEN" ] && [ -n "$CHAT" ]; then
+        curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+          --data-urlencode "chat_id=${CHAT}" \
+          --data-urlencode "text=⚠️ TradePilot ML retrain FAILED at $(date '+%H:%M IST'). Engines will use yesterday's model. Check logs/ml-retrain.log" > /dev/null 2>&1
+    fi
+    echo "  (Engines will still start with existing model)"
+else
+    # Archive today's model
+    TODAY=$(date '+%Y-%m-%d')
+    ARCHIVE_DIR="prototype/v4/models/archive/${TODAY}"
+    mkdir -p "$ARCHIVE_DIR"
+    cp prototype/v4/models/lgbm_intraday.txt "$ARCHIVE_DIR/"
+    cp prototype/v4/models/lgbm_meta.json "$ARCHIVE_DIR/"
+    echo "trained_at: $(date '+%Y-%m-%d %H:%M:%S IST')" > "$ARCHIVE_DIR/trained_at.txt"
+    echo "git_sha: $(git rev-parse --short HEAD 2>/dev/null)" >> "$ARCHIVE_DIR/trained_at.txt"
+    # Update current symlink
+    (cd prototype/v4/models && rm -f current/lgbm_intraday.txt current/lgbm_meta.json && \
+     ln -s "../archive/${TODAY}/lgbm_intraday.txt" current/lgbm_intraday.txt && \
+     ln -s "../archive/${TODAY}/lgbm_meta.json" current/lgbm_meta.json)
+    echo "  ✅ Retrain succeeded. Archived as $ARCHIVE_DIR"
+fi
 echo "  Done (see logs/ml-retrain.log)"
 
 # 2. Pre-market intelligence

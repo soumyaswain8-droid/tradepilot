@@ -119,6 +119,36 @@ class RustBridge:
         except Exception as e:
             return {"success": False, "message": f"Kill switch failed: {e}"}
 
+    def sync_positions(self, total_positions, positions_by_symbol, total_deployed):
+        """Reconcile Rust's internal position count with Python's authoritative state.
+
+        Prevents drift — if Python closes a position without telling Rust, Rust's
+        count could creep up and eventually lock trading permanently. Call this
+        periodically (e.g., start of each scan cycle).
+
+        Args:
+            total_positions: int, total open positions tracked by Python
+            positions_by_symbol: dict of {symbol: count}
+            total_deployed: float, rupees currently deployed
+
+        Returns:
+            dict with success, message, data (previous_count, new_count, drift_corrected)
+        """
+        payload = {
+            "total_positions": int(total_positions),
+            "positions_by_symbol": {k: int(v) for k, v in positions_by_symbol.items()},
+            "total_deployed": float(total_deployed),
+        }
+        try:
+            r = requests.post(
+                f"{self.url}/api/risk/sync",
+                json=payload,
+                timeout=TIMEOUT_SECS,
+            )
+            return r.json()
+        except Exception as e:
+            return {"success": False, "message": f"Sync failed: {e}"}
+
 
 # ═══════════════════════════════════════════════════════════
 # Convenience functions for use in paper trading scripts
@@ -164,3 +194,31 @@ def check_rust_risk():
     if not bridge.is_alive():
         return None
     return bridge.get_risk_status()
+
+
+def sync_positions_from_state(state):
+    """Sync Rust's position count from Python state dict (silent if Rust offline).
+
+    Call at the start of each scan cycle. Reads positions from state["pools"][*]["positions"]
+    and posts to Rust /api/risk/sync.
+
+    Returns True if drift was corrected, False if no drift / Rust offline.
+    """
+    bridge = get_bridge()
+    if not bridge.is_alive():
+        return False
+
+    # Aggregate positions from all pools
+    total = 0
+    by_symbol = {}
+    total_deployed = 0.0
+    for pool_name, pool in state.get("pools", {}).items():
+        for p in pool.get("positions", []):
+            total += 1
+            sym = p.get("symbol", "?")
+            by_symbol[sym] = by_symbol.get(sym, 0) + 1
+            total_deployed += p.get("cost", p.get("qty", 0) * p.get("entry_price", 0))
+
+    result = bridge.sync_positions(total, by_symbol, total_deployed)
+    data = result.get("data") or {}
+    return bool(data.get("drift_corrected", False))

@@ -33,6 +33,7 @@ TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_7"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
+from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
 LOG_FILE = LOG_DIR / "v5_7-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
@@ -204,7 +205,7 @@ def _save_active_positions(state):
         "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "positions": positions,
     }
-    ACTIVE_POS_FILE.write_text(json.dumps(data, indent=2, default=str))
+    atomic_write_json(ACTIVE_POS_FILE, data)
 
 def _check_position_aging(state):
     """Warn about positions held too long."""
@@ -251,7 +252,7 @@ def load_state():
     return s
 
 def save_state(s):
-    _state_file().write_text(json.dumps(s, indent=2, default=str))
+    atomic_write_json(_state_file(), s)
     # Always persist multi-day positions separately
     _save_active_positions(s)
 
@@ -321,7 +322,13 @@ def _tg_alert(msg):
     except Exception:
         pass
 
+
+import os as _os_tgnoise
+TELEGRAM_TRADE_NOISE = _os_tgnoise.environ.get("TELEGRAM_TRADE_NOISE", "0") == "1"
+
 def _tg_entry(trade):
+    if not TELEGRAM_TRADE_NOISE:
+        return
     try:
         from prototype.v5.telegram_bot import alert_entry
         alert_entry(trade)
@@ -329,6 +336,8 @@ def _tg_entry(trade):
         pass
 
 def _tg_exit(trade):
+    if not TELEGRAM_TRADE_NOISE:
+        return
     try:
         from prototype.v5.telegram_bot import alert_exit
         alert_exit(trade)
@@ -360,24 +369,38 @@ def deploy_signals(state, pm, rm, signals):
     except ImportError:
         box_available = False
 
-    for sig in [s for s in signals if s["direction"] in ("BUY", "SELL")]:
+    # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.
+    for sig in sorted([s for s in signals if s["direction"] in ("BUY", "SELL")],
+                      key=lambda s: -float(s.get("score", 0))):
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
         if sym in held or pool_name not in state["pools"] or pool_name == "NONE": continue
         if rm:
-            ok, reason = rm.check_can_trade(pool_name, sym)
+            # #1 FIX: pass position_type so the slot-partition cap can fire per-direction
+            _pt = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
+            ok, reason = rm.check_can_trade(pool_name, sym, _pt)
             if not ok: continue
         pool = pm.pools.get(pool_name)
         if not pool: continue
         budget = pm.get_pool_budget(pool_name)
         if budget < 10000: continue
         price = sig.get("entry_price", sig.get("price", 0))
-        if price <= 0: continue
         base = budget * 0.15
+
         sized = rm.get_position_size(pool_name, base) if rm else base
-        qty = max(1, int(min(sized, budget) / price))
-        sl = sig.get("sl_price", price * (0.985 if sig["direction"] == "BUY" else 1.015))
+
+        qty = safe_qty(budget, price, sized=sized)
+
+        if qty is None: continue
+        cost = qty * price
+        # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%)
+        _gap = abs(float(state.get("premarket", {}).get("gap_prediction", {}).get("magnitude_pct", 0) or 0))
+        _sl_pct = 0.0225 if _gap > 0.5 else 0.015
+        sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
         tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
         pos_type = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
+        if is_reentry_blocked(state, sym, pos_type):  # learning 2026-04-17_003: 2-SL same-day block
+            log(f"  {sym}: BLOCKED (reentry cap: 2 SL in {pos_type} today)")
+            continue
 
         # ═══ BOX THEORY FILTER ═══
         if box_available:
@@ -555,6 +578,16 @@ def scan_positions(state, pm, rm):
 
 # ═══════════════════════════ RESCORE ═══════════════════════════
 
+def _held_for_min(pos, min_minutes):
+    """#5 helper: True when position held LESS than min_minutes (exit should be suppressed)."""
+    try:
+        et = datetime.strptime(pos.get("entry_time", ""), "%H:%M:%S").replace(
+            year=datetime.now().year, month=datetime.now().month, day=datetime.now().day)
+        return (datetime.now() - et).total_seconds() < min_minutes * 60
+    except (ValueError, TypeError):
+        return False
+
+
 def _should_rescore(state):
     last = state.get("last_rescore_time")
     if not last: return True
@@ -604,6 +637,10 @@ def rescore_and_redeploy(state, pm, rm):
                         log(f"  {sym}: HOLD in BULL regime — keeping position (v5.5)")
                 else:
                     exit_it = nd in ("SELL", "HOLD")  # Same as v5 in SIDEWAYS/BEAR
+            # #5 FIX: 60-min minimum hold before SIGNAL_FLIP
+            if exit_it and _held_for_min(pos, 60):
+                log(f"  {sym}: flip suppressed (held <60min since {pos.get('entry_time','?')})")
+                exit_it = False
             if exit_it:
                 log(f"  {sym}: flipped to {nd} -> exit {'SHORT' if is_short else 'LONG'}")
                 px = get_prices_batch([sym])
@@ -735,6 +772,7 @@ def push_to_devpilot(state):
 # ═══════════════════════════ MAIN LOOP ═══════════════════════════
 
 def run():
+    check_model_freshness(max_age_days=3)  # learning #005: refuse stale ML
     log(f"{'='*65}\n  v5.7 INTRADAY-BOX ENGINE | {_fmt(TOTAL_CAPITAL)} | Multi-Pool + Short\n"
         f"  Scan {SCAN_INTERVAL_MIN}m | Rescore {RESCORE_INTERVAL_MIN}m | Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
         f"  Pools: INTRADAY(30%) SWING(25%) POSITIONAL(25%) INVESTMENT(15%)\n{'='*65}")

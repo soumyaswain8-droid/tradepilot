@@ -5,12 +5,21 @@
 # Launches:
 #   1. Rust engine (execution/risk layer)
 #   2. Flask dashboard (localhost:5050)
-#   3. 7 paper-trade engines (v4, v5, v5_classic, v5_2, v5_3, v5_6, v5_7)
-#   4. crash-watchdog (restart crashed engines)
-#   5. telegram-digest (30-min P&L updates to Soumya)
-#   6. laptop-heartbeat (15-min "alive" ping)
-#   7. auto-stop-eod (kills everything at 15:35)
-#   8. satish-schedule (4 trade-data updates/day — only if SATISH_TELEGRAM_CHAT_ID set)
+#   3. daily-scores archiver (snapshots dashboard BUY/HOLD list — added 2026-04-23)
+#   4. 4 paper-trade engines (v5, v5_classic, v5_6, v5_7) — see RETIRED list below
+#   5. crash-watchdog (restart crashed engines)
+#   6. telegram-digest (30-min P&L updates to Soumya)
+#   7. laptop-heartbeat (15-min "alive" ping)
+#   8. auto-stop-eod (kills everything at 15:35)
+#   9. satish-schedule (4 trade-data updates/day — only if SATISH_TELEGRAM_CHAT_ID set)
+#
+# RETIRED 2026-04-27 (no longer auto-launched, scripts and models preserved):
+#   v4    — original engine. Code at scripts/v4-paper-trade.py and prototype/v4/
+#           kept indefinitely; v4's ml_engine + composite_scorer + tiered models
+#           are STILL used by v5/v5_6/v5_7 as the underlying ML layer.
+#   v5_2  — F&O straddle experiment. Cycle-based, not continuous. Insights logged.
+#   v5_3  — over-filtered variant. Carrying -Rs 52,864 cumulative loss.
+#   To re-enable: uncomment the relevant entry in the ENGINES array below.
 #
 # Usage:
 #   ./scripts/launch-market.sh              # full launch
@@ -26,13 +35,23 @@ TODAY=$(date +%Y-%m-%d)
 STAMP=$(date +%H%M%S)
 
 ENGINES=(
+  # Active engines (6) as of 2026-04-28 EOD post-mortem.
+  # v4 was re-instated after 04-28 produced +Rs 26,179 (71% WR) — original 2-day retirement was wrong.
+  # v6 is NEW: "v4 raw signals + Track A bolt-on" — bypasses v5's signal_engine percentile gate
+  # which mechanically forced SHORTs in BEAR regime (RCA finding from 04-28 EOD).
+  # v5 retains Fix #1 in signal_engine.py (require absolute weakness for SHORT emission).
   "v4|scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py"
-  "v5_2|scripts/v5_2-paper-trade.py"
-  "v5_3|scripts/v5_3-paper-trade.py"
   "v5_6|scripts/v5_6-paper-trade.py"
   "v5_7|scripts/v5_7-paper-trade.py"
+  "v6|scripts/v6-paper-trade.py"
+  # v5.8 NEW 2026-04-29 EOD: v5 with regime-aware slot partition DISABLED.
+  # Tests whether the BEAR-day LONG starvation (175 blocked signals on 04-29) was the v5-vs-v4 bottleneck.
+  "v5_8|scripts/v5_8-paper-trade.py"
+  # Still retired (preserved — uncomment to re-enable):
+  # "v5_2|scripts/v5_2-paper-trade.py"
+  # "v5_3|scripts/v5_3-paper-trade.py"
 )
 
 send_telegram() {
@@ -96,8 +115,8 @@ echo "════════════════════════�
 echo "  TradePilot FULL LAUNCH — $TODAY $STAMP"
 echo "════════════════════════════════════════════════════════════"
 
-# [0/8] Kill stale processes
-echo "[0/8] Cleaning stale processes..."
+# [0/9] Kill stale processes
+echo "[0/9] Cleaning stale processes..."
 pkill -f "scripts/v[45].*paper-trade.py" 2>/dev/null
 pkill -f "scripts/crash-watchdog.sh"  2>/dev/null
 pkill -f "scripts/telegram-digest.sh" 2>/dev/null
@@ -107,8 +126,8 @@ pkill -f "scripts/satish-schedule.sh" 2>/dev/null
 pkill -f "tradepilot-engine"          2>/dev/null
 sleep 2
 
-# [1/8] Rust engine
-echo "[1/8] Starting Rust engine (execution + risk)..."
+# [1/9] Rust engine
+echo "[1/9] Starting Rust engine (execution + risk)..."
 if [ -f "./engine/target/release/tradepilot-engine" ]; then
   nohup ./engine/target/release/tradepilot-engine > /tmp/rust-engine.log 2>&1 &
   echo "  ✓ Rust engine launched (PID $!)"
@@ -124,8 +143,8 @@ else
   echo "    Run: cd engine && cargo build --release"
 fi
 
-# [2/8] Flask dashboard
-echo "[2/8] Starting Flask dashboard (localhost:5050)..."
+# [2/9] Flask dashboard
+echo "[2/9] Starting Flask dashboard (localhost:5050)..."
 if lsof -iTCP:5050 -sTCP:LISTEN -n -P > /dev/null 2>&1; then
   echo "  ✓ already running on :5050"
 else
@@ -134,15 +153,15 @@ else
   echo "  ✓ Flask launched (PID $!)"
 fi
 
-# [2.5/8] Capture today's dashboard score snapshot (added 2026-04-23)
+# [3/9] Capture today's dashboard score snapshot (added 2026-04-23)
 # Foundation for consensus-pick analysis: archives the BUY/HOLD list BEFORE
 # engines start trading. ~10-15s. Run in background so it doesn't gate engines.
-echo "[2.5/8] Archiving today's dashboard scores in background..."
+echo "[3/9] Archiving today's dashboard scores in background..."
 nohup python3 ./scripts/archive-daily-scores.py > "logs/archive-scores-${TODAY}.log" 2>&1 &
 echo "  ✓ daily scores archiver (PID $!) → docs/dashboard-scores/${TODAY}.json"
 
-# [3/8] Engines
-echo "[3/8] Launching 7 paper-trade engines..."
+# [4/9] Engines
+echo "[4/9] Launching 7 paper-trade engines..."
 for entry in "${ENGINES[@]}"; do
   IFS='|' read -r name script <<< "$entry"
   if [ ! -f "$script" ]; then
@@ -154,28 +173,28 @@ for entry in "${ENGINES[@]}"; do
   sleep 1
 done
 
-# [4/8] Crash watchdog
-echo "[4/8] Launching crash-watchdog..."
+# [5/9] Crash watchdog
+echo "[5/9] Launching crash-watchdog..."
 nohup ./scripts/crash-watchdog.sh > "logs/watchdog-${TODAY}.log" 2>&1 &
 echo "  ✓ watchdog (PID $!)"
 
-# [5/8] Telegram digest (30-min)
-echo "[5/8] Launching telegram-digest (30-min Soumya updates)..."
+# [6/9] Telegram digest (30-min)
+echo "[6/9] Launching telegram-digest (30-min Soumya updates)..."
 nohup ./scripts/telegram-digest.sh > "logs/telegram-digest-${TODAY}.log" 2>&1 &
 echo "  ✓ digest (PID $!)"
 
-# [6/8] Laptop heartbeat (15-min)
-echo "[6/8] Launching laptop-heartbeat..."
+# [7/9] Laptop heartbeat (15-min)
+echo "[7/9] Launching laptop-heartbeat..."
 nohup ./scripts/laptop-heartbeat.sh > "logs/laptop-heartbeat-${TODAY}.log" 2>&1 &
 echo "  ✓ heartbeat (PID $!)"
 
-# [7/8] Auto-stop-EOD
-echo "[7/8] Launching auto-stop-eod (fires 15:35)..."
+# [8/9] Auto-stop-EOD
+echo "[8/9] Launching auto-stop-eod (fires 15:35)..."
 nohup ./scripts/auto-stop-eod.sh > "logs/auto-stop-${TODAY}.log" 2>&1 &
 echo "  ✓ auto-stop (PID $!)"
 
-# [8/8] Satish schedule — only if his chat ID is set
-echo "[8/8] Satish schedule check..."
+# [9/9] Satish schedule — only if his chat ID is set
+echo "[9/9] Satish schedule check..."
 if grep -q "^SATISH_TELEGRAM_CHAT_ID=[0-9]" .env 2>/dev/null; then
   nohup ./scripts/satish-schedule.sh > "logs/satish-schedule-${TODAY}.log" 2>&1 &
   echo "  ✓ satish-schedule launched (PID $!) — will send 4 trade reports to Satish today"

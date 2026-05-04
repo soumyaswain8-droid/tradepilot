@@ -43,6 +43,13 @@ _SELL_BOT_PCT = 0.20      # bottom 20% = SELL
 _BEAR_BUY_PCT = 0.10      # BEAR: shrink BUY to top 10%
 _SIDEWAYS_SELL_PCT = 0.10  # SIDEWAYS: shrink SELL to bottom 10%
 
+# Fix #1 (2026-04-28): SHORT emission requires actual weakness, not just bottom-rank.
+# RCA showed mechanical bottom-percentile flipped good stocks into SHORT in BEAR regime
+# (e.g. 04-28: stock score=55 with change_pct=+0.3% became SHORT — guaranteed loss).
+# Now bottom-ranked stocks must ALSO satisfy these absolute conditions to be SHORTed.
+SHORT_REQUIRE_NEGATIVE_CHANGE_PCT = -0.5  # stock must be down at least this much vs prev close
+SHORT_REQUIRE_MAX_SCORE = 35              # stock's composite score must be below this (out of 100)
+
 
 def score_for_short(stock: dict, nifty_change: float) -> dict:
     """Compute weakness score for a SELL (short) candidate."""
@@ -130,25 +137,30 @@ def generate_signals(regime: str = None) -> List[dict]:
     """
     t0 = time.time()
 
+    # #4 FIX: resolve regime FIRST (from v5.regime_detector), then pass it into v4 composite scorer.
+    # Previously: v4 computed its own regime internally (from nifty change% only) which could disagree
+    # with v5's multi-indicator regime — leading to long-biased scoring in BEAR tapes.
+    if regime is None and detect_regime is not None:
+        try:
+            ri = detect_regime()
+            regime = ri.get("regime", "SIDEWAYS")
+            logger.info(f"v5 regime: {regime} (score={ri.get('score')}, conf={ri.get('confidence')})")
+        except Exception as e:
+            logger.warning(f"Regime detection failed: {e}")
+            regime = "SIDEWAYS"
+    if regime:
+        regime = regime.upper().replace("NEUTRAL", "SIDEWAYS")
+
     logger.info("Running v4 composite scorer...")
-    v4_results = score_all_stocks()
+    v4_results = score_all_stocks(regime_override=regime)
     if not v4_results:
         logger.error("v4 scorer returned empty results")
         return []
 
-    # Detect regime
-    if regime is None:
-        if detect_regime is not None:
-            try:
-                ri = detect_regime()
-                regime = ri.get("regime", "SIDEWAYS")
-                logger.info(f"v5 regime: {regime} (score={ri.get('score')}, conf={ri.get('confidence')})")
-            except Exception as e:
-                logger.warning(f"Regime detection failed: {e}")
-                regime = v4_results[0].get("market_regime", "SIDEWAYS")
-        else:
-            regime = v4_results[0].get("market_regime", "SIDEWAYS")
-    regime = regime.upper().replace("NEUTRAL", "SIDEWAYS")
+    # Final regime normalization (in case regime was never set)
+    if not regime:
+        regime = v4_results[0].get("market_regime", "SIDEWAYS")
+        regime = regime.upper().replace("NEUTRAL", "SIDEWAYS")
 
     # Nifty change for short scoring
     nifty_change = 0.0
@@ -167,15 +179,31 @@ def generate_signals(regime: str = None) -> List[dict]:
         buy_count, sell_count = max(1, int(n * _BUY_TOP_PCT)), 0
 
     signals = []
+    n_short_filtered = 0
     for i, stock in enumerate(v4_results):
         rank = i + 1
         if rank <= buy_count:
             direction, pos = "BUY", "LONG"
             levels, short_data = _compute_long_levels(stock), {}
         elif sell_count > 0 and rank > n - sell_count:
-            direction, pos = "SELL", "SHORT"
-            short_data = score_for_short(stock, nifty_change)
-            levels = _compute_short_levels(stock)
+            # Fix #1: bottom-ranked is necessary but not sufficient. Stock must
+            # ALSO show actual weakness (real negative change AND low absolute score).
+            # Without this gate, a green-tape day causes 20-40 SHORTs to fire on
+            # stocks that just happen to be the relatively-lowest-scored — and
+            # they all hit STOPLOSS as the tape rises. RCA: 2026-04-28 v5 EOD.
+            stock_change = stock.get("change_pct", 0)
+            stock_score = stock.get("score", 100)
+            actually_weak = (stock_change < SHORT_REQUIRE_NEGATIVE_CHANGE_PCT and
+                             stock_score < SHORT_REQUIRE_MAX_SCORE)
+            if actually_weak:
+                direction, pos = "SELL", "SHORT"
+                short_data = score_for_short(stock, nifty_change)
+                levels = _compute_short_levels(stock)
+            else:
+                # Bottom-ranked but not actually weak — skip rather than force-SHORT.
+                direction, pos = "HOLD", "NONE"
+                levels, short_data = _compute_long_levels(stock), {}
+                n_short_filtered += 1
         else:
             direction, pos = "HOLD", "NONE"
             levels, short_data = _compute_long_levels(stock), {}
@@ -198,8 +226,9 @@ def generate_signals(regime: str = None) -> List[dict]:
 
     elapsed = time.time() - t0
     counts = {d: sum(1 for s in signals if s["direction"] == d) for d in ("BUY", "SELL", "HOLD")}
+    fix_note = f" (Fix#1 filtered {n_short_filtered} bottom-ranked-but-not-weak SHORTs)" if n_short_filtered else ""
     logger.info(f"v5 signals: BUY={counts['BUY']} SELL={counts['SELL']} HOLD={counts['HOLD']} "
-                f"| regime={regime} | {elapsed:.1f}s")
+                f"| regime={regime} | {elapsed:.1f}s{fix_note}")
     return signals
 
 

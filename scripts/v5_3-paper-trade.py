@@ -43,6 +43,7 @@ TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5_3"
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
+from prototype.utils.signal_guards import atomic_write_json
 LOG_FILE = LOG_DIR / "v5_3-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
@@ -300,7 +301,7 @@ def load_state():
 
 
 def save_state(s):
-    _state_file().write_text(json.dumps(s, indent=2, default=str))
+    atomic_write_json(_state_file(), s)
 
 
 # ═══════════════════════════════ PRE-MARKET ═══════════════════════════

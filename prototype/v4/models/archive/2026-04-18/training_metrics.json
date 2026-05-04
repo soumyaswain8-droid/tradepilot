@@ -1,0 +1,42 @@
+{
+  "trained_at": "2026-04-18T12:54:42.748409",
+  "git_sha": "c3ede11",
+  "rows": 50661,
+  "stocks": 199,
+  "date_range": {
+    "start": "2024-06-26",
+    "end": "2026-04-17"
+  },
+  "mean_ic": 0.0495,
+  "ic_positive_pct": 0.733,
+  "mean_hit_rate": 0.5174,
+  "mean_ls_spread": 0.0019,
+  "best_iteration": 2,
+  "top_features": [
+    {
+      "name": "nifty_change_pct",
+      "importance": 8
+    },
+    {
+      "name": "gap_pct",
+      "importance": 4
+    },
+    {
+      "name": "prev_day_range_pct",
+      "importance": 3
+    },
+    {
+      "name": "bollinger_pctb",
+      "importance": 2
+    },
+    {
+      "name": "return_5d",
+      "importance": 1
+    }
+  ],
+  "regime_at_training": "SIDEWAYS",
+  "vix_at_training": 17.2,
+  "nifty_at_training": 24231,
+  "previous_model_age_days": 8,
+  "notes": "First successful retrain since 2026-04-10. Previous retrains silently failed due to CSV schema mismatch (Datetime vs Date column). Fixed before training."
+}

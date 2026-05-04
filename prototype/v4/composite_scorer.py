@@ -428,12 +428,16 @@ def compute_stock_scores(
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def score_all_stocks(symbols: Optional[List[str]] = None) -> List[dict]:
+def score_all_stocks(symbols: Optional[List[str]] = None,
+                     regime_override: Optional[str] = None) -> List[dict]:
     """
     Score and rank all stocks in the universe.
 
     Args:
         symbols: Optional list of NSE symbols. Defaults to ACTIVE_SYMBOLS.
+        regime_override: #4 FIX — when set (e.g., v5.regime_detector result), use this as
+            the market regime instead of recomputing from nifty change%. Unifies the regime
+            source so v5 signal engine and v4 composite scorer never disagree.
 
     Returns:
         List of scored stock dicts, sorted by composite score descending.
@@ -455,7 +459,12 @@ def score_all_stocks(symbols: Optional[List[str]] = None) -> List[dict]:
     logger.info("Fetching market-wide data (Nifty index, FII/DII)...")
     nifty_data = get_nifty_index_level()
     fii_data = get_fii_dii_daily()
-    market_regime = _detect_market_regime(nifty_data.get("change_pct", 0.0))
+    # #4 FIX: respect caller-supplied regime; fall back to nifty-change detection only if not provided
+    if regime_override:
+        market_regime = regime_override.upper().replace("SIDEWAYS", "NEUTRAL")
+        logger.info(f"Using caller-supplied regime: {regime_override} -> {market_regime}")
+    else:
+        market_regime = _detect_market_regime(nifty_data.get("change_pct", 0.0))
     logger.info(
         f"Nifty: {nifty_data.get('level', 0):.0f} ({nifty_data.get('change_pct', 0):+.2f}%) "
         f"| Regime: {market_regime} "

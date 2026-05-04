@@ -48,16 +48,30 @@ pub struct RiskConfig {
 
 impl Default for RiskConfig {
     fn default() -> Self {
+        // Load from env vars with sane fallbacks.
+        // Rationale (2026-04-21 forensic): hardcoded max_total_positions=30 throttled
+        // v5 to 10 trades/day. Externalized so we never hit this trap again.
+        fn env_dec(key: &str, fallback: Decimal) -> Decimal {
+            std::env::var(key).ok()
+                .and_then(|v| v.parse::<Decimal>().ok())
+                .unwrap_or(fallback)
+        }
+        fn env_u32(key: &str, fallback: u32) -> u32 {
+            std::env::var(key).ok()
+                .and_then(|v| v.parse::<u32>().ok())
+                .unwrap_or(fallback)
+        }
+
         Self {
-            max_daily_loss: dec!(-20000),           // Rs 20K hard stop
-            max_order_value: dec!(100000),           // Rs 1L max per order
-            max_total_positions: 30,
-            max_positions_per_symbol: 3,
-            max_deployment_pct: dec!(0.80),          // 80% max deployed
-            total_capital: dec!(1000000),             // Rs 10L
+            max_daily_loss: env_dec("RUST_MAX_DAILY_LOSS", dec!(-20000)),
+            max_order_value: env_dec("RUST_MAX_ORDER_VALUE", dec!(100000)),
+            max_total_positions: env_u32("RUST_MAX_TOTAL_POSITIONS", 150),
+            max_positions_per_symbol: env_u32("RUST_MAX_POSITIONS_PER_SYMBOL", 10),
+            max_deployment_pct: env_dec("RUST_MAX_DEPLOYMENT_PCT", dec!(0.80)),
+            total_capital: env_dec("RUST_TOTAL_CAPITAL", dec!(1000000)),
             force_exit_time: NaiveTime::from_hms_opt(15, 15, 0).unwrap(),
-            high_vix_threshold: dec!(20),
-            high_vix_size_multiplier: dec!(0.50),
+            high_vix_threshold: env_dec("RUST_HIGH_VIX_THRESHOLD", dec!(20)),
+            high_vix_size_multiplier: env_dec("RUST_HIGH_VIX_SIZE_MULTIPLIER", dec!(0.50)),
         }
     }
 }
@@ -190,6 +204,23 @@ impl RiskManager {
         self.positions_count += 1;
         *self.positions_by_symbol.entry(symbol.to_string()).or_insert(0) += 1;
         self.total_deployed += value;
+    }
+
+    /// Reconcile internal position state with authoritative Python state.
+    /// Called periodically to prevent drift (e.g., when Python closes a
+    /// position without notifying Rust). Overwrites the internal count.
+    /// Returns (old_count, new_count) for logging.
+    pub fn sync_positions(
+        &mut self,
+        total_positions: u32,
+        positions_by_symbol: HashMap<String, u32>,
+        total_deployed: Decimal,
+    ) -> (u32, u32) {
+        let old_count = self.positions_count;
+        self.positions_count = total_positions;
+        self.positions_by_symbol = positions_by_symbol;
+        self.total_deployed = total_deployed.max(Decimal::ZERO);
+        (old_count, total_positions)
     }
 
     /// Record a position being closed

@@ -9,6 +9,14 @@ Thumbs.db
 
 # Data (large, regeneratable)
 prototype/data/*.csv
+prototype/data/cache/
+prototype/data/intraday/
+
+# Rust build artifacts
+engine/target/
+
+# Claude Code session memory
+.claude/
 
 # Models — now tracked in git (repo is private)
 # prototype/models/*.pkl

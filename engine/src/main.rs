@@ -154,6 +154,48 @@ async fn get_positions(state: web::Data<AppState>) -> HttpResponse {
     }))
 }
 
+#[derive(Debug, Deserialize)]
+struct SyncRequest {
+    total_positions: u32,
+    positions_by_symbol: std::collections::HashMap<String, u32>,
+    total_deployed: f64,
+}
+
+async fn sync_positions(
+    state: web::Data<AppState>,
+    req: web::Json<SyncRequest>,
+) -> HttpResponse {
+    let r = req.into_inner();
+    let total_deployed = rust_decimal::Decimal::try_from(r.total_deployed).unwrap_or_default();
+    let (old_count, new_count) = state
+        .risk_manager
+        .lock()
+        .unwrap()
+        .sync_positions(r.total_positions, r.positions_by_symbol, total_deployed);
+
+    if old_count != new_count {
+        tracing::warn!(
+            "POSITION DRIFT CORRECTED: Rust had {} positions, Python reports {}",
+            old_count, new_count
+        );
+    }
+
+    HttpResponse::Ok().json(ApiResponse {
+        success: true,
+        message: format!(
+            "Synced: Rust {} -> Python {} ({})",
+            old_count,
+            new_count,
+            if old_count == new_count { "no drift" } else { "drift corrected" }
+        ),
+        data: Some(serde_json::json!({
+            "previous_count": old_count,
+            "new_count": new_count,
+            "drift_corrected": old_count != new_count,
+        })),
+    })
+}
+
 async fn kill_switch(state: web::Data<AppState>) -> HttpResponse {
     let mut rm = state.risk_manager.lock().unwrap();
     rm.activate_kill_switch("Manual emergency stop via API".into());
@@ -201,6 +243,7 @@ async fn main() -> std::io::Result<()> {
             .route("/api/risk", web::get().to(risk_status))
             .route("/api/positions", web::get().to(get_positions))
             .route("/api/kill", web::post().to(kill_switch))
+            .route("/api/risk/sync", web::post().to(sync_positions))
     })
     .bind("127.0.0.1:8080")?
     .run()

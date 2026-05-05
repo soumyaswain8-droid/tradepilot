@@ -93,6 +93,13 @@ python3 scripts/eod-comparison-report.py > "/tmp/eod-report-$(date +%Y%m%d).log"
   && echo "  ✓ EOD report: docs/watchdog/reports/$(date +%Y-%m-%d)_eod/report.pdf" \
   || echo "  (eod-comparison-report failed, see /tmp/eod-report-*.log)"
 
+# 5b. Generate missed-trades report (BUY signals no engine entered + right/wrong calls)
+echo "[$(date '+%H:%M:%S')] Generating missed-trades report..."
+python3 scripts/missed-trades-report.py "$(date +%Y-%m-%d)" \
+  > "/tmp/missed-trades-$(date +%Y%m%d).log" 2>&1 \
+  && echo "  ✓ missed-trades: docs/reports/missed-trades-$(date +%Y-%m-%d).md" \
+  || echo "  (missed-trades-report failed, see /tmp/missed-trades-*.log)"
+
 # 5. Verify nothing left
 remaining=$(ps aux | grep -E "paper-trade|crash-watchdog|telegram-digest" | grep -v grep | grep -v Docker | grep -v watchdogd | wc -l | tr -d ' ')
 echo "[$(date '+%H:%M:%S')] Shutdown complete. Remaining processes: $remaining"

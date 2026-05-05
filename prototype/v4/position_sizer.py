@@ -73,42 +73,62 @@ def size_positions(
     if not scored_stocks:
         return []
 
-    # Filter out stocks with no valid price
-    stocks = [s for s in scored_stocks if s.get("price", 0) > 0]
+    # Filter out stocks with no valid price; sort by score descending so the
+    # iterative truncation below drops lowest-conviction picks first.
+    stocks = sorted(
+        [s for s in scored_stocks if s.get("price", 0) > 0],
+        key=lambda s: s.get("score", 0),
+        reverse=True,
+    )
     if not stocks:
         return []
 
     max_alloc = max_per_stock_pct * capital
-    scores = [s.get("score", 0) for s in stocks]
-    total_score = sum(scores)
 
-    if total_score <= 0:
+    # --- BUG-FIX 2026-05-06: iteratively drop lowest-score stocks until every
+    # selected stock can clear min_per_stock_rs under score-weighted allocation.
+    #
+    # Prior bug: when too many BUYs competed for halved capital (VIX>18 cuts
+    # available_capital by 50%), score-weighted allocation put every stock below
+    # the Rs 20K floor → all dropped → empty result. v4 made 0 trades all of
+    # 2026-05-05 because of this. The redistribution loop only handled excess
+    # from CAPPED stocks; it had no path for "everyone below floor."
+    #
+    # New behavior: drop lowest-score until allocations clear the floor, then
+    # apply the existing cap + redistribute logic on the surviving subset.
+    allocations: List[float] = []
+    for _drop in range(len(stocks)):
+        scores = [s.get("score", 0) for s in stocks]
+        total_score = sum(scores)
+        if total_score <= 0:
+            return []
+        allocations = [(s["score"] / total_score) * capital for s in stocks]
+        # Cap excess and redistribute (existing logic)
+        for _ in range(5):
+            excess = 0.0
+            uncapped_score = 0.0
+            for i, alloc in enumerate(allocations):
+                if alloc > max_alloc:
+                    excess += alloc - max_alloc
+                    allocations[i] = max_alloc
+                elif alloc >= min_per_stock_rs:
+                    uncapped_score += scores[i]
+            if excess <= 0 or uncapped_score <= 0:
+                break
+            for i, alloc in enumerate(allocations):
+                if alloc < max_alloc and alloc >= min_per_stock_rs:
+                    share = (scores[i] / uncapped_score) * excess
+                    allocations[i] = min(alloc + share, max_alloc)
+        # Are any stocks still below floor? If yes, drop the lowest-score one
+        # (last in sorted list) and retry. This bounds the universe to a size
+        # the floor can support.
+        if any(0 < a < min_per_stock_rs for a in allocations):
+            stocks.pop()  # drop lowest-score
+            continue
+        break  # all allocations now respect both cap and floor
+
+    if not stocks or not allocations:
         return []
-
-    # --- Step 1: Score-weighted base allocation ---
-    allocations = [(s["score"] / total_score) * capital for s in stocks]
-
-    # --- Step 2-4: Cap, floor, redistribute ---
-    # Iterative redistribution (converges in 2-3 passes)
-    for _ in range(5):
-        excess = 0.0
-        uncapped_score = 0.0
-
-        for i, alloc in enumerate(allocations):
-            if alloc > max_alloc:
-                excess += alloc - max_alloc
-                allocations[i] = max_alloc
-            elif alloc >= min_per_stock_rs:
-                uncapped_score += scores[i]
-
-        if excess <= 0 or uncapped_score <= 0:
-            break
-
-        # Redistribute proportionally to uncapped stocks
-        for i, alloc in enumerate(allocations):
-            if alloc < max_alloc and alloc >= min_per_stock_rs:
-                share = (scores[i] / uncapped_score) * excess
-                allocations[i] = min(alloc + share, max_alloc)
 
     # --- Build output ---
     positions = []

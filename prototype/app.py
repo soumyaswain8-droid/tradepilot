@@ -497,6 +497,132 @@ def api_compare_v4():
         return jsonify({"comparison": [], "error": str(e)}), 500
 
 
+@app.route("/api/engine-status")
+def api_engine_status():
+    """Per-engine live state for the dashboard. Reads each engine's state JSON file
+    directly — same source of truth used by the engines themselves and the
+    eod-comparison report.
+
+    Returns combined view: P&L, trades, WR, open positions, watchlist, kill switch
+    tier — for ALL 7 engines (v4 + v5 family) in one call.
+
+    Used by:
+      - Dashboard "Live Status" panel (replaces bash status command)
+      - Dashboard "Engine P&L Comparison" panel (v4 vs v5 family)
+      - Dashboard "Watchlist & Revival Gate" panel
+      - Dashboard "Kill Switch Tier" panel
+    """
+    try:
+        from datetime import date as _date
+        target = request.args.get('date') or _date.today().isoformat()
+        project_root = Path(__file__).resolve().parent.parent
+        engines = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6']
+
+        result = []
+        fleet_pnl = 0.0
+        fleet_trades = 0
+        fleet_open = 0
+
+        for eng in engines:
+            f = project_root / 'docs' / 'paper-trades' / eng / f'{target}.json'
+            if not f.exists():
+                result.append({
+                    'engine': eng, 'status': 'no_data',
+                    'pnl': 0, 'trades': 0, 'wins': 0, 'losses': 0,
+                    'wr': 0, 'open': 0, 'watchlist': [], 'loss_counts': {},
+                    'kill_switch_tier': 0, 'capital': 0, 'cash': 0,
+                })
+                continue
+            try:
+                d = json.loads(f.read_text())
+            except Exception:
+                continue
+
+            # v5 family — pools shape
+            if 'pools' in d:
+                s = d.get('summary', {}) or {}
+                pnl = float(s.get('total_pnl', 0) or 0)
+                trades = int(s.get('trades', 0) or 0)
+                wins = int(s.get('wins', 0) or 0)
+                losses = int(s.get('losses', 0) or 0)
+                open_count = sum(len(p.get('positions', []) or []) for p in d.get('pools', {}).values())
+                capital = float(d.get('total_capital', 0) or 0)
+                # v5 family doesn't have watchlist in current code; leave empty
+                watchlist = []
+                loss_counts = {}
+                kill_switch_tier = 0
+            else:
+                # v4 flat shape
+                ct = d.get('closed_trades', []) or []
+                pnl = float(d.get('realized_pnl', 0) or 0)
+                trades = len(ct)
+                wins = sum(1 for t in ct if (t.get('pnl') or 0) > 0)
+                losses = trades - wins
+                open_count = sum(1 for p in (d.get('positions') or []) if p.get('status') == 'open')
+                capital = float(d.get('daily_pool', 0) or 0)
+                watchlist_raw = d.get('watchlist', {}) or {}
+                # Normalize watchlist for frontend
+                watchlist = [
+                    {
+                        'symbol': sym,
+                        'exit_time': info.get('exit_time'),
+                        'exit_price': info.get('exit_price'),
+                        'post_drop_low': info.get('post_drop_low'),
+                        'exit_reason': info.get('exit_reason'),
+                        'loss_pct': info.get('loss_pct'),
+                    }
+                    for sym, info in watchlist_raw.items()
+                ]
+                loss_counts = d.get('stock_loss_count', {}) or {}
+                kill_switch_tier = int(d.get('kill_switch_tier', 0) or 0)
+
+            wr = round(100.0 * wins / trades, 1) if trades > 0 else 0.0
+            cash = float(d.get('cash', 0) or 0)
+            row = {
+                'engine': eng,
+                'status': 'ok',
+                'pnl': round(pnl, 2),
+                'trades': trades,
+                'wins': wins,
+                'losses': losses,
+                'wr': wr,
+                'open': open_count,
+                'capital': capital,
+                'cash': round(cash, 2),
+                'watchlist': watchlist,
+                'loss_counts': loss_counts,
+                'kill_switch_tier': kill_switch_tier,
+            }
+            result.append(row)
+            fleet_pnl += pnl
+            fleet_trades += trades
+            fleet_open += open_count
+
+        # Rank engines by P&L for the comparison panel
+        result_sorted = sorted(result, key=lambda r: r.get('pnl', 0), reverse=True)
+        for i, r in enumerate(result_sorted, 1):
+            r['rank'] = i
+
+        # Derive v4 vs v5_family summary
+        v4_pnl = next((r['pnl'] for r in result if r['engine'] == 'v4'), 0)
+        v5_family_pnl = sum(r['pnl'] for r in result if r['engine'] != 'v4')
+
+        return jsonify({
+            'date': target,
+            'engines': result_sorted,
+            'fleet': {
+                'total_pnl': round(fleet_pnl, 2),
+                'total_trades': fleet_trades,
+                'total_open': fleet_open,
+                'v4_pnl': round(v4_pnl, 2),
+                'v5_family_pnl': round(v5_family_pnl, 2),
+            },
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'engines': [], 'error': str(e)}), 500
+
+
 @app.route("/api/indices")
 def api_indices():
     """Get market indices -- formatted for frontend."""

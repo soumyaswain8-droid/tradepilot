@@ -967,6 +967,194 @@ table.dt {
   .work { grid-template-columns: repeat(4, 1fr); }
   .c3, .c4, .c5, .c6, .c7, .c8, .c9, .c12 { grid-column: span 4; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ENGINE LEADERBOARD · WATCHLIST · KILL SWITCH (added 2026-05-07)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Engine Leaderboard ─── */
+.eng-leaderboard {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.eng-leaderboard tbody tr {
+  border-top: 1px solid var(--line-faint);
+  transition: background 0.12s ease;
+}
+.eng-leaderboard tbody tr:hover { background: var(--paper-2); }
+.eng-leaderboard tbody tr.v4-row {
+  background: linear-gradient(90deg, rgba(31,122,62,0.06) 0%, transparent 100%);
+  font-weight: 700;
+}
+.eng-leaderboard tbody tr.v4-row td:nth-child(2) { color: var(--green-bright); font-weight: 800; }
+.eng-leaderboard td { padding: 6px 10px; vertical-align: middle; }
+.eng-leaderboard td.r { text-align: right; }
+.eng-leaderboard td b { font-weight: 800; }
+.eng-leaderboard td.up { color: var(--green); font-weight: 800; }
+.eng-leaderboard td.down { color: var(--red); font-weight: 800; }
+.eng-leaderboard td.flat { color: var(--ink-3); }
+.eng-leaderboard .rank-badge {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--ink-4); color: var(--surface);
+  font-family: var(--led); font-size: 10px; font-weight: 700;
+  text-align: center; line-height: 18px;
+}
+.eng-leaderboard .rank-badge.r1 { background: linear-gradient(135deg,#FFD700,#D4A017); color: var(--ink); }
+.eng-leaderboard .rank-badge.r2 { background: linear-gradient(135deg,#C0C0C0,#9A9A9A); color: var(--ink); }
+.eng-leaderboard .rank-badge.r3 { background: linear-gradient(135deg,#CD7F32,#8B5A2B); color: var(--surface); }
+.eng-leaderboard .pnl-bar {
+  display: inline-block;
+  height: 10px; min-width: 30px;
+  background: var(--green-dim);
+  border-left: 2px solid var(--green);
+  vertical-align: middle;
+  border-radius: 2px;
+}
+.eng-leaderboard .pnl-bar.neg {
+  background: var(--red-dim);
+  border-left: none; border-right: 2px solid var(--red);
+}
+.eng-leaderboard .tier-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-family: var(--mono); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 2px;
+}
+.eng-leaderboard .tier-badge.t0 { color: var(--green); border-color: var(--green-dim); background: rgba(31,122,62,0.06); }
+.eng-leaderboard .tier-badge.t1 { color: var(--amber); border-color: rgba(217,135,31,0.4); background: rgba(217,135,31,0.08); }
+.eng-leaderboard .tier-badge.t2 { color: var(--red); border-color: var(--red-dim); background: rgba(199,62,44,0.08); }
+.eng-leaderboard .tier-badge.t3 { color: var(--surface); background: var(--red); border-color: var(--red-bright); animation: pulse-red 1.2s ease-in-out infinite; }
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(199,62,44,0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(199,62,44,0); }
+}
+
+/* ─── Watchlist & Revival Gate ─── */
+.watch-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line-faint);
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.watch-card:hover { background: var(--paper-2); }
+.watch-card .sym {
+  font-family: var(--led);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  min-width: 80px;
+}
+.watch-card .info {
+  font-size: 10px;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+.watch-card .info b { color: var(--ink-2); }
+.watch-card .info .reason {
+  display: inline-block;
+  padding: 1px 5px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-faint);
+  border-radius: 2px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 4px;
+}
+.watch-card .info .reason.signal-exit { color: var(--blue); border-color: var(--blue-dim); }
+.watch-card .info .reason.stoploss { color: var(--red); border-color: var(--red-dim); }
+.watch-card .info .reason.abs-pct-sl { color: var(--red-bright); border-color: var(--red); font-weight: 700; }
+.watch-card .pct {
+  font-family: var(--led);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+  min-width: 60px;
+}
+.watch-card .pct.down { color: var(--red); }
+.watch-card .gate-badge {
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid var(--line-faint);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* ─── Kill Switch Tier ─── */
+.kill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+.kill-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 12px;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.kill-card .eng {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+.kill-card .tier {
+  font-family: var(--led);
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0;
+  letter-spacing: 0.04em;
+}
+.kill-card .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.kill-card .pnl-now {
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-top: 4px;
+  color: var(--ink-3);
+}
+.kill-card .pnl-now b { font-weight: 800; }
+.kill-card.t0 .tier { color: var(--green); }
+.kill-card.t0 .label { color: var(--green); }
+.kill-card.t0 { border-left: 3px solid var(--green); }
+.kill-card.t1 .tier { color: var(--amber); }
+.kill-card.t1 .label { color: var(--amber); }
+.kill-card.t1 { border-left: 3px solid var(--amber); background: rgba(217,135,31,0.04); }
+.kill-card.t2 .tier { color: var(--red); }
+.kill-card.t2 .label { color: var(--red); }
+.kill-card.t2 { border-left: 3px solid var(--red); background: rgba(199,62,44,0.06); }
+.kill-card.t3 .tier { color: var(--surface); }
+.kill-card.t3 .label { color: var(--surface); }
+.kill-card.t3 { background: var(--red); border-color: var(--red-bright); animation: pulse-red 1.2s ease-in-out infinite; }
+.kill-card.t3 .eng { color: var(--surface); opacity: 0.8; }
+.kill-card.t3 .pnl-now { color: var(--surface); opacity: 0.8; }
+.kill-card.t3 .pnl-now b { color: var(--surface); }
 </style>
 </head>
 <body data-density="normal">
@@ -1183,6 +1371,59 @@ table.dt {
         <div class="panel-head"><span class="num">08</span> Engine Arena <span class="meta">v5 family</span></div>
         <div class="panel-body tight">
           <div class="arena-grid" id="arenaGrid">
+            <div class="dt-empty" style="grid-column:1/-1">Loading…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ENGINE LEADERBOARD (NEW 2026-05-07: replaces bash 'status' command) ── -->
+      <section class="panel c12" id="p-leaderboard">
+        <div class="panel-head">
+          <span class="num">09</span> Engine P&amp;L Leaderboard
+          <span class="meta" id="leaderMeta">— all 7 engines · live</span>
+        </div>
+        <div class="panel-body tight">
+          <table class="dt eng-leaderboard" id="leaderTable">
+            <thead><tr>
+              <th class="r">#</th>
+              <th>Engine</th>
+              <th class="r">Day P&amp;L</th>
+              <th class="r">P&amp;L Bar</th>
+              <th class="r">Trades</th>
+              <th class="r">Win Rate</th>
+              <th class="r">Open</th>
+              <th class="r">Cash</th>
+              <th class="r">Tier</th>
+              <th class="r">Watchlist</th>
+            </tr></thead>
+            <tbody id="leaderBody">
+              <tr><td colspan="10" class="dt-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── WATCHLIST & REVIVAL GATE (NEW 2026-05-07) ── -->
+      <section class="panel c6" id="p-watchlist">
+        <div class="panel-head">
+          <span class="num">10</span> Watchlist · Revival Gate
+          <span class="meta" id="watchMeta">— v4 stocks awaiting candle confirmation</span>
+        </div>
+        <div class="panel-body tight" style="overflow:auto;max-height:320px">
+          <div id="watchBody">
+            <div class="dt-empty">Loading…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── KILL SWITCH TIER (NEW 2026-05-07) ── -->
+      <section class="panel c6" id="p-killswitch">
+        <div class="panel-head">
+          <span class="num">11</span> Kill Switch · 3-Tier Status
+          <span class="meta" id="killMeta">— per-engine</span>
+        </div>
+        <div class="panel-body tight">
+          <div class="kill-grid" id="killGrid">
             <div class="dt-empty" style="grid-column:1/-1">Loading…</div>
           </div>
         </div>
@@ -1995,6 +2236,147 @@ table.dt {
     });
   }
 
+  // ─── Engine Status (NEW 2026-05-07) ─────────────
+  // Drives Engine Leaderboard + Watchlist & Revival Gate + Kill Switch panels.
+  // Replaces the bash 'status' command with live in-dashboard view.
+  // Builds DOM via createElement (XSS-safe; engine state files contain
+  // user-derived symbol names that should never be interpreted as HTML).
+  function fmtPnl(n) {
+    if (n === undefined || n === null) return '—';
+    var sign = n >= 0 ? '+' : '−';
+    return sign + '₹' + Math.abs(Math.round(n)).toLocaleString('en-IN');
+  }
+  function fmtPnlShort(n) {
+    if (n === undefined || n === null) return '—';
+    var v = Math.abs(n);
+    var sign = n >= 0 ? '+' : '−';
+    if (v >= 100000) return sign + '₹' + (v / 100000).toFixed(2) + 'L';
+    if (v >= 1000) return sign + '₹' + (v / 1000).toFixed(1) + 'K';
+    return sign + '₹' + Math.round(v);
+  }
+  var TIER_LABELS = ['CLEAR', 'WARN', 'SOFT HOLD', 'HARD KILL'];
+  function _el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined && txt !== null) e.textContent = String(txt);
+    return e;
+  }
+  function loadEngineStatus() {
+    return get('/api/engine-status').then(function(d) {
+      if (!d || !d.engines) return;
+      var engines = d.engines;
+      var fleet = d.fleet || {};
+
+      // ── 1. Leaderboard ──
+      var maxAbsPnl = Math.max.apply(null, engines.map(function(e) { return Math.abs(e.pnl || 0); }).concat([1]));
+      var lb = $('leaderBody');
+      if (lb) {
+        lb.replaceChildren();
+        engines.forEach(function(e) {
+          var pnlClass = e.pnl > 0 ? 'r up' : (e.pnl < 0 ? 'r down' : 'r flat');
+          var rankClass = 'rank-badge' + (e.rank <= 3 ? ' r' + e.rank : '');
+          var v4Class = e.engine === 'v4' ? 'v4-row' : '';
+          var barWidth = Math.max(4, Math.round((Math.abs(e.pnl) / maxAbsPnl) * 100));
+          var barClass = e.pnl >= 0 ? 'pnl-bar' : 'pnl-bar neg';
+          var tier = e.kill_switch_tier || 0;
+          var watchCount = (e.watchlist || []).length;
+          var capDisplay = e.cash > 0 ? '₹' + Math.round(e.cash / 1000) + 'K' : '—';
+
+          var tr = _el('tr', v4Class);
+          var tdRank = _el('td', 'r');
+          tdRank.appendChild(_el('span', rankClass, e.rank));
+          tr.appendChild(tdRank);
+          var tdEng = _el('td');
+          tdEng.appendChild(_el('b', '', e.engine));
+          tr.appendChild(tdEng);
+          tr.appendChild(_el('td', pnlClass, fmtPnl(e.pnl)));
+          var tdBar = _el('td', 'r');
+          var bar = _el('span', barClass);
+          bar.style.width = barWidth + 'px';
+          tdBar.appendChild(bar);
+          tr.appendChild(tdBar);
+          tr.appendChild(_el('td', 'r', e.trades || 0));
+          tr.appendChild(_el('td', 'r', (e.wr || 0) + '%'));
+          tr.appendChild(_el('td', 'r', e.open || 0));
+          tr.appendChild(_el('td', 'r', capDisplay));
+          var tdTier = _el('td', 'r');
+          tdTier.appendChild(_el('span', 'tier-badge t' + tier, tier === 0 ? '·' : 'T' + tier));
+          tr.appendChild(tdTier);
+          tr.appendChild(_el('td', 'r', watchCount > 0 ? watchCount : '—'));
+          lb.appendChild(tr);
+        });
+      }
+      var lm = $('leaderMeta');
+      if (lm) {
+        var v4Pct = fleet.total_pnl ? Math.round((fleet.v4_pnl / fleet.total_pnl) * 100) : 0;
+        lm.textContent = 'Fleet ' + fmtPnl(fleet.total_pnl) + ' · ' +
+                         fleet.total_trades + ' trades · ' +
+                         'v4 ' + fmtPnlShort(fleet.v4_pnl) + ' (' + v4Pct + '%) · ' +
+                         'v5 family ' + fmtPnlShort(fleet.v5_family_pnl);
+      }
+
+      // ── 2. Watchlist & Revival Gate ──
+      var v4 = engines.find(function(e) { return e.engine === 'v4'; });
+      var wb = $('watchBody');
+      var wm = $('watchMeta');
+      if (v4 && v4.watchlist && v4.watchlist.length > 0) {
+        var now = new Date();
+        var hour = now.getHours(), min = now.getMinutes();
+        var inWindow = (hour > 11 || (hour === 11 && min >= 15)) && (hour < 14 || (hour === 14 && min <= 45));
+        wb.replaceChildren();
+        v4.watchlist.forEach(function(w) {
+          var reasonClass = 'reason ' + (w.exit_reason || '').toLowerCase().replace(/_/g, '-');
+          var lossPct = w.loss_pct !== null && w.loss_pct !== undefined ? w.loss_pct.toFixed(2) + '%' : '—';
+          var lossCount = (v4.loss_counts && v4.loss_counts[w.symbol]) || 1;
+          var gateText = inWindow ? 'WAITING ENGULFING + 1.5× VOL' : 'OUTSIDE 11:15-14:45';
+
+          var card = _el('div', 'watch-card');
+          card.appendChild(_el('div', 'sym', w.symbol));
+          var info = _el('div', 'info');
+          info.appendChild(_el('span', reasonClass, w.exit_reason || '?'));
+          info.appendChild(document.createTextNode(' exit '));
+          info.appendChild(_el('b', '', '₹' + (w.exit_price || '?')));
+          info.appendChild(document.createTextNode(' · low '));
+          info.appendChild(_el('b', '', '₹' + (w.post_drop_low || w.exit_price || '?')));
+          info.appendChild(document.createTextNode(' · loss #' + lossCount + ' @ ' + (w.exit_time || '')));
+          info.appendChild(_el('br'));
+          var gate = _el('span', 'gate-badge', gateText);
+          gate.style.color = inWindow ? 'var(--amber)' : 'var(--ink-4)';
+          gate.style.marginTop = '4px';
+          info.appendChild(gate);
+          card.appendChild(info);
+          card.appendChild(_el('div', 'pct down', lossPct));
+          wb.appendChild(card);
+        });
+        wm.textContent = v4.watchlist.length + ' symbol' + (v4.watchlist.length === 1 ? '' : 's') + ' · ' +
+                         (inWindow ? 'in window — gate active' : 'outside window');
+      } else {
+        wb.replaceChildren(_el('div', 'dt-empty', 'No watchlisted symbols · v4 has no losing exits yet today'));
+        wm.textContent = '— v4 only';
+      }
+
+      // ── 3. Kill Switch Grid ──
+      var kg = $('killGrid');
+      kg.replaceChildren();
+      engines.forEach(function(e) {
+        var tier = e.kill_switch_tier || 0;
+        var pnlClass = e.pnl > 0 ? 'up' : (e.pnl < 0 ? 'down' : '');
+        var card = _el('div', 'kill-card t' + tier);
+        card.appendChild(_el('div', 'eng', e.engine));
+        card.appendChild(_el('div', 'tier', 'T' + tier));
+        card.appendChild(_el('div', 'label', TIER_LABELS[tier]));
+        var pnlNow = _el('div', 'pnl-now');
+        pnlNow.appendChild(document.createTextNode('P&L '));
+        pnlNow.appendChild(_el('b', pnlClass, fmtPnlShort(e.pnl)));
+        card.appendChild(pnlNow);
+        kg.appendChild(card);
+      });
+      var km = $('killMeta');
+      var anyTriggered = engines.some(function(e) { return (e.kill_switch_tier || 0) > 0; });
+      km.textContent = anyTriggered ? '⚠ at least one engine in alert tier' : '— all clear · per-engine';
+    });
+  }
+
   // ─── Density toggle ─────────────────────────────
   $('densityToggle').addEventListener('click', function(e) {
     var btn = e.target.closest('button');
@@ -2210,11 +2592,14 @@ table.dt {
   setInterval(loadPortfolio, 4000);
   setInterval(loadIndices, 5000);
   setInterval(loadLivePicks, 8000);
+  setInterval(loadEngineStatus, 15000);
   setInterval(loadIntraday, 30000);
   setInterval(loadScores, 30000);
   setInterval(loadHistory, 30000);
   setInterval(loadArena, 60000);
   setInterval(loadPulse, 90000);
+  // Initial fire so panels populate immediately, not after first interval
+  loadEngineStatus();
 
   // ─── Init order quote ───────────────────────────
   setTimeout(updateOrderQuote, 800);

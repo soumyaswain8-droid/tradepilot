@@ -41,7 +41,7 @@ PAPER = ROOT / "docs" / "paper-trades"
 WATCH = ROOT / "docs" / "watchdog"
 REPORTS = WATCH / "reports"
 
-ENGINES = ["v4", "v5", "v5_classic", "v5_2", "v5_3", "v5_6", "v5_7"]
+ENGINES = ["v4", "v5", "v5_classic", "v5_2", "v5_3", "v5_6", "v5_7", "v5_8", "v6"]
 
 PALETTE = {
     "v4":         "#64748b",
@@ -71,23 +71,49 @@ def load_engine(engine: str, date_str: str) -> dict | None:
 
 
 def all_closed_trades(d: dict) -> list[dict]:
-    """Flatten all closed trades across pools, with pool name attached."""
+    """Flatten all closed trades across pools, with pool name attached.
+
+    Two shapes supported:
+      v5 family : d['pools'][pool]['closed_trades' or 'closed']
+      v4 flat   : d['closed_trades']  (single implicit pool 'MAIN')
+    """
     out = []
-    for pname, pool in (d.get("pools") or {}).items():
-        for t in pool.get("closed_trades") or []:
+    pools = d.get("pools") or {}
+    if pools:
+        for pname, pool in pools.items():
+            # v5 stores under 'closed_trades' historically; v5_classic uses 'closed'
+            trades = pool.get("closed_trades") or pool.get("closed") or []
+            for t in trades:
+                tt = dict(t)
+                tt["_pool"] = pname
+                out.append(tt)
+    else:
+        # v4 flat shape — top-level closed_trades, no pool concept
+        for t in d.get("closed_trades") or []:
             tt = dict(t)
-            tt["_pool"] = pname
+            tt["_pool"] = "MAIN"
             out.append(tt)
     return out
 
 
 def all_positions(d: dict) -> list[dict]:
+    """Flatten all positions across pools, with pool name attached.
+    Same dual-shape support as all_closed_trades — see that docstring."""
     out = []
-    for pname, pool in (d.get("pools") or {}).items():
-        for p in pool.get("positions") or []:
-            pp = dict(p)
-            pp["_pool"] = pname
-            out.append(pp)
+    pools = d.get("pools") or {}
+    if pools:
+        for pname, pool in pools.items():
+            for p in pool.get("positions") or []:
+                pp = dict(p)
+                pp["_pool"] = pname
+                out.append(pp)
+    else:
+        # v4 flat shape — open positions are entries with status == 'open'
+        for p in d.get("positions") or []:
+            if p.get("status") == "open":
+                pp = dict(p)
+                pp["_pool"] = "MAIN"
+                out.append(pp)
     return out
 
 
@@ -97,12 +123,27 @@ def summarise(engine: str, d: dict | None) -> dict:
     s = d.get("summary", {}) or {}
     closed = all_closed_trades(d)
     open_p = all_positions(d)
-    total_pnl = float(s.get("total_pnl", 0) or 0)
-    trades = int(s.get("trades", 0) or 0)
-    wins = int(s.get("wins", 0) or 0)
-    losses = int(s.get("losses", 0) or 0)
-    longs = int(s.get("longs", 0) or 0)
-    shorts = int(s.get("shorts", 0) or 0)
+
+    # 2026-05-07 fix: v4 has flat shape with no 'summary' block. Compute totals
+    # directly from closed trades when summary is absent. Without this branch,
+    # v4's row in the comparison report shows total_pnl=0, trades=0 every day,
+    # even on days v4 leads (e.g., 2026-05-06: actual +Rs 196,789 / 243 trades
+    # was reported as Rs 0 / 0 trades).
+    if s:
+        total_pnl = float(s.get("total_pnl", 0) or 0)
+        trades = int(s.get("trades", 0) or 0)
+        wins = int(s.get("wins", 0) or 0)
+        losses = int(s.get("losses", 0) or 0)
+        longs = int(s.get("longs", 0) or 0)
+        shorts = int(s.get("shorts", 0) or 0)
+    else:
+        total_pnl = float(d.get("realized_pnl", 0) or 0)
+        trades = len(closed)
+        wins = sum(1 for t in closed if (t.get("pnl") or 0) > 0)
+        losses = trades - wins
+        # v4 is long-only; if a position_type field is absent, treat all as LONG
+        longs = sum(1 for t in closed if t.get("position_type", "LONG") != "SHORT")
+        shorts = trades - longs
     win_rate = round(100.0 * wins / trades, 1) if trades > 0 else 0.0
 
     # Per-closed-trade P&L (best-effort; engines use different keys)

@@ -502,7 +502,9 @@ def deploy_into_buys(state):
         if sym in watchlist:
             if revival_module is None:
                 try:
-                    from prototype.v4.candle_patterns import revival_signal, fetch_recent_bars
+                    # v4-paper-trade adds prototype/ to sys.path (line 29), so import
+                    # bare 'v4.candle_patterns' — same pattern as composite_scorer/position_sizer.
+                    from v4.candle_patterns import revival_signal, fetch_recent_bars
                     revival_module = (revival_signal, fetch_recent_bars)
                 except ImportError as e:
                     log(f"  WARN: candle_patterns import failed ({e}) — skipping watchlist re-entries")

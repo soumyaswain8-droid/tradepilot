@@ -444,74 +444,238 @@ def generate_insights(summaries: list[dict]) -> list[str]:
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
-<title>TradePilot EOD Comparison — {date}</title>
+<title>TradePilot EOD Report — {date}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..800,0..100&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-@page {{ size: A4; margin: 18mm 14mm; }}
-* {{ box-sizing: border-box; }}
-body {{ font-family: Charter, Georgia, 'Times New Roman', serif; font-size: 11pt;
-       color: #111; line-height: 1.55; margin: 0; padding: 0; background: #fff; }}
-h1, h2, h3 {{ font-family: 'Avenir Next', Avenir, Helvetica, sans-serif;
-              margin: 0.6em 0 0.3em; }}
-h1 {{ font-size: 26pt; color: #1e1b4b; border-bottom: 3px solid #4f46e5; padding-bottom: 6px; }}
-h2 {{ font-size: 16pt; color: #312e81; margin-top: 1.4em; }}
-h3 {{ font-size: 13pt; color: #4338ca; }}
-.cover {{ text-align: center; padding: 40px 0 20px; background: linear-gradient(180deg, #fff, #eef2ff); border-radius: 8px; margin-bottom: 22px; }}
-.cover .badge {{ display: inline-block; background: #4f46e5; color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 10pt; font-weight: 600; letter-spacing: 1px; }}
-.cover h1 {{ border: none; margin-top: 14px; }}
-.cover .subtitle {{ color: #475569; font-style: italic; margin-top: 4px; }}
-table {{ width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 10.5pt; }}
-thead th {{ background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff;
-           padding: 8px 10px; text-align: left; font-family: 'Avenir Next', sans-serif; }}
-td {{ padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }}
-tr.row-win td {{ background: #f0fdf4; }}
-tr.row-loss td {{ background: #fef2f2; }}
-tr.row-lead td {{ background: #fff7ed; font-weight: 600; }}
+/* ═══ TradePilot EOD Report — editorial fintech (matches landing/dashboard) ═══ */
+@page {{ size: A4; margin: 16mm 14mm; }}
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+:root {{
+  --paper: #FAF7F0; --paper-2: #F1ECE0; --paper-3: #E8E1CD;
+  --ink: #0E0F12; --ink-2: #2A2C32; --ink-3: #5C5F66; --ink-4: #8A8D94;
+  --line: #0E0F12; --line-soft: rgba(14,15,18,0.18); --hairline: rgba(14,15,18,0.14);
+  --saffron: #E07F2C; --saffron-2: #C46419; --saffron-3: #F3D8B6;
+  --up: #0E7C4E; --down: #A1242C;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Manrope', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}}
+body {{
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  color: var(--ink);
+  line-height: 1.55;
+  background: var(--paper);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}}
+h1, h2, h3 {{
+  font-family: var(--serif);
+  font-weight: 350;
+  font-variation-settings: "opsz" 96, "SOFT" 30;
+  letter-spacing: -0.018em;
+  line-height: 1.05;
+}}
+h1 {{ font-size: 36pt; }}
+h2 {{ font-size: 20pt; margin: 1.4em 0 0.4em; }}
+h3 {{ font-size: 13pt; margin: 1em 0 0.3em; font-weight: 500; font-variation-settings: "opsz" 36; }}
+em {{ font-style: italic; font-variation-settings: "opsz" 96, "SOFT" 100; color: var(--saffron); }}
+
+/* ─── Cover / masthead ─── */
+.masthead {{
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 30px;
+  align-items: end;
+}}
+.masthead .ttl {{ display: flex; flex-direction: column; gap: 6px; }}
+.masthead .eyebrow {{
+  font-family: var(--mono);
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--saffron);
+}}
+.masthead .meta {{
+  font-family: var(--mono);
+  font-size: 8.5pt;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  text-align: right;
+}}
+
+/* ─── Section numbers (№ 01 / № 02 / ...) ─── */
+.section-num {{
+  font-family: var(--mono);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--saffron);
+  text-transform: uppercase;
+  margin-top: 1.2em;
+  margin-bottom: 4px;
+}}
+
+/* ─── KPI strip ─── */
+.kpi-row {{
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0 18px;
+}}
+.kpi {{
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 14px 16px 12px;
+  position: relative;
+}}
+.kpi.pos {{ background: var(--paper-2); }}
+.kpi .label {{
+  font-family: var(--mono);
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}}
+.kpi .value {{
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 22pt;
+  letter-spacing: -0.025em;
+  margin-top: 2px;
+  line-height: 1;
+}}
+.kpi.pos .value {{ color: var(--up); }}
+.kpi.neg .value {{ color: var(--down); }}
+.kpi .small {{ font-size: 8.5pt; color: var(--ink-3); margin-top: 6px; font-family: var(--sans); }}
+.kpi.featured {{ background: var(--ink); color: var(--paper); border-color: var(--ink); }}
+.kpi.featured .label {{ color: rgba(250,247,240,0.55); }}
+.kpi.featured .value {{ color: var(--saffron); }}
+.kpi.featured .small {{ color: rgba(250,247,240,0.7); }}
+
+/* ─── Tables ─── */
+table {{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 14px;
+  font-size: 9.5pt;
+  border: 1px solid var(--line);
+}}
+thead th {{
+  background: var(--ink);
+  color: var(--paper);
+  padding: 7px 10px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}}
+td {{
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 9.5pt;
+}}
+tbody tr:last-child td {{ border-bottom: none; }}
+tr.row-win td {{ background: rgba(14,124,78,0.04); }}
+tr.row-loss td {{ background: rgba(161,36,44,0.04); }}
+tr.row-lead td {{ background: rgba(224,127,44,0.08); font-weight: 600; }}
+tr.row-lead td:first-child {{ position: relative; }}
+tr.row-lead td:first-child::before {{
+  content: '★';
+  color: var(--saffron);
+  margin-right: 4px;
+}}
 .num {{ text-align: right; font-variant-numeric: tabular-nums; }}
-.green {{ color: #15803d; font-weight: 600; }}
-.red {{ color: #b91c1c; font-weight: 600; }}
-.muted {{ color: #64748b; }}
-.insight {{ background: #eff6ff; border-left: 4px solid #2563eb; padding: 10px 14px;
-            margin: 8px 0; border-radius: 4px; }}
-.insight.warn {{ background: #fff7ed; border-left-color: #f59e0b; }}
-.insight.good {{ background: #f0fdf4; border-left-color: #16a34a; }}
-.chart {{ text-align: center; margin: 1em 0; }}
-.chart img {{ max-width: 100%; border: 1px solid #e2e8f0; border-radius: 6px;
-              box-shadow: 0 1px 4px rgba(0,0,0,0.06); }}
-.small {{ font-size: 9pt; }}
+.green {{ color: var(--up); font-weight: 600; }}
+.red {{ color: var(--down); font-weight: 600; }}
+.muted {{ color: var(--ink-3); }}
+.small {{ font-size: 8.5pt; }}
+
+/* ─── Insight blocks (editorial pull-quote treatment) ─── */
+.insight {{
+  border-left: 3px solid var(--saffron);
+  padding: 10px 14px;
+  margin: 8px 0;
+  background: var(--paper-2);
+  font-family: var(--sans);
+  font-size: 10pt;
+  line-height: 1.55;
+}}
+.insight.warn {{ border-left-color: var(--down); background: rgba(161,36,44,0.04); }}
+.insight.good {{ border-left-color: var(--up); background: rgba(14,124,78,0.04); }}
+.insight b {{ color: var(--ink); font-weight: 700; }}
+
+/* ─── Chart frames ─── */
+.chart {{ text-align: center; margin: 8px 0 14px; }}
+.chart img {{
+  max-width: 100%;
+  border: 1px solid var(--line-soft);
+  background: var(--paper);
+  padding: 4px;
+}}
+
+/* ─── Misc ─── */
+p.lede {{
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  color: var(--ink-2);
+  font-weight: 430;
+  max-width: 70ch;
+  margin: 4px 0 12px;
+}}
 .page-break {{ page-break-before: always; }}
-.kpi-row {{ display: flex; gap: 10px; margin: 10px 0; }}
-.kpi {{ flex: 1; padding: 14px; border-radius: 8px; text-align: center;
-        background: #f8fafc; border: 1px solid #e2e8f0; }}
-.kpi .label {{ font-size: 9pt; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }}
-.kpi .value {{ font-size: 20pt; font-weight: 700; margin-top: 4px; }}
-.kpi.pos .value {{ color: #15803d; }}
-.kpi.neg .value {{ color: #b91c1c; }}
-.footer {{ text-align: center; color: #64748b; font-size: 9pt; margin-top: 2em;
-           padding-top: 12px; border-top: 1px solid #e5e7eb; }}
+.footer {{
+  font-family: var(--mono);
+  font-size: 8pt;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  margin-top: 2em;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+}}
 </style></head>
 <body>
-<div class="cover">
-  <span class="badge">TRADEPILOT · EOD REPORT</span>
-  <h1>Engine Comparison — {date}</h1>
-  <div class="subtitle">Side-by-side performance across {n_engines} engines · generated {gen_time}</div>
-</div>
+
+<header class="masthead">
+  <div class="ttl">
+    <span class="eyebrow">№ EOD REPORT  ·  TRADEPILOT</span>
+    <h1>The fleet, <em>{date}.</em></h1>
+  </div>
+  <div class="meta">
+    Engines covered &nbsp;·&nbsp; <b style="color:var(--ink);">{n_engines}</b><br>
+    Generated &nbsp;·&nbsp; {gen_time}
+  </div>
+</header>
+
+<div class="section-num">№ 01  ·  AT A GLANCE</div>
 
 <div class="kpi-row">
-  <div class="kpi {winner_cls}"><div class="label">Today's Winner</div>
+  <div class="kpi featured"><div class="label">Day's Winner</div>
     <div class="value">{winner_name}</div>
-    <div class="small">Rs {winner_pnl:+,.0f} · {winner_trades} trades · {winner_wr}% wins</div>
+    <div class="small">Rs {winner_pnl:+,.0f}  ·  {winner_trades} trades  ·  {winner_wr}% wins</div>
   </div>
-  <div class="kpi"><div class="label">Total Engines</div>
-    <div class="value">{n_engines}</div>
-    <div class="small">Profitable: {n_profit} · Negative: {n_neg}</div>
+  <div class="kpi pos"><div class="label">Engines Profitable</div>
+    <div class="value">{n_profit} <span style="font-size:11pt;color:var(--ink-3);font-weight:500;">/ {n_engines}</span></div>
+    <div class="small">Negative: {n_neg}</div>
   </div>
   <div class="kpi"><div class="label">Best Single Trade</div>
     <div class="value">Rs {best_trade:+,.0f}</div>
-    <div class="small">{best_engine} · {best_symbol}</div>
+    <div class="small">{best_engine}  ·  {best_symbol}</div>
   </div>
 </div>
 
-<h2>1. Scoreboard</h2>
+<div class="section-num">№ 02  ·  SCOREBOARD</div>
+<p class="lede">Per-engine performance ranked by net P&L. Star marks the day's leader; rows tinted by outcome.</p>
 <table><thead><tr>
   <th>Rank</th><th>Engine</th><th class="num">Trades</th><th class="num">Win %</th>
   <th class="num">Avg Win</th><th class="num">Avg Loss</th><th class="num">Net P&L</th>
@@ -522,32 +686,43 @@ tr.row-lead td {{ background: #fff7ed; font-weight: 600; }}
 <div class="chart"><img src="charts/scoreboard.png" alt="Scoreboard"></div>
 
 <div class="page-break"></div>
-<h2>2. P&L Timeline</h2>
-<p class="muted">How each engine's profit evolved through the day (30-min snapshots).</p>
+
+<div class="section-num">№ 03  ·  TIMELINE</div>
+<h2>How the day <em>unfolded.</em></h2>
+<p class="lede">Cumulative profit per engine through the trading session. 30-minute snapshots from the profit-watchdog. Where lines diverge, that's where the engines started disagreeing about the regime.</p>
 <div class="chart"><img src="charts/pnl_timeline.png" alt="PnL Timeline"></div>
 
-<h2>3. Win Rate vs Trade Count</h2>
-<p class="muted">Bubble size = absolute P&L. Top-right is the sweet spot.</p>
+<div class="section-num">№ 04  ·  EFFICIENCY</div>
+<h2>Trade volume <em>vs.</em> hit rate.</h2>
+<p class="lede">Bubble size is absolute P&L. Top-right of the plot — high win rate at high volume — is the engine you want to scale. Bottom-left is the one to retire or refactor.</p>
 <div class="chart"><img src="charts/winrate_bubble.png" alt="Win Rate vs Trades"></div>
 
 <div class="page-break"></div>
-<h2>4. Exit Reason Mix</h2>
-<p class="muted">What ended each trade — reveals whether stops, targets, or flips dominate.</p>
+
+<div class="section-num">№ 05  ·  EXIT MIX</div>
+<h2>Where the trades <em>ended.</em></h2>
+<p class="lede">A useful diagnostic: an engine dominated by STOPLOSS exits is being stopped out by noise; an engine dominated by SIGNAL_EXIT is reading regime shifts; an engine dominated by TARGET is letting winners run.</p>
 <div class="chart"><img src="charts/exit_mix.png" alt="Exit Mix"></div>
 
-<h2>5. Trade Overlap Matrix</h2>
-<p class="muted">Number of symbols both engines touched today. High overlap with very different P&L = you've found the part of the logic that matters.</p>
+<div class="section-num">№ 06  ·  OVERLAP</div>
+<h2>Where engines <em>agreed.</em></h2>
+<p class="lede">Symbols touched by two engines today, and the P&L gap between them. High overlap with very different outcomes points at the part of the logic that decides the trade.</p>
 {overlap_table}
 
 <div class="page-break"></div>
-<h2>6. Tonight's Tune-ups (auto-surfaced)</h2>
-<p class="muted">Patterns the watchdog surfaced from today's data. Treat as starting points, not conclusions.</p>
+
+<div class="section-num">№ 07  ·  TONIGHT'S TUNE-UPS</div>
+<h2>Patterns the watchdog <em>surfaced.</em></h2>
+<p class="lede">Auto-extracted observations from the day's data — starting points for the post-market review, not conclusions in themselves. Verify against the per-engine detail in section 08 before acting.</p>
 {insights_html}
 
-<h2>7. Per-Engine Detail</h2>
+<div class="section-num">№ 08  ·  PER-ENGINE DETAIL</div>
 {per_engine_html}
 
-<div class="footer">TradePilot watchdog · report {date} · no commits made · uncommitted engine diffs preserved on main</div>
+<div class="footer">
+  <span>TRADEPILOT  ·  watchdog  ·  {date}</span>
+  <span>uncommitted engine diffs preserved on main</span>
+</div>
 </body></html>
 """
 

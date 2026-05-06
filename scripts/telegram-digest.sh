@@ -27,6 +27,8 @@ in_market_hours() {
 }
 
 send_telegram() {
+  # 2026-05-07: parse_mode=HTML so <pre>...</pre> from status-digest.py
+  # renders as monospace (editorial-voice column-aligned tables).
   local msg="$1"
   if [ -f .env ]; then
     local token
@@ -37,6 +39,8 @@ send_telegram() {
       curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" \
         --data-urlencode "chat_id=${chat}" \
         --data-urlencode "text=${msg}" \
+        --data-urlencode "parse_mode=HTML" \
+        --data-urlencode "disable_web_page_preview=true" \
         --max-time 10 > /dev/null 2>&1
     fi
   fi
@@ -45,7 +49,7 @@ send_telegram() {
 _hours=$((INTERVAL_SEC / 3600))
 _mins_total=$((INTERVAL_SEC / 60))
 echo "[$(date '+%H:%M:%S')] telegram-digest started — will send every ${_mins_total} min during 09:15–15:30 IST"
-send_telegram "📡 Digest monitor online. Cadence: every ${_hours}h. First digest at next interval."
+send_telegram "<b>TRADEPILOT</b>  ·  digest monitor online  ·  cadence ${_hours}h"
 
 while true; do
   if ! in_market_hours; then
@@ -65,7 +69,7 @@ while true; do
   # EOD summary
   nm=$(now_min)
   if [ "$nm" -ge "$MARKET_CLOSE_MIN" ]; then
-    send_telegram "🏁 Market closed. Final digest sent above. Watchdog goes silent until tomorrow."
+    send_telegram "<b>MARKET CLOSED</b>  ·  final digest above  ·  silent until tomorrow"
     echo "[$(date '+%H:%M:%S')] EOD digest sent, exiting"
     exit 0
   fi

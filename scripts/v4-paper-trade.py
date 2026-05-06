@@ -55,12 +55,25 @@ NIFTY_BEAR_THRESHOLD = -0.5     # If Nifty < this % by 10 AM, go defensive
 BEAR_MODE_SIZE_MULT = 0.50      # Position size in bear mode
 MAX_DAILY_LOSS_PCT = 3.0        # Kill switch: stop all trading if daily loss exceeds this %
 
-# 2026-05-04 MVP guards (audit response — reusing v5's corp_actions.json data, not its multi-pool RiskManager).
-# These are absolute Rs floors that fire BEFORE the existing %-based caps. Set to None to disable individually.
+# 2026-05-04 MVP guards (corp_actions filter + abs Rs floors)
 ABS_POSITION_SL_RS    = -25_000   # Force-close any single position when unrealized P&L hits this floor
-ABS_DAILY_KILL_RS     =  -5_000   # Halt all NEW entries when realized P&L hits this floor (sticky)
 CORP_ACTIONS_PATH     = PROJECT_ROOT / "prototype" / "data" / "corp_actions.json"
 CORP_ACTION_BAN_DAYS  = 7         # Ban window: ex_date - 1 day through ex_date + N days
+
+# 2026-05-06 Revival mechanics (replaces flat MAX_REENTRY_PER_STOCK gate + flat kill switch).
+# Per pro-trader research consensus (Linda Raschke, SMB, Brett Steenbarger): cut + watch +
+# re-enter on technical confirmation. Per Agent A research: Bullish Engulfing + 1.5x volume +
+# 11:15-14:45 IST window = ~65% reversal hit rate. See docs/research/2026-05-06_revival_research.md.
+STOCK_LOSS_EXIT_PCT          = -10.0     # %-based outer floor — force-exit if position drops 10% from entry
+MAX_LOSSES_PER_STOCK_PER_DAY =      2    # Per-stock cap counts LOSING exits only; winners are unrestricted
+
+# Kill switch — 3 tiers replacing the old flat ABS_DAILY_KILL_RS = -5_000
+# Industry default per Agent D research: SOFT halt blocks new entries, doesn't liquidate.
+# HARD kill is for catastrophic / runaway scenarios only.
+ABS_DAILY_WARN_RS         =  -2_500   # Tier 1: telegram alert + log, NO entry block
+ABS_DAILY_SOFT_HOLD_RS    =  -5_000   # Tier 2: BLOCK new entries, hold existing positions to their stops
+ABS_DAILY_HARD_KILL_RS    = -10_000   # Tier 3: flatten all + halt for the day
+HARD_KILL_PCT_SL_COUNT    =       3   # Also tier 3 if N+ stocks force-closed on -10% intraday
 
 
 def log(msg):
@@ -100,11 +113,16 @@ def fresh_state():
         # Risk control state
         "consecutive_losses": 0,
         "circuit_breaker_active": False,
-        "stock_entry_count": {},       # {symbol: count} — tracks re-entries
+        "stock_entry_count": {},       # {symbol: count} — tracks ALL entries (informational)
         "bear_mode": False,
         "vix_high_mode": False,
-        "size_multiplier": 1.0,        # Current position size multiplier
+        "size_multiplier": 1.0,        # Current position size multiplier (always 1.0 since 2026-05-06)
         "risk_events": [],             # Log of risk control triggers
+        # 2026-05-06 revival mechanics
+        "stock_loss_count": {},        # {symbol: int} — counts ONLY losing exits per stock per day
+        "watchlist": {},               # {symbol: {exit_time, exit_price, post_drop_low, exit_reason, loss_pct}}
+        "kill_switch_tier": 0,         # 0=clear, 1=WARN, 2=SOFT_HOLD, 3=HARD_KILL
+        "force_flatten_now": False,    # Set by tier 3 kill; scan_and_react reads + force_close_all
     }
 
 
@@ -247,58 +265,125 @@ def size_and_deploy(buys, capital):
 # ═══════════════════════════════════════════════════
 
 def check_circuit_breaker(state):
-    """Check if circuit breaker should activate. Returns True if trading should stop."""
-    # 1. Consecutive losses circuit breaker
+    """3-tier kill switch + 5-consec-loss circuit breaker.
+
+    Returns True to BLOCK new entries (tier 2 or 3, or 5-consec loss).
+    Tier 3 ALSO sets state['force_flatten_now'] so scan_and_react flushes positions.
+
+    Tiers (replaces 2026-05-04 MVP single-threshold ABS_DAILY_KILL_RS):
+      0 — clear
+      1 WARN     : realized <= ABS_DAILY_WARN_RS  → alert only, no block
+      2 SOFT_HOLD: realized <= ABS_DAILY_SOFT_HOLD_RS → block new entries
+      3 HARD_KILL: realized <= ABS_DAILY_HARD_KILL_RS OR pct-SL exits >= HARD_KILL_PCT_SL_COUNT
+                   → flatten all + halt for the day
+    """
+    realized = state.get("realized_pnl", 0)
+
+    # 5-consecutive-loss breaker (independent of tiers; existing behavior)
     if state.get("consecutive_losses", 0) >= CIRCUIT_BREAKER_LOSSES:
         if not state.get("circuit_breaker_active"):
             state["circuit_breaker_active"] = True
-            state["risk_events"].append(f"{datetime.now().strftime('%H:%M')} CIRCUIT_BREAKER: {state['consecutive_losses']} consecutive losses")
-            log(f"  ** CIRCUIT BREAKER ACTIVATED ** {state['consecutive_losses']} consecutive losses — NO NEW ENTRIES")
+            state["risk_events"].append(
+                f"{datetime.now().strftime('%H:%M')} CIRCUIT_BREAKER: "
+                f"{state['consecutive_losses']} consecutive losses"
+            )
+            log(f"  ** CIRCUIT BREAKER ** {state['consecutive_losses']} consecutive losses — NO NEW ENTRIES")
         return True
 
-    # 1b. 2026-05-04 MVP: absolute Rs daily kill switch (fires before %-based check below)
-    if ABS_DAILY_KILL_RS is not None and state.get("realized_pnl", 0) <= ABS_DAILY_KILL_RS:
-        if not state.get("circuit_breaker_active"):
+    # Count -10% pct-SL force-closes today (a separate signal of cascade)
+    pct_sl_today = sum(
+        1 for t in state.get("closed_trades", [])
+        if t.get("reason") in ("ABS_PCT_SL", "ABS_RS_SL")
+    )
+
+    current_tier = state.get("kill_switch_tier", 0)
+
+    # Tier 3 — HARD KILL (catastrophic / cascade)
+    hard_kill_rs   = ABS_DAILY_HARD_KILL_RS is not None and realized <= ABS_DAILY_HARD_KILL_RS
+    hard_kill_cnt  = pct_sl_today >= HARD_KILL_PCT_SL_COUNT
+    if hard_kill_rs or hard_kill_cnt:
+        if current_tier < 3:
+            state["kill_switch_tier"] = 3
+            state["circuit_breaker_active"] = True
+            state["force_flatten_now"] = True
+            trigger = (f"realized Rs {realized:+,.0f} <= floor Rs {ABS_DAILY_HARD_KILL_RS:+,.0f}"
+                       if hard_kill_rs
+                       else f"{pct_sl_today} stocks force-closed at -10% (cascade)")
+            state["risk_events"].append(
+                f"{datetime.now().strftime('%H:%M')} HARD_KILL: {trigger}"
+            )
+            log(f"  ** HARD KILL ** {trigger} — FLATTEN ALL + HALT")
+        return True
+
+    # Tier 2 — SOFT HOLD (block new entries, hold existing to their own stops)
+    if ABS_DAILY_SOFT_HOLD_RS is not None and realized <= ABS_DAILY_SOFT_HOLD_RS:
+        if current_tier < 2:
+            state["kill_switch_tier"] = 2
+            state["risk_events"].append(
+                f"{datetime.now().strftime('%H:%M')} SOFT_HOLD: "
+                f"realized Rs {realized:+,.0f} <= Rs {ABS_DAILY_SOFT_HOLD_RS:+,.0f}"
+            )
+            log(f"  ** SOFT HOLD ** Realized Rs {realized:+,.0f} <= Rs {ABS_DAILY_SOFT_HOLD_RS:+,.0f} — "
+                f"blocking new entries, existing positions ride to their own stops")
+        return True
+
+    # Tier 1 — WARN (alert only, do NOT block)
+    if ABS_DAILY_WARN_RS is not None and realized <= ABS_DAILY_WARN_RS:
+        if current_tier < 1:
+            state["kill_switch_tier"] = 1
+            state["risk_events"].append(
+                f"{datetime.now().strftime('%H:%M')} WARN: "
+                f"realized Rs {realized:+,.0f} <= Rs {ABS_DAILY_WARN_RS:+,.0f}"
+            )
+            log(f"  ** WARN ** Realized Rs {realized:+,.0f} approaching limits — alert only, no block")
+        # fall through (no block at tier 1)
+
+    # Legacy %-based kill (kept as final safety net; should rarely trigger before tier 3)
+    daily_loss_pct = abs(realized) / state.get("daily_pool", DAILY_POOL) * 100
+    if realized < 0 and daily_loss_pct >= MAX_DAILY_LOSS_PCT:
+        if current_tier < 3:
             state["circuit_breaker_active"] = True
             state["risk_events"].append(
-                f"{datetime.now().strftime('%H:%M')} ABS_RS_KILL: realized Rs {state['realized_pnl']:+,.0f} <= floor Rs {ABS_DAILY_KILL_RS:+,.0f}"
+                f"{datetime.now().strftime('%H:%M')} LEGACY_KILL: -{daily_loss_pct:.1f}% daily loss"
             )
-            log(f"  ** ABS Rs KILL SWITCH ** Realized P&L Rs {state['realized_pnl']:+,.0f} <= floor Rs {ABS_DAILY_KILL_RS:+,.0f} — NO NEW ENTRIES")
-        return True
-
-    # 2. Max daily loss kill switch
-    daily_loss_pct = abs(state["realized_pnl"]) / state["daily_pool"] * 100
-    if state["realized_pnl"] < 0 and daily_loss_pct >= MAX_DAILY_LOSS_PCT:
-        if not state.get("circuit_breaker_active"):
-            state["circuit_breaker_active"] = True
-            state["risk_events"].append(f"{datetime.now().strftime('%H:%M')} KILL_SWITCH: -{daily_loss_pct:.1f}% daily loss")
-            log(f"  ** KILL SWITCH ** Daily loss -{daily_loss_pct:.1f}% exceeds {MAX_DAILY_LOSS_PCT}% limit — STOPPING ALL ENTRIES")
+            log(f"  ** LEGACY KILL ** Daily loss -{daily_loss_pct:.1f}% exceeds {MAX_DAILY_LOSS_PCT}% — STOPPING")
         return True
 
     return False
 
 
 def check_market_regime(state):
-    """Check VIX and Nifty trend to adjust position sizing."""
-    size_mult = 1.0
-    reasons = []
+    """Check VIX and Nifty trend — INFORMATIONAL ONLY since 2026-05-06.
+
+    Previously this function returned a size_mult that halved capital when
+    VIX > 18 or Nifty < -0.5%. That structural cut caused 2026-05-05's
+    zero-trades event because halved capital + 40 BUYs + Rs 20K floor =
+    no allocation could clear the floor.
+
+    New approach (per pro-trader research consensus): keep VIX/Nifty as
+    awareness signals only. Risk is now managed BEHAVIORALLY at the
+    per-stock level (-10% absolute floor + watchlist + candle re-entry
+    gate) and at the portfolio level (3-tier kill switch). High VIX days
+    don't need pre-emptive capital cuts; they need tighter active risk.
+
+    Always returns 1.0. State flags vix_high_mode/bear_mode kept for
+    dashboards and EOD reports.
+    """
+    state["size_multiplier"] = 1.0  # always full capital — behavioral risk only
 
     try:
         import yfinance as yf
-        # Check India VIX
+        # India VIX — log only
         vix_data = yf.download("^INDIAVIX", period="2d", interval="1d", progress=False)
         if hasattr(vix_data.columns, 'droplevel') and len(vix_data.columns.names) > 1:
             vix_data.columns = vix_data.columns.droplevel(1)
         if len(vix_data) > 0:
             vix = float(vix_data["Close"].iloc[-1])
-            if vix > VIX_HIGH_THRESHOLD:
-                size_mult = min(size_mult, VIX_SIZE_MULTIPLIER)
-                state["vix_high_mode"] = True
-                reasons.append(f"VIX={vix:.1f}>{VIX_HIGH_THRESHOLD}")
-            else:
-                state["vix_high_mode"] = False
+            state["vix_high_mode"] = vix > VIX_HIGH_THRESHOLD
+            if state["vix_high_mode"]:
+                log(f"  ** REGIME NOTE ** VIX={vix:.1f}>{VIX_HIGH_THRESHOLD} (informational; no capital cut)")
 
-        # Check Nifty intraday trend (after 10 AM)
+        # Nifty intraday trend — log only
         now = datetime.now()
         if now.hour >= 10:
             nifty = yf.download("^NSEI", period="2d", interval="1d", progress=False)
@@ -308,32 +393,26 @@ def check_market_regime(state):
                 prev_close = float(nifty["Close"].iloc[-2])
                 today_close = float(nifty["Close"].iloc[-1])
                 nifty_change = (today_close - prev_close) / prev_close * 100
-                if nifty_change < NIFTY_BEAR_THRESHOLD:
-                    size_mult = min(size_mult, BEAR_MODE_SIZE_MULT)
-                    state["bear_mode"] = True
-                    reasons.append(f"NIFTY={nifty_change:+.2f}%<{NIFTY_BEAR_THRESHOLD}%")
-                else:
-                    state["bear_mode"] = False
+                state["bear_mode"] = nifty_change < NIFTY_BEAR_THRESHOLD
+                if state["bear_mode"]:
+                    log(f"  ** REGIME NOTE ** NIFTY={nifty_change:+.2f}%<{NIFTY_BEAR_THRESHOLD}% (informational; no capital cut)")
     except Exception as e:
         log(f"  Regime check failed: {e}")
 
-    if reasons:
-        state["size_multiplier"] = size_mult
-        log(f"  ** RISK ADJUST ** Size={size_mult:.0%} ({', '.join(reasons)})")
-        if reasons and f"REGIME:{','.join(reasons)}" not in [r for r in state.get("risk_events", [])]:
-            state["risk_events"].append(f"{datetime.now().strftime('%H:%M')} REGIME: {', '.join(reasons)} -> size={size_mult:.0%}")
-    else:
-        state["size_multiplier"] = 1.0
-
-    return size_mult
+    return 1.0
 
 
 def can_enter_stock(state, symbol):
-    """Check if we're allowed to enter this stock (re-entry cap)."""
-    entry_count = state.get("stock_entry_count", {}).get(symbol, 0)
-    if entry_count > MAX_REENTRY_PER_STOCK:
-        return False
-    return True
+    """2026-05-06: gate on LOSING exits only — winners are unrestricted.
+
+    Rationale: if a stock made profit on a previous trade today, the engine
+    should be free to re-enter it as the algorithm signals. Only losses
+    indicate "this stock isn't working today" and warrant a per-stock cap.
+
+    Returns True if loss_count < MAX_LOSSES_PER_STOCK_PER_DAY (default 2).
+    """
+    loss_count = state.get("stock_loss_count", {}).get(symbol, 0)
+    return loss_count < MAX_LOSSES_PER_STOCK_PER_DAY
 
 
 def record_entry(state, symbol):
@@ -399,8 +478,15 @@ def deploy_into_buys(state):
     if corp_bans:
         log(f"  Corp-action bans active today: {', '.join(sorted(corp_bans.keys()))}")
 
-    # Filter: already held + corp-action ban + re-entry cap
+    # 2026-05-06 revival mechanics — watchlist contains stocks that recently exited at a loss.
+    # Re-entry is gated by revival_signal() — must show Bullish Engulfing + 1.5x volume +
+    # 11:15-14:45 IST window + price within 0.5% of post-drop low.
+    watchlist = state.get("watchlist", {})
+    loss_counts = state.get("stock_loss_count", {})
+
+    # Filter: held / corp-action / loss-count / watchlist-revival-gate
     new_buys = []
+    revival_module = None  # lazy-import only if a watchlist entry needs checking
     for b in buys:
         sym = b["symbol"]
         if sym in held:
@@ -408,9 +494,34 @@ def deploy_into_buys(state):
         if sym in corp_bans:
             log(f"  {sym}: SKIPPED ({corp_bans[sym][:80]})")
             continue
-        if not can_enter_stock(state, sym):
-            log(f"  {sym}: SKIPPED (max {MAX_REENTRY_PER_STOCK} re-entries reached)")
+        loss_count = loss_counts.get(sym, 0)
+        if loss_count >= MAX_LOSSES_PER_STOCK_PER_DAY:
+            log(f"  {sym}: SKIPPED (blacklisted — {loss_count} losses today, max {MAX_LOSSES_PER_STOCK_PER_DAY})")
             continue
+        # If symbol is in watchlist (just exited at loss), require revival confirmation
+        if sym in watchlist:
+            if revival_module is None:
+                try:
+                    from prototype.v4.candle_patterns import revival_signal, fetch_recent_bars
+                    revival_module = (revival_signal, fetch_recent_bars)
+                except ImportError as e:
+                    log(f"  WARN: candle_patterns import failed ({e}) — skipping watchlist re-entries")
+                    revival_module = (None, None)
+            rs_fn, fetch_fn = revival_module
+            if rs_fn is None:
+                continue  # safety: if module broken, don't allow watchlist re-entry
+            bars = fetch_fn(sym)
+            if bars is None or len(bars) < 21:
+                log(f"  {sym}: SKIPPED (watchlist — insufficient bars for revival check)")
+                continue
+            ok, reason = rs_fn(bars, current_price=b["price"],
+                               post_drop_low=watchlist[sym].get("post_drop_low", b["price"]))
+            if not ok:
+                log(f"  {sym}: SKIPPED (watchlist — {reason})")
+                continue
+            log(f"  {sym}: WATCHLIST CLEARED — re-entry allowed ({reason})")
+            # Clear from watchlist so we don't re-check; loss_count still gates 2nd loss
+            del watchlist[sym]
         new_buys.append(b)
 
     if not new_buys:
@@ -514,6 +625,11 @@ def scan_and_react(state):
             if not reason and ABS_POSITION_SL_RS is not None and pnl_rs <= ABS_POSITION_SL_RS:
                 reason = "ABS_RS_SL"
                 log(f"  {sym}: ABS Rs SL hit — unrealized Rs {pnl_rs:+,.0f} <= floor Rs {ABS_POSITION_SL_RS:+,.0f}")
+            # 2026-05-06 revival outer floor: -10% from entry forces exit regardless of trailing SL.
+            # Catches outlier moves where 1% SL was trailed up to breakeven and price collapsed past it.
+            if not reason and STOCK_LOSS_EXIT_PCT is not None and pnl_pct <= STOCK_LOSS_EXIT_PCT:
+                reason = "ABS_PCT_SL"
+                log(f"  {sym}: -10% SL hit — unrealized {pnl_pct:+.2f}% <= floor {STOCK_LOSS_EXIT_PCT:.0f}%")
             if not reason and price >= pos["target_price"]: reason = "TARGET"
             if not reason and price <= pos["sl_price"]: reason = "STOPLOSS"
             if not reason and pnl_pct >= TRAILING_TRIGGER_PCT:
@@ -535,9 +651,28 @@ def scan_and_react(state):
         if dd > state["max_drawdown"]: state["max_drawdown"] = dd
         log(f"\n  Realized: Rs {state['realized_pnl']:+,.0f} | Unrealized: Rs {unrealized:+,.0f} | Total: Rs {total_pnl:+,.0f}")
 
+    # 2026-05-06 revival mechanics: update post_drop_low for watchlisted stocks.
+    # Tracks the lowest price seen since exit so the "near low" gate measures from the
+    # actual bottom, not just the exit price.
+    watchlist = state.get("watchlist", {})
+    if watchlist:
+        watch_prices = get_prices_batch(list(watchlist.keys()))
+        for sym, current_px in watch_prices.items():
+            entry = watchlist.get(sym)
+            if entry and current_px < entry.get("post_drop_low", current_px):
+                entry["post_drop_low"] = round(current_px, 2)
+
+    # 2026-05-06: tier-3 HARD KILL request — flatten all positions immediately
+    if state.get("force_flatten_now"):
+        log(f"\n  ** HARD KILL TRIGGERED ** flattening all open positions")
+        force_close_all(state)
+        state["force_flatten_now"] = False  # clear so we don't loop
+
     if do_rescore and state["cash"] >= 10000:
         if check_circuit_breaker(state):
-            log(f"\n  Free cash Rs {state['cash']:,.0f} -- but CIRCUIT BREAKER active, no new entries")
+            tier = state.get("kill_switch_tier", 0)
+            tier_name = ["clear", "WARN", "SOFT_HOLD", "HARD_KILL"][min(tier, 3)]
+            log(f"\n  Free cash Rs {state['cash']:,.0f} -- entries blocked (kill switch tier {tier} {tier_name})")
         else:
             log(f"\n  Free cash Rs {state['cash']:,.0f} -- checking for new v4 BUY signals...")
             deploy_into_buys(state)
@@ -566,6 +701,8 @@ def close_position(state, pos, exit_price, reason):
         if state.get("circuit_breaker_active"):
             state["circuit_breaker_active"] = False
             log(f"  ** Circuit breaker RESET ** (win streak started)")
+        # 2026-05-06: profitable exits do NOT increment stock_loss_count or
+        # add to watchlist. Winners are unrestricted for re-entry.
     else:
         state["consecutive_losses"] = state.get("consecutive_losses", 0) + 1
         if state["consecutive_losses"] >= CIRCUIT_BREAKER_LOSSES and not state.get("circuit_breaker_active"):
@@ -573,6 +710,26 @@ def close_position(state, pos, exit_price, reason):
             state.setdefault("risk_events", []).append(
                 f"{datetime.now().strftime('%H:%M')} CIRCUIT_BREAKER: {state['consecutive_losses']} consecutive losses")
             log(f"  ** CIRCUIT BREAKER ACTIVATED ** {state['consecutive_losses']} consecutive losses")
+        # 2026-05-06 revival mechanics: increment per-stock loss count + add to watchlist
+        sym = pos["symbol"]
+        loss_counts = state.setdefault("stock_loss_count", {})
+        loss_counts[sym] = loss_counts.get(sym, 0) + 1
+        # Watchlist entry only on first loss of the day for this symbol; second loss goes
+        # straight to blacklist via MAX_LOSSES_PER_STOCK_PER_DAY gate in deploy_into_buys.
+        if loss_counts[sym] < MAX_LOSSES_PER_STOCK_PER_DAY:
+            state.setdefault("watchlist", {})[sym] = {
+                "exit_time": datetime.now().strftime("%H:%M:%S"),
+                "exit_price": round(exit_price, 2),
+                "post_drop_low": round(exit_price, 2),  # initial; updated by scan_and_react if price falls further
+                "exit_reason": reason,
+                "loss_pct": round(pnl_pct, 2),
+            }
+            log(f"  {sym}: added to watchlist (loss #{loss_counts[sym]}, exit {reason} @ Rs {exit_price:.2f}); "
+                f"re-entry requires Bullish Engulfing + 1.5x volume + 11:15-14:45 IST + price within 0.5% of low")
+        else:
+            log(f"  {sym}: BLACKLISTED for the day ({loss_counts[sym]} losses; max {MAX_LOSSES_PER_STOCK_PER_DAY})")
+            # Remove from watchlist so it's clearly in blacklist state, not "watching"
+            state.get("watchlist", {}).pop(sym, None)
 
     tag = "WIN" if pnl > 0 else "LOSS"
     log(f"  >> {tag}: {pos['symbol']} x{pos['qty']} @ Rs {exit_price:.2f} ({reason}) "
@@ -722,22 +879,27 @@ def push_to_devpilot(state):
 
 def run():
     """Deploy and monitor. Runs until market close."""
-    # 2026-05-04 MVP guards: surface corp-action bans + abs Rs floors at startup
+    # Surface corp-action bans + revival mechanics + kill-switch tiers at startup
     _bans_at_boot = load_corp_action_bans()
     _bans_str = ", ".join(sorted(_bans_at_boot.keys())) if _bans_at_boot else "none"
     log(f"{'='*65}\n  v4 PAPER TRADING ENGINE | Rs {DAILY_POOL:,.0f} | Kelly-weighted\n"
         f"  Scan {SCAN_INTERVAL_MIN}min | Rescore {RESCORE_INTERVAL_MIN}min | "
         f"Exit {FORCE_EXIT_HOUR}:{FORCE_EXIT_MIN:02d}\n"
-        f"  RISK CONTROLS:\n"
-        f"    Circuit breaker: pause after {CIRCUIT_BREAKER_LOSSES} consecutive losses\n"
-        f"    Max re-entry: {MAX_REENTRY_PER_STOCK} per stock per day\n"
-        f"    VIX > {VIX_HIGH_THRESHOLD}: position size -> {VIX_SIZE_MULTIPLIER:.0%}\n"
-        f"    Nifty < {NIFTY_BEAR_THRESHOLD}%: position size -> {BEAR_MODE_SIZE_MULT:.0%}\n"
-        f"    Daily loss kill switch: {MAX_DAILY_LOSS_PCT}%\n"
+        f"  LEGACY GUARDS:\n"
+        f"    Circuit breaker (consecutive losses): {CIRCUIT_BREAKER_LOSSES}\n"
+        f"    VIX/Nifty regime check: INFORMATIONAL ONLY (no capital cut since 2026-05-06)\n"
+        f"    Legacy daily-loss safety: {MAX_DAILY_LOSS_PCT}%\n"
         f"  MVP GUARDS (2026-05-04):\n"
         f"    Abs position SL: Rs {ABS_POSITION_SL_RS:+,.0f}\n"
-        f"    Abs daily kill : Rs {ABS_DAILY_KILL_RS:+,.0f}\n"
-        f"    Corp-action bans: {_bans_str}\n{'='*65}")
+        f"    Corp-action bans: {_bans_str}\n"
+        f"  REVIVAL MECHANICS (2026-05-06):\n"
+        f"    Per-stock pct SL: {STOCK_LOSS_EXIT_PCT:.0f}% (outer floor)\n"
+        f"    Max losses per stock per day: {MAX_LOSSES_PER_STOCK_PER_DAY} (winners unrestricted)\n"
+        f"    Re-entry gate: Bullish Engulfing + 1.5x volume + 11:15-14:45 IST + price within 0.5% of low\n"
+        f"  KILL SWITCH (3-tier, 2026-05-06):\n"
+        f"    WARN      Rs {ABS_DAILY_WARN_RS:+,.0f}  alert only\n"
+        f"    SOFT HOLD Rs {ABS_DAILY_SOFT_HOLD_RS:+,.0f}  block new entries, hold existing\n"
+        f"    HARD KILL Rs {ABS_DAILY_HARD_KILL_RS:+,.0f} OR {HARD_KILL_PCT_SL_COUNT}+ pct-SL exits  flatten all\n{'='*65}")
     state = load_state()
     n_open = sum(1 for p in state["positions"] if p["status"] == "open")
     if n_open == 0 and state["cash"] > 10000:

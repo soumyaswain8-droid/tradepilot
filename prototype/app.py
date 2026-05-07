@@ -623,6 +623,257 @@ def api_engine_status():
         return jsonify({'engines': [], 'error': str(e)}), 500
 
 
+@app.route("/api/system-health")
+def api_system_health():
+    """Aggregate system-health events for the dashboard notification surface.
+
+    Sources scanned (each cheap — last N lines / single state-file read):
+      - engine logs (logs/v4-DATE.log etc.) for NaN rate, empty sizer, staleness
+      - state files (docs/paper-trades/v4/DATE.json etc.) for kill switch tier,
+        watchlist size, large losses, recent risk events
+      - process list (subprocess pgrep) for engine/Rust liveness
+
+    Severity tiers: info / warn / error / critical.
+    Overall status = highest severity present.
+
+    Used by:
+      - /dashboard top-of-page status banner
+      - /dashboard "System Health" panel (event list)
+    """
+    try:
+        import subprocess as _sp
+        import time as _time
+        from datetime import datetime as _dt, time as _time_t, timedelta as _td
+
+        project_root = Path(__file__).resolve().parent.parent
+        today = _dt.now().strftime("%Y-%m-%d")
+        engines = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6']
+
+        events = []
+        # Severity rank for sorting / overall calc
+        sev_rank = {"info": 0, "warn": 1, "error": 2, "critical": 3}
+
+        # Are we in market hours? (09:15-15:30 IST)
+        now = _dt.now()
+        market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+        market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+        in_market = market_open <= now <= market_close
+
+        # --- 1. Process liveness (only flag during market hours) ---
+        try:
+            ps = _sp.run(['pgrep', '-fl', 'scripts/v.*-paper-trade.py|tradepilot-engine'],
+                         capture_output=True, text=True, timeout=3)
+            running = ps.stdout
+        except Exception:
+            running = ""
+        if in_market:
+            for eng in engines:
+                if f"scripts/{eng}-paper-trade.py" not in running:
+                    events.append({
+                        "ts": now.strftime("%H:%M:%S"),
+                        "severity": "critical",
+                        "code": "ENGINE_DOWN",
+                        "source": eng,
+                        "message": f"{eng} engine process not running during market hours",
+                    })
+            if "tradepilot-engine" not in running:
+                events.append({
+                    "ts": now.strftime("%H:%M:%S"),
+                    "severity": "critical",
+                    "code": "RUST_DOWN",
+                    "source": "rust",
+                    "message": "Rust execution engine not running",
+                })
+
+        # --- 2. Per-engine state file scan ---
+        for eng in engines:
+            sf = project_root / 'docs' / 'paper-trades' / eng / f'{today}.json'
+            if not sf.exists():
+                continue
+            try:
+                d = json.loads(sf.read_text())
+            except Exception:
+                continue
+
+            # Kill switch tier (v4 only — v5 family doesn't track this currently)
+            tier = int(d.get('kill_switch_tier', 0) or 0)
+            if tier > 0:
+                tier_severity = ['info', 'warn', 'error', 'critical'][min(tier, 3)]
+                tier_label = ['CLEAR', 'WARN', 'SOFT_HOLD', 'HARD_KILL'][tier]
+                events.append({
+                    "ts": now.strftime("%H:%M:%S"),
+                    "severity": tier_severity,
+                    "code": "KILL_SWITCH_ACTIVE",
+                    "source": eng,
+                    "message": f"{eng} kill switch at tier {tier} ({tier_label})",
+                })
+
+            # Watchlist size
+            wl = d.get('watchlist', {}) or {}
+            if len(wl) > 5:
+                events.append({
+                    "ts": now.strftime("%H:%M:%S"),
+                    "severity": "info",
+                    "code": "WATCHLIST_LARGE",
+                    "source": eng,
+                    "message": f"{eng} watchlist has {len(wl)} symbols ({', '.join(sorted(wl.keys())[:5])}{'...' if len(wl) > 5 else ''})",
+                })
+
+            # Large single-trade losses (> Rs 10K)
+            closed = d.get('closed_trades', []) or []
+            for t in closed[-30:]:  # only recent 30 trades
+                if (t.get('pnl') or 0) <= -10000:
+                    events.append({
+                        "ts": t.get('exit_time', '—'),
+                        "severity": "warn",
+                        "code": "LARGE_LOSS",
+                        "source": eng,
+                        "message": f"{eng} {t.get('symbol', '?')} closed at Rs {t['pnl']:+,.0f} ({t.get('reason', '?')})",
+                    })
+
+        # --- 3. Engine log scans (NaN rate, empty sizer, staleness) ---
+        # Only scan v4 + v5 (cheap); pattern same across family
+        for eng in ['v4', 'v5']:
+            lf = project_root / 'logs' / f'{eng}-{today}.log'
+            if not lf.exists():
+                continue
+            # Last 200 lines
+            try:
+                ps = _sp.run(['tail', '-n', '200', str(lf)],
+                             capture_output=True, text=True, timeout=3)
+                tail = ps.stdout.splitlines()
+            except Exception:
+                continue
+            # NaN rate from latest "NaN-priced (downgraded to HOLD): N" line
+            for line in reversed(tail):
+                if "NaN-priced (downgraded to HOLD):" in line:
+                    try:
+                        n = int(line.split("NaN-priced (downgraded to HOLD):")[1].split("|")[0].strip())
+                        # Look for total scored (e.g. "200 scored")
+                        scored = 200  # default
+                        for prev in reversed(tail):
+                            if "scored," in prev and "Scoring complete" in prev:
+                                try:
+                                    scored = int(prev.split("Scoring complete:")[1].split("scored")[0].strip())
+                                except Exception:
+                                    pass
+                                break
+                        rate = (n / scored * 100) if scored else 0
+                        if rate >= 50:
+                            sev = "error"
+                        elif rate >= 20:
+                            sev = "warn"
+                        elif rate > 0:
+                            sev = "info"
+                        else:
+                            sev = None
+                        if sev:
+                            events.append({
+                                "ts": line[1:9] if line.startswith("[") else now.strftime("%H:%M:%S"),
+                                "severity": sev,
+                                "code": "DATA_NAN",
+                                "source": eng,
+                                "message": f"{eng} yfinance NaN rate {rate:.0f}% ({n} of {scored}). Strategy unaffected; data quality flag.",
+                            })
+                    except Exception:
+                        pass
+                    break
+
+            # Empty sizer returns in last 30 minutes (during market hours)
+            if in_market:
+                cutoff = now - _td(minutes=30)
+                cutoff_str = cutoff.strftime("%H:%M")
+                empty_count = 0
+                for line in tail:
+                    if "Position sizer returned no positions" in line and line.startswith("["):
+                        ts = line[1:9]
+                        if ts >= cutoff_str:
+                            empty_count += 1
+                if empty_count >= 3:
+                    events.append({
+                        "ts": now.strftime("%H:%M:%S"),
+                        "severity": "warn",
+                        "code": "SIZER_EMPTY",
+                        "source": eng,
+                        "message": f"{eng} sizer returned 0 positions {empty_count}× in last 30 min (idle capital risk)",
+                    })
+
+            # Staleness: last log line older than 35 min
+            if in_market and tail:
+                last_line = tail[-1]
+                if last_line.startswith("["):
+                    last_ts_str = last_line[1:9]
+                    try:
+                        h, m, s = last_ts_str.split(':')
+                        last_ts = now.replace(hour=int(h), minute=int(m), second=int(s),
+                                              microsecond=0)
+                        if (now - last_ts).total_seconds() > 2100:  # 35 min
+                            events.append({
+                                "ts": now.strftime("%H:%M:%S"),
+                                "severity": "error",
+                                "code": "STALE_SCAN",
+                                "source": eng,
+                                "message": f"{eng} last log entry was {int((now-last_ts).total_seconds()//60)} min ago — scan may be hung",
+                            })
+                    except Exception:
+                        pass
+
+            # Watchdog restarts in last 30 min
+            wf = project_root / 'logs' / f'watchdog-{today}.log'
+            if in_market and wf.exists():
+                try:
+                    ps = _sp.run(['tail', '-n', '50', str(wf)],
+                                 capture_output=True, text=True, timeout=3)
+                    cutoff = now - _td(minutes=30)
+                    cutoff_str = cutoff.strftime("%H:%M")
+                    for line in ps.stdout.splitlines():
+                        if "restart" in line.lower() and line.startswith("["):
+                            ts = line[1:9]
+                            if ts >= cutoff_str:
+                                events.append({
+                                    "ts": ts,
+                                    "severity": "warn",
+                                    "code": "WATCHDOG_RESTART",
+                                    "source": "watchdog",
+                                    "message": line.split("] ", 1)[-1][:120] if "] " in line else line[:120],
+                                })
+                                break  # only one notification per restart event
+                except Exception:
+                    pass
+
+        # Deduplicate events by (code, source) — keep highest-severity copy
+        seen = {}
+        for ev in events:
+            key = (ev['code'], ev['source'])
+            if key not in seen or sev_rank[ev['severity']] > sev_rank[seen[key]['severity']]:
+                seen[key] = ev
+        deduped = list(seen.values())
+
+        # Sort by severity (highest first), then time
+        deduped.sort(key=lambda e: (-sev_rank[e['severity']], e['ts']), reverse=False)
+        deduped.sort(key=lambda e: -sev_rank[e['severity']])
+
+        # Overall status = highest severity, or 'ok' if no events
+        if not deduped:
+            overall = "ok"
+        else:
+            top_sev = max(sev_rank[e['severity']] for e in deduped)
+            overall = ["info", "warn", "error", "critical"][top_sev]
+            if top_sev == 0 and not in_market:
+                overall = "ok"  # info-only outside market hours = effectively OK
+
+        return jsonify({
+            "overall_status": overall,
+            "in_market_hours": in_market,
+            "events": deduped[:30],
+            "event_count": len(deduped),
+            "checked_at": now.strftime("%H:%M:%S"),
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"overall_status": "error", "events": [], "error": str(e)}), 500
+
+
 @app.route("/api/indices")
 def api_indices():
     """Get market indices -- formatted for frontend."""

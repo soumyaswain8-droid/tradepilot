@@ -3,1190 +3,1276 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TradePilot — A seven-engine intraday trading fleet</title>
-<meta name="description" content="TradePilot is a seven-engine algorithmic intraday paper-trading platform for the Indian NSE market. Currently in a Mode A test. Real numbers, behavioral risk control, transparent design.">
+<title>TradePilot — Algorithmic intraday trading for the Indian market</title>
+<meta name="description" content="A seven-engine intraday trading platform for NSE. Built for the Indian retail trader who wants real-time data, transparent risk control, and a fleet that earns when one engine is right — and stays small when one is wrong.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..800,0..100&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="icon" type="image/png" href="/static/icon-192.png">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   TRADEPILOT · LANDING — Editorial Fintech
-   Voice: a premium financial publication (FT Weekend, Bloomberg print)
-   Body type: warm cream paper, deep ink, single saffron accent
-   Numbers are the protagonist — large, mono, given the dignity of art
+   TRADEPILOT — Plaid layout × Stripe palette
+   Clean B2B fintech, premium feel without being editorial.
+   Stripe palette: #F6F9FC bg, #0A2540 text, #635BFF indigo accent.
+   Plaid cadence: eyebrow + headline + body + supporting visual.
    ═══════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
 
 :root {
-  /* Palette */
-  --paper:   #FAF7F0;
-  --paper-2: #F1ECE0;
-  --paper-3: #E8E1CD;
-  --ink:     #0E0F12;
-  --ink-2:   #2A2C32;
-  --ink-3:   #5C5F66;
-  --ink-4:   #8A8D94;
-  --line:    #0E0F12;
-  --line-soft: rgba(14,15,18,0.18);
-  --line-faint: rgba(14,15,18,0.08);
-  --hairline:  rgba(14,15,18,0.14);
+  /* Stripe palette */
+  --bg:           #F6F9FC;
+  --bg-2:         #FFFFFF;
+  --bg-3:         #EBF1FA;
+  --ink:          #0A2540;     /* Stripe signature dark */
+  --ink-2:        #1A2C42;
+  --ink-3:        #425466;     /* Stripe muted */
+  --ink-4:        #6B7C93;
+  --ink-soft:     #ADBDCC;
+  --line:         #E3E8EE;
+  --line-soft:    #EFF1F4;
 
-  /* Saffron — single accent. Used sparingly, like spot ink in a magazine. */
-  --saffron:    #E07F2C;
-  --saffron-2:  #C46419;
-  --saffron-3:  #F3D8B6;
+  /* Stripe indigo + blue */
+  --indigo:       #635BFF;
+  --indigo-2:     #4F46E5;
+  --indigo-3:     #7A73FF;
+  --indigo-soft:  #EEEDFF;
+  --blue:         #0F75D8;
+  --blue-2:       #1A6FF0;
+  --cyan:         #4FD1FF;
 
   /* Semantic */
-  --up:        #0E7C4E;
-  --up-bright: #14A464;
-  --up-soft:   rgba(14,124,78,0.10);
-  --down:      #A1242C;
-  --down-bright: #C7322C;
-  --down-soft: rgba(161,36,44,0.08);
+  --up:           #10B981;
+  --up-soft:      #ECFDF5;
+  --down:         #EF4444;
+  --down-soft:    #FEF2F2;
 
   /* Type */
-  --serif:    'Fraunces', Georgia, serif;
-  --sans:     'Manrope', -apple-system, system-ui, sans-serif;
-  --mono:     'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --display: 'Inter Tight', -apple-system, system-ui, sans-serif;
+  --sans:    'Inter', -apple-system, system-ui, sans-serif;
+  --mono:    'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
-  /* Density */
-  --maxw: 1280px;
-  --gutter: clamp(20px, 4vw, 64px);
+  --maxw: 1200px;
+  --gutter: clamp(20px, 4vw, 48px);
 }
 
-::selection { background: var(--ink); color: var(--paper); }
+::selection { background: var(--indigo); color: #fff; }
 
-html, body {
-  background: var(--paper);
+body {
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
   font-size: 16px;
   line-height: 1.55;
   font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* paper grain — barely there, mixed multiply */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 25% 25%, rgba(0,0,0,0.025) 1px, transparent 1.5px),
-    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.018) 1px, transparent 1.5px);
-  background-size: 5px 5px, 9px 9px;
-  z-index: 1;
-  mix-blend-mode: multiply;
-  opacity: 0.55;
 }
 
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 img { display: block; max-width: 100%; }
 
-.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); position: relative; z-index: 2; }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); position: relative; }
+
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
+  font-family: var(--sans);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  color: var(--indigo);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ink-3);
-}
-.section-num {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: var(--saffron);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   TICKER TAPE
+   NAVIGATION — Plaid-style sticky header
    ═══════════════════════════════════════════════════════════════════ */
-.ticker {
+.nav {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  overflow: hidden;
-}
-.ticker-track {
-  display: inline-flex;
-  gap: 36px;
-  white-space: nowrap;
-  animation: ticker-scroll 60s linear infinite;
-  padding-left: 100%;
-}
-.ticker-item { display: inline-flex; align-items: center; gap: 8px; }
-.ticker-item .lbl { color: rgba(255,255,255,0.55); }
-.ticker-item .val { color: var(--paper); font-weight: 600; }
-.ticker-item .val.up { color: #5FE3A1; }
-.ticker-item .val.down { color: #F08D88; }
-.ticker-item .dot { width: 4px; height: 4px; background: rgba(255,255,255,0.35); border-radius: 50%; }
-@keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   NAVIGATION
-   ═══════════════════════════════════════════════════════════════════ */
-.nav {
-  position: relative;
-  z-index: 30;
-  padding: 24px 0 18px;
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line-soft);
 }
 .nav-row {
   display: flex; justify-content: space-between; align-items: center;
-  gap: 40px;
+  padding: 16px 0;
+  gap: 30px;
 }
 .brand {
   display: flex; align-items: center; gap: 12px;
 }
 .brand-mark {
-  width: 38px; height: 38px;
-  background: var(--ink);
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--indigo), var(--blue));
   display: flex; align-items: center; justify-content: center;
-  border-radius: 4px;
+  border-radius: 9px;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99,91,255,0.25);
 }
-.brand-mark img { width: 26px; height: 26px; filter: invert(1); }
+.brand-mark img { width: 22px; height: 22px; filter: brightness(0) invert(1); }
 .brand-name {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-variation-settings: "opsz" 24;
-  font-size: 22px;
-  letter-spacing: -0.01em;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.014em;
   color: var(--ink);
 }
-.brand-name .mark-after {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  color: var(--saffron);
-  margin-left: 8px;
-  vertical-align: 4px;
-}
 .nav-links {
-  display: flex; gap: 32px; align-items: center;
+  display: flex; gap: 28px; align-items: center;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 500;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 .nav-links a {
-  position: relative;
-  transition: color 0.18s ease;
-}
-.nav-links a::after {
-  content: ''; position: absolute; left: 0; bottom: -3px;
-  width: 0; height: 1px; background: var(--saffron);
-  transition: width 0.22s ease;
+  transition: color 0.15s ease;
 }
 .nav-links a:hover { color: var(--ink); }
-.nav-links a:hover::after { width: 100%; }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 11px 20px;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
   font-family: var(--sans);
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  border-radius: 100px;
-  transition: all 0.18s ease;
+  letter-spacing: -0.005em;
+  border-radius: 8px;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 .btn-primary {
   background: var(--ink);
-  color: var(--paper);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 .btn-primary:hover {
-  background: var(--saffron-2);
+  background: #142F50;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(10,37,64,0.25);
 }
-.btn-primary .arr { font-family: var(--mono); font-size: 13px; transform: translateY(-1px); }
+.btn-primary .arr { font-family: var(--mono); font-size: 13px; }
+.btn-indigo {
+  background: var(--indigo);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-indigo:hover {
+  background: var(--indigo-2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(99,91,255,0.35);
+}
 .btn-ghost {
   border: 1px solid var(--line);
-  background: transparent;
+  background: var(--bg-2);
   color: var(--ink);
 }
-.btn-ghost:hover { background: var(--ink); color: var(--paper); }
-.btn-saffron {
-  background: var(--saffron);
-  color: var(--ink);
+.btn-ghost:hover {
+  border-color: var(--ink-soft);
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(50,50,93,0.06);
 }
-.btn-saffron:hover { background: var(--saffron-2); color: var(--paper); }
+.btn-large {
+  padding: 14px 24px;
+  font-size: 15px;
+  border-radius: 10px;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
-   HERO
+   HERO — Stripe-style gradient mesh + Plaid clean layout
    ═══════════════════════════════════════════════════════════════════ */
 .hero {
-  padding: 80px 0 100px;
   position: relative;
+  padding: 80px 0 100px;
   overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 60% at 70% -10%, rgba(99,91,255,0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 10% 100%, rgba(79,209,255,0.12), transparent 55%),
+    linear-gradient(180deg, #fff 0%, var(--bg) 100%);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(10,37,64,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 0%, transparent 70%);
 }
 .hero-grid {
+  position: relative;
   display: grid;
-  grid-template-columns: 1.45fr 1fr;
-  gap: clamp(40px, 6vw, 80px);
-  align-items: start;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
 }
 .hero-pre {
-  display: flex; gap: 14px; align-items: center;
-  margin-bottom: 26px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  display: inline-flex; gap: 8px; align-items: center;
+  margin-bottom: 22px;
+  padding: 6px 12px 6px 8px;
+  background: rgba(99,91,255,0.08);
+  border: 1px solid rgba(99,91,255,0.18);
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--indigo-2);
+  letter-spacing: 0.005em;
 }
-.hero-pre .swatch {
-  width: 8px; height: 8px;
-  background: var(--saffron);
+.hero-pre .dot {
+  width: 6px; height: 6px;
+  background: var(--indigo);
   border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(224,127,44,0.15);
-  animation: pulse 2.4s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(99,91,255,0.18);
+  animation: live-pulse 2s ease-in-out infinite;
 }
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(224,127,44,0.15); }
-  50%      { box-shadow: 0 0 0 8px rgba(224,127,44,0.04); }
+@keyframes live-pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(99,91,255,0.18); }
+  50%     { box-shadow: 0 0 0 6px rgba(99,91,255,0.04); }
 }
 .hero h1 {
-  font-family: var(--serif);
-  font-weight: 350;
-  font-variation-settings: "opsz" 144, "SOFT" 30;
-  font-size: clamp(48px, 7.4vw, 96px);
-  line-height: 0.97;
-  letter-spacing: -0.025em;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(40px, 5.4vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
   color: var(--ink);
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
-.hero h1 em {
-  font-style: italic;
-  font-variation-settings: "opsz" 144, "SOFT" 100;
-  color: var(--saffron);
-  font-weight: 350;
+.hero h1 .grad {
+  background: linear-gradient(135deg, var(--indigo) 0%, var(--blue) 60%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
-.hero h1 .stop { color: var(--saffron); font-style: normal; }
 .hero-deck {
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--ink-3);
   font-weight: 420;
   max-width: 50ch;
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 .hero-cta {
   display: flex; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 50px;
+  margin-bottom: 36px;
 }
 .hero-meta {
-  display: flex; gap: 28px; flex-wrap: wrap;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  display: flex; gap: 22px; flex-wrap: wrap;
+  font-family: var(--sans);
+  font-size: 13.5px;
   color: var(--ink-3);
-  padding-top: 22px;
-  border-top: 1px solid var(--hairline);
+  font-weight: 500;
 }
-.hero-meta .it b { color: var(--ink); font-weight: 700; }
+.hero-meta .it {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.hero-meta .it::before {
+  content: '';
+  width: 14px; height: 14px;
+  background: var(--up);
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z'/></svg>") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z'/></svg>") center / contain no-repeat;
+  flex-shrink: 0;
+}
 
-.hero-stats {
-  background: var(--paper-2);
+/* Hero product preview — fake dashboard mock matching our actual /dashboard */
+.hero-mock {
+  background: #fff;
+  border-radius: 16px;
   border: 1px solid var(--line);
-  padding: 32px 30px;
-  position: relative;
-  box-shadow: 6px 6px 0 0 var(--ink);
+  box-shadow:
+    0 30px 60px -20px rgba(50,50,93,0.18),
+    0 18px 36px -18px rgba(0,0,0,0.10),
+    0 0 0 1px rgba(255,255,255,0.5) inset;
+  overflow: hidden;
+  transform: perspective(1500px) rotateY(-6deg) rotateX(2deg);
+  transform-origin: 50% 50%;
 }
-.hero-stats::before {
-  content: 'BY THE NUMBERS';
-  position: absolute;
-  top: -1px; left: -1px;
-  background: var(--ink);
-  color: var(--paper);
+.mock-bar {
+  display: flex; gap: 6px; padding: 12px 16px;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--line-soft);
+}
+.mock-bar i {
+  width: 11px; height: 11px; border-radius: 50%; display: block;
+}
+.mock-bar i:nth-child(1) { background: #FF5F57; }
+.mock-bar i:nth-child(2) { background: #FEBC2E; }
+.mock-bar i:nth-child(3) { background: #27C840; }
+.mock-bar .url {
+  margin-left: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  background: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line-soft);
+  flex: 1;
+  max-width: 220px;
+}
+.mock-content { padding: 18px; }
+.mock-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mock-tile {
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.mock-tile.feature {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-2));
+  border-color: var(--indigo-2);
+  color: #fff;
+}
+.mock-tile .l {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mock-tile.feature .l { color: rgba(255,255,255,0.78); }
+.mock-tile .v {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-top: 4px;
+}
+.mock-tile.feature .v { color: #fff; }
+.mock-tile .v.up { color: var(--up); }
+.mock-row-large {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mock-chart {
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  padding: 14px;
+  border-radius: 10px;
+  height: 130px;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+.mock-chart .l {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.mock-chart svg { flex: 1; width: 100%; margin-top: 8px; }
+.mock-engines {
+  margin-top: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.mock-engines .l {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.mock-eng {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line-soft);
+  align-items: center;
+}
+.mock-eng:last-child { border-bottom: none; }
+.mock-eng .rk {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-4);
+  text-align: right;
+}
+.mock-eng .pn { font-weight: 700; color: var(--up); }
+.mock-eng.lead .nm { color: var(--indigo); font-weight: 700; }
+
+@media (max-width: 1000px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero-mock { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LOGOS BAND — Plaid signature treatment
+   ═══════════════════════════════════════════════════════════════════ */
+.logos-band {
+  padding: 48px 0;
+  background: #fff;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.logos-row {
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  gap: 50px;
+  align-items: center;
+}
+.logos-label {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 500;
+  line-height: 1.45;
+}
+.logos-label b { color: var(--ink); font-weight: 700; }
+.logos-list {
+  display: flex; gap: 36px; flex-wrap: wrap; align-items: center;
+  font-family: var(--mono);
+}
+.logo-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px 8px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+  transition: all 0.15s ease;
+}
+.logo-pill:hover {
+  border-color: var(--indigo);
+  background: var(--indigo-soft);
+  color: var(--indigo-2);
+}
+.logo-pill .badge {
+  width: 22px; height: 22px;
+  background: linear-gradient(135deg, var(--indigo), var(--blue));
+  color: #fff;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  padding: 6px 14px;
+  letter-spacing: -0.01em;
 }
-.hero-stats-list {
-  margin-top: 22px;
-  display: flex; flex-direction: column;
-  gap: 16px;
-}
-.hs-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 16px;
-  align-items: baseline;
-  border-bottom: 1px dashed var(--line-soft);
-  padding-bottom: 16px;
-}
-.hs-row:last-child { border-bottom: none; padding-bottom: 0; }
-.hs-row .label {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink-3);
-  letter-spacing: 0.02em;
-  font-weight: 500;
-  line-height: 1.35;
-  max-width: 18ch;
-}
-.hs-row .v {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 26px;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.hs-row .v.up { color: var(--up); }
-.hs-row .v.featured {
-  font-size: 38px;
-  background: linear-gradient(180deg, transparent 60%, rgba(224,127,44,0.25) 60%);
-  padding: 0 4px;
-}
-
-.hero-mark {
-  position: absolute;
-  right: -8%; top: 60%;
-  font-family: var(--serif);
-  font-style: italic;
-  font-variation-settings: "opsz" 144, "SOFT" 100;
-  font-weight: 200;
-  font-size: clamp(280px, 50vw, 580px);
-  color: rgba(224,127,44,0.05);
-  line-height: 0.8;
-  pointer-events: none;
-  z-index: 0;
-  user-select: none;
-}
+@media (max-width: 800px) { .logos-row { grid-template-columns: 1fr; gap: 24px; } }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SECTION PATTERN
+   SECTION PATTERN — Plaid eyebrow + headline + body cadence
    ═══════════════════════════════════════════════════════════════════ */
 .section {
-  padding: clamp(80px, 10vw, 130px) 0;
-  border-top: 1px solid var(--hairline);
-  position: relative;
+  padding: clamp(80px, 9vw, 110px) 0;
+  background: var(--bg-2);
 }
+.section.alt { background: var(--bg); }
 .section.dark {
   background: var(--ink);
-  color: var(--paper);
-  border-top: none;
+  color: #fff;
 }
-.section.dark .section-num { color: var(--saffron); }
-.section.dark .section-heading h2 { color: var(--paper); }
-.section.dark .section-heading p { color: rgba(250,247,240,0.7); }
+.section.dark .eyebrow { color: var(--cyan); }
+.section.gradient {
+  background:
+    radial-gradient(ellipse 70% 50% at 80% 0%, rgba(99,91,255,0.12), transparent 60%),
+    linear-gradient(180deg, #fff 0%, var(--bg) 100%);
+}
 
-.section-heading {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 60px;
-  align-items: end;
+.section-head {
   margin-bottom: 60px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--hairline);
+  max-width: 720px;
 }
-.section.dark .section-heading { border-bottom-color: rgba(250,247,240,0.16); }
-.section-heading .lh { display: flex; flex-direction: column; gap: 14px; }
-.section-heading h2 {
-  font-family: var(--serif);
-  font-weight: 350;
-  font-variation-settings: "opsz" 96, "SOFT" 30;
-  font-size: clamp(34px, 4.6vw, 56px);
-  line-height: 1.02;
-  letter-spacing: -0.022em;
+.section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+.section-head h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.08;
+  letter-spacing: -0.028em;
   color: var(--ink);
+  margin: 14px 0 18px;
 }
-.section-heading h2 em {
-  font-style: italic;
-  font-variation-settings: "opsz" 96, "SOFT" 100;
-  color: var(--saffron);
+.section.dark .section-head h2 { color: #fff; }
+.section-head h2 .grad {
+  background: linear-gradient(135deg, var(--indigo), var(--blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
-.section-heading p {
-  font-family: var(--sans);
-  font-size: 17px;
+.section-head p {
+  font-size: 18px;
   line-height: 1.55;
-  color: var(--ink-2);
-  font-weight: 430;
-  max-width: 56ch;
-}
-
-@media (max-width: 800px) {
-  .section-heading { grid-template-columns: 1fr; gap: 24px; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   ENGINES
-   ═══════════════════════════════════════════════════════════════════ */
-.engines-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  border: 1px solid var(--line);
-}
-.eng-card {
-  border-right: 1px solid var(--line-soft);
-  border-bottom: 1px solid var(--line-soft);
-  padding: 28px 26px 32px;
-  background: var(--paper);
-  position: relative;
-  transition: background 0.18s ease;
-}
-.eng-card:hover { background: var(--paper-2); }
-.eng-card:nth-child(4n) { border-right: none; }
-.eng-card.feature {
-  background: var(--ink);
-  color: var(--paper);
-  grid-column: span 2;
-}
-.eng-card.feature:hover { background: #18191E; }
-.eng-card .eng-id {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--saffron);
-  text-transform: uppercase;
-}
-.eng-card .eng-name {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-variation-settings: "opsz" 36;
-  font-size: 28px;
-  margin-top: 10px;
-  letter-spacing: -0.012em;
-  line-height: 1.05;
-}
-.eng-card .eng-philo {
-  font-family: var(--mono);
-  font-size: 11px;
   color: var(--ink-3);
-  margin-top: 10px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 420;
+  max-width: 60ch;
 }
-.eng-card.feature .eng-philo { color: rgba(250,247,240,0.5); }
-.eng-card .eng-desc {
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--ink-2);
-  margin-top: 18px;
-  line-height: 1.5;
-  max-width: 38ch;
-}
-.eng-card.feature .eng-desc { color: rgba(250,247,240,0.78); }
-.eng-card .eng-stat {
-  margin-top: 22px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding-top: 18px;
-  border-top: 1px dashed var(--line-soft);
-}
-.eng-card.feature .eng-stat { border-top-color: rgba(250,247,240,0.14); }
-.eng-card .eng-stat .l {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--ink-4);
-}
-.eng-card.feature .eng-stat .l { color: rgba(250,247,240,0.5); }
-.eng-card .eng-stat .v {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 15px;
-  margin-top: 4px;
-  letter-spacing: -0.01em;
-}
-.eng-card .eng-stat .v.up { color: var(--up); }
-.eng-card.feature .eng-stat .v.up { color: var(--up-bright); }
-
-@media (max-width: 1100px) { .engines-grid { grid-template-columns: repeat(2, 1fr); } .eng-card.feature { grid-column: span 2; } }
-@media (max-width: 600px)  { .engines-grid { grid-template-columns: 1fr; } .eng-card.feature { grid-column: span 1; } }
+.section.dark .section-head p { color: rgba(255,255,255,0.68); }
 
 /* ═══════════════════════════════════════════════════════════════════
-   NUMBERS — three-day arc
+   FEATURE GRID — Plaid 3-card row
    ═══════════════════════════════════════════════════════════════════ */
-.numbers-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 48px;
-  align-items: stretch;
-}
-.day-arc {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  padding: 36px 32px 26px;
-}
-.day-arc-h {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 30px;
-  padding-bottom: 14px;
-  border-bottom: 1px dashed var(--line-soft);
-}
-.day-arc-h .ti {
-  font-family: var(--serif); font-weight: 500;
-  font-size: 22px; letter-spacing: -0.012em;
-  font-variation-settings: "opsz" 24;
-}
-.day-arc-h .meta {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--ink-3); letter-spacing: 0.06em;
-}
-.bars {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
-  align-items: end;
-  height: 320px;
-  padding: 14px 0 4px;
-  position: relative;
-}
-.bar-col { display: flex; flex-direction: column; align-items: center; gap: 12px; height: 100%; }
-.bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; }
-.bar {
-  width: 100%;
-  background: linear-gradient(180deg, var(--saffron) 0%, var(--saffron-2) 100%);
-  position: relative;
-  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transform-origin: bottom;
-}
-.bar.feature {
-  background: linear-gradient(180deg, #F2A056 0%, #C46419 100%);
-  box-shadow: 0 -8px 0 0 var(--saffron) inset;
-}
-.bar-amt {
-  font-family: var(--mono); font-weight: 700;
-  font-size: 17px; letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.bar-day {
-  font-family: var(--mono); font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--ink-3);
-}
-.bar-day b { color: var(--ink); font-weight: 700; }
-
-.callouts {
-  display: flex; flex-direction: column;
-  gap: 18px;
-}
-.callout {
-  border: 1px solid var(--line);
-  padding: 26px 26px 22px;
-  background: var(--paper);
-  position: relative;
-}
-.callout.featured {
-  background: var(--ink);
-  color: var(--paper);
-}
-.callout .label {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--ink-3);
-}
-.callout.featured .label { color: rgba(250,247,240,0.55); }
-.callout .big {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 38px;
-  letter-spacing: -0.025em;
-  margin-top: 4px;
-  line-height: 1;
-}
-.callout.featured .big { color: var(--saffron); }
-.callout .sub {
-  margin-top: 8px;
-  font-size: 13.5px;
-  color: var(--ink-2);
-  line-height: 1.5;
-  font-weight: 430;
-}
-.callout.featured .sub { color: rgba(250,247,240,0.75); }
-
-@media (max-width: 900px) { .numbers-grid { grid-template-columns: 1fr; } }
-
-/* ═══════════════════════════════════════════════════════════════════
-   RISK CONTROL
-   ═══════════════════════════════════════════════════════════════════ */
-.risk-stack { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
-.section.dark .risk-stack { border-color: rgba(250,247,240,0.16); }
-.risk-row {
-  display: grid;
-  grid-template-columns: 60px 1fr 1.6fr 1fr;
-  gap: 32px;
-  padding: 38px 0 38px;
-  border-bottom: 1px solid var(--line);
-  align-items: start;
-}
-.section.dark .risk-row { border-color: rgba(250,247,240,0.16); }
-.risk-row .num {
-  font-family: var(--serif); font-style: italic;
-  font-variation-settings: "opsz" 96, "SOFT" 100;
-  font-weight: 350;
-  font-size: 56px;
-  color: var(--saffron);
-  line-height: 1;
-}
-.risk-row .ttl {
-  font-family: var(--serif); font-weight: 500;
-  font-variation-settings: "opsz" 36;
-  font-size: 24px;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-}
-.risk-row .desc {
-  font-family: var(--sans);
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink-2);
-  font-weight: 430;
-  max-width: 55ch;
-}
-.section.dark .risk-row .desc { color: rgba(250,247,240,0.75); }
-.risk-row .desc b { color: var(--ink); font-weight: 700; }
-.section.dark .risk-row .desc b { color: var(--paper); }
-.risk-row .proof {
-  background: var(--paper-2);
-  border-left: 3px solid var(--saffron);
-  padding: 14px 16px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-.section.dark .risk-row .proof {
-  background: rgba(250,247,240,0.04);
-  color: rgba(250,247,240,0.78);
-  border-left-color: var(--saffron);
-}
-.risk-row .proof .pf-num {
-  font-size: 22px; font-weight: 700; color: var(--saffron);
-  letter-spacing: -0.02em; display: block; margin-bottom: 4px;
-}
-
-@media (max-width: 900px) {
-  .risk-row { grid-template-columns: 1fr; gap: 14px; }
-  .risk-row .num { font-size: 38px; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   HOW IT WORKS — flow
-   ═══════════════════════════════════════════════════════════════════ */
-.flow {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0;
-  border: 1px solid var(--line);
-}
-.step {
-  padding: 26px 22px 32px;
-  border-right: 1px solid var(--line-soft);
-  position: relative;
-}
-.step:last-child { border-right: none; }
-.step .step-time {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--saffron);
-}
-.step .step-name {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-variation-settings: "opsz" 24;
-  font-size: 19px;
-  letter-spacing: -0.01em;
-  margin-top: 8px;
-  line-height: 1.15;
-}
-.step .step-desc {
-  font-family: var(--sans);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ink-2);
-  margin-top: 14px;
-  font-weight: 430;
-}
-.step .arrow {
-  position: absolute;
-  right: -8px; top: 50%;
-  transform: translateY(-50%);
-  width: 14px; height: 14px;
-  background: var(--saffron);
-  clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%);
-}
-.step:last-child .arrow { display: none; }
-@media (max-width: 1000px) {
-  .flow { grid-template-columns: 1fr; }
-  .step { border-right: none; border-bottom: 1px solid var(--line-soft); }
-  .step .arrow { display: none; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   WHY THIS
-   ═══════════════════════════════════════════════════════════════════ */
-.why-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 60px;
-  align-items: start;
-}
-.pull {
-  font-family: var(--serif);
-  font-weight: 350;
-  font-variation-settings: "opsz" 96, "SOFT" 100;
-  font-style: italic;
-  font-size: clamp(28px, 3.4vw, 42px);
-  line-height: 1.18;
-  letter-spacing: -0.018em;
-  color: var(--ink);
-  position: relative;
-  padding-left: 28px;
-  border-left: 3px solid var(--saffron);
-}
-.pull-attr {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  color: var(--ink-3);
-  margin-top: 22px;
-  text-transform: uppercase;
-}
-.answer {
-  font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.62;
-  color: var(--ink-2);
-  font-weight: 430;
-}
-.answer p { margin-bottom: 18px; }
-.answer p:last-child { margin-bottom: 0; }
-.answer b { color: var(--ink); font-weight: 700; }
-.answer .accent { color: var(--saffron); font-weight: 700; }
-@media (max-width: 900px) { .why-grid { grid-template-columns: 1fr; } }
-
-/* ═══════════════════════════════════════════════════════════════════
-   DASHBOARD PREVIEW
-   ═══════════════════════════════════════════════════════════════════ */
-.dash-preview {
-  border: 1px solid rgba(250,247,240,0.18);
-  background: rgba(250,247,240,0.04);
-  padding: 28px;
-  margin-top: 50px;
-}
-.dash-preview-bar {
-  display: flex; gap: 8px; margin-bottom: 18px;
-}
-.dash-preview-bar i {
-  width: 12px; height: 12px; border-radius: 50%; display: block;
-}
-.dash-preview-bar i:nth-child(1) { background: #FF5F57; }
-.dash-preview-bar i:nth-child(2) { background: #FEBC2E; }
-.dash-preview-bar i:nth-child(3) { background: #27C840; }
-.dash-mock {
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 4px;
-  padding: 24px;
+.feat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
-.dash-tile {
-  border: 1px solid var(--line-soft);
-  padding: 14px 16px;
-  background: var(--paper-2);
-}
-.dash-tile.feature { background: var(--saffron-3); }
-.dash-tile .l {
-  font-family: var(--mono); font-size: 9px;
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--ink-3);
-}
-.dash-tile .n {
-  font-family: var(--mono); font-weight: 700;
-  font-size: 22px; letter-spacing: -0.025em;
-  margin-top: 4px;
-  color: var(--ink);
-}
-.dash-tile .n.up { color: var(--up); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   CLOSING
-   ═══════════════════════════════════════════════════════════════════ */
-.closing {
-  padding: clamp(80px, 10vw, 130px) 0;
-  text-align: center;
-  background: var(--paper-2);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+.feat-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px 26px 32px;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
-.closing::before {
-  content: '₹';
-  position: absolute;
-  font-family: var(--serif); font-style: italic;
-  font-weight: 200;
-  font-variation-settings: "opsz" 144, "SOFT" 100;
-  font-size: 48vw;
-  color: rgba(224,127,44,0.05);
-  top: -8%; left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
-  line-height: 0.8;
-  z-index: 0;
+.feat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 40px -18px rgba(50,50,93,0.16), 0 12px 24px -12px rgba(0,0,0,0.05);
+  border-color: rgba(99,91,255,0.28);
 }
-.closing-inner { position: relative; z-index: 2; }
-.closing h3 {
-  font-family: var(--serif);
-  font-weight: 350;
-  font-variation-settings: "opsz" 144, "SOFT" 30;
-  font-size: clamp(40px, 6vw, 72px);
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+.feat-card .ico {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--indigo-soft), #fff);
+  border: 1px solid rgba(99,91,255,0.22);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--indigo);
+}
+.feat-card h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.feat-card p {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  font-weight: 420;
+}
+@media (max-width: 900px) { .feat-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENGINE GRID — fleet display, 4-up cards
+   ═══════════════════════════════════════════════════════════════════ */
+.engines {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.eng {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px 22px 26px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.eng:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -16px rgba(50,50,93,0.12);
+  border-color: rgba(99,91,255,0.22);
+}
+.eng.lead {
+  background: linear-gradient(135deg, var(--ink) 0%, #1a3460 100%);
+  color: #fff;
+  border-color: var(--ink);
+  grid-column: span 2;
+  grid-row: span 1;
+}
+.eng .id {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--indigo);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.eng.lead .id { color: var(--cyan); }
+.eng .name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  margin-top: 8px;
+  line-height: 1.15;
+}
+.eng.lead .name { color: #fff; font-size: 28px; }
+.eng .philo {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.eng.lead .philo { color: rgba(255,255,255,0.68); }
+.eng .stat {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.eng.lead .stat { border-top-color: rgba(255,255,255,0.14); }
+.eng .stat .l {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.eng.lead .stat .l { color: rgba(255,255,255,0.5); }
+.eng .stat .v {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.014em;
+  margin-top: 3px;
+  color: var(--up);
+}
+.eng.lead .stat .v { color: #5FE3A1; }
+@media (max-width: 1000px) { .engines { grid-template-columns: repeat(2, 1fr); } .eng.lead { grid-column: span 2; } }
+@media (max-width: 600px) { .engines { grid-template-columns: 1fr; } .eng.lead { grid-column: span 1; } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATS BLOCK — big numbers, Stripe gradient text
+   ═══════════════════════════════════════════════════════════════════ */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.stat-card {
+  padding: 30px 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.stat-card .lbl {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stat-card .num {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 36px;
+  letter-spacing: -0.03em;
+  margin-top: 10px;
+  line-height: 1;
+}
+.stat-card .num.grad {
+  background: linear-gradient(135deg, var(--indigo), var(--blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card .num.up { color: var(--up); }
+.stat-card .sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 8px;
+  line-height: 1.45;
+}
+@media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .stats { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SPLIT — Plaid alternating left/right blocks
+   ═══════════════════════════════════════════════════════════════════ */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  align-items: center;
+}
+.split.reverse .split-text { order: 2; }
+.split-text h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  margin-bottom: 14px;
+  margin-top: 12px;
+}
+.split-text p {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  font-weight: 420;
+  margin-bottom: 14px;
+}
+.split-text p b { color: var(--ink); font-weight: 600; }
+.split-text ul {
+  margin-top: 18px;
+  list-style: none;
+}
+.split-text li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 14.5px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line-soft);
+}
+.split-text li:last-child { border-bottom: none; }
+.split-text li::before {
+  content: '';
+  width: 18px; height: 18px;
+  margin-top: 3px;
+  background:
+    linear-gradient(135deg, var(--indigo), var(--blue));
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z'/></svg>") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z'/></svg>") center / contain no-repeat;
+  border-radius: 50%;
+}
+.split-text li b { color: var(--ink); font-weight: 600; }
+.split-visual {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 16px 40px -22px rgba(50,50,93,0.18);
+  position: relative;
+  overflow: hidden;
+}
+.split-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(99,91,255,0.08), transparent 60%);
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; gap: 36px; }
+  .split.reverse .split-text { order: 0; }
+}
+
+/* Visual: 3-tier kill switch diagram */
+.tier-stack { position: relative; z-index: 1; }
+.tier {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.tier:last-child { margin-bottom: 0; }
+.tier .badge {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.tier-1 { background: rgba(245,158,11,0.04); }
+.tier-1 .badge { background: rgba(245,158,11,0.14); color: #B45309; border: 1px solid rgba(245,158,11,0.32); }
+.tier-2 { background: rgba(239,68,68,0.04); }
+.tier-2 .badge { background: rgba(239,68,68,0.12); color: #B91C1C; border: 1px solid rgba(239,68,68,0.30); }
+.tier-3 { background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.30); }
+.tier-3 .badge { background: var(--down); color: #fff; }
+.tier-clear { background: var(--up-soft); }
+.tier-clear .badge { background: rgba(16,185,129,0.14); color: #047857; border: 1px solid rgba(16,185,129,0.32); }
+.tier .label {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.tier .desc {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.tier .threshold {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+/* Visual: how-it-works flow */
+.flow {
+  display: grid;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+.flow-step {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.flow-step .marker {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--indigo-soft), #fff);
+  border: 1px solid rgba(99,91,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--indigo);
+  font-size: 16px;
+}
+.flow-step .when {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--indigo);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.flow-step h4 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  margin-top: 2px;
+  color: var(--ink);
+}
+.flow-step p {
+  font-size: 14px;
+  color: var(--ink-3);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUOTE / WHY THIS — single column treatment
+   ═══════════════════════════════════════════════════════════════════ */
+.quote-block {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.quote-block blockquote {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.4;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  position: relative;
+  padding: 0 20px;
+}
+.quote-block blockquote::before {
+  content: '"';
+  font-family: var(--display);
+  font-size: 100px;
+  font-weight: 800;
+  color: var(--indigo-soft);
+  line-height: 1;
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-style: italic;
+  opacity: 0.7;
+}
+.quote-block .attr {
+  margin-top: 26px;
+  font-size: 13px;
+  color: var(--ink-4);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CTA BLOCK — Stripe-style banner
+   ═══════════════════════════════════════════════════════════════════ */
+.cta-banner {
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 0%, rgba(99,91,255,0.6), transparent 60%),
+    radial-gradient(ellipse 70% 80% at 100% 100%, rgba(79,209,255,0.4), transparent 60%),
+    linear-gradient(135deg, #1a1f3d 0%, #0a2540 100%);
+  border-radius: 20px;
+  padding: 56px 50px;
+  color: #fff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-banner h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.024em;
+  margin-bottom: 16px;
   max-width: 22ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cta-banner p {
+  font-size: 17px;
+  color: rgba(255,255,255,0.78);
+  max-width: 50ch;
   margin: 0 auto 28px;
 }
-.closing h3 em {
-  font-style: italic;
-  font-variation-settings: "opsz" 144, "SOFT" 100;
-  color: var(--saffron);
-  font-weight: 350;
+.cta-banner-cta {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
 }
-.closing p { color: var(--ink-2); max-width: 56ch; margin: 0 auto 32px; font-size: 17px; }
-.closing-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.cta-banner .btn-primary { background: #fff; color: var(--ink); }
+.cta-banner .btn-primary:hover { background: var(--cyan); color: var(--ink); }
+.cta-banner .btn-ghost { border-color: rgba(255,255,255,0.3); color: #fff; background: transparent; }
+.cta-banner .btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.6); }
 
 /* ═══════════════════════════════════════════════════════════════════
    FOOTER
    ═══════════════════════════════════════════════════════════════════ */
 .footer {
-  padding: 70px 0 32px;
+  padding: 56px 0 32px;
   background: var(--ink);
-  color: var(--paper);
+  color: #fff;
 }
 .foot-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 50px;
-  margin-bottom: 50px;
-  padding-bottom: 40px;
-  border-bottom: 1px solid rgba(250,247,240,0.12);
+  gap: 40px;
+  margin-bottom: 36px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
 }
-.foot-brand .brand-name { color: var(--paper); }
-.foot-brand .brand-mark { background: rgba(250,247,240,0.08); }
-.foot-brand .brand-mark img { filter: none; }
+.foot-brand .brand-name { color: #fff; }
+.foot-brand .brand-mark { background: linear-gradient(135deg, var(--indigo), var(--cyan)); box-shadow: 0 4px 16px rgba(99,91,255,0.35); }
 .foot-brand p {
-  margin-top: 18px;
+  margin-top: 16px;
   font-size: 14px;
-  line-height: 1.55;
-  color: rgba(250,247,240,0.6);
+  color: rgba(255,255,255,0.6);
   max-width: 38ch;
+  line-height: 1.55;
 }
 .foot-col h5 {
-  font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--saffron);
-  margin-bottom: 18px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 16px;
 }
-.foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .foot-col a {
   font-size: 14px;
-  color: rgba(250,247,240,0.78);
-  transition: color 0.18s ease;
+  color: rgba(255,255,255,0.78);
+  transition: color 0.15s ease;
 }
-.foot-col a:hover { color: var(--saffron); }
+.foot-col a:hover { color: var(--cyan); }
 .foot-bottom {
-  display: flex; justify-content: space-between; gap: 30px;
-  font-family: var(--mono); font-size: 11px;
-  color: rgba(250,247,240,0.45);
-  letter-spacing: 0.06em;
+  display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.45);
 }
 .foot-bottom .pair { display: flex; gap: 18px; }
-.foot-bottom .disclaimer {
-  max-width: 70ch;
-  font-size: 11px;
-  line-height: 1.55;
-  color: rgba(250,247,240,0.4);
+.disclaimer-block {
   margin-top: 18px;
-  font-family: var(--sans);
-  letter-spacing: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.4);
+  max-width: 80ch;
 }
-
-@media (max-width: 900px) {
-  .foot-grid { grid-template-columns: 1fr 1fr; }
-}
+@media (max-width: 900px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
 
 /* ═══════════════════════════════════════════════════════════════════
-   ENTRY ANIMATIONS
+   ANIMATIONS — restrained
    ═══════════════════════════════════════════════════════════════════ */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.anim-1 { animation: fade-up 0.8s 0.05s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-.anim-2 { animation: fade-up 0.8s 0.18s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-.anim-3 { animation: fade-up 0.8s 0.31s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-.anim-4 { animation: fade-up 0.9s 0.44s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-.anim-5 { animation: fade-up 0.9s 0.57s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-@keyframes bar-grow {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
-}
-.bar { animation: bar-grow 1.2s 0.5s both cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-@media (max-width: 1000px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 50px; }
-  .hero-mark { display: none; }
-  .hero-stats { box-shadow: 4px 4px 0 0 var(--ink); }
-}
+.anim-1 { animation: fade-in-up 0.7s 0.05s both ease-out; }
+.anim-2 { animation: fade-in-up 0.7s 0.16s both ease-out; }
+.anim-3 { animation: fade-in-up 0.7s 0.27s both ease-out; }
+.anim-4 { animation: fade-in-up 0.8s 0.4s both ease-out; }
+.anim-mock { animation: fade-in-up 1s 0.3s both cubic-bezier(0.2,0.8,0.2,1); }
 </style>
 </head>
 
 <body>
-
-<!-- ─── TICKER TAPE ─── -->
-<div class="ticker">
-  <div class="ticker-track">
-    <span class="ticker-item"><span class="lbl">NIFTY 50</span> <span class="val up">24,235.85 +0.99%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">SENSEX</span> <span class="val up">74,107.22 +1.07%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">BANKNIFTY</span> <span class="val up">56,039 +0.87%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">INDIA VIX</span> <span class="val">17.43</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">USDINR</span> <span class="val">83.42</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">CRUDE</span> <span class="val down">$78.20 −0.34%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">FLEET P&amp;L (WED)</span> <span class="val up">+₹3,77,836</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">v4 BEST DAY</span> <span class="val up">+₹1,96,789 · 92% WR</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">MODE A</span> <span class="val">2026-05-04 → ONGOING</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">NIFTY 50</span> <span class="val up">24,235.85 +0.99%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">SENSEX</span> <span class="val up">74,107.22 +1.07%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">BANKNIFTY</span> <span class="val up">56,039 +0.87%</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">INDIA VIX</span> <span class="val">17.43</span></span>
-    <span class="dot"></span>
-    <span class="ticker-item"><span class="lbl">FLEET P&amp;L (WED)</span> <span class="val up">+₹3,77,836</span></span>
-    <span class="dot"></span>
-  </div>
-</div>
 
 <!-- ─── NAVIGATION ─── -->
 <nav class="nav">
   <div class="wrap nav-row">
     <a href="/" class="brand">
       <span class="brand-mark"><img src="/static/logo-tradepilot.png" alt="TradePilot logo"></span>
-      <span class="brand-name">TradePilot<span class="mark-after">№ 04</span></span>
+      <span class="brand-name">TradePilot</span>
     </a>
-    <div class="nav-links">
+    <div class="nav-links" style="display:flex">
       <a href="#engines">The Fleet</a>
-      <a href="#numbers">By the Numbers</a>
+      <a href="#numbers">Performance</a>
       <a href="#risk">Risk Control</a>
       <a href="#how">How it Works</a>
-      <a href="/dashboard" class="btn btn-primary">View Dashboard <span class="arr">→</span></a>
+      <a href="/dashboard" class="btn btn-primary">Open Dashboard <span class="arr">→</span></a>
     </div>
   </div>
 </nav>
 
 <!-- ─── HERO ─── -->
 <section class="hero">
-  <div class="hero-mark">₹</div>
   <div class="wrap hero-grid">
     <div class="hero-left">
       <div class="hero-pre anim-1">
-        <span class="swatch"></span>
-        FY 2026 · MODE A · INTRADAY · NSE
+        <span class="dot"></span>
+        Mode A · paper money on real-time NSE data
       </div>
       <h1 class="anim-2">
-        Algorithmic intraday trading,<br>
-        built one <em>stop-loss</em> at a time.<span class="stop">·</span>
+        Algorithmic intraday<br>
+        trading, designed for the <span class="grad">Indian market.</span>
       </h1>
       <p class="hero-deck anim-3">
         Seven independent strategy engines run in parallel against the live NSE feed.
-        Each one carries its own conviction, its own risk frame, its own way of being
-        wrong. Together they form a fleet that earns when one is right and stays
-        small when one is wrong.
+        Each carries its own conviction, its own risk frame, its own way of being wrong.
+        Together they form a fleet that earns when one is right and stays small when one is wrong.
       </p>
-      <div class="hero-cta anim-4">
-        <a href="/dashboard" class="btn btn-saffron">Open the Dashboard <span class="arr">→</span></a>
-        <a href="#numbers" class="btn btn-ghost">See this week's numbers</a>
+      <div class="hero-cta anim-3">
+        <a href="/dashboard" class="btn btn-indigo btn-large">Open the Dashboard <span class="arr">→</span></a>
+        <a href="#numbers" class="btn btn-ghost btn-large">See this week's numbers</a>
       </div>
-      <div class="hero-meta anim-5">
-        <span class="it"><b>Mode A</b> · paper money, real-time data</span>
-        <span class="it">7 engines · 1 fleet</span>
-        <span class="it">NSE only · Indian market hours</span>
+      <div class="hero-meta anim-3">
+        <span class="it">7 strategy engines</span>
+        <span class="it">Real-time NSE data</span>
+        <span class="it">Open every state file</span>
       </div>
     </div>
 
-    <aside class="hero-stats anim-3" aria-label="By the Numbers">
-      <div class="hero-stats-list">
-        <div class="hs-row">
-          <div class="label">Best single day P&amp;L<br><span style="color:var(--ink-4); font-size:11px; font-family:var(--mono); letter-spacing:0.06em;">2026-05-06 · v4</span></div>
-          <div class="v featured up">+₹1,96,789</div>
+    <!-- Hero product mock — looks like /dashboard -->
+    <div class="hero-mock anim-mock" aria-hidden="true">
+      <div class="mock-bar">
+        <i></i><i></i><i></i>
+        <span class="url">tradepilot.local/dashboard</span>
+      </div>
+      <div class="mock-content">
+        <div class="mock-row">
+          <div class="mock-tile feature">
+            <div class="l">v4 · Day P&L</div>
+            <div class="v">+₹1,96,789</div>
+          </div>
+          <div class="mock-tile">
+            <div class="l">Win rate</div>
+            <div class="v up">92%</div>
+          </div>
+          <div class="mock-tile">
+            <div class="l">Trades</div>
+            <div class="v">243</div>
+          </div>
         </div>
-        <div class="hs-row">
-          <div class="label">Win rate, that day</div>
-          <div class="v up">92%</div>
+        <div class="mock-row-large">
+          <div class="mock-chart">
+            <div class="l">Fleet P&L · day arc</div>
+            <svg viewBox="0 0 200 80" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="hg1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#635BFF" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#635BFF" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,68 L20,62 L40,58 L60,52 L80,48 L100,42 L120,30 L140,22 L160,16 L180,12 L200,10 L200,80 L0,80 Z" fill="url(#hg1)"/>
+              <path d="M0,68 L20,62 L40,58 L60,52 L80,48 L100,42 L120,30 L140,22 L160,16 L180,12 L200,10" stroke="#635BFF" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <div class="mock-chart">
+            <div class="l">Kill switch · all engines</div>
+            <svg viewBox="0 0 200 80" preserveAspectRatio="none">
+              <rect x="8" y="56" width="20" height="16" rx="2" fill="#10B981"/>
+              <rect x="36" y="50" width="20" height="22" rx="2" fill="#10B981"/>
+              <rect x="64" y="48" width="20" height="24" rx="2" fill="#10B981"/>
+              <rect x="92" y="52" width="20" height="20" rx="2" fill="#10B981"/>
+              <rect x="120" y="50" width="20" height="22" rx="2" fill="#10B981"/>
+              <rect x="148" y="46" width="20" height="26" rx="2" fill="#10B981"/>
+              <rect x="176" y="50" width="20" height="22" rx="2" fill="#10B981"/>
+            </svg>
+          </div>
         </div>
-        <div class="hs-row">
-          <div class="label">Trades closed<br><span style="color:var(--ink-4); font-size:11px; font-family:var(--mono); letter-spacing:0.06em;">single engine</span></div>
-          <div class="v">243</div>
-        </div>
-        <div class="hs-row">
-          <div class="label">Gross profit ÷ gross loss</div>
-          <div class="v up">38 : 1</div>
-        </div>
-        <div class="hs-row">
-          <div class="label">Capital turnover<br><span style="color:var(--ink-4); font-size:11px; font-family:var(--mono); letter-spacing:0.06em;">₹1.12L → ₹68.18L deployed</span></div>
-          <div class="v">6×</div>
+        <div class="mock-engines">
+          <div class="l">Engine leaderboard</div>
+          <div class="mock-eng lead"><span class="rk">1</span><span class="nm">v4 — composite</span><span class="pn">+₹1,96,789</span></div>
+          <div class="mock-eng"><span class="rk">2</span><span class="nm">v5_8 — regime</span><span class="pn">+₹42,748</span></div>
+          <div class="mock-eng"><span class="rk">3</span><span class="nm">v5_classic</span><span class="pn">+₹32,541</span></div>
+          <div class="mock-eng"><span class="rk">4</span><span class="nm">v5_7 — boxes</span><span class="pn">+₹29,723</span></div>
         </div>
       </div>
-    </aside>
+    </div>
   </div>
 </section>
 
-<!-- ─── ENGINES ─── -->
+<!-- ─── LOGOS BAND (engine names as pills) ─── -->
+<section class="logos-band">
+  <div class="wrap logos-row">
+    <div class="logos-label">
+      <b>Seven engines, one fleet.</b><br>
+      Each runs alongside the others — distinct strategies, shared discipline.
+    </div>
+    <div class="logos-list">
+      <span class="logo-pill"><span class="badge">v4</span>Composite</span>
+      <span class="logo-pill"><span class="badge">v5</span>Multi-pool</span>
+      <span class="logo-pill"><span class="badge">v5</span>Classic</span>
+      <span class="logo-pill"><span class="badge">v5</span>Darvas Box</span>
+      <span class="logo-pill"><span class="badge">v5</span>Mean-revert</span>
+      <span class="logo-pill"><span class="badge">v5</span>Regime-aware</span>
+      <span class="logo-pill"><span class="badge">v6</span>Bolt-on</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PERFORMANCE STATS ─── -->
+<section class="section gradient" id="numbers">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow">Mode A · this week</div>
+      <h2>Real numbers, <span class="grad">not projections.</span></h2>
+      <p>Every figure on this page is the sum of state-file values written by the engines themselves and reconciled by the dashboard. Three trading days, the latest engine upgrade, and the arc that followed.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="lbl">Best single day</div>
+        <div class="num grad">+₹1,96,789</div>
+        <div class="sub">v4, 2026-05-06 · 243 trades · 92% wins</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Fleet · Wednesday</div>
+        <div class="num up">+₹3,77,836</div>
+        <div class="sub">All seven engines · 877 trades total</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Profit / loss ratio</div>
+        <div class="num grad">38 : 1</div>
+        <div class="sub">Gross profit ₹2,02,113 vs gross loss ₹5,324</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Capital turnover</div>
+        <div class="num up">6×</div>
+        <div class="sub">₹1.12L pool, ₹68.18L deployed cumulative</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ENGINE FLEET ─── -->
 <section class="section" id="engines">
   <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 01 / THE FLEET</span>
-      </div>
-      <div class="rh">
-        <h2>Seven engines. <em>One fleet.</em></h2>
-        <p>No single algorithm wins on every regime. Bull, bear, sideways, news-shocked, demerger Tuesday — each calls for a different temperament. We run seven strategies side by side, let them disagree, and read the spread.</p>
-      </div>
-    </header>
+    <div class="section-head">
+      <div class="eyebrow">№ 01 · The Fleet</div>
+      <h2>Seven engines. <span class="grad">Different temperaments.</span></h2>
+      <p>No single algorithm wins on every market regime. Bull, bear, sideways, news-shocked, demerger Tuesday — each calls for a different temperament. We run seven strategies side by side and read the spread.</p>
+    </div>
 
-    <div class="engines-grid">
-      <article class="eng-card feature">
-        <div class="eng-id">v4 · COMPOSITE SCORER</div>
-        <div class="eng-name">The workhorse.</div>
-        <div class="eng-philo">Multi-feature ML rank · Kelly cap · permissive re-entry</div>
-        <p class="eng-desc">A composite of momentum, breadth, FII/DII flow, and an ML rank. Trades wide, sizes small, and lets winners be re-entered freely — the engine carrying the fleet on trending days.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹1,96,789</div></div>
+    <div class="engines">
+      <article class="eng lead">
+        <div class="id">v4 · Composite Scorer</div>
+        <div class="name">The workhorse.</div>
+        <div class="philo">Multi-feature ML rank · Kelly cap · permissive re-entry on winners</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹1,96,789</div></div>
           <div><div class="l">Trades</div><div class="v">243</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v5 · MULTI-POOL</div>
-        <div class="eng-name">The portfolio mind.</div>
-        <div class="eng-philo">4 capital pools · regime slot partition · risk manager</div>
-        <p class="eng-desc">Splits capital across INTRADAY / SWING / POSITIONAL / INVESTMENT pools. Disciplined, slow to react, hard to surprise. The fleet's quietest week-over-week earner.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹27,968</div></div>
+      <article class="eng">
+        <div class="id">v5 · Multi-pool</div>
+        <div class="name">The portfolio mind.</div>
+        <div class="philo">Splits capital across 4 pools — INTRADAY, SWING, POSITIONAL, INVESTMENT.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹27,968</div></div>
           <div><div class="l">Trades</div><div class="v">104</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v5_classic · CONTROL</div>
-        <div class="eng-name">The benchmark.</div>
-        <div class="eng-philo">v5 without Track A fixes · A/B baseline</div>
-        <p class="eng-desc">An intentional control variant. Same scoring layer as v5 but stripped of the tactical fixes — runs alongside so we can measure what every fix is actually worth.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹32,541</div></div>
+      <article class="eng">
+        <div class="id">v5 · Classic</div>
+        <div class="name">The benchmark.</div>
+        <div class="philo">v5 without Track A fixes. A control variant for clean A/B measurement.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹32,541</div></div>
           <div><div class="l">Trades</div><div class="v">109</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v5_6 · DARVAS BOX</div>
-        <div class="eng-name">The breakout reader.</div>
-        <div class="eng-philo">Dynamic SL/target from price boxes</div>
-        <p class="eng-desc">Stocks form boxes — tight ranges that break in one direction and run. v5_6 finds them, sizes the box, and rides the resolution. Best on volatile but directional days.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹21,809</div></div>
+      <article class="eng">
+        <div class="id">v5_6 · Darvas Box</div>
+        <div class="name">Breakout reader.</div>
+        <div class="philo">Finds tight ranges, sizes the box, rides the resolution.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹21,809</div></div>
           <div><div class="l">Trades</div><div class="v">90</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v5_7 · INTRADAY BOX</div>
-        <div class="eng-name">The mean-reverter.</div>
-        <div class="eng-philo">Buy bottom, sell top · range trading</div>
-        <p class="eng-desc">Box theory inverted — when a stock pings between two levels with no breakout, v5_7 buys the floor and sells the ceiling. Sideways regime's quiet earner.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹29,723</div></div>
+      <article class="eng">
+        <div class="id">v5_7 · Mean-Revert</div>
+        <div class="name">Buys the floor.</div>
+        <div class="philo">Box theory inverted — when a stock pings two levels, fade it.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹29,723</div></div>
           <div><div class="l">Trades</div><div class="v">108</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v5_8 · REGIME-AWARE</div>
-        <div class="eng-name">The disciplined experimentalist.</div>
-        <div class="eng-philo">Slot partition disabled · A/B variant</div>
-        <p class="eng-desc">A live experiment in v5's framework — does the regime-aware slot partition help or hurt? v5_8 runs without it. Highest win rate (94%) on Wednesday's run.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹42,748</div></div>
+      <article class="eng">
+        <div class="id">v5_8 · Regime-Aware</div>
+        <div class="name">Disciplined experiment.</div>
+        <div class="philo">A live test — does the regime-slot partition help, or hurt? v5_8 is the answer.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹42,748</div></div>
           <div><div class="l">Trades</div><div class="v">119</div></div>
         </div>
       </article>
 
-      <article class="eng-card">
-        <div class="eng-id">v6 · BOLT-ON</div>
-        <div class="eng-name">The hybrid.</div>
-        <div class="eng-philo">v4 raw signals + Track A risk shell</div>
-        <p class="eng-desc">v4's signals run through v5's risk-management shell. The bridge between the wide-deploying composite and the disciplined multi-pool — a study in what each side gives up.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹26,258</div></div>
+      <article class="eng">
+        <div class="id">v6 · Bolt-On</div>
+        <div class="name">The hybrid.</div>
+        <div class="philo">v4's signals running through v5's risk shell. The bridge between the two halves.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹26,258</div></div>
           <div><div class="l">Trades</div><div class="v">104</div></div>
         </div>
       </article>
 
-      <article class="eng-card" style="background: var(--paper-2);">
-        <div class="eng-id">FLEET</div>
-        <div class="eng-name" style="color: var(--saffron-2);">Together, in concert.</div>
-        <div class="eng-philo">Sum across all 7 engines</div>
-        <p class="eng-desc">Each engine on its own would have weaknesses. Together they give us seven independent reads on the same market — and a sum that's been consistently larger than the parts.</p>
-        <div class="eng-stat">
-          <div><div class="l">Best day</div><div class="v up">+₹3,77,836</div></div>
+      <article class="eng">
+        <div class="id">Fleet · Combined</div>
+        <div class="name">Together.</div>
+        <div class="philo">Each engine on its own would have weaknesses. The sum has been larger than the parts.</div>
+        <div class="stat">
+          <div><div class="l">Best day</div><div class="v">+₹3,77,836</div></div>
           <div><div class="l">Trades</div><div class="v">877</div></div>
         </div>
       </article>
@@ -1194,264 +1280,166 @@ img { display: block; max-width: 100%; }
   </div>
 </section>
 
-<!-- ─── NUMBERS ─── -->
-<section class="section" id="numbers" style="background: var(--paper-2);">
+<!-- ─── BEHAVIORAL RISK — split with tier diagram ─── -->
+<section class="section alt" id="risk">
   <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 02 / BY THE NUMBERS</span>
-      </div>
-      <div class="rh">
-        <h2>One week of <em>Mode A.</em><br>The arc of three days.</h2>
-        <p>This is what the fleet did in the first three trading days after the latest engine upgrade. No demos, no projections — these are state-file numbers, audited by the per-engine reports and the dashboard reconciliation.</p>
-      </div>
-    </header>
+    <div class="section-head">
+      <div class="eyebrow">№ 02 · Risk Control</div>
+      <h2>Behavioral risk, <span class="grad">three layers deep.</span></h2>
+      <p>Most algorithmic blowups don't come from a bad strategy. They come from a strategy that worked yesterday encountering a market that doesn't fit. Our risk control isn't one stop-loss — it's a stack of three independent checks, each with a different job.</p>
+    </div>
 
-    <div class="numbers-grid">
-      <div class="day-arc">
-        <div class="day-arc-h">
-          <span class="ti">Fleet P&amp;L · this week</span>
-          <span class="meta">2026-05-04 → 2026-05-06 · ₹</span>
-        </div>
-        <div class="bars">
-          <div class="bar-col">
-            <div class="bar-amt">+₹87,935</div>
-            <div class="bar-track"><div class="bar" style="height: 23%"></div></div>
-            <div class="bar-day"><b>MON</b> · 05-04</div>
-          </div>
-          <div class="bar-col">
-            <div class="bar-amt">+₹63,787</div>
-            <div class="bar-track"><div class="bar" style="height: 17%"></div></div>
-            <div class="bar-day"><b>TUE</b> · 05-05</div>
-          </div>
-          <div class="bar-col">
-            <div class="bar-amt">+₹3,77,836</div>
-            <div class="bar-track"><div class="bar feature" style="height: 100%"></div></div>
-            <div class="bar-day"><b>WED</b> · 05-06</div>
-          </div>
-        </div>
-        <div style="margin-top: 26px; padding-top: 16px; border-top: 1px dashed var(--line-soft); font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em;">
-          MON pre-revival · TUE position-sizer was broken (v4 ran but never deployed) · WED revival mechanics shipped
-        </div>
+    <div class="split">
+      <div class="split-text">
+        <div class="eyebrow">Layered defence</div>
+        <h3>One stop-loss isn't enough. Three is.</h3>
+        <p>Every position carries the scorer's tactical 1% trailing-breakeven SL <b>plus</b> a hard −10% absolute floor for outlier moves. The portfolio runs a three-tier kill switch on top of that. None of these have ever fired together — that's the point.</p>
+        <ul>
+          <li><b>Corp action skip-list</b> — saved ~₹30K from a single VEDL demerger event</li>
+          <li><b>Per-position −10% floor</b> — caps tail risk on any single name</li>
+          <li><b>Portfolio kill switch</b> — soft halt at −₹5K, hard kill at −₹10K</li>
+          <li><b>Watchlist &amp; revival gate</b> — re-entry only on engulfing + volume confirm</li>
+        </ul>
       </div>
-
-      <div class="callouts">
-        <div class="callout featured">
-          <div class="label">v4 Wednesday</div>
-          <div class="big">+₹1,96,789</div>
-          <div class="sub">Single engine, single day, 243 trades closed at 92% win rate. The "winners unrestricted" rule took YESBANK five times, BIOCON five times, M&amp;MFIN four times — every one a winner.</div>
-        </div>
-        <div class="callout">
-          <div class="label">Profit / loss ratio</div>
-          <div class="big">38 : 1</div>
-          <div class="sub">Gross profit ₹2,02,113 against gross loss ₹5,324. Wins compound, losses stay small. The architecture's tightest day yet.</div>
-        </div>
-        <div class="callout">
-          <div class="label">Capital turnover</div>
-          <div class="big">6×</div>
-          <div class="sub">A ₹1.12L pool deployed ₹68.18L of cumulative trades. Same money, six full cycles of buy-sell-buy. No leverage — just velocity unlocked by free re-entry on winners.</div>
+      <div class="split-visual">
+        <div class="tier-stack">
+          <div class="tier tier-clear">
+            <div class="badge">T0</div>
+            <div>
+              <div class="label">Clear</div>
+              <div class="desc">All engines below their warn thresholds</div>
+            </div>
+            <div class="threshold">P&amp;L ≥ −₹2,500</div>
+          </div>
+          <div class="tier tier-1">
+            <div class="badge">T1</div>
+            <div>
+              <div class="label">Warn</div>
+              <div class="desc">Telegram alert, no trading restriction</div>
+            </div>
+            <div class="threshold">≤ −₹2,500</div>
+          </div>
+          <div class="tier tier-2">
+            <div class="badge">T2</div>
+            <div>
+              <div class="label">Soft Hold</div>
+              <div class="desc">Block new entries, hold existing positions</div>
+            </div>
+            <div class="threshold">≤ −₹5,000</div>
+          </div>
+          <div class="tier tier-3">
+            <div class="badge">T3</div>
+            <div>
+              <div class="label">Hard Kill</div>
+              <div class="desc">Flatten everything, halt for the day</div>
+            </div>
+            <div class="threshold">≤ −₹10,000</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── RISK CONTROL ─── -->
-<section class="section dark" id="risk">
-  <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 03 / RISK</span>
-      </div>
-      <div class="rh">
-        <h2>Behavioral risk, <em>three layers deep.</em></h2>
-        <p>Most algorithmic blowups don't come from a bad strategy. They come from a strategy that worked yesterday encountering a market that doesn't fit. Our risk control isn't a single stop-loss — it's a stack of three independent checks, each with a different job.</p>
-      </div>
-    </header>
-
-    <div class="risk-stack">
-      <div class="risk-row">
-        <div class="num"><em>i</em></div>
-        <div class="ttl">Corporate action skip-list</div>
-        <div class="desc">When a stock undergoes a demerger, bonus, or split, its price feed registers an artificial cliff that no algorithm can read correctly. v4 reads <b>prototype/data/corp_actions.json</b> at start and refuses to enter any banned name through a configurable post-event window. <b>Saved an estimated ₹30K+ on the VEDL demerger</b> the first day this filter was active.</div>
-        <div class="proof">
-          <span class="pf-num">5×</span>
-          times the corp-action filter blocked v4 from entering VEDL on a single day in the post-demerger window
-        </div>
-      </div>
-
-      <div class="risk-row">
-        <div class="num"><em>ii</em></div>
-        <div class="ttl">Per-position absolute floors</div>
-        <div class="desc">Every position carries two stops: the scorer's tactical 1% trailing-breakeven SL, plus a hard <b>−10% of price</b> outer floor for outlier moves. Together they handle both noise (the trailing exit) and tail risk (the absolute floor). The floor never had to fire on the fleet's best day. That's the point — it's there for the days you don't have.</div>
-        <div class="proof">
-          <span class="pf-num">−₹492</span>
-          worst single-trade loss on Wednesday across 877 fleet trades
-        </div>
-      </div>
-
-      <div class="risk-row">
-        <div class="num"><em>iii</em></div>
-        <div class="ttl">Three-tier portfolio kill switch</div>
-        <div class="desc">At <b>−₹2,500</b> session P&amp;L the engine warns. At <b>−₹5,000</b> it stops opening new positions but lets existing ones ride to their per-position stops. At <b>−₹10,000 — or three positions force-closing on the −10% floor in the same day —</b> the kill is hard: flatten everything, halt entries, close the book. Soft halt is the industry default; hard halt is reserved for a runaway.</div>
-        <div class="proof">
-          <span class="pf-num">T0</span>
-          all engines closed the week at tier zero — never breached the warn line
-        </div>
-      </div>
-
-      <div class="risk-row">
-        <div class="num"><em>iv</em></div>
-        <div class="ttl">The watchlist & revival gate</div>
-        <div class="desc">When a stock exits at a loss, it's not banned — it's <b>watched</b>. To re-enter, four conditions must align: a Bullish Engulfing pattern on the latest 5-minute candles, volume on the trigger bar at <b>1.5× the 20-bar average</b>, current price within <b>0.5% of the post-drop low</b>, and time of day inside <b>11:15–14:45 IST</b> (the empirically-best NSE reversal window). Two losses on the same stock in a day → blacklist it for the day.</div>
-        <div class="proof">
-          <span class="pf-num">~65%</span>
-          published hit rate of Bullish Engulfing + volume confirm at intraday reversals
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── HOW IT WORKS ─── -->
+<!-- ─── HOW IT WORKS — split with flow ─── -->
 <section class="section" id="how">
   <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 04 / HOW IT WORKS</span>
-      </div>
-      <div class="rh">
-        <h2>One trading day, <em>five movements.</em></h2>
-        <p>The same five steps every Monday through Friday. Auto-launched at 08:45 IST, auto-closed at 15:35. The engines never sleep in.</p>
-      </div>
-    </header>
+    <div class="section-head">
+      <div class="eyebrow">№ 03 · How it Works</div>
+      <h2>One trading day, <span class="grad">five movements.</span></h2>
+      <p>The same five steps every Monday through Friday. Auto-launched at 08:45 IST, auto-closed at 15:35. The engines never sleep in.</p>
+    </div>
 
-    <div class="flow">
-      <div class="step">
-        <div class="step-time">08:45 IST</div>
-        <div class="step-name">Pre-market scoring</div>
-        <div class="step-desc">Each engine scores the universe — 200 to 500 stocks. The dashboard archives the BUY/HOLD/SELL list at 08:42, 30 minutes before NSE opens.</div>
-        <div class="arrow"></div>
+    <div class="split">
+      <div class="split-text">
+        <div class="eyebrow">From open to close</div>
+        <h3>Engineered cadence, not gut decisions.</h3>
+        <p>Every step has a precise time, a precise input, a precise output. The system never asks "should I trade now?" — it asks "what does this scan say, against this watchlist, with this kill switch tier active?"</p>
+        <p>The dashboard mirrors the same logic in real time. What you see at <b>localhost:5050/dashboard</b> is exactly what the engines see — same state files, same numbers, same regime context.</p>
       </div>
-      <div class="step">
-        <div class="step-time">09:15 IST</div>
-        <div class="step-name">Initial deployment</div>
-        <div class="step-desc">The seven engines deploy in parallel against their independent BUY queues. Each carries its own Kelly cap, its own slot partition, its own conviction.</div>
-        <div class="arrow"></div>
-      </div>
-      <div class="step">
-        <div class="step-time">EVERY 10m</div>
-        <div class="step-name">Scan + react</div>
-        <div class="step-desc">Open positions are repriced. If a stop hits, the position closes. If a target hits, the position banks. Trailing stops move on the way up.</div>
-        <div class="arrow"></div>
-      </div>
-      <div class="step">
-        <div class="step-time">EVERY 30m</div>
-        <div class="step-name">Rescore + redeploy</div>
-        <div class="step-desc">A full universe rescore. New BUYs go through corp-action filter, watchlist gate, and re-entry blocker before a position is opened. Winners can re-enter freely.</div>
-        <div class="arrow"></div>
-      </div>
-      <div class="step">
-        <div class="step-time">15:15 — 15:35</div>
-        <div class="step-name">Force exit + EOD</div>
-        <div class="step-desc">All open positions force-close at 15:15 — no overnight risk in Mode A. By 15:35 the auto-stop-eod fires the comparison report, the missed-trades audit, the EOD insights digest.</div>
-        <div class="arrow"></div>
+      <div class="split-visual" style="background: var(--bg-2); padding: 0;">
+        <div class="flow" style="padding: 18px;">
+          <div class="flow-step">
+            <div class="marker">1</div>
+            <div>
+              <div class="when">08:45 IST</div>
+              <h4>Pre-market scoring</h4>
+              <p>Each engine scores 200–500 stocks. Dashboard archives the BUY/HOLD/SELL list 30 minutes before NSE opens.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="marker">2</div>
+            <div>
+              <div class="when">09:15 IST</div>
+              <h4>Initial deployment</h4>
+              <p>Seven engines deploy in parallel — each with its own Kelly cap, slot partition, and conviction.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="marker">3</div>
+            <div>
+              <div class="when">Every 10m</div>
+              <h4>Scan + react</h4>
+              <p>Open positions repriced. Stops trigger, targets bank. Trailing stops move on the way up.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="marker">4</div>
+            <div>
+              <div class="when">Every 30m</div>
+              <h4>Rescore + redeploy</h4>
+              <p>Full universe rescore. New BUYs go through corp-action filter, watchlist gate, re-entry blocker.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="marker">5</div>
+            <div>
+              <div class="when">15:15 — 15:35</div>
+              <h4>Force exit + EOD</h4>
+              <p>Force-close at 15:15 — no overnight risk in Mode A. Reports auto-generate by 15:35.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── WHY THIS ─── -->
-<section class="section" style="background: var(--paper-2);">
+<!-- ─── WHY THIS — quote treatment ─── -->
+<section class="section alt">
   <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 05 / WHY THIS</span>
-      </div>
-      <div class="rh">
-        <h2>You'll have read that all <em>algos eventually fail.</em></h2>
-        <p>You'd be right. Most do. Here's how this one is built to be different.</p>
-      </div>
-    </header>
-
-    <div class="why-grid">
-      <blockquote class="pull">
-        "If you can't tell whether a position is bleeding because the strategy is wrong or because the regime changed, you can't fix it. That's how most algorithmic systems die. Quietly. Profitably for a while. Then suddenly not."
-        <div class="pull-attr">— Engineer's note, week-1 retrospective</div>
+    <div class="quote-block">
+      <div class="eyebrow" style="margin-bottom: 18px">№ 04 · Why this works</div>
+      <blockquote>
+        Most quant systems fail at the same place: they treat every loss the same. A 2% on a noisy day in a winning regime gets cut as fast as a 2% in the leading edge of a regime change. The first should be ignored. The second should halt every engine in the fleet.
       </blockquote>
+      <div class="attr">— TRADEPILOT ENGINEERING NOTE  ·  WEEK 1 RETROSPECTIVE</div>
+    </div>
 
-      <div class="answer">
-        <p>Most quant retail systems fail at the same place: they treat every loss the same. A −2% on a noisy day in a winning regime gets cut as fast as a −2% in the leading edge of a regime change. The first should be ignored; the second should halt every engine in the fleet.</p>
-        <p>TradePilot's design acknowledges that <span class="accent">losses are not all the same</span>. A position that exits on a tactical 1% stop goes to the watchlist, awaits a candle pattern, and may re-enter the same hour. A position that exits on the −10% absolute floor gets a second-strike rule. The portfolio P&amp;L crossing −₹5,000 doesn't liquidate — it stops new entries, lets the existing positions ride to their own stops. <b>Three different layers handle three different kinds of wrong.</b></p>
-        <p>That's why we run seven engines, not one. Each fails differently. The fleet's net P&amp;L on a regime-shock day is the difference between hold-and-hope (one engine bleeds the others) and <b>cut-watch-confirm</b> (each engine handles its own bleeding).</p>
-        <p>The proof is on the dashboard. Not in this paragraph.</p>
-      </div>
+    <div style="max-width: 780px; margin: 50px auto 0; font-size: 16.5px; line-height: 1.7; color: var(--ink-3);">
+      <p style="margin-bottom: 18px">TradePilot's design acknowledges that <b style="color:var(--ink)">losses are not all the same</b>. A position that exits on a 1% tactical stop goes to the watchlist, awaits a candle pattern, and may re-enter the same hour. A position that exits on the −10% absolute floor gets a second-strike rule. The portfolio P&L crossing −₹5,000 doesn't liquidate — it stops new entries, lets existing positions ride to their own stops.</p>
+      <p style="margin-bottom: 18px"><b style="color:var(--ink)">Three different layers handle three different kinds of wrong.</b> That's why we run seven engines, not one. Each fails differently — and the fleet's net P&L on any given day is the spread between hold-and-hope (one engine bleeds the others) and cut-watch-confirm (each engine handles its own bleeding).</p>
+      <p>The proof is on the dashboard. Not in this paragraph.</p>
     </div>
   </div>
 </section>
 
-<!-- ─── DASHBOARD CTA ─── -->
-<section class="section dark" id="dashboard">
+<!-- ─── DASHBOARD CTA — Stripe-style banner ─── -->
+<section class="section" style="padding-bottom: 0">
   <div class="wrap">
-    <header class="section-heading">
-      <div class="lh">
-        <span class="section-num">№ 06 / SEE IT LIVE</span>
+    <div class="cta-banner">
+      <h3>The dashboard is the <span style="background: linear-gradient(135deg, var(--cyan), #fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">source of truth.</span></h3>
+      <p>Every number on this page comes from the same JSON state files the dashboard reads. Open it during market hours and watch the engines work in real time.</p>
+      <div class="cta-banner-cta">
+        <a href="/dashboard" class="btn btn-primary btn-large">Open the live dashboard <span class="arr">→</span></a>
+        <a href="mailto:support@devpilot.co.in" class="btn btn-ghost btn-large">Request access</a>
       </div>
-      <div class="rh">
-        <h2>The dashboard <em>is the source of truth.</em></h2>
-        <p>Every number on this page comes from the same JSON state files the dashboard reads. Open it during market hours (Mon–Fri 09:15–15:30 IST) and watch the engines work in real time.</p>
-      </div>
-    </header>
-
-    <div class="dash-preview">
-      <div class="dash-preview-bar"><i></i><i></i><i></i></div>
-      <div class="dash-mock">
-        <div class="dash-tile feature">
-          <div class="l">v4 · Day P&amp;L</div>
-          <div class="n up">+₹1,96,789</div>
-        </div>
-        <div class="dash-tile">
-          <div class="l">Fleet · Open positions</div>
-          <div class="n">55</div>
-        </div>
-        <div class="dash-tile">
-          <div class="l">Kill switch · all engines</div>
-          <div class="n up">T0 · CLEAR</div>
-        </div>
-        <div class="dash-tile">
-          <div class="l">v4 · Trades closed</div>
-          <div class="n">243</div>
-        </div>
-        <div class="dash-tile">
-          <div class="l">Win rate · v4</div>
-          <div class="n up">92%</div>
-        </div>
-        <div class="dash-tile">
-          <div class="l">Watchlist · v4</div>
-          <div class="n">19 stocks</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="text-align: center; margin-top: 50px;">
-      <a href="/dashboard" class="btn btn-saffron" style="font-size:15px; padding:14px 28px;">
-        Open the live dashboard <span class="arr">→</span>
-      </a>
     </div>
   </div>
 </section>
 
-<!-- ─── CLOSING ─── -->
-<section class="closing">
-  <div class="wrap closing-inner">
-    <h3>Honest numbers, <em>seven engines,</em> one fleet.</h3>
-    <p>Mode A is paper trading on real-time data — no real money is at risk yet. The next phase moves to Kite Connect with live execution. Until then, every claim on this page is verifiable in the state files.</p>
-    <div class="closing-cta">
-      <a href="/dashboard" class="btn btn-primary">Open the Dashboard <span class="arr">→</span></a>
-      <a href="mailto:support@devpilot.co.in" class="btn btn-ghost">Request access</a>
-    </div>
-  </div>
-</section>
+<!-- ─── BOTTOM SPACER ─── -->
+<div style="padding: 80px 0;"></div>
 
 <!-- ─── FOOTER ─── -->
 <footer class="footer">
@@ -1460,16 +1448,16 @@ img { display: block; max-width: 100%; }
       <div class="foot-brand">
         <a href="/" class="brand">
           <span class="brand-mark"><img src="/static/logo-tradepilot.png" alt="TradePilot logo"></span>
-          <span class="brand-name" style="color:var(--paper);">TradePilot<span class="mark-after">№ 04</span></span>
+          <span class="brand-name">TradePilot</span>
         </a>
-        <p>An algorithmic intraday trading platform for Indian NSE markets. Currently in Mode A: paper money, real-time data, transparent state files. Built by the same team behind DevPilot.</p>
+        <p>An algorithmic intraday trading platform for Indian NSE markets. Currently in Mode A: paper money, real-time data, transparent state files. Built by the team behind DevPilot.</p>
       </div>
       <div class="foot-col">
         <h5>Product</h5>
         <ul>
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="#engines">The Fleet</a></li>
-          <li><a href="#numbers">By the Numbers</a></li>
+          <li><a href="#numbers">Performance</a></li>
           <li><a href="#how">How it Works</a></li>
         </ul>
       </div>
@@ -1477,8 +1465,8 @@ img { display: block; max-width: 100%; }
         <h5>Trust</h5>
         <ul>
           <li><a href="#risk">Risk Control</a></li>
-          <li><a href="https://devpilot.co.in/privacy">Privacy</a></li>
-          <li><a href="https://devpilot.co.in/terms">Terms</a></li>
+          <li><a href="https://devpilot.co.in/privacy">Privacy Policy</a></li>
+          <li><a href="https://devpilot.co.in/terms">Terms of Service</a></li>
         </ul>
       </div>
       <div class="foot-col">
@@ -1492,10 +1480,8 @@ img { display: block; max-width: 100%; }
       <span>© 2026 TradePilot · A DevPilot project</span>
       <span class="pair"><a href="https://devpilot.co.in/privacy">Privacy</a><a href="https://devpilot.co.in/terms">Terms</a></span>
     </div>
-    <div class="foot-bottom" style="margin-top: 18px;">
-      <span class="disclaimer" style="max-width: 100%; font-family: var(--sans); font-size: 11px; line-height: 1.55; color: rgba(250,247,240,0.4); letter-spacing: 0;">
-        Mode A is a paper-trading test environment. No real money is at risk. Numbers shown reflect simulated trades on real-time NSE data and are not a representation of future performance. TradePilot is not a SEBI-registered investment advisor. Trading in financial markets carries risk; past performance — paper or real — is not indicative of future results.
-      </span>
+    <div class="disclaimer-block">
+      Mode A is a paper-trading test environment. No real money is at risk. Numbers reflect simulated trades on real-time NSE data and are not a representation of future performance. TradePilot is not a SEBI-registered investment advisor. Trading in financial markets carries risk; past performance — paper or real — is not indicative of future results.
     </div>
   </div>
 </footer>

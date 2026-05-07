@@ -546,7 +546,23 @@ def score_all_stocks(symbols: Optional[List[str]] = None,
     buy_count = n - buy_cutoff   # stocks above 80th percentile
     hold_count = n - hold_cutoff  # stocks above 50th percentile
 
+    # 2026-05-08 NaN guard: yfinance returns NaN price during rate-limit / stale-quote
+    # periods. NaN propagates into the BUY record and silently fails downstream
+    # filters (notably position_sizer.py:77 `price > 0` which evaluates False for
+    # NaN). Symptom: 38 of 40 BUYs vanish from sizer with no log line.
+    # Root cause documented in memory project_tradepilot_v4_sizer_bug.md
+    # (was incorrectly marked FIXED 2026-05-06 — wrapper was reverted).
+    # Fix: any stock with non-positive or NaN price is downgraded to HOLD before
+    # ranking is finalized. The downstream sizer never sees these rows as BUYs
+    # so it cannot deploy them — but the scorer also cannot mistakenly count them.
+    nan_dropped = 0
     for i, stock in enumerate(results):
+        price = stock.get("price", 0)
+        if not isinstance(price, (int, float)) or price != price or price <= 0:
+            stock["direction"] = "HOLD"
+            stock["_nan_price"] = True  # for diagnostics
+            nan_dropped += 1
+            continue
         if i < buy_count:
             stock["direction"] = "BUY"
         elif i < hold_count:
@@ -562,6 +578,7 @@ def score_all_stocks(symbols: Optional[List[str]] = None,
     logger.info(
         f"Scoring complete: {scored} scored, {failed} failed "
         f"| BUY={buy_n} HOLD={hold_n} AVOID={avoid_n} "
+        f"| NaN-priced (downgraded to HOLD): {nan_dropped} "
         f"| {elapsed:.1f}s elapsed"
     )
 

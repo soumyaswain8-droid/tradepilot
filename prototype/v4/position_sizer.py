@@ -73,8 +73,29 @@ def size_positions(
     if not scored_stocks:
         return []
 
-    # Filter out stocks with no valid price
-    stocks = [s for s in scored_stocks if s.get("price", 0) > 0]
+    # 2026-05-08: explicit NaN check + dropped-count logging.
+    # Was silently dropping NaN-priced stocks via `price > 0` (NaN comparisons
+    # are False per IEEE-754). Bug bit Thu 2026-05-07 — 38 of 40 BUYs vanished
+    # invisibly. Primary fix is upstream in composite_scorer (downgrades NaN
+    # BUYs to HOLD) but this gate stays as defence-in-depth + visible failure.
+    stocks = []
+    nan_dropped = 0
+    zero_dropped = 0
+    for s in scored_stocks:
+        price = s.get("price", 0)
+        if not isinstance(price, (int, float)) or price != price:  # NaN test
+            nan_dropped += 1
+            continue
+        if price <= 0:
+            zero_dropped += 1
+            continue
+        stocks.append(s)
+    if nan_dropped or zero_dropped:
+        # Print rather than logger.* — sizer is called from contexts without the
+        # tradepilot logger configured. Caller (deploy_into_buys) prints to engine log.
+        print(f"[position_sizer] dropped {nan_dropped} NaN-priced + "
+              f"{zero_dropped} zero-priced of {len(scored_stocks)} candidates "
+              f"before allocation", flush=True)
     if not stocks:
         return []
 

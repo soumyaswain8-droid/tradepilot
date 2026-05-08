@@ -529,6 +529,28 @@ def deploy_into_buys(state):
     if not new_buys:
         log("  Already holding all v4 BUY signals or re-entry caps hit"); return
 
+    # 2026-05-09: Late-start preflight filter (specced 2026-04-27).
+    # If boot was after 09:30, apply per-signal late-mode filter and reduce
+    # Kelly to 55% of normal. Once applied, clear preflight_mode so subsequent
+    # scans run normal logic.
+    preflight_mode = state.get("preflight_mode", "NORMAL")
+    if preflight_mode == "LATE_ENTRY":
+        from prototype.v4.preflight import apply_late_start_filter, kelly_scale_for_mode
+        symbols = [b["symbol"] for b in new_buys]
+        filtered_signals, ctx, mode_label = apply_late_start_filter(new_buys, symbols)
+        if not filtered_signals:
+            log("  Late-start filter rejected all signals — skipping deploy")
+            state["preflight_mode"] = "NORMAL"  # one-shot, disable for next scan
+            return
+        rejected_n = len(new_buys) - len(filtered_signals)
+        if rejected_n > 0:
+            log(f"  Late-start filter: {len(filtered_signals)}/{len(new_buys)} signals passed ({rejected_n} rejected)")
+        new_buys = filtered_signals
+        # Apply Kelly reduction
+        size_mult = size_mult * kelly_scale_for_mode(mode_label)
+        log(f"  Late-start: Kelly reduced to {kelly_scale_for_mode(mode_label)*100:.0f}% (effective size_mult={size_mult:.2f})")
+        state["preflight_mode"] = "NORMAL"  # one-shot, disable for next scan
+
     # Apply regime-adjusted capital
     available_capital = state["cash"] * size_mult
     sized, risk = size_and_deploy(new_buys, available_capital)
@@ -921,9 +943,28 @@ def run():
             f"daily-bar to settle (until {warmup_end.strftime('%H:%M')} IST)")
         time.sleep(wait_sec)
 
+    # 2026-05-09: Late-start preflight (specced 2026-04-27, finally coded today).
+    # If boot time > 09:30, the morning's intraday signals are stale. Apply
+    # late-mode filters: skip overextended stocks, reject LONGs with DOWN trend,
+    # reject SHORTs with UP trend. If boot > 14:00, skip first deploy entirely.
+    # Stores mode_label in state so deploy_into_buys can read it and adjust Kelly.
+    from prototype.v4.preflight import is_late_start, should_skip_first_deploy
+    now = datetime.now()
+    if is_late_start(now):
+        if should_skip_first_deploy(now):
+            log(f"\n  ⚠ LATE BOOT ({now.strftime('%H:%M')} IST > 14:00) — skipping initial deploy. Will only manage existing positions.")
+            state["preflight_mode"] = "MANAGE_ONLY"
+        else:
+            log(f"\n  ⚠ LATE BOOT ({now.strftime('%H:%M')} IST > 09:30) — entering LATE_ENTRY mode. Half-Kelly + filters active.")
+            state["preflight_mode"] = "LATE_ENTRY"
+        save_state(state)
+
     if n_open == 0 and state["cash"] > 10000:
-        log("\n--- INITIAL v4 DEPLOYMENT ---")
-        deploy_into_buys(state); save_state(state)
+        if state.get("preflight_mode") == "MANAGE_ONLY":
+            log("\n--- v4 LATE BOOT: skipping initial deploy ---")
+        else:
+            log("\n--- INITIAL v4 DEPLOYMENT ---")
+            deploy_into_buys(state); save_state(state)
     elif n_open > 0:
         log(f"\n  Resuming with {n_open} open positions")
 

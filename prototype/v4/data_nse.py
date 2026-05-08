@@ -590,6 +590,31 @@ def get_all_nifty50_quotes() -> dict:
             logger.warning("Batch download returned empty. Falling back to individual quotes.")
             return _fallback_individual_quotes()
 
+        # 2026-05-09: NaN-rate fallback trigger.
+        # The batch can return non-empty but mostly-NaN data when yfinance's
+        # daily-bar aggregator hasn't caught up (pre-market access, market-open
+        # warmup, or upstream provider degradation). Bug bit 2026-05-08:
+        # batch returned 200 entries with 193 NaN, fallback never fired,
+        # cache wrote NaN, engine served stale all morning, v4 lost Rs 6,884.
+        # Detection: count rows where Close is NaN/zero. If >50%, treat as
+        # batch failure and call per-symbol fallback (v6's pattern).
+        try:
+            close_col = df.xs("Close", axis=1, level=1) if isinstance(df.columns, pd.MultiIndex) else df["Close"]
+            last_row = close_col.iloc[-1] if not close_col.empty else None
+            if last_row is not None:
+                nan_count = sum(1 for v in last_row.values
+                                if v is None or (isinstance(v, float) and v != v) or (isinstance(v, (int, float)) and v <= 0))
+                total = len(last_row.values)
+                nan_rate = nan_count / total if total else 0
+                if nan_rate > 0.5:
+                    logger.warning(
+                        f"Batch returned {nan_count}/{total} NaN ({nan_rate*100:.0f}%). "
+                        f"Falling back to per-symbol fast_info fetch."
+                    )
+                    return _fallback_individual_quotes()
+        except Exception as e:
+            logger.debug(f"NaN-rate check skipped: {e}")
+
         for symbol in ACTIVE_SYMBOLS:
             yf_sym = f"{symbol}.NS"
             try:

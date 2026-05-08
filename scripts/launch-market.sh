@@ -96,7 +96,7 @@ fi
 # ═══════════════════════════ STOP ═══════════════════════════
 if [ "${1:-}" = "--stop" ]; then
   echo "Stopping TradePilot stack..."
-  pkill -f "scripts/v[45].*paper-trade.py" 2>/dev/null
+  pkill -f "scripts/v[0-9].*paper-trade.py" 2>/dev/null
   pkill -f "scripts/crash-watchdog.sh"  2>/dev/null
   pkill -f "scripts/telegram-digest.sh" 2>/dev/null
   pkill -f "scripts/laptop-heartbeat.sh" 2>/dev/null
@@ -117,7 +117,7 @@ echo "════════════════════════�
 
 # [0/9] Kill stale processes
 echo "[0/9] Cleaning stale processes..."
-pkill -f "scripts/v[45].*paper-trade.py" 2>/dev/null
+pkill -f "scripts/v[0-9].*paper-trade.py" 2>/dev/null
 pkill -f "scripts/crash-watchdog.sh"  2>/dev/null
 pkill -f "scripts/telegram-digest.sh" 2>/dev/null
 pkill -f "scripts/laptop-heartbeat.sh" 2>/dev/null
@@ -206,7 +206,7 @@ fi
 echo ""
 echo "[verify] Checking process health..."
 sleep 3
-alive=$(pgrep -f "scripts/v[45].*paper-trade.py" | wc -l | tr -d ' ')
+alive=$(pgrep -f "scripts/v[0-9].*paper-trade.py" | wc -l | tr -d ' ')
 wd=$(pgrep -f "scripts/crash-watchdog.sh" | wc -l | tr -d ' ')
 rust=$(pgrep -f "tradepilot-engine" | wc -l | tr -d ' ')
 echo "  Engines: $alive/7  |  Watchdog: $wd/1  |  Rust: $rust/1"

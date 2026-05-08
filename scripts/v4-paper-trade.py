@@ -904,6 +904,23 @@ def run():
         f"    HARD KILL Rs {ABS_DAILY_HARD_KILL_RS:+,.0f} OR {HARD_KILL_PCT_SL_COUNT}+ pct-SL exits  flatten all\n{'='*65}")
     state = load_state()
     n_open = sum(1 for p in state["positions"] if p["status"] == "open")
+
+    # 2026-05-08: warm-up window. yfinance daily-bar aggregation lags 09:15-09:30 IST
+    # at market open. Initial deployments before 09:30 are based on incomplete /
+    # potentially NaN data. Bug bit 2026-05-08 — engine deployed at 09:19 into
+    # the only 2 stocks with valid prices (cache was poisoned overnight), both
+    # lost 1.3% on huge concentrated positions. Total: -Rs 6,884 from 2 trades.
+    # Fix: refuse to do initial deploy before 09:30. Wait if necessary.
+    WARMUP_HOUR = 9
+    WARMUP_MIN = 30
+    now = datetime.now()
+    warmup_end = now.replace(hour=WARMUP_HOUR, minute=WARMUP_MIN, second=0, microsecond=0)
+    if now < warmup_end:
+        wait_sec = (warmup_end - now).total_seconds()
+        log(f"\n  Warm-up window — waiting {wait_sec/60:.0f} min for yfinance "
+            f"daily-bar to settle (until {warmup_end.strftime('%H:%M')} IST)")
+        time.sleep(wait_sec)
+
     if n_open == 0 and state["cash"] > 10000:
         log("\n--- INITIAL v4 DEPLOYMENT ---")
         deploy_into_buys(state); save_state(state)

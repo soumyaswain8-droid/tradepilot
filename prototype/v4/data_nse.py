@@ -88,22 +88,91 @@ def _cache_dir_today() -> Path:
     return d
 
 
+CACHE_TTL_SECONDS = 300  # 5 minutes
+MARKET_OPEN_HOUR = 9     # 09:15 IST
+MARKET_OPEN_MIN = 15
+MARKET_CLOSE_HOUR = 15   # 15:30 IST
+MARKET_CLOSE_MIN = 30
+
+
+def _is_market_hours() -> bool:
+    """Returns True between 09:15 and 15:30 IST. Cache writes are blocked outside this window."""
+    from datetime import datetime
+    now = datetime.now()
+    open_t = now.replace(hour=MARKET_OPEN_HOUR, minute=MARKET_OPEN_MIN, second=0, microsecond=0)
+    close_t = now.replace(hour=MARKET_CLOSE_HOUR, minute=MARKET_CLOSE_MIN, second=0, microsecond=0)
+    return open_t <= now <= close_t
+
+
+def _is_mostly_nan(data: dict, threshold: float = 0.5) -> bool:
+    """Returns True if more than `threshold` fraction of values have NaN/zero last_price.
+    Used to reject corrupt batch responses before caching them.
+    """
+    if not isinstance(data, dict) or not data:
+        return False
+    bad = 0
+    total = 0
+    for k, v in data.items():
+        if not isinstance(v, dict):
+            continue
+        total += 1
+        p = v.get("last_price", 0)
+        # NaN check (NaN != NaN per IEEE-754) + non-positive price
+        if p is None or (isinstance(p, float) and p != p) or (isinstance(p, (int, float)) and p <= 0):
+            bad += 1
+    if total == 0:
+        return False
+    return (bad / total) >= threshold
+
+
 def _read_cache(filename: str) -> Optional[dict]:
-    """Read cached JSON file from today's cache dir. Returns None if missing/stale."""
+    """Read cached JSON file from today's cache dir.
+    Returns None if missing, stale (older than CACHE_TTL_SECONDS), or unreadable.
+
+    Staleness check (added 2026-05-08 after cache poisoning incident):
+    Files older than 5 minutes are treated as missing. This forces a refetch
+    and prevents pre-market-written stale NaN data from being served all day.
+    """
+    import time
     path = _cache_dir_today() / filename
-    if path.exists():
-        try:
-            with open(path, "r") as f:
-                data = json.load(f)
-            logger.debug(f"Cache hit: {filename}")
-            return data
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Cache read error for {filename}: {e}")
-    return None
+    if not path.exists():
+        return None
+    try:
+        age_seconds = time.time() - path.stat().st_mtime
+        if age_seconds > CACHE_TTL_SECONDS:
+            logger.info(f"Cache stale ({age_seconds:.0f}s > {CACHE_TTL_SECONDS}s): {filename} — refetching")
+            return None
+        with open(path, "r") as f:
+            data = json.load(f)
+        logger.debug(f"Cache hit: {filename} (age {age_seconds:.0f}s)")
+        return data
+    except (json.JSONDecodeError, IOError) as e:
+        logger.warning(f"Cache read error for {filename}: {e}")
+        return None
 
 
 def _write_cache(filename: str, data: dict) -> None:
-    """Write data as JSON to today's cache dir."""
+    """Write data as JSON to today's cache dir.
+
+    Guards (added 2026-05-08 after cache poisoning incident):
+    1. Pre-market write block: Refuses to write outside 09:15-15:30 IST.
+       Prevents the morning's catastrophe (overnight Flask hit triggered cache write
+       at 03:04 IST when yfinance had no daily-bar data → NaN-filled cache).
+    2. All-NaN write rejection: Refuses to write if >50% of entries have NaN/zero
+       last_price. Defence-in-depth for transient yfinance failures during market hours.
+    """
+    if not _is_market_hours():
+        logger.warning(f"Cache write BLOCKED (outside market hours): {filename}")
+        return
+    if filename == "nifty50_quotes_batch.json" and _is_mostly_nan(data):
+        bad_count = sum(1 for v in data.values()
+                        if isinstance(v, dict) and (
+                            v.get("last_price") is None
+                            or (isinstance(v.get("last_price"), float) and v.get("last_price") != v.get("last_price"))
+                            or v.get("last_price", 0) <= 0
+                        ))
+        logger.warning(f"Cache write REJECTED ({bad_count}/{len(data)} bad entries): {filename}")
+        return
     path = _cache_dir_today() / filename
     try:
         with open(path, "w") as f:

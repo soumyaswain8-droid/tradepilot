@@ -52,23 +52,26 @@ def kelly_fraction(win_rate: float, avg_win_pct: float, avg_loss_pct: float) -> 
 def size_positions(
     scored_stocks: List[Dict],
     capital: float = 1_000_000.0,
-    max_per_stock_pct: float = 0.20,
+    max_per_stock_pct: float = 0.15,
     min_per_stock_rs: float = 20_000.0,
     default_sl_pct: float = 1.0,
     default_target_pct: float = 2.0,
+    min_buy_count: int = 10,
 ) -> List[Dict]:
     """
     Size positions for all BUY signals based on composite score.
 
     Allocation logic:
-    1. Score-weighted: higher composite score = larger allocation
+    1. Universe-health gate: if fewer than `min_buy_count` valid BUYs, skip
+       deployment entirely (added 2026-05-08 — see below).
+    2. Score-weighted: higher composite score = larger allocation
        weight_i = score_i / sum(all_scores)
        base_alloc_i = weight_i * capital
-    2. Cap at max_per_stock_pct * capital
-    3. Floor at min_per_stock_rs (skip if below after capping)
-    4. Redistribute excess from capped stocks to uncapped ones
-    5. Compute qty = int(position_size / price)
-    6. SL/target from scorer if available, else use defaults
+    3. Cap at max_per_stock_pct * capital (default 15% — was 20% pre-2026-05-08)
+    4. Floor at min_per_stock_rs (skip if below after capping)
+    5. Redistribute excess from capped stocks to uncapped ones
+    6. Compute qty = int(position_size / price)
+    7. SL/target from scorer if available, else use defaults
     """
     if not scored_stocks:
         return []
@@ -97,6 +100,20 @@ def size_positions(
               f"{zero_dropped} zero-priced of {len(scored_stocks)} candidates "
               f"before allocation", flush=True)
     if not stocks:
+        return []
+
+    # 2026-05-08: minimum BUY-count gate.
+    # When valid universe is small (data feed degraded or selection-biased),
+    # the top-N picks aren't actually "best of universe" — they're "best of
+    # whatever happened to have clean data." Score 60.x in a 7-stock universe
+    # is meaningless. Bug bit 2026-05-08: cache poisoning left 7 valid BUYs,
+    # v4 picked top-2, both lost ~1.3% (within noise for marginal scores) on
+    # huge concentrated positions. Total: -Rs 6,884 from 2 trades.
+    # Fix: refuse to deploy unless we have a real universe to choose from.
+    if len(stocks) < min_buy_count:
+        print(f"[position_sizer] BUY-count gate: only {len(stocks)} valid "
+              f"BUYs (< {min_buy_count} required). Universe is too small for "
+              f"signal quality — skipping deployment.", flush=True)
         return []
 
     max_alloc = max_per_stock_pct * capital

@@ -126,6 +126,20 @@ pkill -f "scripts/satish-schedule.sh" 2>/dev/null
 pkill -f "tradepilot-engine"          2>/dev/null
 sleep 2
 
+# [0.5/9] Pre-launch verification — catches import/syntax bugs BEFORE engines deploy.
+# Added 2026-05-11 after Monday morning's v4 crash (preflight import path was wrong,
+# crashed at 09:30 IST market open). Runs only the smoke section (~2s) for speed.
+echo "[0.5/9] Pre-launch verification (smoke test — would have caught Monday's crash)..."
+if ./scripts/sarathi-verify.sh --smoke --quiet 2>&1 | tail -5; then
+  echo "  ✓ All 7 engine scripts import + compile clean"
+else
+  echo ""
+  echo "  ✗ PRE-LAUNCH SMOKE FAILED — refusing to start engines."
+  echo "  → Run: ./scripts/sarathi-verify.sh   (full output)"
+  echo "  → Fix the issue, then re-launch."
+  exit 2
+fi
+
 # [1/9] Rust engine
 echo "[1/9] Starting Rust engine (execution + risk)..."
 if [ -f "./engine/target/release/tradepilot-engine" ]; then

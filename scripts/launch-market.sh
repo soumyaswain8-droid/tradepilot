@@ -129,12 +129,20 @@ sleep 2
 # [0.5/9] Pre-launch verification — catches import/syntax bugs BEFORE engines deploy.
 # Added 2026-05-11 after Monday morning's v4 crash (preflight import path was wrong,
 # crashed at 09:30 IST market open). Runs only the smoke section (~2s) for speed.
+#
+# 2026-05-12 FIX: previous version was `if cmd 2>&1 | tail -5; then` which checks
+# tail's exit code (always 0), NOT the upstream verify script's. Result: gate
+# always passed even when smoke failed. Fixed by capturing output first, then
+# checking the script's actual exit code separately.
 echo "[0.5/9] Pre-launch verification (smoke test — would have caught Monday's crash)..."
-if ./scripts/sarathi-verify.sh --smoke --quiet 2>&1 | tail -5; then
+SMOKE_OUTPUT=$(./scripts/sarathi-verify.sh --smoke --quiet 2>&1)
+SMOKE_EXIT=$?
+echo "$SMOKE_OUTPUT" | tail -5
+if [ "$SMOKE_EXIT" -eq 0 ]; then
   echo "  ✓ All 7 engine scripts import + compile clean"
 else
   echo ""
-  echo "  ✗ PRE-LAUNCH SMOKE FAILED — refusing to start engines."
+  echo "  ✗ PRE-LAUNCH SMOKE FAILED (exit $SMOKE_EXIT) — refusing to start engines."
   echo "  → Run: ./scripts/sarathi-verify.sh   (full output)"
   echo "  → Fix the issue, then re-launch."
   exit 2

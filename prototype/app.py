@@ -104,6 +104,100 @@ def live_view():
     return render_template("live.html")
 
 
+@app.route("/api/positions-live")
+def api_positions_live():
+    """Open positions for ALL 7 active engines (v4, v5, v5_classic, v5_6, v5_7, v5_8, v6).
+    Reads each engine's state file directly:
+      - v4 uses docs/paper-trades/v4/{YYYY-MM-DD}.json (date-stamped, list under 'positions')
+      - v5 family uses docs/paper-trades/{engine}/positions_active.json (nested by pool)
+    Normalizes both shapes to a flat {engine: [position]} dict.
+    Replaces /api/engine-arena for /live (which only returned 5 legacy engines).
+    Added 2026-05-12 to fix /live missing v4, v5, v6 positions.
+    Read-only — does NOT touch engine state files."""
+    from datetime import date
+    from pathlib import Path
+
+    TODAY = date.today().isoformat()
+    BASE = Path(os.path.dirname(__file__)).parent / "docs" / "paper-trades"
+
+    result = {}
+
+    # v4: date-stamped state file
+    v4_file = BASE / "v4" / f"{TODAY}.json"
+    if v4_file.exists():
+        try:
+            with open(v4_file) as f:
+                v4_state = json.load(f)
+            v4_positions = []
+            # v4 state has 'positions' key — list of position dicts
+            for p in (v4_state.get("positions") or []):
+                if p.get("status") != "open":
+                    continue
+                v4_positions.append({
+                    "symbol": p.get("symbol", "?"),
+                    "entry_price": p.get("entry_price", p.get("price", 0)),
+                    "direction": p.get("direction", "LONG"),
+                    "qty": p.get("qty", 0),
+                    "unrealized_pnl": p.get("unrealized_pnl", 0),
+                    "sl_price": p.get("sl_price", 0),
+                    "target_price": p.get("target_price", 0),
+                })
+            result["v4"] = v4_positions
+        except (json.JSONDecodeError, IOError):
+            result["v4"] = []
+    else:
+        result["v4"] = []
+
+    # v5 family + v6: positions_active.json with positions nested by pool
+    for engine in ["v5", "v5_classic", "v5_6", "v5_7", "v5_8", "v6"]:
+        f = BASE / engine / "positions_active.json"
+        if not f.exists():
+            result[engine] = []
+            continue
+        try:
+            with open(f) as fp:
+                data = json.load(fp)
+            positions_by_pool = data.get("positions", {})
+            flat = []
+            # positions can be a dict {pool: [pos]} OR a flat list
+            if isinstance(positions_by_pool, dict):
+                for pool, plist in positions_by_pool.items():
+                    if not isinstance(plist, list):
+                        continue
+                    for p in plist:
+                        flat.append({
+                            "symbol": p.get("symbol", "?"),
+                            "entry_price": p.get("entry_price", 0),
+                            "direction": p.get("direction", p.get("position_type", "LONG")),
+                            "qty": p.get("qty", 0),
+                            "unrealized_pnl": p.get("unrealized_pnl", 0),
+                            "sl_price": p.get("sl_price", 0),
+                            "target_price": p.get("target_price", 0),
+                            "pool": pool,
+                        })
+            elif isinstance(positions_by_pool, list):
+                for p in positions_by_pool:
+                    flat.append({
+                        "symbol": p.get("symbol", "?"),
+                        "entry_price": p.get("entry_price", 0),
+                        "direction": p.get("direction", "LONG"),
+                        "qty": p.get("qty", 0),
+                        "unrealized_pnl": p.get("unrealized_pnl", 0),
+                    })
+            result[engine] = flat
+        except (json.JSONDecodeError, IOError):
+            result[engine] = []
+
+    return jsonify({
+        "date": TODAY,
+        "positions": result,
+        "totals": {
+            "engines": len(result),
+            "open_total": sum(len(v) for v in result.values()),
+        },
+    })
+
+
 @app.route("/api/recent-scans")
 def api_recent_scans():
     """Recent scan + trade events across all 7 engines.

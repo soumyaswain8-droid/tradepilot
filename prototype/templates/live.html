@@ -504,10 +504,12 @@ function pulseEdge(fromX, fromY, toX, toY) {
 
 async function fetchData() {
   try {
-    const [statusResp, healthResp, arenaResp] = await Promise.all([
+    const [statusResp, healthResp, posResp] = await Promise.all([
       fetch('/api/engine-status').then(function(r) { return r.json(); }),
       fetch('/api/system-health').then(function(r) { return r.json(); }).catch(function() { return {}; }),
-      fetch('/api/engine-arena').then(function(r) { return r.json(); }).catch(function() { return {}; }),
+      // 2026-05-12: switched from /api/engine-arena (legacy, only 5 engines) to
+      // /api/positions-live which returns all 7 active engines' positions.
+      fetch('/api/positions-live').then(function(r) { return r.json(); }).catch(function() { return { positions: {} }; }),
     ]);
 
     // Update engine state
@@ -515,11 +517,12 @@ async function fetchData() {
       state.engines[e.engine] = e;
     });
 
-    // Update positions per engine
-    Object.keys(arenaResp).forEach(function(engineId) {
-      const data = arenaResp[engineId] || {};
-      const normalizedId = engineId.replace('.', '_');  // v5.6 → v5_6
-      const positions = (data.positions || []).map(function(p) {
+    // Update positions per engine — positions-live returns {engine: [pos, ...]}
+    const posData = posResp.positions || {};
+    Object.keys(posData).forEach(function(engineId) {
+      // Engine IDs already match (v4, v5, v5_classic, v5_6, v5_7, v5_8, v6) — no normalization needed
+      const normalizedId = engineId;
+      const positions = (posData[engineId] || []).map(function(p) {
         return {
           symbol: p.symbol,
           entry_price: p.entry_price,

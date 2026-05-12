@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePilot · Live · Agent Network</title>
+<style>
+  :root {
+    --bg: #050608;
+    --bg-card: #0d0f14;
+    --bg-elev: #131720;
+    --ink: #E4E9F2;
+    --ink-dim: #8A93A6;
+    --ink-faint: #4A5468;
+    --line: #1c2230;
+    --line-bright: #2a3142;
+    --green: #00ff88;
+    --green-dim: #00b366;
+    --red: #ff3860;
+    --red-dim: #b32340;
+    --cyan: #00d4ff;
+    --cyan-dim: #0099cc;
+    --indigo: #635BFF;
+    --indigo-glow: #7c75ff;
+    --amber: #ffb547;
+    --pink: #ff4da6;
+    --mono: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+    --sans: "Inter", -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 12px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at center top, rgba(99,91,255,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at center bottom, rgba(0,212,255,0.04) 0%, transparent 50%),
+      var(--bg);
+  }
+
+  .statusbar {
+    height: 44px;
+    display: grid;
+    grid-template-columns: auto repeat(8, 1fr) auto;
+    align-items: center;
+    padding: 0 16px;
+    background: linear-gradient(180deg, rgba(13,15,20,0.95), rgba(13,15,20,0.85));
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+  }
+  .statusbar .brand {
+    color: var(--indigo);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding-right: 20px;
+    border-right: 1px solid var(--line);
+    margin-right: 16px;
+  }
+  .statusbar .stat { display: flex; flex-direction: column; line-height: 1.3; }
+  .statusbar .stat .label {
+    color: var(--ink-faint);
+    font-size: 8.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .statusbar .stat .value { color: var(--ink); font-size: 11px; font-weight: 600; }
+  .statusbar .stat .value.green { color: var(--green); }
+  .statusbar .stat .value.red { color: var(--red); }
+  .statusbar .stat .value.amber { color: var(--amber); }
+  .statusbar .links {
+    border-left: 1px solid var(--line);
+    padding-left: 16px;
+    display: flex;
+    gap: 14px;
+    font-size: 10.5px;
+  }
+  .statusbar .links a { color: var(--ink-dim); text-decoration: none; transition: color 0.2s; }
+  .statusbar .links a:hover { color: var(--cyan); }
+  .statusbar .links a.active { color: var(--indigo); }
+
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - 44px - 36px);
+  }
+
+  .events {
+    background: var(--bg-card);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .events-header {
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .events-header .live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .events-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .events-body::-webkit-scrollbar { width: 6px; }
+  .events-body::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 3px; }
+  .event {
+    padding: 5px 14px;
+    display: flex;
+    gap: 8px;
+    border-left: 2px solid transparent;
+    transition: background 0.15s;
+  }
+  .event:hover { background: var(--bg-elev); }
+  .event.buy { border-left-color: var(--green); }
+  .event.sell { border-left-color: var(--red); }
+  .event.scan { border-left-color: var(--ink-faint); }
+  .event.exit-target { border-left-color: var(--cyan); }
+  .event.exit-stop { border-left-color: var(--red-dim); }
+  .event .time { color: var(--ink-faint); flex-shrink: 0; width: 50px; }
+  .event .engine { color: var(--cyan); font-weight: 600; flex-shrink: 0; width: 38px; }
+  .event .msg { color: var(--ink-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .event .msg .sym { color: var(--ink); font-weight: 600; }
+  .event .msg .px { color: var(--amber); }
+
+  .network {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, rgba(99,91,255,0.06) 0%, transparent 60%), var(--bg);
+  }
+  .network::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(28,34,48,0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28,34,48,0.5) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  #networkSvg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .edge { stroke: var(--line-bright); stroke-width: 1; fill: none; opacity: 0.4; transition: opacity 0.3s, stroke 0.3s; }
+  .edge.active { stroke: var(--cyan); stroke-width: 1.5; opacity: 0.7; filter: drop-shadow(0 0 4px var(--cyan)); }
+  .edge-pulse { fill: var(--cyan); filter: drop-shadow(0 0 6px var(--cyan)); }
+
+  .node-engine { cursor: pointer; transition: transform 0.2s; }
+  .node-engine .node-bg { fill: var(--bg-elev); stroke: var(--line-bright); stroke-width: 1; }
+  .node-engine.active .node-bg {
+    fill: rgba(99,91,255,0.15);
+    stroke: var(--indigo);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 12px rgba(99,91,255,0.5));
+  }
+  .node-engine.profit .node-bg { stroke: var(--green); filter: drop-shadow(0 0 8px rgba(0,255,136,0.4)); }
+  .node-engine.loss .node-bg { stroke: var(--red); filter: drop-shadow(0 0 8px rgba(255,56,96,0.4)); }
+  .node-engine .node-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    fill: var(--ink); text-anchor: middle; letter-spacing: 0.05em;
+  }
+  .node-engine .node-pnl {
+    font-family: var(--mono); font-size: 9.5px; fill: var(--ink-dim); text-anchor: middle;
+  }
+  .node-engine .node-pnl.green { fill: var(--green); }
+  .node-engine .node-pnl.red { fill: var(--red); }
+  .node-engine .node-meta {
+    font-family: var(--mono); font-size: 8px; fill: var(--ink-faint);
+    text-anchor: middle; letter-spacing: 0.06em;
+  }
+
+  .node-stock { cursor: pointer; }
+  .node-stock .stock-bg { fill: var(--bg-card); stroke: var(--line-bright); stroke-width: 1; }
+  .node-stock.up .stock-bg { stroke: var(--green); fill: rgba(0,255,136,0.06); }
+  .node-stock.down .stock-bg { stroke: var(--red); fill: rgba(255,56,96,0.06); }
+  .node-stock .stock-sym {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    fill: var(--ink); text-anchor: middle;
+  }
+  .node-stock .stock-pnl {
+    font-family: var(--mono); font-size: 7.5px; text-anchor: middle; fill: var(--ink-dim);
+  }
+  .node-stock.up .stock-pnl { fill: var(--green); }
+  .node-stock.down .stock-pnl { fill: var(--red); }
+
+  .center-label { pointer-events: none; }
+  .center-label .center-title {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    fill: var(--ink-dim); text-anchor: middle; letter-spacing: 0.2em;
+  }
+  .center-label .center-pnl {
+    font-family: var(--mono); font-size: 24px; font-weight: 800;
+    text-anchor: middle; fill: var(--ink);
+  }
+  .center-label .center-pnl.green { fill: var(--green); filter: drop-shadow(0 0 8px rgba(0,255,136,0.4)); }
+  .center-label .center-pnl.red { fill: var(--red); filter: drop-shadow(0 0 8px rgba(255,56,96,0.4)); }
+  .center-label .center-meta {
+    font-family: var(--mono); font-size: 9px; fill: var(--ink-faint);
+    text-anchor: middle; letter-spacing: 0.15em; text-transform: uppercase;
+  }
+
+  .footer {
+    height: 36px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-dim);
+  }
+  .footer .item { display: flex; gap: 6px; align-items: center; }
+  .footer .item .label {
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 9px;
+  }
+  .footer .item .v { color: var(--ink); font-weight: 600; }
+  .footer .item .v.green { color: var(--green); }
+  .footer .item .v.red { color: var(--red); }
+  .footer .right { margin-left: auto; color: var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<header class="statusbar">
+  <div class="brand">⟦ Sarathi · Live ⟧</div>
+  <div class="stat"><span class="label">Time IST</span><span class="value" id="sTime">—</span></div>
+  <div class="stat"><span class="label">Market</span><span class="value" id="sMarket">—</span></div>
+  <div class="stat"><span class="label">Engines</span><span class="value" id="sEngines">—</span></div>
+  <div class="stat"><span class="label">Open Pos</span><span class="value" id="sOpen">—</span></div>
+  <div class="stat"><span class="label">Trades</span><span class="value" id="sTrades">—</span></div>
+  <div class="stat"><span class="label">Win Rate</span><span class="value" id="sWR">—</span></div>
+  <div class="stat"><span class="label">Health</span><span class="value" id="sHealth">—</span></div>
+  <div class="stat"><span class="label">Fleet P&amp;L</span><span class="value" id="sFleet">—</span></div>
+  <div class="links">
+    <a href="/dashboard">/dashboard</a>
+    <a href="/live" class="active">/live</a>
+    <a href="/landing">/landing</a>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="events">
+    <div class="events-header">
+      <span>Event Stream</span>
+      <span class="live-dot"></span>
+    </div>
+    <div class="events-body" id="eventsBody"></div>
+  </aside>
+
+  <main class="network">
+    <svg id="networkSvg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet">
+      <g id="edges"></g>
+      <g id="nodes"></g>
+      <g class="center-label">
+        <text class="center-meta" x="600" y="335">FLEET P&amp;L</text>
+        <text class="center-pnl" id="centerPnl" x="600" y="370">—</text>
+        <text class="center-meta" id="centerMeta" x="600" y="395">— trades · — open</text>
+      </g>
+      <g id="pulses"></g>
+    </svg>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="item"><span class="label">Last update</span><span class="v" id="fLastUpdate">—</span></div>
+  <div class="item"><span class="label">Refresh</span><span class="v">3s</span></div>
+  <div class="item"><span class="label">Rust</span><span class="v" id="fRust">—</span></div>
+  <div class="item"><span class="label">Watchdog</span><span class="v" id="fWatchdog">—</span></div>
+  <div class="right">v0.1 · built 2026-05-12 · Sarathi</div>
+</footer>
+
+<script>
+'use strict';
+
+// Engine configuration ─ 7 active engines arranged in a circle
+const ENGINES = [
+  { id: 'v4',         label: 'v4',         desc: 'COMPOSITE' },
+  { id: 'v5',         label: 'v5',         desc: 'MULTI-POOL' },
+  { id: 'v5_classic', label: 'v5_classic', desc: 'CLASSIC' },
+  { id: 'v5_6',       label: 'v5_6',       desc: 'DARVAS' },
+  { id: 'v5_7',       label: 'v5_7',       desc: 'MEAN-REV' },
+  { id: 'v5_8',       label: 'v5_8',       desc: 'REGIME' },
+  { id: 'v6',         label: 'v6',         desc: 'BOLT-ON' },
+];
+
+const CENTER_X = 600, CENTER_Y = 360;
+const ENGINE_RADIUS = 200, STOCK_RADIUS = 100;
+const ENGINE_NODE_W = 80, ENGINE_NODE_H = 48;
+const STOCK_NODE_W = 70, STOCK_NODE_H = 30;
+
+function engineAngle(idx) { return (idx * (360 / ENGINES.length)) - 90; }
+function enginePos(idx) {
+  const a = engineAngle(idx) * Math.PI / 180;
+  return {
+    x: CENTER_X + Math.cos(a) * ENGINE_RADIUS,
+    y: CENTER_Y + Math.sin(a) * ENGINE_RADIUS,
+    angle: a,
+  };
+}
+function stockPos(engineIdx, stockIdx, totalStocks) {
+  const ep = enginePos(engineIdx);
+  const fanSpread = Math.min(60, 15 * totalStocks);
+  const start = ep.angle * 180 / Math.PI - fanSpread / 2;
+  const step = totalStocks > 1 ? fanSpread / (totalStocks - 1) : 0;
+  const angleDeg = start + stockIdx * step;
+  const angle = angleDeg * Math.PI / 180;
+  return {
+    x: ep.x + Math.cos(angle) * STOCK_RADIUS,
+    y: ep.y + Math.sin(angle) * STOCK_RADIUS,
+  };
+}
+
+const state = { engines: {}, positions: {}, events: [], seenEvents: new Set(), bootTime: null };
+
+const svgNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(svgNS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function $(id) { return document.getElementById(id); }
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+// Event stream — builds DOM with createElement (no innerHTML, XSS-safe)
+function addEvent(type, engine, parts) {
+  // parts is an array of {text, cls} objects
+  const t = new Date().toLocaleTimeString('en-IN', { hour12: false }).slice(0, 8);
+  state.events.unshift({ t, type, engine, parts });
+  if (state.events.length > 100) state.events.pop();
+  renderEvents();
+}
+
+function renderEvents() {
+  const body = $('eventsBody');
+  clear(body);
+  state.events.slice(0, 80).forEach(function(e) {
+    const div = document.createElement('div');
+    div.className = 'event ' + e.type;
+
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = e.t.slice(0, 5);
+    div.appendChild(time);
+
+    const eng = document.createElement('span');
+    eng.className = 'engine';
+    eng.textContent = e.engine;
+    div.appendChild(eng);
+
+    const msg = document.createElement('span');
+    msg.className = 'msg';
+    // Build msg from structured parts — never use innerHTML
+    e.parts.forEach(function(p) {
+      const span = document.createElement('span');
+      if (p.cls) span.className = p.cls;
+      span.textContent = p.text;
+      msg.appendChild(span);
+    });
+    div.appendChild(msg);
+
+    body.appendChild(div);
+  });
+}
+
+function renderNetwork() {
+  const edges = $('edges');
+  const nodes = $('nodes');
+  clear(edges);
+  clear(nodes);
+
+  ENGINES.forEach(function(eng, ei) {
+    const ep = enginePos(ei);
+    const data = state.engines[eng.id] || {};
+    const positions = state.positions[eng.id] || [];
+
+    // Center → engine edge
+    edges.appendChild(svgEl('line', {
+      x1: CENTER_X, y1: CENTER_Y, x2: ep.x, y2: ep.y,
+      class: 'edge' + (positions.length > 0 ? ' active' : '')
+    }));
+
+    // Engine → stock edges
+    positions.forEach(function(p, pi) {
+      const sp = stockPos(ei, pi, positions.length);
+      edges.appendChild(svgEl('line', {
+        x1: ep.x, y1: ep.y, x2: sp.x, y2: sp.y,
+        class: 'edge active'
+      }));
+    });
+
+    // Engine node
+    const pnl = data.pnl || 0;
+    const cls = 'node-engine' +
+      (positions.length > 0 ? ' active' : '') +
+      (pnl > 0 ? ' profit' : pnl < 0 ? ' loss' : '');
+    const g = svgEl('g', {
+      class: cls,
+      transform: 'translate(' + (ep.x - ENGINE_NODE_W/2) + ',' + (ep.y - ENGINE_NODE_H/2) + ')'
+    });
+    g.appendChild(svgEl('rect', {
+      class: 'node-bg', x: 0, y: 0,
+      width: ENGINE_NODE_W, height: ENGINE_NODE_H, rx: 6
+    }));
+    const lbl = svgEl('text', { class: 'node-label', x: ENGINE_NODE_W/2, y: 17 });
+    lbl.textContent = eng.label;
+    g.appendChild(lbl);
+
+    const pnlEl = svgEl('text', {
+      class: 'node-pnl' + (pnl > 0 ? ' green' : pnl < 0 ? ' red' : ''),
+      x: ENGINE_NODE_W/2, y: 31
+    });
+    pnlEl.textContent = (pnl >= 0 ? '+' : '−') + '₹' + Math.abs(Math.round(pnl)).toLocaleString('en-IN');
+    g.appendChild(pnlEl);
+
+    const meta = svgEl('text', { class: 'node-meta', x: ENGINE_NODE_W/2, y: 43 });
+    meta.textContent = (data.trades || 0) + 't · ' + Math.round(data.wr || 0) + '%';
+    g.appendChild(meta);
+
+    nodes.appendChild(g);
+
+    // Stock nodes
+    positions.forEach(function(p, pi) {
+      const sp = stockPos(ei, pi, positions.length);
+      const symPnl = p.unrealized_pnl || 0;
+      const stockCls = 'node-stock' + (symPnl > 0 ? ' up' : symPnl < 0 ? ' down' : '');
+      const sg = svgEl('g', {
+        class: stockCls,
+        transform: 'translate(' + (sp.x - STOCK_NODE_W/2) + ',' + (sp.y - STOCK_NODE_H/2) + ')'
+      });
+      sg.appendChild(svgEl('rect', {
+        class: 'stock-bg', x: 0, y: 0,
+        width: STOCK_NODE_W, height: STOCK_NODE_H, rx: 4
+      }));
+      const ssym = svgEl('text', { class: 'stock-sym', x: STOCK_NODE_W/2, y: 13 });
+      ssym.textContent = (p.symbol || '?').slice(0, 8);
+      sg.appendChild(ssym);
+
+      const spnl = svgEl('text', { class: 'stock-pnl', x: STOCK_NODE_W/2, y: 24 });
+      if (symPnl !== 0) {
+        spnl.textContent = (symPnl >= 0 ? '+' : '−') + '₹' + Math.abs(Math.round(symPnl));
+      } else {
+        spnl.textContent = '₹' + (p.entry_price || 0).toFixed(2);
+      }
+      sg.appendChild(spnl);
+
+      nodes.appendChild(sg);
+    });
+  });
+}
+
+// Animated pulse along an edge
+function pulseEdge(fromX, fromY, toX, toY) {
+  const pulses = $('pulses');
+  const pulse = svgEl('circle', { cx: fromX, cy: fromY, r: 4, class: 'edge-pulse' });
+  pulses.appendChild(pulse);
+
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const duration = 800;
+  const start = performance.now();
+
+  function step(now) {
+    const progress = Math.min(1, (now - start) / duration);
+    pulse.setAttribute('cx', fromX + dx * progress);
+    pulse.setAttribute('cy', fromY + dy * progress);
+    pulse.style.opacity = 1 - progress * 0.8;
+    if (progress < 1) requestAnimationFrame(step);
+    else pulse.remove();
+  }
+  requestAnimationFrame(step);
+}
+
+async function fetchData() {
+  try {
+    const [statusResp, healthResp, arenaResp] = await Promise.all([
+      fetch('/api/engine-status').then(function(r) { return r.json(); }),
+      fetch('/api/system-health').then(function(r) { return r.json(); }).catch(function() { return {}; }),
+      fetch('/api/engine-arena').then(function(r) { return r.json(); }).catch(function() { return {}; }),
+    ]);
+
+    // Update engine state
+    (statusResp.engines || []).forEach(function(e) {
+      state.engines[e.engine] = e;
+    });
+
+    // Update positions per engine
+    Object.keys(arenaResp).forEach(function(engineId) {
+      const data = arenaResp[engineId] || {};
+      const normalizedId = engineId.replace('.', '_');  // v5.6 → v5_6
+      const positions = (data.positions || []).map(function(p) {
+        return {
+          symbol: p.symbol,
+          entry_price: p.entry_price,
+          direction: p.direction,
+          unrealized_pnl: p.unrealized_pnl || 0,
+        };
+      });
+
+      // Detect new/exited positions for event stream
+      const prev = state.positions[normalizedId] || [];
+      const prevSyms = new Set(prev.map(function(x) { return x.symbol; }));
+      const currSyms = new Set(positions.map(function(x) { return x.symbol; }));
+
+      positions.forEach(function(p) {
+        if (!prevSyms.has(p.symbol)) {
+          addEvent('buy', normalizedId, [
+            { text: p.symbol, cls: 'sym' },
+            { text: ' ' + (p.direction === 'LONG' ? 'LONG' : 'SHORT') + ' @ ' },
+            { text: '₹' + (p.entry_price ? p.entry_price.toFixed(2) : '?'), cls: 'px' },
+          ]);
+          const engIdx = ENGINES.findIndex(function(e) { return e.id === normalizedId; });
+          if (engIdx >= 0) {
+            const ep = enginePos(engIdx);
+            pulseEdge(CENTER_X, CENTER_Y, ep.x, ep.y);
+          }
+        }
+      });
+      prev.forEach(function(p) {
+        if (!currSyms.has(p.symbol)) {
+          addEvent('sell', normalizedId, [
+            { text: p.symbol, cls: 'sym' },
+            { text: ' EXIT' },
+          ]);
+        }
+      });
+
+      state.positions[normalizedId] = positions;
+    });
+
+    // Status bar totals
+    const engines = statusResp.engines || [];
+    const totalOpen = engines.reduce(function(s, e) { return s + (e.open || 0); }, 0);
+    const totalTrades = engines.reduce(function(s, e) { return s + (e.trades || 0); }, 0);
+    const totalWins = engines.reduce(function(s, e) { return s + (e.wins || 0); }, 0);
+    const totalPnl = engines.reduce(function(s, e) { return s + (e.pnl || 0); }, 0);
+    const wr = totalTrades > 0 ? (totalWins / totalTrades * 100) : 0;
+
+    $('sTime').textContent = new Date().toLocaleTimeString('en-IN', { hour12: false }).slice(0, 8);
+    $('sMarket').textContent = healthResp.in_market_hours ? 'OPEN' : 'CLOSED';
+    $('sMarket').className = 'value ' + (healthResp.in_market_hours ? 'green' : 'amber');
+    $('sEngines').textContent = engines.length + '/7';
+    $('sOpen').textContent = totalOpen;
+    $('sTrades').textContent = totalTrades;
+    $('sWR').textContent = wr.toFixed(0) + '%';
+    $('sHealth').textContent = (healthResp.overall_status || '—').toUpperCase();
+    const hStatus = healthResp.overall_status;
+    $('sHealth').className = 'value ' +
+      (hStatus === 'ok' ? 'green' :
+       (hStatus === 'error' || hStatus === 'critical') ? 'red' : 'amber');
+    $('sFleet').textContent = (totalPnl >= 0 ? '+' : '−') + '₹' + Math.abs(Math.round(totalPnl)).toLocaleString('en-IN');
+    $('sFleet').className = 'value ' + (totalPnl >= 0 ? 'green' : 'red');
+
+    // Center label
+    $('centerPnl').textContent = (totalPnl >= 0 ? '+' : '−') + '₹' + Math.abs(Math.round(totalPnl)).toLocaleString('en-IN');
+    $('centerPnl').setAttribute('class', 'center-pnl ' + (totalPnl >= 0 ? 'green' : 'red'));
+    $('centerMeta').textContent = totalTrades + ' trades · ' + totalOpen + ' open · ' + wr.toFixed(0) + '% WR';
+
+    // Footer
+    $('fLastUpdate').textContent = new Date().toLocaleTimeString('en-IN', { hour12: false }).slice(0, 8);
+
+    renderNetwork();
+
+  } catch (e) {
+    console.error('Fetch failed:', e);
+  }
+}
+
+// Live-tail engine logs via /api/recent-scans — populates event stream with
+// real scan/deploy/win/loss/watchlist events. Polled every 5 sec.
+async function fetchRecentScans() {
+  try {
+    const r = await fetch('/api/recent-scans');
+    if (!r.ok) return;
+    const d = await r.json();
+
+    // Map API event types to event-stream CSS classes
+    const TYPE_MAP = {
+      'scan':      'scan',
+      'deploy':    'buy',
+      'win':       'exit-target',
+      'loss':      'exit-stop',
+      'watchlist': 'scan',
+    };
+
+    // Process events oldest → newest so they appear in correct order
+    const events = (d.events || []).slice().reverse();
+    let newCount = 0;
+    events.forEach(function(e) {
+      // Unique key for dedup
+      const key = e.time + '|' + e.engine + '|' + (e.msg || '').slice(0, 40);
+      if (state.seenEvents.has(key)) return;
+      state.seenEvents.add(key);
+
+      // On first load, seed seen-set without rendering — only render NEW events
+      if (state.bootTime === null) return;
+
+      // Build structured msg parts for safe DOM construction
+      const parts = [];
+      const msg = e.msg || '';
+      if (e.type === 'scan' && e.detail) {
+        parts.push({ text: 'scan · ' });
+        parts.push({ text: e.detail.scored + ' scored ', cls: 'sym' });
+        parts.push({ text: ' BUY=' + e.detail.buy + ' HOLD=' + e.detail.hold + ' AVOID=' + e.detail.avoid });
+      } else if (e.type === 'deploy') {
+        parts.push({ text: msg.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, ''), cls: 'sym' });
+      } else if (e.type === 'win' && e.detail) {
+        parts.push({ text: 'WIN ', cls: 'sym' });
+        parts.push({ text: e.detail.symbol, cls: 'sym' });
+        parts.push({ text: ' · ' + e.detail.reason + ' · ' });
+        parts.push({ text: 'Rs ' + e.detail.pnl_rs, cls: 'px' });
+      } else if (e.type === 'loss' && e.detail) {
+        parts.push({ text: 'LOSS ', cls: 'sym' });
+        parts.push({ text: e.detail.symbol, cls: 'sym' });
+        parts.push({ text: ' · ' + e.detail.reason + ' · ' });
+        parts.push({ text: 'Rs ' + e.detail.pnl_rs, cls: 'px' });
+      } else {
+        parts.push({ text: msg });
+      }
+
+      addEvent(TYPE_MAP[e.type] || 'scan', e.engine, parts);
+      newCount++;
+    });
+
+    // After first successful poll, set bootTime — subsequent polls will render new events
+    if (state.bootTime === null) {
+      state.bootTime = Date.now();
+      // Show summary of what was seeded
+      const lastEvent = events[events.length - 1];
+      if (lastEvent) {
+        addEvent('scan', 'sys', [
+          { text: 'Tailing engine logs · ' },
+          { text: events.length + ' historical events skipped', cls: 'sym' },
+          { text: ' · new events will appear as they happen' },
+        ]);
+      }
+    }
+  } catch (err) {
+    console.error('recent-scans poll failed:', err);
+  }
+}
+
+// Boot
+addEvent('scan', 'sys', [{ text: 'Live view initialized · polling every 3s' }]);
+fetchData();
+fetchRecentScans();
+setInterval(fetchData, 3000);
+setInterval(fetchRecentScans, 5000);
+</script>
+</body>
+</html>

@@ -96,6 +96,90 @@ def dashboard():
     """Live trading desk — macOS-style multi-panel dashboard."""
     return render_template("dashboard.html")
 
+
+@app.route("/live")
+def live_view():
+    """Live agent-network view — radial visualization of engines + open positions.
+    Inspired by quant trading dashboards (inferencesaver style). Built 2026-05-12."""
+    return render_template("live.html")
+
+
+@app.route("/api/recent-scans")
+def api_recent_scans():
+    """Recent scan + trade events across all 7 engines.
+    Tails the engine log files and extracts interesting lines (scans, deploys,
+    exits, watchlist additions). Returns last 60 events sorted newest first.
+    Polled by /live every 5s for the event stream.
+    Added 2026-05-12 (Option C in /live refinement)."""
+    import re
+    from pathlib import Path
+
+    ENGINES = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6']
+    LOG_DIR = Path(os.path.dirname(__file__)).parent / "logs"
+
+    # Patterns to extract — each tuple: (regex, event_type)
+    # Handles BOTH log formats:
+    #   v4: ">> LOSS: SYMBOL xQTY @ Rs PRICE (REASON) P&L: Rs -X"  (colon, no direction)
+    #   v5: ">> WIN SHORT SYMBOL xQTY @PRICE (REASON) P&L: Rs +X"  (no colon, with direction)
+    # Direction (SHORT/LONG) is optional via non-capturing group.
+    PATTERNS = [
+        (re.compile(r'\[(\d{2}:\d{2}:\d{2})\].*scorer:\s*(\d+)\s*scored\s*\|\s*BUY=(\d+)\s*HOLD=(\d+)\s*AVOID=(\d+)'), 'scan'),
+        (re.compile(r'\[(\d{2}:\d{2}:\d{2})\]\s*DEPLOYING\s*Rs\s*([\d,]+)\s*into\s*(\d+)\s*v?\d*\s*BUY\s*signals'), 'deploy'),
+        (re.compile(r'\[(\d{2}:\d{2}:\d{2})\]\s*>>\s*WIN:?\s+(?:(SHORT|LONG)\s+)?(\w+)\s+x(\d+)\s*@\s*(?:Rs\s*)?([\d.,]+)\s*\(([^)]+)\)\s*P&L:\s*Rs\s*([+-]?[\d,]+)'), 'win'),
+        (re.compile(r'\[(\d{2}:\d{2}:\d{2})\]\s*>>\s*LOSS:?\s+(?:(SHORT|LONG)\s+)?(\w+)\s+x(\d+)\s*@\s*(?:Rs\s*)?([\d.,]+)\s*\(([^)]+)\)\s*P&L:\s*Rs\s*([+-]?[\d,]+)'), 'loss'),
+        (re.compile(r'\[(\d{2}:\d{2}:\d{2})\]\s+(\w+):\s+added\s+to\s+watchlist'), 'watchlist'),
+    ]
+
+    events = []
+    # Tail last ~200 lines from each engine log (fast — IO bound)
+    for engine in ENGINES:
+        log_file = LOG_DIR / f"{engine}-paper-trade.log"
+        if not log_file.exists():
+            continue
+        try:
+            # Read last 200 lines efficiently
+            with open(log_file, 'rb') as f:
+                f.seek(0, 2)  # seek to end
+                size = f.tell()
+                # Read last 30KB (~200 lines avg)
+                read_from = max(0, size - 30_000)
+                f.seek(read_from)
+                lines = f.read().decode('utf-8', errors='ignore').split('\n')
+        except (IOError, OSError):
+            continue
+
+        # Parse last 100 lines (most recent first if we reverse)
+        for line in lines[-100:]:
+            for pattern, evt_type in PATTERNS:
+                m = pattern.search(line)
+                if not m:
+                    continue
+                g = m.groups()
+                event = {'time': g[0], 'engine': engine, 'type': evt_type}
+                if evt_type == 'scan':
+                    event['msg'] = f"scan: {g[1]} scored · BUY={g[2]} HOLD={g[3]} AVOID={g[4]}"
+                    event['detail'] = {'scored': int(g[1]), 'buy': int(g[2]), 'hold': int(g[3]), 'avoid': int(g[4])}
+                elif evt_type == 'deploy':
+                    event['msg'] = f"DEPLOY Rs {g[1]} into {g[2]} BUYs"
+                elif evt_type in ('win', 'loss'):
+                    direction, symbol, qty, price, reason, pnl = g[1], g[2], g[3], g[4], g[5], g[6]
+                    event['msg'] = f"{evt_type.upper()} {direction} {symbol} @{price} ({reason}) Rs {pnl}"
+                    event['detail'] = {'symbol': symbol, 'direction': direction, 'reason': reason, 'pnl_rs': pnl}
+                elif evt_type == 'watchlist':
+                    event['msg'] = f"{g[1]} → watchlist"
+                events.append(event)
+                break  # one pattern per line
+
+    # Sort newest first by time (lexicographic works for HH:MM:SS)
+    events.sort(key=lambda e: e['time'], reverse=True)
+
+    return jsonify({
+        'events': events[:60],
+        'count': len(events[:60]),
+        'engines_scanned': ENGINES,
+    })
+
+
 @app.route("/api/preloaded-scores")
 def api_preloaded():
     """Serve pre-computed scores (instant, no API delay)."""

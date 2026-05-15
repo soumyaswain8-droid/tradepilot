@@ -681,7 +681,7 @@ _loaded_model = None
 
 
 def _get_model():
-    """Lazy-load the trained model."""
+    """Lazy-load the trained model. SARATHI-ML gated."""
     global _loaded_model
     if _loaded_model is not None:
         return _loaded_model
@@ -689,6 +689,26 @@ def _get_model():
     if not MODEL_PATH.exists():
         logger.warning(f"No trained model at {MODEL_PATH}. Using neutral prediction.")
         return None
+
+    # SARATHI-ML gate (added 2026-05-15, Sprint 1). Engines refuse to load
+    # a model whose verification_report.json is missing, BLOCKed, or whose
+    # CEO override has expired. Prevents the May-13 silent retrain pattern.
+    try:
+        import sys as _sys
+        _root = MODEL_PATH.parent.parent.parent.parent
+        if str(_root) not in _sys.path:
+            _sys.path.insert(0, str(_root))
+        from scripts.team.gates.mlops_ic_gate import ensure_model_allowed, ModelBlockedError
+        ensure_model_allowed(MODEL_PATH)
+    except ImportError:
+        # Gate not installed (e.g. running outside project tree) — proceed with warning
+        logger.warning("SARATHI-ML gate not available; loading model without verification")
+    except Exception as e:
+        # NameError catches ModelBlockedError above when ImportError already triggered
+        if type(e).__name__ == "ModelBlockedError":
+            logger.error(f"SARATHI-ML BLOCK: {e}")
+            raise
+        logger.warning(f"SARATHI-ML gate raised non-block error: {e}")
 
     import lightgbm as lgb
     _loaded_model = lgb.Booster(model_file=str(MODEL_PATH))

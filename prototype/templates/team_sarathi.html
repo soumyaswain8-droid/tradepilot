@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sarathi Ledger · TradePilot</title>
+<style>
+  :root { --bg:#0b0d12; --panel:#11141b; --text:#e6e8ee; --text-dim:#9aa0ad;
+          --border:#1f2430; --blue:#3b82f6; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family: 'Inter', -apple-system, sans-serif; font-size:13px; }
+  header { padding:14px 20px; border-bottom:1px solid var(--border);
+           display:flex; justify-content:space-between; background:var(--panel); }
+  header h1 { margin:0; font-size:16px; font-weight:600; }
+  main { padding:14px 20px; }
+  .controls { display:flex; gap:8px; margin-bottom:12px; }
+  select, button { background:var(--panel); color:var(--text); border:1px solid var(--border);
+                   padding:6px 10px; border-radius:4px; font-size:12px; }
+  table { width:100%; border-collapse:collapse; background:var(--panel);
+          border:1px solid var(--border); border-radius:6px; font-size:12px; }
+  th { text-align:left; padding:8px 12px; border-bottom:1px solid var(--border);
+       color:var(--text-dim); text-transform:uppercase; font-size:10px; letter-spacing:.8px; }
+  td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .dec { font-weight:600; font-size:10px; padding:2px 6px; border-radius:3px;
+         display:inline-block; }
+  .dec.PASS    { background:#064e3b; color:#a7f3d0; }
+  .dec.WARN    { background:#78350f; color:#fde68a; }
+  .dec.BLOCK   { background:#7f1d1d; color:#fecaca; }
+  .dec.REJECT  { background:#7f1d1d; color:#fecaca; }
+  .dec.OVERRIDE{ background:#312e81; color:#c7d2fe; }
+  .dec.ESCALATE{ background:#831843; color:#fbcfe8; }
+  .nav-link { color:var(--blue); text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sarathi Verification Ledger</h1>
+  <div><a class="nav-link" href="/team">← Dashboard</a></div>
+</header>
+<main>
+  <div class="controls">
+    Family:
+    <select id="family">
+      <option value="">All</option>
+      <option value="SARATHI-LRN">LRN — Learnings</option>
+      <option value="SARATHI-SPR">SPR — Sprints</option>
+      <option value="SARATHI-ML">ML — Models</option>
+      <option value="SARATHI-CDE">CDE — Code/Deploy</option>
+      <option value="SARATHI-DAT">DAT — Data</option>
+    </select>
+    Decision:
+    <select id="decision">
+      <option value="">All</option>
+      <option value="BLOCK,REJECT">Blocks only</option>
+      <option value="WARN">Warns only</option>
+      <option value="PASS">Passes only</option>
+    </select>
+    <button id="refresh">Refresh</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:90px;">Time</th>
+        <th style="width:90px;">Family</th>
+        <th style="width:80px;">Decision</th>
+        <th style="width:120px;">Action</th>
+        <th>Subject / Reason</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</main>
+
+<script>
+"use strict";
+function fmt(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleString("en-IN", {hour12:false});
+}
+function makeEl(tag, opts) {
+  const e = document.createElement(tag);
+  if (opts && opts.cls)  e.className = opts.cls;
+  if (opts && opts.text) e.textContent = opts.text;
+  return e;
+}
+function clear(p) { while (p.firstChild) p.removeChild(p.firstChild); }
+
+async function load() {
+  const fam = document.getElementById("family").value;
+  const dec = document.getElementById("decision").value;
+  const params = new URLSearchParams();
+  if (fam) params.set("family", fam);
+  if (dec) params.set("decision", dec);
+  const r = await fetch("/api/team/audit?" + params.toString());
+  const j = await r.json();
+  const body = document.getElementById("tbody");
+  clear(body);
+  if (!j.audit.length) {
+    const tr = makeEl("tr");
+    const td = makeEl("td", {text: "No matching entries."});
+    td.colSpan = 5; td.style.color = "var(--text-dim)";
+    tr.appendChild(td); body.appendChild(tr);
+    return;
+  }
+  j.audit.forEach(r => {
+    const tr = makeEl("tr");
+    tr.appendChild(makeEl("td", {text: fmt(r.ts)}));
+    tr.appendChild(makeEl("td", {text: r.rule_family || "—"}));
+    const dec = makeEl("td");
+    dec.appendChild(makeEl("span", {cls: `dec ${r.decision}`, text: r.decision}));
+    tr.appendChild(dec);
+    tr.appendChild(makeEl("td", {text: r.action || ""}));
+    const summary = `${r.subject || ""}${r.reason ? " — " + r.reason : ""}`;
+    tr.appendChild(makeEl("td", {text: summary}));
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById("refresh").addEventListener("click", load);
+document.getElementById("family").addEventListener("change", load);
+document.getElementById("decision").addEventListener("change", load);
+load();
+</script>
+</body>
+</html>

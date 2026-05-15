@@ -104,6 +104,22 @@ def live_view():
     return render_template("live.html")
 
 
+@app.route("/api/missed-opportunities")
+def api_missed_opportunities():
+    """Reads the missed-opportunities watchdog snapshot.
+    The watchdog (scripts/missed-opportunities-watchdog.py) writes a JSON every
+    3 min during market hours. This endpoint just serves the latest snapshot.
+    Returns {} if watchdog hasn't run yet."""
+    snap = os.path.join(os.path.dirname(__file__), "data", "missed-opportunities.json")
+    if not os.path.exists(snap):
+        return jsonify({"status": "no_snapshot_yet", "hint": "run scripts/missed-opportunities-watchdog.py"})
+    try:
+        with open(snap) as f:
+            return jsonify(json.load(f))
+    except (json.JSONDecodeError, IOError) as e:
+        return jsonify({"status": "snapshot_unreadable", "error": str(e)}), 500
+
+
 @app.route("/api/positions-live")
 def api_positions_live():
     """Open positions for ALL 7 active engines (v4, v5, v5_classic, v5_6, v5_7, v5_8, v6).
@@ -2541,6 +2557,135 @@ def generate_market_answer(question):
             "- **Investment advice**: 'Best SIP mutual funds'\n"
             "- **VIX analysis**: 'What does VIX mean?'\n\n"
             "Try asking one of these questions!")
+
+
+# ═══════════════════════════ TEAM DASHBOARD ════════════════════════════
+# Added 2026-05-15 (Sprint 1). Reads from docs/team/{status,activity,audit}
+# and docs/sarathi/ledger. Append-only — never writes here.
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_TEAM_STATUS_DIR   = _PROJECT_ROOT / "docs" / "team" / "status"
+_TEAM_ACTIVITY_DIR = _PROJECT_ROOT / "docs" / "team" / "activity"
+_TEAM_AUDIT_DIR    = _PROJECT_ROOT / "docs" / "team" / "audit"
+_SARATHI_LEDGER    = _PROJECT_ROOT / "docs" / "sarathi" / "ledger"
+
+_TEAM_AGENTS = [
+    "ceo", "sarathi", "architect", "alpha-hunter", "mlops-sentinel",
+    "execution-analyst", "drift-watcher", "data-quality-officer",
+    "competitive-intel", "knowledge-archivist",
+]
+
+
+def _team_read_jsonl_tail(directory: Path, n: int = 60,
+                          since_ts: str | None = None,
+                          filter_decision: list | None = None) -> list:
+    out = []
+    if not directory.exists():
+        return out
+    files = sorted(directory.glob("*.jsonl"))[-2:]
+    for f in files:
+        try:
+            for line in f.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                if since_ts and r.get("ts", "") <= since_ts:
+                    continue
+                if filter_decision and r.get("decision") not in filter_decision:
+                    continue
+                out.append(r)
+        except Exception:
+            continue
+    out.sort(key=lambda r: r.get("ts", ""), reverse=True)
+    return out[:n]
+
+
+@app.route("/team")
+def team_dashboard():
+    """Permanent agent team dashboard."""
+    return render_template("team.html")
+
+
+@app.route("/team/sarathi")
+def team_sarathi():
+    """Sarathi verification ledger — drill-down on gate decisions."""
+    return render_template("team_sarathi.html")
+
+
+@app.route("/api/team/status")
+def api_team_status():
+    """Aggregate snapshot for the dashboard. One round-trip per 5-s poll."""
+    agents_status = []
+    for a in _TEAM_AGENTS:
+        p = _TEAM_STATUS_DIR / f"{a}.json"
+        if p.exists():
+            try:
+                agents_status.append(json.loads(p.read_text(encoding="utf-8")))
+            except Exception:
+                agents_status.append({"agent": a, "status": "unknown", "ts": None})
+        else:
+            agents_status.append({"agent": a, "status": "scheduled", "ts": None,
+                                  "last_action": None, "next_due": "not yet bootstrapped"})
+
+    # Recent feeds
+    activity = _team_read_jsonl_tail(_TEAM_ACTIVITY_DIR, n=30)
+    audit = _team_read_jsonl_tail(_TEAM_AUDIT_DIR, n=20)
+    sarathi_recent = _team_read_jsonl_tail(_SARATHI_LEDGER, n=10)
+
+    # Quick KPI counts (today)
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_audit = []
+    p_audit_today = _TEAM_AUDIT_DIR / f"{today}.jsonl"
+    if p_audit_today.exists():
+        for line in p_audit_today.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                try:
+                    today_audit.append(json.loads(line))
+                except Exception:
+                    pass
+    kpi = {
+        "today_audit_total": len(today_audit),
+        "today_blocks": sum(1 for r in today_audit if r.get("decision") in ("BLOCK", "REJECT")),
+        "today_warns":  sum(1 for r in today_audit if r.get("decision") == "WARN"),
+        "today_passes": sum(1 for r in today_audit if r.get("decision") == "PASS"),
+    }
+
+    return jsonify({
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "agents": agents_status,
+        "activity": activity,
+        "audit": audit,
+        "sarathi_recent": sarathi_recent,
+        "kpi": kpi,
+    })
+
+
+@app.route("/api/team/agent/<name>")
+def api_team_agent(name):
+    """Drill-down on a single agent: recent activity + audit decisions."""
+    safe_name = name.replace("/", "_").replace("..", "_")
+    status_p = _TEAM_STATUS_DIR / f"{safe_name}.json"
+    status = json.loads(status_p.read_text(encoding="utf-8")) if status_p.exists() else None
+    # Filter activity for this agent
+    activity = [r for r in _team_read_jsonl_tail(_TEAM_ACTIVITY_DIR, n=200)
+                if r.get("agent") == safe_name][:50]
+    audit = [r for r in _team_read_jsonl_tail(_TEAM_AUDIT_DIR, n=200)
+             if r.get("agent") == safe_name][:50]
+    return jsonify({"agent": safe_name, "status": status,
+                    "activity": activity, "audit": audit})
+
+
+@app.route("/api/team/audit")
+def api_team_audit():
+    """Audit log with optional filtering. Used by /team/sarathi page."""
+    fam = request.args.get("family")  # e.g. SARATHI-ML
+    decision = request.args.get("decision")
+    decision_filter = decision.split(",") if decision else None
+    all_audit = _team_read_jsonl_tail(_TEAM_AUDIT_DIR, n=500,
+                                       filter_decision=decision_filter)
+    if fam:
+        all_audit = [r for r in all_audit if r.get("rule_family") == fam]
+    return jsonify({"audit": all_audit[:100], "total": len(all_audit)})
 
 
 if __name__ == "__main__":

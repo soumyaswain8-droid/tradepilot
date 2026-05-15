@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TradePilot Quant Desk · Team</title>
+<style>
+  :root {
+    --bg: #0b0d12; --panel: #11141b; --panel2:#161a23;
+    --text:#e6e8ee; --text-dim:#9aa0ad; --border:#1f2430;
+    --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+    --blue:#3b82f6; --grey:#475569;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family: 'Inter', -apple-system, system-ui, sans-serif; font-size:13px; }
+  header { padding:14px 20px; border-bottom:1px solid var(--border);
+           display:flex; justify-content:space-between; align-items:center;
+           background:var(--panel); }
+  header h1 { margin:0; font-size:16px; font-weight:600; letter-spacing:.3px; }
+  header .meta { color:var(--text-dim); font-size:12px; }
+  main { padding:14px 20px; }
+  section { margin-bottom:18px; }
+  h2 { font-size:11px; text-transform:uppercase; letter-spacing:1.2px;
+       color:var(--text-dim); margin:0 0 8px 0; font-weight:600; }
+  .kpi-strip { display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; }
+  .kpi { background:var(--panel); border:1px solid var(--border); padding:10px;
+         border-radius:6px; }
+  .kpi .label { font-size:10px; color:var(--text-dim); text-transform:uppercase;
+                letter-spacing:.8px; }
+  .kpi .value { font-size:18px; font-weight:600; margin-top:4px; }
+  .agent-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; }
+  .agent-card { background:var(--panel); border:1px solid var(--border);
+                padding:12px; border-radius:6px; cursor:pointer;
+                transition:border-color .15s; }
+  .agent-card:hover { border-color:var(--blue); }
+  .agent-card .name { font-weight:600; font-size:13px; margin-bottom:4px;
+                      display:flex; align-items:center; gap:6px; }
+  .agent-card .status { font-size:11px; color:var(--text-dim); }
+  .agent-card .last { font-size:11px; color:var(--text-dim); margin-top:6px;
+                      max-height:32px; overflow:hidden; }
+  .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.idle      { background:var(--green); }
+  .dot.running   { background:var(--yellow); }
+  .dot.blocked   { background:var(--red); }
+  .dot.warning   { background:var(--yellow); }
+  .dot.scheduled { background:var(--grey); }
+  .dot.paged     { background:var(--red); }
+  .dot.unknown   { background:var(--grey); }
+  .two-col { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  .feed { background:var(--panel); border:1px solid var(--border);
+          border-radius:6px; max-height:380px; overflow-y:auto; }
+  .feed-row { padding:8px 12px; border-bottom:1px solid var(--border);
+              font-size:12px; display:grid; grid-template-columns: 80px 110px 1fr; gap:8px; }
+  .feed-row:last-child { border-bottom:none; }
+  .feed-row .time { color:var(--text-dim); font-variant-numeric:tabular-nums; }
+  .feed-row .agent { color:var(--blue); }
+  .feed-row .text { color:var(--text); overflow:hidden; text-overflow:ellipsis; }
+  .audit-row { padding:8px 12px; border-bottom:1px solid var(--border);
+               font-size:12px; display:grid; grid-template-columns: 70px 90px 80px 1fr; gap:8px; }
+  .audit-row .decision { font-weight:600; font-size:10px; padding:2px 6px;
+                         border-radius:3px; text-align:center; }
+  .audit-row .decision.PASS    { background:#064e3b; color:#a7f3d0; }
+  .audit-row .decision.WARN    { background:#78350f; color:#fde68a; }
+  .audit-row .decision.BLOCK   { background:#7f1d1d; color:#fecaca; }
+  .audit-row .decision.REJECT  { background:#7f1d1d; color:#fecaca; }
+  .audit-row .decision.OVERRIDE{ background:#312e81; color:#c7d2fe; }
+  .audit-row .decision.ESCALATE{ background:#831843; color:#fbcfe8; }
+  .nav-link { color:var(--blue); text-decoration:none; font-size:12px; }
+  .nav-link:hover { text-decoration:underline; }
+  .empty { padding:14px; color:var(--text-dim); font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>TradePilot Quant Desk</h1>
+  <div class="meta">
+    <span id="ts">—</span>
+    &nbsp;·&nbsp;
+    <a class="nav-link" href="/team/sarathi">Sarathi Ledger</a>
+    &nbsp;·&nbsp;
+    <a class="nav-link" href="/live">Live Engines</a>
+  </div>
+</header>
+<main>
+  <section>
+    <h2>KPI · Today</h2>
+    <div class="kpi-strip" id="kpi"></div>
+  </section>
+
+  <section>
+    <h2>Agent Grid · 10 roles</h2>
+    <div class="agent-grid" id="agents"></div>
+  </section>
+
+  <section>
+    <h2>Activity feed &nbsp;·&nbsp; Audit log</h2>
+    <div class="two-col">
+      <div class="feed" id="activity"></div>
+      <div class="feed" id="audit"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const POLL_MS = 5000;
+
+function fmt(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return d.toLocaleTimeString("en-IN", {hour12: false});
+}
+
+function makeEl(tag, opts) {
+  const el = document.createElement(tag);
+  if (!opts) return el;
+  if (opts.cls)   el.className = opts.cls;
+  if (opts.text)  el.textContent = opts.text;
+  if (opts.title) el.title = opts.title;
+  if (opts.onClick) el.addEventListener("click", opts.onClick);
+  return el;
+}
+
+function clear(parent) { while (parent.firstChild) parent.removeChild(parent.firstChild); }
+
+function renderKpi(kpi) {
+  const items = [
+    ["Audit events", String(kpi.today_audit_total ?? 0)],
+    ["Blocks",       String(kpi.today_blocks ?? 0)],
+    ["Warns",        String(kpi.today_warns ?? 0)],
+    ["Passes",       String(kpi.today_passes ?? 0)],
+    ["Sprint",       "1 · S1"],
+    ["Target Sharpe","1.5"],
+  ];
+  const root = document.getElementById("kpi");
+  clear(root);
+  items.forEach(([l, v]) => {
+    const box = makeEl("div", {cls: "kpi"});
+    box.appendChild(makeEl("div", {cls: "label", text: l}));
+    box.appendChild(makeEl("div", {cls: "value", text: v}));
+    root.appendChild(box);
+  });
+}
+
+function renderAgents(agents) {
+  const root = document.getElementById("agents");
+  clear(root);
+  agents.forEach(a => {
+    const status = a.status || "unknown";
+    const card = makeEl("div", {cls: "agent-card"});
+    const nameRow = makeEl("div", {cls: "name"});
+    nameRow.appendChild(makeEl("span", {cls: `dot ${status}`}));
+    nameRow.appendChild(makeEl("span", {text: a.agent}));
+    card.appendChild(nameRow);
+    card.appendChild(makeEl("div", {cls: "status", text: `${status} · ${fmt(a.ts)}`}));
+    const last = a.last_action || "—";
+    const next = a.next_due ? ` · next: ${a.next_due}` : "";
+    card.appendChild(makeEl("div", {cls: "last", text: `${last}${next}`, title: last}));
+    root.appendChild(card);
+  });
+}
+
+function renderActivity(rows) {
+  const root = document.getElementById("activity");
+  clear(root);
+  if (!rows.length) {
+    root.appendChild(makeEl("div", {cls: "empty", text: "No activity yet."}));
+    return;
+  }
+  rows.forEach(r => {
+    const row = makeEl("div", {cls: "feed-row"});
+    row.appendChild(makeEl("div", {cls: "time", text: fmt(r.ts)}));
+    row.appendChild(makeEl("div", {cls: "agent", text: r.agent || ""}));
+    row.appendChild(makeEl("div", {cls: "text", text: r.summary || r.kind || ""}));
+    root.appendChild(row);
+  });
+}
+
+function renderAudit(rows) {
+  const root = document.getElementById("audit");
+  clear(root);
+  if (!rows.length) {
+    root.appendChild(makeEl("div", {cls: "empty", text: "No audit entries yet."}));
+    return;
+  }
+  rows.forEach(r => {
+    const row = makeEl("div", {cls: "audit-row"});
+    row.appendChild(makeEl("div", {cls: "time", text: fmt(r.ts)}));
+    row.appendChild(makeEl("div", {cls: `decision ${r.decision}`, text: r.decision}));
+    row.appendChild(makeEl("div", {cls: "agent", text: r.agent || ""}));
+    const tail = `${r.action || ""} → ${r.subject || ""}${r.reason ? " · " + r.reason : ""}`;
+    row.appendChild(makeEl("div", {cls: "text", text: tail, title: tail}));
+    root.appendChild(row);
+  });
+}
+
+async function tick() {
+  try {
+    const r = await fetch("/api/team/status");
+    const j = await r.json();
+    document.getElementById("ts").textContent = fmt(j.ts);
+    renderKpi(j.kpi || {});
+    renderAgents(j.agents || []);
+    renderActivity(j.activity || []);
+    renderAudit(j.audit || []);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+tick();
+setInterval(tick, POLL_MS);
+</script>
+</body>
+</html>

@@ -15,8 +15,17 @@ prototype/data/intraday/
 # Rust build artifacts
 engine/target/
 
-# Claude Code session memory
-.claude/
+# Claude Code session memory — ignore everything inside .claude/ EXCEPT team charter
+.claude/*
+!.claude/team/
+
+# Ephemeral team logs (Sprint 1 audit data) — never commit
+docs/team/status/*.json
+docs/team/activity/*.jsonl
+docs/team/audit/*.jsonl
+docs/sarathi/ledger/*.jsonl
+docs/slippage/*.jsonl
+docs/exec/*.json
 
 # Models — now tracked in git (repo is private)
 # prototype/models/*.pkl

@@ -35,21 +35,22 @@ TODAY=$(date +%Y-%m-%d)
 STAMP=$(date +%H%M%S)
 
 ENGINES=(
-  # Active engines (6) as of 2026-04-28 EOD post-mortem.
-  # v4 was re-instated after 04-28 produced +Rs 26,179 (71% WR) — original 2-day retirement was wrong.
-  # v6 is NEW: "v4 raw signals + Track A bolt-on" — bypasses v5's signal_engine percentile gate
-  # which mechanically forced SHORTs in BEAR regime (RCA finding from 04-28 EOD).
-  # v5 retains Fix #1 in signal_engine.py (require absolute weakness for SHORT emission).
+  # Active engines: 3 (post-Sprint-1 consolidation per CEO option 3B, 2026-05-15).
+  # Rationale: focus rebuild effort on a smaller A/B set. v5_6/v5_7/v5_8/v6
+  # explore different strategies and add maintenance cost during the 8-week rebuild.
+  # State files preserved; can be revived after rebuild via uncomment.
   "v4|scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py"
-  "v5_6|scripts/v5_6-paper-trade.py"
-  "v5_7|scripts/v5_7-paper-trade.py"
-  "v6|scripts/v6-paper-trade.py"
-  # v5.8 NEW 2026-04-29 EOD: v5 with regime-aware slot partition DISABLED.
-  # Tests whether the BEAR-day LONG starvation (175 blocked signals on 04-29) was the v5-vs-v4 bottleneck.
-  "v5_8|scripts/v5_8-paper-trade.py"
-  # Still retired (preserved — uncomment to re-enable):
+
+  # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
+  # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).
+  # "v5_6|scripts/v5_6-paper-trade.py"     # Darvas-box breakout
+  # "v5_7|scripts/v5_7-paper-trade.py"     # Box mean-reversion
+  # "v5_8|scripts/v5_8-paper-trade.py"     # v5 with regime slot-partition disabled
+  # "v6|scripts/v6-paper-trade.py"         # v4 raw signals + Track A bolt-on
+
+  # Still retired from earlier rounds:
   # "v5_2|scripts/v5_2-paper-trade.py"
   # "v5_3|scripts/v5_3-paper-trade.py"
 )

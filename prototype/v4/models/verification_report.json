@@ -1,0 +1,106 @@
+{
+  "model_path": "prototype/v4/models/lgbm_intraday.txt",
+  "trained_at": "2026-05-04T09:56:06.020301",
+  "date_range": "2024-06-26 to 2026-05-04",
+  "candidate": {
+    "oos_ic": 0.0061,
+    "ic_positive_pct": 0.562,
+    "n_folds": 16
+  },
+  "champion": null,
+  "rules_evaluated": [
+    {
+      "rule": "ML-001",
+      "name": "CPCV report",
+      "result": "BLOCK",
+      "evidence": {
+        "cpcv_present": false
+      },
+      "reason": "No CPCV report attached. Run mlfinlab CombinatorialPurgedCV."
+    },
+    {
+      "rule": "ML-002",
+      "name": "IC >= champion",
+      "result": "WARN",
+      "evidence": {
+        "champion_ic": null
+      },
+      "reason": "No champion to compare against (first-ever promotion)"
+    },
+    {
+      "rule": "ML-003",
+      "name": "IC >= spec floor",
+      "result": "WARN",
+      "evidence": {
+        "ic": 0.0061,
+        "floor": 0.05,
+        "exemption": "legacy"
+      },
+      "reason": "IC 0.0061 below floor 0.05, legacy exemption granted until rebuild completes"
+    },
+    {
+      "rule": "ML-004",
+      "name": "No data leakage",
+      "result": "WARN",
+      "evidence": {
+        "leakage_check_present": false
+      },
+      "reason": "No leakage_check block in meta; cannot verify"
+    },
+    {
+      "rule": "ML-005",
+      "name": "Walk-forward folds",
+      "result": "BLOCK",
+      "evidence": {
+        "n_folds": 16,
+        "ic_positive_pct": 0.562,
+        "min_folds": 12,
+        "min_pos_pct": 0.6
+      },
+      "reason": "folds=16 (need 12), pos%=56.20% (need 60%)"
+    },
+    {
+      "rule": "ML-006",
+      "name": "Cost-corrected backtest",
+      "result": "WARN",
+      "evidence": {
+        "cost_10bps_sharpe": null,
+        "cost_15bps_sharpe": null
+      },
+      "reason": "Cost-corrected Sharpe missing for 10bps and/or 15bps"
+    },
+    {
+      "rule": "ML-007",
+      "name": "Champion-challenger",
+      "result": "WARN",
+      "evidence": {
+        "present": false
+      },
+      "reason": "No champion supplied; first-ever promotion"
+    },
+    {
+      "rule": "ML-008",
+      "name": "Reproducibility",
+      "result": "WARN",
+      "evidence": {},
+      "reason": "data_sha256 or code_commit missing from meta"
+    }
+  ],
+  "blocking_rules": [
+    "ML-001"
+  ],
+  "overall": "BLOCK",
+  "override": {
+    "by": "soumya",
+    "ts": "2026-05-15T16:13:53+05:30",
+    "reason": "Legacy mode during 8-week rebuild. Restored May-9 pre-retrain model after May-13 retrain bled WR to 14-21%. Rebuild ships meta-labeled model + CPCV-validated retrain by 2026-07-15.",
+    "expires": "2026-07-15",
+    "scope": "prototype/v4/models/lgbm_intraday.txt",
+    "applies_to_engines": [
+      "v4",
+      "v5",
+      "v5_classic"
+    ]
+  },
+  "legacy_exempt": true
+}

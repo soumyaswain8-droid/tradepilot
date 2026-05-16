@@ -10,6 +10,10 @@ cyan="\033[36m"; gray="\033[37m"; reset="\033[0m"
 echo -e "${cyan}=== TradePilot Quant Desk · Automation Status ===${reset}"
 echo ""
 
+echo -e "${cyan}--- pmset wake schedule (Mac power management) ---${reset}"
+pmset -g sched 2>/dev/null | head -5 || echo "(pmset unavailable)"
+echo ""
+
 echo -e "${cyan}--- Cron schedule (TRADEPILOT block) ---${reset}"
 crontab -l 2>/dev/null | sed -n '/# TRADEPILOT-BEGIN/,/# TRADEPILOT-END/p' || echo "(no TRADEPILOT block installed yet)"
 echo ""

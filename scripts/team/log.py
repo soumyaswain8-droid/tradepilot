@@ -106,7 +106,9 @@ def update_status(agent: str, status: str,
     if extra:
         card.update(extra)
     path = STATUS_DIR / f"{agent}.json"
-    tmp = path.with_suffix(".json.tmp")
+    # Unique tmp filename to prevent races when multiple processes update
+    # the same agent's status file concurrently (e.g. parallel Sarathi calls).
+    tmp = path.with_suffix(f".json.tmp.{os.getpid()}")
     tmp.write_text(json.dumps(card, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     os.replace(tmp, path)  # atomic on POSIX
 

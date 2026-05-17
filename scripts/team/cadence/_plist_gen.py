@@ -31,6 +31,14 @@ DAILY = list(range(7))        # 0..6
 # Schedule table
 # (name, command_args, hour, minute, weekdays, log_filename)
 JOBS = [
+    # Preflight — 08:50 IST weekdays. Runs the 27-check self-test;
+    # pages Telegram via Sarathi BLOCK audit entry on any FAIL.
+    # Fires 5 min before DAT (08:55) so issues surface before trading chain.
+    # Fresh log filename to avoid TCC taint pattern seen with other jobs.
+    ("preflight",
+     ["python3", "scripts/team/cadence/preflight.py"],
+     8, 50, WEEKDAYS, "preflight-v1.log"),
+
     ("dqo-premarket",
      ["python3", "scripts/sarathi/verify.py", "--family", "DAT", "--check", "pre-market"],
      8, 55, WEEKDAYS, "dqo-premarket.log"),

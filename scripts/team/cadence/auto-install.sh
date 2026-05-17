@@ -28,8 +28,9 @@ cd "$PROJECT_ROOT"
 mkdir -p logs/auto/v2 docs/team/due
 
 LABELS=(
+  com.tradepilot.v2.preflight
   com.tradepilot.v2.dqo-premarket
-  com.tradepilot.v2.launch-market
+  com.tradepilot.v2.engines-on
   com.tradepilot.v2.dqo-mid
   com.tradepilot.v2.exec-eod
   com.tradepilot.v2.standup

@@ -62,8 +62,8 @@ check "pmset wake schedule for weekdays" \
       "pmset -g sched | grep -q 'wakepoweron at 8:45AM weekdays'"
 
 echo ""
-echo -e "${cyan}— 2. launchd jobs (9 expected) —${reset}"
-for label in dqo-premarket engines-on dqo-mid exec-eod standup \
+echo -e "${cyan}— 2. launchd jobs (10 expected) —${reset}"
+for label in preflight dqo-premarket engines-on dqo-mid exec-eod standup \
              due-alpha-hunter due-competitive-intel due-architect bk-daily; do
   check "launchd: com.tradepilot.v2.$label loaded" \
         "launchctl print 'gui/$UID/com.tradepilot.v2.$label' 2>/dev/null | grep -q 'path ='"

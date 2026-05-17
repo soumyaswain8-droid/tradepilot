@@ -535,6 +535,20 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
     pnl_net = pnl - cost
     if pm: pm.close_position(pool_name, sym, exit_price, reason)
     if rm: rm.record_trade_result(pool_name, sym, pnl)
+    # Sprint 1 — Execution Analyst slippage hook. Failure is non-blocking:
+    # any exception in the slippage helper must NOT impact trade close.
+    try:
+        from scripts.team.slippage import record_slippage
+        record_slippage(
+            engine="v5", symbol=sym,
+            direction="SELL" if is_short else "BUY",
+            expected_price=pos.get("target_price") or exit_price,
+            fill_price=exit_price,
+            quantity=pos["qty"], side="exit",
+            trade_id=f"v5-{sym}-{pos.get('entry_time','?')}",
+            extra={"reason": reason, "pnl_net": pnl_net})
+    except Exception:
+        pass
     if reason == "STOPLOSS":  # learning 2026-04-17_003: track SL for same-day reentry block
         record_reentry_sl(state, sym, pos.get("position_type", "LONG"))
     # Task 1.2: WINNER_RE_ARM — only on TARGET exits, never STOPLOSS / TIME_EXIT / FLAT_FORCE_EXIT

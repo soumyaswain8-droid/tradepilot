@@ -401,6 +401,19 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
         pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * 100
     if pm: pm.close_position(pool_name, sym, exit_price, reason)
     if rm: rm.record_trade_result(pool_name, sym, pnl)
+    # Sprint 1 — Execution Analyst slippage hook. Non-blocking on failure.
+    try:
+        from scripts.team.slippage import record_slippage
+        record_slippage(
+            engine="v5_classic", symbol=sym,
+            direction="SELL" if is_short else "BUY",
+            expected_price=pos.get("target_price") or exit_price,
+            fill_price=exit_price,
+            quantity=pos["qty"], side="exit",
+            trade_id=f"v5_classic-{sym}-{pos.get('entry_time','?')}",
+            extra={"reason": reason})
+    except Exception:
+        pass
     state["pools"][pool_name]["closed"].append({
         "symbol": sym, "entry_price": pos["entry_price"], "exit_price": round(exit_price, 2),
         "qty": pos["qty"], "entry_time": pos["entry_time"],

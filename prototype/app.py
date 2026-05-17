@@ -2650,6 +2650,16 @@ def api_team_status():
         "today_passes": sum(1 for r in today_audit if r.get("decision") == "PASS"),
     }
 
+    # Pending LLM-agent tasks (due markers — cron-written, surfaced for human)
+    due_dir = _PROJECT_ROOT / "docs" / "team" / "due"
+    due_markers = []
+    if due_dir.exists():
+        for p in sorted(due_dir.glob("*.due")):
+            try:
+                due_markers.append(json.loads(p.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+
     return jsonify({
         "ts": datetime.now().isoformat(timespec="seconds"),
         "agents": agents_status,
@@ -2657,6 +2667,7 @@ def api_team_status():
         "audit": audit,
         "sarathi_recent": sarathi_recent,
         "kpi": kpi,
+        "due": due_markers,
     })
 
 

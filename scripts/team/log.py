@@ -86,6 +86,26 @@ def log_audit(agent: str, action: str, decision: str,
     _append_jsonl(AUDIT_DIR / f"{_date_stamp()}.jsonl", record)
     if rule_family and rule_family.startswith("SARATHI-"):
         _append_jsonl(SARATHI_DIR / f"{_date_stamp()}.jsonl", record)
+    # Pager — send a Telegram alert when a Sarathi block or reject happens.
+    # Non-blocking: ANY failure here must not affect the audit log write.
+    if decision in ("BLOCK", "REJECT", "ESCALATE"):
+        try:
+            import sys as _sys
+            _root = PROJECT_ROOT
+            if str(_root) not in _sys.path:
+                _sys.path.insert(0, str(_root))
+            from prototype.v5.telegram_bot import send_alert
+            short_subj = subject if len(subject) <= 60 else subject[:57] + "..."
+            short_reason = reason if len(reason) <= 200 else reason[:197] + "..."
+            msg = (f"🚨 *Sarathi {decision}*\n"
+                   f"*Agent:* `{agent}`\n"
+                   f"*Family:* `{rule_family or '-'}`\n"
+                   f"*Action:* {action}\n"
+                   f"*Subject:* `{short_subj}`\n"
+                   f"*Reason:* {short_reason}")
+            send_alert(msg)
+        except Exception:
+            pass
     return record
 
 

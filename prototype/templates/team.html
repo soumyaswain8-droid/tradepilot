@@ -68,6 +68,13 @@
   .nav-link { color:var(--blue); text-decoration:none; font-size:12px; }
   .nav-link:hover { text-decoration:underline; }
   .empty { padding:14px; color:var(--text-dim); font-size:12px; }
+  .due-badge { display:inline-block; background:#7c2d12; color:#fed7aa;
+               font-size:9px; padding:1px 5px; border-radius:3px;
+               margin-left:6px; font-weight:600; letter-spacing:.5px; }
+  .due-panel { background:var(--panel); border:1px solid var(--border);
+               border-radius:6px; padding:10px 14px; }
+  .due-panel .row { font-size:12px; padding:4px 0; color:var(--text-dim); }
+  .due-panel .agent-name { color:#fbbf24; font-weight:600; }
 </style>
 </head>
 <body>
@@ -90,6 +97,11 @@
   <section>
     <h2>Agent Grid · 10 roles</h2>
     <div class="agent-grid" id="agents"></div>
+  </section>
+
+  <section>
+    <h2>Pending LLM-agent tasks (due markers)</h2>
+    <div class="due-panel" id="due"></div>
   </section>
 
   <section>
@@ -142,7 +154,7 @@ function renderKpi(kpi) {
   });
 }
 
-function renderAgents(agents) {
+function renderAgents(agents, dueSet) {
   const root = document.getElementById("agents");
   clear(root);
   agents.forEach(a => {
@@ -151,12 +163,32 @@ function renderAgents(agents) {
     const nameRow = makeEl("div", {cls: "name"});
     nameRow.appendChild(makeEl("span", {cls: `dot ${status}`}));
     nameRow.appendChild(makeEl("span", {text: a.agent}));
+    if (dueSet.has(a.agent)) {
+      nameRow.appendChild(makeEl("span", {cls: "due-badge", text: "DUE"}));
+    }
     card.appendChild(nameRow);
     card.appendChild(makeEl("div", {cls: "status", text: `${status} · ${fmt(a.ts)}`}));
     const last = a.last_action || "—";
     const next = a.next_due ? ` · next: ${a.next_due}` : "";
     card.appendChild(makeEl("div", {cls: "last", text: `${last}${next}`, title: last}));
     root.appendChild(card);
+  });
+}
+
+function renderDue(dueList) {
+  const root = document.getElementById("due");
+  clear(root);
+  if (!dueList.length) {
+    root.appendChild(makeEl("div", {cls: "empty", text: "No pending LLM-agent tasks."}));
+    return;
+  }
+  dueList.forEach(d => {
+    const row = makeEl("div", {cls: "row"});
+    row.appendChild(makeEl("span", {cls: "agent-name", text: d.agent}));
+    row.appendChild(makeEl("span", {text: " · " + (d.reason || "")}));
+    const since = d.marked_at ? " · marked " + fmt(d.marked_at) : "";
+    row.appendChild(makeEl("span", {text: since}));
+    root.appendChild(row);
   });
 }
 
@@ -199,8 +231,11 @@ async function tick() {
     const r = await fetch("/api/team/status");
     const j = await r.json();
     document.getElementById("ts").textContent = fmt(j.ts);
+    const dueList = j.due || [];
+    const dueSet = new Set(dueList.map(d => d.agent));
     renderKpi(j.kpi || {});
-    renderAgents(j.agents || []);
+    renderAgents(j.agents || [], dueSet);
+    renderDue(dueList);
     renderActivity(j.activity || []);
     renderAudit(j.audit || []);
   } catch (e) {

@@ -35,9 +35,16 @@ JOBS = [
      ["python3", "scripts/sarathi/verify.py", "--family", "DAT", "--check", "pre-market"],
      8, 55, WEEKDAYS, "dqo-premarket.log"),
 
-    ("launch-market",
-     ["bash", ".claude/team/cadence/launch-with-gate.sh"],
-     9, 10, WEEKDAYS, "launch.log"),
+    # 3rd Label rename (market-go also TCC-tainted somehow). Fresh names
+    # for both Label and log file. Python launcher inside.
+    # abandon_process_group=True is CRITICAL: launch-market.sh spawns
+    # ~10 nohup'd background processes (engines, watchdogs, telegram).
+    # Without it, when market_go.py returns, launchd SIGTERMs the entire
+    # group and engines die seconds after start.
+    ("engines-on",
+     ["python3", "scripts/team/cadence/market_go.py"],
+     9, 10, WEEKDAYS, "engines-on.log",
+     True),  # abandon_process_group
 
     ("dqo-mid",
      ["python3", "scripts/sarathi/verify.py", "--family", "DAT", "--check", "mid-market"],
@@ -73,8 +80,10 @@ JOBS = [
      23, 0, DAILY, "backup.log"),
 ]
 
-# Standard PATH a launchd job sees (it's minimal by default; we extend for tooling)
-ENV_PATH = "/usr/local/bin:/usr/bin:/bin:/Users/soumyaswain/anaconda3/bin"
+# Standard PATH a launchd job sees (it's minimal by default; we extend for tooling).
+# anaconda3 FIRST — system /usr/local/bin/python3 is x86_64 numpy on this arm64 Mac
+# and crashes engines that import numpy via subprocess (caught: v5_classic 2026-05-17).
+ENV_PATH = "/Users/soumyaswain/anaconda3/bin:/usr/local/bin:/usr/bin:/bin"
 
 
 def cal_intervals_xml(hour: int, minute: int, weekdays: list[int]) -> str:
@@ -123,13 +132,16 @@ def _shellquote(s: str) -> str:
 
 
 def make_plist(name: str, args: list[str], hour: int, minute: int,
-               weekdays: list[int], log_file: str) -> str:
+               weekdays: list[int], log_file: str,
+               abandon_process_group: bool = False) -> str:
     label = f"{LABEL_PREFIX}.{name}"
     # Logs go under logs/auto/v2/ so each plist Label gets a TCC-virgin
     # log path. Earlier launchd failures tainted file paths in TCC's cache
     # such that subsequent writes returned EX_CONFIG with no log output —
     # extremely confusing. A fresh subdirectory sidesteps that entirely.
     log_path = PROJECT_ROOT / "logs" / "auto" / "v2" / log_file
+    abandon_xml = ("    <key>AbandonProcessGroup</key>\n    <true/>\n"
+                   if abandon_process_group else "")
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -159,7 +171,7 @@ def make_plist(name: str, args: list[str], hour: int, minute: int,
     <false/>
     <key>ProcessType</key>
     <string>Background</string>
-  </dict>
+{abandon_xml}  </dict>
 </plist>
 """
 
@@ -171,8 +183,15 @@ def main():
     args = p.parse_args()
 
     out = []
-    for (name, cmd_args, h, m, wds, log_fn) in JOBS:
-        plist = make_plist(name, cmd_args, h, m, wds, log_fn)
+    for job in JOBS:
+        # Optional 7th element: abandon_process_group flag (defaults False)
+        if len(job) == 7:
+            name, cmd_args, h, m, wds, log_fn, abandon = job
+        else:
+            name, cmd_args, h, m, wds, log_fn = job
+            abandon = False
+        plist = make_plist(name, cmd_args, h, m, wds, log_fn,
+                           abandon_process_group=abandon)
         path = LAUNCH_AGENTS / f"{LABEL_PREFIX}.{name}.plist"
         if args.print:
             out.append(f"# === {path.name} ===\n{plist}")

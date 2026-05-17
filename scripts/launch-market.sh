@@ -1,25 +1,27 @@
 #!/bin/bash
 # FULL BATTLE LAUNCH — everything needed for today's market.
 # Use this as the single command after laptop restart or every morning.
+# Triggered automatically Mon-Fri 09:10 IST via launchd (com.tradepilot.v2.launch-market).
 #
 # Launches:
 #   1. Rust engine (execution/risk layer)
-#   2. Flask dashboard (localhost:5050)
+#   2. Flask dashboard (localhost:5050) — also serves /team agent dashboard
 #   3. daily-scores archiver (snapshots dashboard BUY/HOLD list — added 2026-04-23)
-#   4. 4 paper-trade engines (v5, v5_classic, v5_6, v5_7) — see RETIRED list below
+#   4. 3 paper-trade engines (v4, v5, v5_classic) — see Sprint 1 consolidation below
 #   5. crash-watchdog (restart crashed engines)
 #   6. telegram-digest (30-min P&L updates to Soumya)
 #   7. laptop-heartbeat (15-min "alive" ping)
 #   8. auto-stop-eod (kills everything at 15:35)
 #   9. satish-schedule (4 trade-data updates/day — only if SATISH_TELEGRAM_CHAT_ID set)
 #
-# RETIRED 2026-04-27 (no longer auto-launched, scripts and models preserved):
-#   v4    — original engine. Code at scripts/v4-paper-trade.py and prototype/v4/
-#           kept indefinitely; v4's ml_engine + composite_scorer + tiered models
-#           are STILL used by v5/v5_6/v5_7 as the underlying ML layer.
-#   v5_2  — F&O straddle experiment. Cycle-based, not continuous. Insights logged.
-#   v5_3  — over-filtered variant. Carrying -Rs 52,864 cumulative loss.
-#   To re-enable: uncomment the relevant entry in the ENGINES array below.
+# SPRINT 1 CONSOLIDATION (2026-05-15, CEO option 3B):
+#   Active: v4 (control), v5 (primary rebuild target), v5_classic (frozen baseline)
+#   Retired (commented in ENGINES array; state preserved, scripts unchanged):
+#     v5_6  Darvas-box breakout
+#     v5_7  Box mean-reversion
+#     v5_8  v5 with regime slot-partition disabled
+#     v6    v4 raw signals + Track A bolt-on
+#   To re-enable: uncomment in ENGINES array. Re-introduction planned post-rebuild (~2026-07-15).
 #
 # Usage:
 #   ./scripts/launch-market.sh              # full launch

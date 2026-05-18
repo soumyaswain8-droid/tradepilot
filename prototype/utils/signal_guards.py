@@ -228,6 +228,26 @@ def check_model_freshness(
         return False
     age_days = (datetime.now() - datetime.fromtimestamp(model_path.stat().st_mtime)).days
     if age_days > max_age_days:
+        # Sprint 1 (2026-05-15): check for a CEO override in verification_report.json
+        # next to the model. If override is active + scoped + unexpired, the override
+        # wins — the CEO has explicitly accepted the stale model for a bounded period
+        # (e.g. legacy mode during a rebuild). Logs the bypass so it's visible.
+        try:
+            import json
+            from datetime import date as _date
+            vr_path = model_path.parent / "verification_report.json"
+            if vr_path.exists():
+                vr = json.loads(vr_path.read_text(encoding="utf-8"))
+                override = vr.get("override") or {}
+                expires = override.get("expires")
+                if expires and _date.fromisoformat(expires) >= _date.today():
+                    print(f"  [check_model_freshness] Model is {age_days}d old "
+                          f"(max {max_age_days}d) — BYPASSED by CEO override "
+                          f"({override.get('by','?')}, expires {expires})")
+                    return True
+        except Exception as _e:
+            print(f"  [check_model_freshness] override check error: {_e}")
+
         msg = (f"⚠️ ML model is {age_days} days old (max allowed: {max_age_days}). "
                f"Retrain likely failing silently. Check logs/ml-retrain.log. "
                f"Refusing to trade with stale model.")

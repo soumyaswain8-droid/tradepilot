@@ -1,16 +1,23 @@
 #!/bin/bash
-# Laptop-alive heartbeat — sends Telegram ping every 15 min during market hours.
+# Laptop-alive heartbeat — sends Telegram ping during market hours.
 # If pings stop, user knows laptop slept / network died / something broke.
 #
-# Also logs network state changes so post-mortem is possible.
+# 2026-05-19 fixes (in-place per CEO option A):
+#  - PATH: explicitly include /sbin + /usr/sbin so `route` is found under launchd
+#    (launchd's default PATH excludes /sbin; was causing "net ✗ (offline)" false positives)
+#  - Engine list: 3 active engines (v4/v5/v5_classic), not the stale 7-engine list
+#  - Interval: 60 min instead of 15 min (less Telegram noise; dashboard is the live truth)
 
 set -u
 ROOT="/Users/soumyaswain/Documents/tinker/projects/tradepilot"
 cd "$ROOT"
 
+# Ensure /sbin and /usr/sbin are in PATH for route/ifconfig under launchd.
+export PATH="/sbin:/usr/sbin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
 MARKET_OPEN_MIN=$((9 * 60))
 MARKET_CLOSE_MIN=$((15 * 60 + 35))
-INTERVAL_SEC=900  # 15 min
+INTERVAL_SEC=3600  # 60 min (was 15 min — too noisy)
 
 now_min() {
   echo $((10#$(date +%H) * 60 + 10#$(date +%M)))
@@ -89,18 +96,19 @@ while true; do
     # Try sending anyway — queued or buffered connections may still work
   fi
 
-  # Count alive engines via heartbeat files
+  # Count alive engines via heartbeat files (3 active post Sprint-1 consolidation)
   TODAY=$(date +%Y-%m-%d)
   alive=0
   total=0
-  for e in v4 v5 v5_classic v5_2 v5_3 v5_6 v5_7; do
+  for e in v4 v5 v5_classic; do
     total=$((total + 1))
     hb="docs/paper-trades/${e}/${TODAY}.json"
     if [ -f "$hb" ]; then
       mtime=$(stat -f "%m" "$hb" 2>/dev/null || echo 0)
       now_ts=$(date +%s)
       age=$((now_ts - mtime))
-      if [ "$age" -lt 900 ]; then
+      # 60-min freshness window (matches new INTERVAL_SEC)
+      if [ "$age" -lt 3600 ]; then
         alive=$((alive + 1))
       fi
     fi

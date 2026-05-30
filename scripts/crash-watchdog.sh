@@ -35,14 +35,16 @@ HEARTBEAT_MAX_AGE_SEC=2700
 # launch_cmd = how to restart if crashed
 TODAY=$(date +%Y-%m-%d)
 declare -a ENGINES=(
-  # Active engines (6) — v4 re-instated, v6 NEW as of 2026-04-28 EOD.
+  # Active engines (3) — must match launch-market.sh ENGINES array.
+  # Sprint 1 consolidation (2026-05-15, CEO option 3B): v5_6/v5_7/v5_8/v6 retired.
   "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
-  "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
-  "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"
-  "v6|scripts/v6-paper-trade.py|docs/paper-trades/v6/${TODAY}.json|python3 scripts/v6-paper-trade.py"
-  "v5_8|scripts/v5_8-paper-trade.py|docs/paper-trades/v5_8/${TODAY}.json|python3 scripts/v5_8-paper-trade.py"
+  # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
+  # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
+  # "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"
+  # "v6|scripts/v6-paper-trade.py|docs/paper-trades/v6/${TODAY}.json|python3 scripts/v6-paper-trade.py"
+  # "v5_8|scripts/v5_8-paper-trade.py|docs/paper-trades/v5_8/${TODAY}.json|python3 scripts/v5_8-paper-trade.py"
   # Still retired (uncomment if re-enabled in launch-market.sh):
   # "v5_3|scripts/v5_3-paper-trade.py|docs/paper-trades/v5_3/${TODAY}.json|python3 scripts/v5_3-paper-trade.py"
 )
@@ -83,6 +85,9 @@ past_eod_cutoff() {
 
 is_whitelisted_eod() {
   local name="$1"
+  # bash 3.2 (macOS default) aborts on "${arr[@]}" for an empty array under
+  # `set -u`. Guard explicitly — ${#arr[@]} is safe; element expansion is not.
+  [ "${#EOD_EXIT_WHITELIST[@]}" -eq 0 ] && return 1
   for w in "${EOD_EXIT_WHITELIST[@]}"; do
     [ "$w" = "$name" ] && return 0
   done

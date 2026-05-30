@@ -74,6 +74,17 @@ pkill -f "scripts/satish-schedule.sh"   2>/dev/null && echo "  ✓ satish-schedu
 # 3b. Stop Rust engine (execution layer) — was surviving shutdown previously
 pkill -f "tradepilot-engine"            2>/dev/null && echo "  ✓ Rust engine stopped"
 
+# 3c. Release the caffeinate wake-lock held by launch-market.sh (added 2026-05-30).
+#     Otherwise the laptop stays awake all night for no reason.
+CAFFEINATE_PID_FILE="/tmp/tradepilot-caffeinate.pid"
+if [ -f "$CAFFEINATE_PID_FILE" ]; then
+  cpid=$(cat "$CAFFEINATE_PID_FILE" 2>/dev/null)
+  if [ -n "$cpid" ] && kill -0 "$cpid" 2>/dev/null; then
+    kill "$cpid" 2>/dev/null && echo "  ✓ caffeinate stopped (PID $cpid) — wake-lock released"
+  fi
+  rm -f "$CAFFEINATE_PID_FILE"
+fi
+
 # 4. Send Telegram summary (pull final digest)
 digest=$(python3 scripts/status-digest.py 2>&1 || echo "(digest failed)")
 send_telegram "🛑 EOD auto-stop complete at $(date +%H:%M).

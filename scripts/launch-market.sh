@@ -36,6 +36,36 @@ mkdir -p logs
 TODAY=$(date +%Y-%m-%d)
 STAMP=$(date +%H%M%S)
 
+# ──────────────────────────── Sleep prevention ────────────────────────────
+# Wednesday 2026-05-27 lost an entire trading session because the laptop slept
+# at 08:45 right after engines warmed up. Until then, this script relied on a
+# separately-managed caffeinate that wasn't guaranteed to exist. Now we own it:
+# launch starts a dedicated caffeinate that survives until --stop (or auto-stop-eod).
+CAFFEINATE_PID_FILE="/tmp/tradepilot-caffeinate.pid"
+
+start_caffeinate() {
+  if [ -f "$CAFFEINATE_PID_FILE" ] && kill -0 "$(cat "$CAFFEINATE_PID_FILE" 2>/dev/null)" 2>/dev/null; then
+    echo "  ✓ caffeinate already running (PID $(cat "$CAFFEINATE_PID_FILE"))"
+    return 0
+  fi
+  # -d: prevent display sleep; -i: idle; -m: disk; -s: system; -u: user-active assertion
+  nohup caffeinate -dimsu > /dev/null 2>&1 &
+  local pid=$!
+  echo "$pid" > "$CAFFEINATE_PID_FILE"
+  echo "  ✓ caffeinate started (PID $pid) — laptop locked awake until --stop or 15:35 EOD"
+}
+
+stop_caffeinate() {
+  if [ -f "$CAFFEINATE_PID_FILE" ]; then
+    local pid
+    pid=$(cat "$CAFFEINATE_PID_FILE" 2>/dev/null)
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null && echo "  ✓ caffeinate stopped (PID $pid)"
+    fi
+    rm -f "$CAFFEINATE_PID_FILE"
+  fi
+}
+
 ENGINES=(
   # Active engines: 3 (post-Sprint-1 consolidation per CEO option 3B, 2026-05-15).
   # Rationale: focus rebuild effort on a smaller A/B set. v5_6/v5_7/v5_8/v6
@@ -92,7 +122,13 @@ if [ "${1:-}" = "--status" ]; then
   printf "  %-18s %s\n" "auto-stop-eod"    "$(pgrep -f 'auto-stop-eod.sh' | head -1 || echo '-')"
   printf "  %-18s %s\n" "satish-schedule"  "$(pgrep -f 'satish-schedule.sh' | head -1 || echo '-')"
   echo ""
-  echo "Caffeinate:      $(pgrep caffeinate | head -1 || echo 'NOT RUNNING (laptop may sleep)')"
+  # Show OUR caffeinate (PID-tracked, owned by launch-market.sh) rather than any
+  # stranger caffeinate that might happen to be on the system.
+  if [ -f "$CAFFEINATE_PID_FILE" ] && kill -0 "$(cat "$CAFFEINATE_PID_FILE" 2>/dev/null)" 2>/dev/null; then
+    echo "Caffeinate (ours): $(cat "$CAFFEINATE_PID_FILE") — wake-lock held"
+  else
+    echo "Caffeinate (ours): NOT RUNNING — laptop free to sleep (Wed-2026-05-27 risk)"
+  fi
   exit 0
 fi
 
@@ -106,6 +142,7 @@ if [ "${1:-}" = "--stop" ]; then
   pkill -f "scripts/auto-stop-eod.sh"   2>/dev/null
   pkill -f "scripts/satish-schedule.sh" 2>/dev/null
   pkill -f "tradepilot-engine"          2>/dev/null
+  stop_caffeinate
   sleep 2
   remaining=$(ps aux | grep -cE "paper-trade|crash-watchdog|telegram-digest|laptop-heartbeat|auto-stop-eod|satish-schedule|tradepilot-engine" | grep -v grep)
   echo "Remaining: ${remaining}"
@@ -117,6 +154,11 @@ fi
 echo "════════════════════════════════════════════════════════════"
 echo "  TradePilot FULL LAUNCH — $TODAY $STAMP"
 echo "════════════════════════════════════════════════════════════"
+
+# [0/9] Sleep prevention FIRST — before anything else can fail and leave the
+# laptop free to nap through the market session (lost Wed 2026-05-27 this way).
+echo "[0/9] Locking laptop awake (caffeinate)..."
+start_caffeinate
 
 # [0/9] Kill stale processes
 echo "[0/9] Cleaning stale processes..."

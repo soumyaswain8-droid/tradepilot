@@ -71,7 +71,67 @@ def main() -> int:
         cwd=PROJECT_ROOT,
     )
     print(f"[{_stamp()}] market_go: launch-market.sh exit={launch.returncode}")
+
+    # S2-PM-006: any non-zero exit from launch is a silent-failure class bug
+    # (caught after the Wed 2026-05-27 sleep-through + the 26/28 quiet-day class).
+    # Page Sarathi and log a CDE BLOCK so the day doesn't pass unnoticed.
+    if launch.returncode != 0:
+        _alert_launch_failure(launch.returncode)
+
     return launch.returncode
+
+
+def _alert_launch_failure(rc: int) -> None:
+    """SARATHI-CDE BLOCK + Telegram page on any non-zero launch exit.
+
+    Implements S2-PM-006 from the Sprint 2 backlog — promoted to high priority
+    on 2026-05-23 after Week 1's review, shipped 2026-05-30 after Week 2
+    produced three silent-failure days (26 / 27 / 28).
+    """
+    # Audit BLOCK (best-effort; audit must never raise back up the stack)
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from scripts.team.log import log_audit  # type: ignore
+        log_audit(
+            "sarathi",
+            action="launch-market-failure",
+            decision="BLOCK",
+            subject="scripts/launch-market.sh",
+            evidence={"exit_code": rc},
+            reason=(
+                f"launch-market.sh exited {rc} — engines may not be running. "
+                "Manual intervention required before 09:15 IST open."
+            ),
+            vetoable_by=["CEO"],
+            rule_family="SARATHI-CDE",
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"warn: BLOCK audit log failed: {e}", file=sys.stderr)
+
+    # Telegram page (best-effort; pure stdlib so no extra import risk)
+    try:
+        token = chat = None
+        env_path = PROJECT_ROOT / ".env"
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                if line.startswith("TELEGRAM_BOT_TOKEN="):
+                    token = line.split("=", 1)[1].strip().strip('"')
+                elif line.startswith("TELEGRAM_CHAT_ID="):
+                    chat = line.split("=", 1)[1].strip().strip('"')
+        if token and chat:
+            import urllib.parse, urllib.request
+            msg = (
+                f"🚨 SARATHI-CDE BLOCK · launch-market.sh exit={rc}\n"
+                f"Time: {_stamp()} IST\n"
+                "Engines may not be running. Manual check required before 09:15 open."
+            )
+            data = urllib.parse.urlencode({"chat_id": chat, "text": msg}).encode()
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{token}/sendMessage", data=data
+            )
+            urllib.request.urlopen(req, timeout=5)
+    except Exception as e:  # noqa: BLE001
+        print(f"warn: Telegram page failed: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

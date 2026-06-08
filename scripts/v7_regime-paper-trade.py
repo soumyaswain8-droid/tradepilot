@@ -241,6 +241,15 @@ def _v7_load_daily(symbol):
 # open we'd have noise; require ~15 (≈75 min) so the ATR(10) band has settled.
 V7_INTRADAY_MIN_BARS = 15
 
+# Layer-1 ADX thresholds. WFO over the NIFTY-50 basket (scripts/v7-wfo-tune.py,
+# 2026-06-09) found NO threshold combo with a positive out-of-sample edge for the
+# daily gate alone (best mean-OOS Sharpe -0.10, DSR 0.12) — so 25/20 is the
+# least-bad robust choice, NOT a validated edge. The engine's real thesis is the
+# Layer-2 intraday flip, which has no intraday history to backtest and can only be
+# validated by this forward paper A/B. Treat v7 as an EXPERIMENT, not a proven engine.
+V7_ADX_TREND = 25.0
+V7_ADX_CHOP = 20.0
+
 
 def _v7_load_intraday(symbol):
     """Fetch today's 5-min OHLC candles (High/Low/Close) for Layer-2 Supertrend.
@@ -284,7 +293,7 @@ def _v7_direction_for(symbol, change_pct=0.0):
     if daily is None:
         return "FLAT"
     try:
-        allowed = allowed_side(daily)
+        allowed = allowed_side(daily, adx_trend=V7_ADX_TREND, adx_chop=V7_ADX_CHOP)
         # Layer 2 flips on intraday 5-min bars; daily is the graceful fallback so
         # the flip is genuinely intraday whenever live candles are available.
         bars = _v7_load_intraday(symbol)

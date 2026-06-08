@@ -111,8 +111,10 @@ ENGINES=(
   # "v5_8|scripts/v5_8-paper-trade.py"     # v5 with regime slot-partition disabled
   # "v6|scripts/v6-paper-trade.py"         # v4 raw signals + Track A bolt-on
 
-  # Opt-in A/B (uncomment to run alongside v4/v5):
-  # "v7_regime|scripts/v7_regime-paper-trade.py"   # regime-gated long/short/flip (A/B vs v4/v5)
+  # A/B EXPERIMENT (live 2026-06-09): regime-gated long/short/flip. NOTE: daily-gate
+  # WFO showed no historical edge (DSR 0.12); running to validate the intraday Layer-2
+  # flip, which can't be backtested. Re-comment this line to pull it from the rotation.
+  "v7_regime|scripts/v7_regime-paper-trade.py"
 
   # Still retired from earlier rounds:
   # "v5_2|scripts/v5_2-paper-trade.py"

@@ -129,6 +129,7 @@ _mod_imports = {
     "allowed_side": ("prototype.v7.regime_gate", "allowed_side"),
     "supertrend":   ("prototype.v7.supertrend_flip", "supertrend"),
     "flip_states":  ("prototype.v7.supertrend_flip", "flip_states"),
+    "intraday_candles": ("prototype.v4.data_nse", "get_intraday_candles"),
 }
 
 for _key, (_mod_path, _attr) in _mod_imports.items():
@@ -236,11 +237,40 @@ def _v7_load_daily(symbol):
     return df
 
 
+# Minimum 5-min candles before intraday Supertrend is trustworthy. ~3 bars after
+# open we'd have noise; require ~15 (≈75 min) so the ATR(10) band has settled.
+V7_INTRADAY_MIN_BARS = 15
+
+
+def _v7_load_intraday(symbol):
+    """Fetch today's 5-min OHLC candles (High/Low/Close) for Layer-2 Supertrend.
+
+    Reuses prototype/v4/data_nse.get_intraday_candles (yfinance period=1d,
+    interval=5m). NOT cached — must refresh every scan so the flip can react
+    intraday. Returns a DataFrame or None when data is missing/too thin (caller
+    then falls back to daily bars, so the engine never does worse than before).
+    """
+    get_candles = _mods.get("intraday_candles")
+    if get_candles is None:
+        return None
+    try:
+        df = get_candles(symbol.replace(".NS", ""), "5m")
+    except Exception as e:
+        log(f"  [v7] {symbol}: intraday fetch failed ({e}) -> daily fallback")
+        return None
+    if df is None or len(df) < V7_INTRADAY_MIN_BARS:
+        return None
+    if not {"High", "Low", "Close"}.issubset(df.columns):
+        return None
+    return df.dropna(subset=["High", "Low", "Close"])
+
+
 def _v7_direction_for(symbol, change_pct=0.0):
     """Decide LONG / SHORT / FLAT for a symbol using the v7 two-layer logic.
 
-    Layer 1: allowed_side(daily) -> LONG_ONLY/SHORT_ONLY/BOTH/FLAT (regime permission)
-    Layer 2: flip_states(supertrend(daily), [allowed]*n)[-1] -> LONG/SHORT/FLAT
+    Layer 1: allowed_side(DAILY) -> LONG_ONLY/SHORT_ONLY/BOTH/FLAT (swing regime permission)
+    Layer 2: flip_states(supertrend(INTRADAY 5m), [allowed]*n)[-1] -> LONG/SHORT/FLAT
+             (falls back to daily bars when intraday is missing/thin, e.g. early session)
     Intraday guard: never SHORT a green-on-day stock, never LONG a red-on-day stock.
 
     Returns "LONG", "SHORT" or "FLAT". Missing/short daily data => FLAT (safe).
@@ -255,8 +285,15 @@ def _v7_direction_for(symbol, change_pct=0.0):
         return "FLAT"
     try:
         allowed = allowed_side(daily)
-        states = supertrend(daily["High"], daily["Low"], daily["Close"])
+        # Layer 2 flips on intraday 5-min bars; daily is the graceful fallback so
+        # the flip is genuinely intraday whenever live candles are available.
+        bars = _v7_load_intraday(symbol)
+        src = "5m"
+        if bars is None:
+            bars, src = daily, "daily"
+        states = supertrend(bars["High"], bars["Low"], bars["Close"])
         position = flip_states(list(states), [allowed] * len(states))[-1]
+        log(f"  [v7] {symbol}: allowed={allowed} src={src} -> {position}")
     except Exception as e:
         log(f"  [v7] {symbol}: direction calc failed ({e}) -> FLAT")
         return "FLAT"

@@ -111,6 +111,14 @@ python3 scripts/missed-trades-report.py "$(date +%Y-%m-%d)" \
   && echo "  ✓ missed-trades: docs/reports/missed-trades-$(date +%Y-%m-%d).md" \
   || echo "  (missed-trades-report failed, see /tmp/missed-trades-*.log)"
 
+# 5c. Trade audit + bear-day solution (per-trade counterfactual: timing/regime/signal).
+# Runs on the settled, complete day so the L1 hindsight + L2 regime math is final.
+echo "[$(date '+%H:%M:%S')] Running trade audit + bear-day solution..."
+python3 scripts/trade-audit.py "$(date +%Y-%m-%d)" --no-pdf \
+  > "/tmp/trade-audit-$(date +%Y%m%d).log" 2>&1 \
+  && echo "  ✓ trade audit: docs/audit/$(date +%Y-%m-%d)_audit-report.md" \
+  || echo "  (trade-audit failed, see /tmp/trade-audit-*.log)"
+
 # 5. Verify nothing left
 remaining=$(ps aux | grep -E "paper-trade|crash-watchdog|telegram-digest" | grep -v grep | grep -v Docker | grep -v watchdogd | wc -l | tr -d ' ')
 echo "[$(date '+%H:%M:%S')] Shutdown complete. Remaining processes: $remaining"

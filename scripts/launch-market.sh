@@ -27,6 +27,24 @@
 #   ./scripts/launch-market.sh              # full launch
 #   ./scripts/launch-market.sh --stop       # kill everything
 #   ./scripts/launch-market.sh --status     # show what's running
+#
+# EXIT CODES (S2-PM-006 — consumed by scripts/team/cadence/market_go.py).
+# Any non-zero exit is treated as a SARATHI-CDE BLOCK by market_go.py: it pages
+# Telegram and refuses to let the session pass silently. Distinct codes let the
+# pager say *what* failed without scraping the log.
+#
+#   0   SUCCESS         Full happy-path launch (all critical components up).
+#   2   SMOKE_FAILED    Pre-launch smoke test (sarathi-verify --smoke) failed —
+#                       engines NOT started (hard gate, before anything deploys).
+#   3   RUST_MISSING    Rust engine binary absent — the execution/risk layer never
+#                       started. The rest of the stack is still launched (so the
+#                       dashboard/engines come up), but we exit non-zero at the end
+#                       so market_go.py pages: trades have no execution backstop.
+#   4   ENGINE_MISSING  One or more paper-trade engine scripts were missing on disk;
+#                       fewer engines launched than ENGINES defines. Stack continues,
+#                       non-zero exit at the end so the shortfall is paged.
+#
+# Codes are reserved sequentially; --stop / --status always exit 0.
 
 set -u
 ROOT="/Users/soumyaswain/Documents/tinker/projects/tradepilot"
@@ -35,6 +53,17 @@ mkdir -p logs
 
 TODAY=$(date +%Y-%m-%d)
 STAMP=$(date +%H%M%S)
+
+# ──────────────────────── Exit codes (see header) ────────────────────────
+# S2-PM-006: distinct, documented codes so market_go.py can page on the exact
+# failure class. SMOKE_FAILED is a hard gate (exit immediately, no engines).
+# RUST_MISSING / ENGINE_MISSING are *deferred* — the rest of the stack still
+# launches (best-effort partial day), but EXIT_CODE is set and returned at the
+# very end so a non-zero exit reaches market_go.py.
+readonly EX_SMOKE_FAILED=2
+readonly EX_RUST_MISSING=3
+readonly EX_ENGINE_MISSING=4
+EXIT_CODE=0   # promoted to a non-zero EX_* by deferred failures below
 
 # ──────────────────────────── Sleep prevention ────────────────────────────
 # Wednesday 2026-05-27 lost an entire trading session because the laptop slept
@@ -82,10 +111,18 @@ ENGINES=(
   # "v5_8|scripts/v5_8-paper-trade.py"     # v5 with regime slot-partition disabled
   # "v6|scripts/v6-paper-trade.py"         # v4 raw signals + Track A bolt-on
 
+  # Opt-in A/B (uncomment to run alongside v4/v5):
+  # "v7_regime|scripts/v7_regime-paper-trade.py"   # regime-gated long/short/flip (A/B vs v4/v5)
+
   # Still retired from earlier rounds:
   # "v5_2|scripts/v5_2-paper-trade.py"
   # "v5_3|scripts/v5_3-paper-trade.py"
 )
+
+# Expected number of active engines — derived from the ENGINES array length so the
+# verify/launch lines never drift from reality (S2-PM-004: the old hardcoded "/7"
+# was a leftover from the retired 7-engine setup; only 3 are active post-Sprint-1).
+EXPECTED_ENGINES=${#ENGINES[@]}
 
 send_telegram() {
   local msg="$1"
@@ -142,6 +179,11 @@ if [ "${1:-}" = "--stop" ]; then
   pkill -f "scripts/auto-stop-eod.sh"   2>/dev/null
   pkill -f "scripts/satish-schedule.sh" 2>/dev/null
   pkill -f "tradepilot-engine"          2>/dev/null
+  if [ -f /tmp/tradepilot-wifi-watchdog.pid ]; then
+    kill "$(cat /tmp/tradepilot-wifi-watchdog.pid)" 2>/dev/null && echo "  ✓ wifi-watchdog stopped"
+    rm -f /tmp/tradepilot-wifi-watchdog.pid
+  fi
+  pkill -f "scripts/wifi-watchdog.sh" 2>/dev/null
   stop_caffeinate
   sleep 2
   remaining=$(ps aux | grep -cE "paper-trade|crash-watchdog|telegram-digest|laptop-heartbeat|auto-stop-eod|satish-schedule|tradepilot-engine" | grep -v grep)
@@ -159,6 +201,18 @@ echo "════════════════════════�
 # laptop free to nap through the market session (lost Wed 2026-05-27 this way).
 echo "[0/9] Locking laptop awake (caffeinate)..."
 start_caffeinate
+
+# [0/9] Network guardian — keep laptop on hotspot "Pro" through the session (2026-06-05)
+WIFI_WATCHDOG_PID_FILE="/tmp/tradepilot-wifi-watchdog.pid"
+mkdir -p "$HOME/Library/Logs/tradepilot"
+if [ -f "$WIFI_WATCHDOG_PID_FILE" ] && kill -0 "$(cat "$WIFI_WATCHDOG_PID_FILE" 2>/dev/null)" 2>/dev/null; then
+  echo "[0/9] wifi-watchdog already running (PID $(cat "$WIFI_WATCHDOG_PID_FILE"))"
+else
+  echo "[0/9] Starting wifi-watchdog (network -> hotspot 'Pro')..."
+  WIFI_TARGET_SSID="Pro" nohup bash "$ROOT/scripts/wifi-watchdog.sh" > "$HOME/Library/Logs/tradepilot/wifi-watchdog.log" 2>&1 &
+  echo $! > "$WIFI_WATCHDOG_PID_FILE"
+  echo "  ✓ wifi-watchdog started (PID $!) — target SSID 'Pro'"
+fi
 
 # [0/9] Kill stale processes
 echo "[0/9] Cleaning stale processes..."
@@ -184,13 +238,13 @@ SMOKE_OUTPUT=$(./scripts/sarathi-verify.sh --smoke --quiet 2>&1)
 SMOKE_EXIT=$?
 echo "$SMOKE_OUTPUT" | tail -5
 if [ "$SMOKE_EXIT" -eq 0 ]; then
-  echo "  ✓ All 7 engine scripts import + compile clean"
+  echo "  ✓ Engine scripts import + compile clean"
 else
   echo ""
   echo "  ✗ PRE-LAUNCH SMOKE FAILED (exit $SMOKE_EXIT) — refusing to start engines."
   echo "  → Run: ./scripts/sarathi-verify.sh   (full output)"
   echo "  → Fix the issue, then re-launch."
-  exit 2
+  exit $EX_SMOKE_FAILED
 fi
 
 # [1/9] Rust engine
@@ -206,8 +260,10 @@ if [ -f "./engine/target/release/tradepilot-engine" ]; then
     echo "  ⚠ Rust started but /health not responding — continuing"
   fi
 else
-  echo "  ✗ Rust binary missing at ./engine/target/release/tradepilot-engine"
-  echo "    Run: cd engine && cargo build --release"
+  echo "  - Rust engine DISABLED (2026-06-05 decision: dropped as optional layer)."
+  echo "    Python engines run solo via rust_bridge offline-fallback. To re-enable:"
+  echo "    cd engine && cargo build --release"
+  # Rust is OPTIONAL now — do NOT set RUST_MISSING; this is not a failure.
 fi
 
 # [2/9] Flask dashboard
@@ -228,11 +284,14 @@ nohup python3 ./scripts/archive-daily-scores.py > "logs/archive-scores-${TODAY}.
 echo "  ✓ daily scores archiver (PID $!) → docs/dashboard-scores/${TODAY}.json"
 
 # [4/9] Engines
-echo "[4/9] Launching 7 paper-trade engines..."
+echo "[4/9] Launching ${EXPECTED_ENGINES} paper-trade engines..."
 for entry in "${ENGINES[@]}"; do
   IFS='|' read -r name script <<< "$entry"
   if [ ! -f "$script" ]; then
     echo "  ✗ $name — script missing"
+    # Deferred failure (S2-PM-006): a defined engine is missing on disk. Don't
+    # clobber a prior RUST_MISSING (3) — only set ENGINE_MISSING if still clean.
+    [ "$EXIT_CODE" -eq 0 ] && EXIT_CODE=$EX_ENGINE_MISSING
     continue
   fi
   nohup python3 "$script" > "logs/${name}-${TODAY}.log" 2>&1 &
@@ -276,7 +335,13 @@ sleep 3
 alive=$(pgrep -f "scripts/v[0-9].*paper-trade.py" | wc -l | tr -d ' ')
 wd=$(pgrep -f "scripts/crash-watchdog.sh" | wc -l | tr -d ' ')
 rust=$(pgrep -f "tradepilot-engine" | wc -l | tr -d ' ')
-echo "  Engines: $alive/7  |  Watchdog: $wd/1  |  Rust: $rust/1"
+echo "  Engines: $alive/${EXPECTED_ENGINES}  |  Watchdog: $wd/1  |  Rust: $rust/1"
+
+# If fewer engines came up alive than defined (e.g. one crashed on boot), flag a
+# deferred ENGINE_MISSING — unless a higher-priority RUST_MISSING already stands.
+if [ "$alive" -lt "$EXPECTED_ENGINES" ] && [ "$EXIT_CODE" -eq 0 ]; then
+  EXIT_CODE=$EX_ENGINE_MISSING
+fi
 
 echo ""
 echo "════════════════════════════════════════════════════════════"
@@ -287,7 +352,11 @@ echo "  Stop all:      ./scripts/launch-market.sh --stop"
 echo "════════════════════════════════════════════════════════════"
 
 send_telegram "🚀 TradePilot FULL LAUNCH at $(date +%H:%M).
-Engines: ${alive}/7 · Rust: ${rust}/1 · Watchdog: ${wd}/1
+Engines: ${alive}/${EXPECTED_ENGINES} · Rust: ${rust}/1 · Watchdog: ${wd}/1
 ML model: fixed (best_iter=1726, india_vix #1)
 Rust cap: 150 (was 30)
 Ready for battle."
+
+# S2-PM-006: return the deferred failure code (0 on a clean happy-path launch).
+# market_go.py reads this — any non-zero triggers a SARATHI-CDE BLOCK + page.
+exit $EXIT_CODE

@@ -46,8 +46,6 @@ The honest twist: **walk-forward optimization showed the daily gate has no histo
 
 :::
 
-<div class="page-break"></div>
-
 ## Session audit log (chronological)
 
 ::: {.changes-table}
@@ -87,24 +85,19 @@ The audit classified every trade. One mistake class explains the entire loss:
 
 The natural experiment proved the fix before we built it: **v4 (long-only) −Rs 8,325; v5 (short-tilted, 40 shorts) +Rs 465** on the same falling day. The problem was never stock-picking — it was the absence of a regime gate and a SELL signal.
 
-<div class="page-break"></div>
-
 ## What we built — the two-layer regime engine
 
 ```mermaid
-graph TD
-    A[Daily OHLC bars] --> B{Layer 1: allowed_side}
-    B -->|ADX < 20| F[FLAT - stand aside]
-    B -->|+DI &gt; -DI &amp; SMA50 up| L[LONG_ONLY]
-    B -->|-DI &gt; +DI &amp; SMA50 down| S[SHORT_ONLY]
-    B -->|trend, mixed| BO[BOTH]
-    L --> C[Layer 2: Supertrend on 5-min candles]
+graph LR
+    A[Daily bars] --> B{Layer 1<br/>allowed_side}
+    B -->|+DI&gt;-DI up| L[LONG_ONLY]
+    B -->|-DI&gt;+DI down| S[SHORT_ONLY]
+    B -->|ADX&lt;20| F[FLAT]
+    L --> C[Layer 2<br/>Supertrend 5-min]
     S --> C
-    BO --> C
-    C -->|flip state +1/-1| D{flip_states - gate constraint}
-    D -->|side allowed| P[Enter LONG / SHORT]
-    D -->|side forbidden| F2[FLAT - never short a riser]
-    F --> F2
+    C --> D{flip_states<br/>gate-constrained}
+    D -->|side allowed| P[LONG / SHORT]
+    D -->|side forbidden| F2[FLAT: never short a riser]
 ```
 
 ::: {.spec-table}
@@ -136,8 +129,6 @@ graph LR
 ```
 
 Walk-forward optimization across the 49-stock NIFTY-50 basket found **no ADX-threshold combination with a positive out-of-sample Sharpe** (best ≈ −0.10), and a Deflated Sharpe Ratio of **0.12** — essentially no evidence of skill. We did **not** fabricate a tuning win. v7 ships with 25/20 (least-bad) explicitly labelled *experiment, not validated edge*. Because the intraday Layer-2 flip cannot be backtested (no intraday history), the **forward paper A/B is the only honest validation path** — and the audit grades it daily.
-
-<div class="page-break"></div>
 
 ## Learnings
 

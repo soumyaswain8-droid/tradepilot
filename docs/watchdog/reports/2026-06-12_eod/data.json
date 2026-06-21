@@ -1,0 +1,122 @@
+{
+  "date": "2026-06-12",
+  "generated_at": "2026-06-12T18:18:08.300017",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 2113.76,
+      "trades": 53,
+      "wins": 25,
+      "losses": 28,
+      "longs": 16,
+      "shorts": 37,
+      "win_rate": 47.2,
+      "open_positions": 0,
+      "best_trade": 734.85,
+      "worst_trade": -137.6,
+      "avg_win": 133.61,
+      "avg_loss": -43.8,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "FLAT_FORCE_EXIT": 12,
+        "TIME_EXIT": 11,
+        "TARGET": 5,
+        "SIGNAL_FLIP": 10
+      },
+      "n_closed": 53,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -946.55,
+      "trades": 39,
+      "wins": 13,
+      "losses": 26,
+      "longs": 10,
+      "shorts": 29,
+      "win_rate": 33.3,
+      "open_positions": 0,
+      "best_trade": 477.0,
+      "worst_trade": -243.2,
+      "avg_win": 80.77,
+      "avg_loss": -76.79,
+      "exit_reasons": {
+        "STOPLOSS": 20,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 6,
+        "TARGET": 1
+      },
+      "n_closed": 39,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "BAJAJ-AUTO",
+      "BHARATFORG",
+      "BPCL",
+      "COALINDIA",
+      "COFORGE",
+      "DMART",
+      "DRREDDY",
+      "GLENMARK",
+      "HCLTECH",
+      "ICICIGI",
+      "LENSKART",
+      "LGEINDIA",
+      "MOTILALOFS",
+      "MPHASIS",
+      "NESTLEIND",
+      "OIL",
+      "ONGC",
+      "POWERGRID",
+      "PREMIERENE",
+      "SBILIFE",
+      "TATACOMM",
+      "TATACONSUM",
+      "TECHM",
+      "TMCV"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +2,114 across 53 trades (47.2% win).",
+    "Laggard: <b>v5_classic</b> with Rs -947 across 39 trades (33.3% win).",
+    "High-volume engines (50+ trades) averaged Rs 2,114; low-volume averaged Rs -947. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (15) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (20) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 47.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 33.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

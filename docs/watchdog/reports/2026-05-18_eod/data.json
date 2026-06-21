@@ -1,0 +1,179 @@
+{
+  "date": "2026-05-18",
+  "generated_at": "2026-05-18T15:35:38.303548",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 9296.31,
+      "trades": 68,
+      "wins": 47,
+      "losses": 21,
+      "longs": 68,
+      "shorts": 0,
+      "win_rate": 69.1,
+      "open_positions": 0,
+      "best_trade": 895.0,
+      "worst_trade": -716.1,
+      "avg_win": 312.62,
+      "avg_loss": -256.99,
+      "exit_reasons": {
+        "STOPLOSS": 8,
+        "SIGNAL_EXIT": 9,
+        "TARGET": 12,
+        "TIME_EXIT": 39
+      },
+      "n_closed": 68,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -1631.3,
+      "trades": 58,
+      "wins": 20,
+      "losses": 38,
+      "longs": 16,
+      "shorts": 42,
+      "win_rate": 34.5,
+      "open_positions": 4,
+      "best_trade": 289.5,
+      "worst_trade": -326.3,
+      "avg_win": 39.05,
+      "avg_loss": -63.48,
+      "exit_reasons": {
+        "STOPLOSS": 34,
+        "FLAT_FORCE_EXIT": 7,
+        "TIME_EXIT": 9,
+        "SIGNAL_FLIP": 6,
+        "TARGET": 2
+      },
+      "n_closed": 58,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -1852.09,
+      "trades": 39,
+      "wins": 9,
+      "losses": 30,
+      "longs": 9,
+      "shorts": 30,
+      "win_rate": 23.1,
+      "open_positions": 1,
+      "best_trade": 380.4,
+      "worst_trade": -556.0,
+      "avg_win": 82.04,
+      "avg_loss": -86.35,
+      "exit_reasons": {
+        "STOPLOSS": 24,
+        "TIME_EXIT": 9,
+        "SIGNAL_FLIP": 4,
+        "TARGET": 2
+      },
+      "n_closed": 39,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "ADANIENSOL",
+      "ADANIPOWER",
+      "BAJAJFINSV",
+      "BHARTIARTL",
+      "BSE",
+      "COFORGE",
+      "INDUSTOWER",
+      "JSWENERGY",
+      "MPHASIS",
+      "NHPC",
+      "OFSS",
+      "OIL",
+      "POLICYBZR",
+      "PREMIERENE",
+      "TECHM",
+      "VMM",
+      "VOLTAS"
+    ],
+    "v4|v5_classic": [
+      "ADANIENSOL",
+      "INFY",
+      "MPHASIS",
+      "NHPC",
+      "OFSS",
+      "OIL",
+      "PREMIERENE",
+      "SOLARINDS",
+      "TCS",
+      "TECHM"
+    ],
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIGREEN",
+      "BANKINDIA",
+      "BDL",
+      "CGPOWER",
+      "EXIDEIND",
+      "GODFRYPHLP",
+      "GODREJPROP",
+      "GROWW",
+      "HAL",
+      "HUDCO",
+      "IREDA",
+      "KALYANKJIL",
+      "LGEINDIA",
+      "MPHASIS",
+      "NHPC",
+      "OFSS",
+      "OIL",
+      "PAYTM",
+      "PFC",
+      "PNB",
+      "POWERGRID",
+      "PREMIERENE",
+      "RECLTD",
+      "TECHM",
+      "TIINDIA",
+      "TRENT",
+      "TVSMOTOR",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v4</b> with Rs +9,296 across 68 trades (69.1% win).",
+    "Laggard: <b>v5_classic</b> with Rs -1,852 across 39 trades (23.1% win).",
+    "High-volume engines (50+ trades) averaged Rs 3,833; low-volume averaged Rs -1,852. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (34) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (24) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 34.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 23.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

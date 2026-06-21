@@ -1,0 +1,45 @@
+combined_pnl: 9943.212861938488
+date: '2026-05-07'
+insights:
+- ⚠ Combined P&L Rs +9,943 is -92% vs baseline. Investigate.
+- ✅ v5 vs v5_classic gap closed to Rs -428. Rust fix holding.
+- ⚠ v5 trade count 19 vs baseline 75. May be throttled — check rejection logs.
+- ⚠ v5_6 trade count 18 vs baseline 70. May be throttled — check rejection logs.
+- ⚠ v5_7 trade count 18 vs baseline 75. May be throttled — check rejection logs.
+- ⚠ v5_classic trade count 16 vs baseline 77. May be throttled — check rejection logs.
+- '● Week 3 target not yet hit: v5 Rs +3,002 < Rs 28,000. Need: Tier models hold WR
+  > 80%?'
+per_engine:
+  v4:
+    losses: 2
+    pnl: -770.361649169922
+    trades: 5
+    wins: 3
+    wr: 60.0
+  v5:
+    losses: 2
+    pnl: 3001.788148803712
+    trades: 19
+    wins: 17
+    wr: 89.47368421052632
+  v5_6:
+    losses: 3
+    pnl: 2355.398346557621
+    trades: 18
+    wins: 15
+    wr: 83.33333333333334
+  v5_7:
+    losses: 3
+    pnl: 2783.0395617675813
+    trades: 18
+    wins: 15
+    wr: 83.33333333333334
+  v5_classic:
+    losses: 3
+    pnl: 2573.348453979495
+    trades: 16
+    wins: 13
+    wr: 81.25
+phase_change: Universe 201 → 539 (tiered models)
+phase_week: 3
+storage: local-only per project rule

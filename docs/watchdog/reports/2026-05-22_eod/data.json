@@ -1,0 +1,176 @@
+{
+  "date": "2026-05-22",
+  "generated_at": "2026-05-22T15:35:15.651775",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 5954.46,
+      "trades": 53,
+      "wins": 26,
+      "losses": 27,
+      "longs": 53,
+      "shorts": 0,
+      "win_rate": 49.1,
+      "open_positions": 0,
+      "best_trade": 1778.4,
+      "worst_trade": -376.0,
+      "avg_win": 368.7,
+      "avg_loss": -139.68,
+      "exit_reasons": {
+        "TARGET": 7,
+        "SIGNAL_EXIT": 12,
+        "STOPLOSS": 5,
+        "TIME_EXIT": 29
+      },
+      "n_closed": 53,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -156.69,
+      "trades": 69,
+      "wins": 32,
+      "losses": 37,
+      "longs": 11,
+      "shorts": 58,
+      "win_rate": 46.4,
+      "open_positions": 5,
+      "best_trade": 378.0,
+      "worst_trade": -157.36,
+      "avg_win": 49.52,
+      "avg_loss": -47.06,
+      "exit_reasons": {
+        "STOPLOSS": 20,
+        "TARGET": 5,
+        "FLAT_FORCE_EXIT": 23,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 69,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -1220.25,
+      "trades": 54,
+      "wins": 24,
+      "losses": 30,
+      "longs": 9,
+      "shorts": 45,
+      "win_rate": 44.4,
+      "open_positions": 0,
+      "best_trade": 379.0,
+      "worst_trade": -1465.0,
+      "avg_win": 70.05,
+      "avg_loss": -96.71,
+      "exit_reasons": {
+        "STOPLOSS": 23,
+        "TARGET": 4,
+        "TIME_EXIT": 20,
+        "SIGNAL_FLIP": 7
+      },
+      "n_closed": 54,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "ADANIENSOL",
+      "ASTRAL",
+      "ATGL",
+      "GVT&D",
+      "ICICIGI",
+      "LENSKART",
+      "SBILIFE",
+      "SHRIRAMFIN",
+      "SIEMENS",
+      "TRENT"
+    ],
+    "v4|v5_classic": [
+      "ADANIENSOL",
+      "ASIANPAINT",
+      "ATGL",
+      "GVT&D",
+      "ICICIGI",
+      "LENSKART",
+      "SBILIFE"
+    ],
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ALKEM",
+      "ATGL",
+      "AUROPHARMA",
+      "BEL",
+      "BHARTIARTL",
+      "BIOCON",
+      "COALINDIA",
+      "COROMANDEL",
+      "DRREDDY",
+      "GLENMARK",
+      "GMRAIRPORT",
+      "GVT&D",
+      "ICICIGI",
+      "INDIGO",
+      "LAURUSLABS",
+      "LENSKART",
+      "LGEINDIA",
+      "M&MFIN",
+      "MANKIND",
+      "MAXHEALTH",
+      "MCX",
+      "MOTHERSON",
+      "MOTILALOFS",
+      "NYKAA",
+      "OFSS",
+      "OIL",
+      "ONGC",
+      "PAYTM",
+      "POLICYBZR",
+      "POWERGRID",
+      "PREMIERENE",
+      "SBILIFE",
+      "SUNPHARMA",
+      "VMM",
+      "WAAREEENER"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v4</b> with Rs +5,954 across 53 trades (49.1% win).",
+    "Laggard: <b>v5_classic</b> with Rs -1,220 across 54 trades (44.4% win).",
+    "<b>v5</b>: STOPLOSS (20) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (23) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v4</b>: 49.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5</b>: 46.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 44.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

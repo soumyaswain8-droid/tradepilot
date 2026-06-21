@@ -104,6 +104,12 @@ def live_view():
     return render_template("live.html")
 
 
+@app.route("/lab")
+def lab_view():
+    """A/B testing lab — challenger-vs-live experiments in one place."""
+    return render_template("lab.html")
+
+
 @app.route("/api/missed-opportunities")
 def api_missed_opportunities():
     """Reads the missed-opportunities watchdog snapshot.
@@ -212,6 +218,315 @@ def api_positions_live():
             "open_total": sum(len(v) for v in result.values()),
         },
     })
+
+
+# ── Live engine roster: single source of truth = launch-market.sh ENGINES array ──
+# The /live dashboard derives its roster + colors from here so it auto-syncs when
+# engines are added/retired in the launcher — it can never go stale again.
+import re as _re_roster
+_LAUNCH_SH = Path(os.path.dirname(__file__)).parent / "scripts" / "launch-market.sh"
+ENGINE_COLORS = {
+    "v5": "#c77dff", "v5_classic": "#5bf08a", "v7_regime": "#ff8c42",
+    "v5_noml": "#ffce5b", "v5_apr": "#4dd0e1", "v4": "#28e0f0", "v6": "#ff5d73",
+}
+_FALLBACK_PALETTE = ["#c77dff", "#5bf08a", "#ff8c42", "#ffce5b", "#4dd0e1", "#ff5d73", "#7c9cff"]
+
+
+def _active_engines():
+    """Live roster = the uncommented "name|script" lines in launch-market.sh's
+    ENGINES=( ... ) array. Falls back to the current set if the file can't be read."""
+    default = ["v5", "v5_classic", "v5_noml", "v5_apr", "v7_regime"]
+    try:
+        txt = _LAUNCH_SH.read_text()
+        m = _re_roster.search(r"^ENGINES=\((.*?)^\)", txt, _re_roster.S | _re_roster.M)
+        if not m:
+            return default
+        out = []
+        for line in m.group(1).splitlines():
+            s = line.strip()
+            if not s or s.startswith("#"):
+                continue
+            mm = _re_roster.match(r'"([^|"]+)\|', s)
+            if mm:
+                out.append(mm.group(1))
+        return out or default
+    except Exception:
+        return default
+
+
+def _roster_colors(engines):
+    return {e: ENGINE_COLORS.get(e, _FALLBACK_PALETTE[i % len(_FALLBACK_PALETTE)])
+            for i, e in enumerate(engines)}
+
+
+@app.route("/api/live-trades")
+def api_live_trades():
+    """Full per-trade detail for the LIVE engines (v4, v5, v5_classic, v7_regime).
+    Returns OPEN + CLOSED trades with entry/exit time, prices, realized P&L,
+    exit reason, pool, plus per-engine regime + summary. Powers the redesigned
+    /live (left list + right detail panel + centre scan). Read-only.
+    Added 2026-06-06 (3-engine redesign — replaces 7-engine positions-live).
+    2026-06-09: added v7_regime (4th main-stack engine, regime-gated long/short)."""
+    from datetime import date
+    from pathlib import Path
+
+    TODAY = request.args.get("date") or date.today().isoformat()
+    BASE = Path(os.path.dirname(__file__)).parent / "docs" / "paper-trades"
+    ENGINES = _active_engines()
+    out = {}
+
+    def _trade(symbol, direction, qty, ep, et, xp, xt, pnl, pnlpct, status, reason, pool):
+        return {
+            "symbol": symbol or "?", "direction": (direction or "LONG"),
+            "qty": qty or 0, "entry_price": ep or 0, "entry_time": et or "—",
+            "exit_price": xp, "exit_time": xt or "—", "pnl": pnl,
+            "pnl_pct": pnlpct, "status": status, "reason": reason or "—", "pool": pool or "—",
+        }
+
+    for eng in ENGINES:
+        f = BASE / eng / f"{TODAY}.json"
+        trades, regime = [], "—"
+        realized = 0.0
+        wins = closed = openn = 0
+        if f.exists():
+            try:
+                d = json.load(open(f))
+            except (json.JSONDecodeError, IOError):
+                d = {}
+            if eng == "v4":
+                regime = "BEAR" if d.get("bear_mode") else ("VIX-HIGH" if d.get("vix_high_mode") else "NEUTRAL")
+                realized = d.get("realized_pnl", 0) or 0
+                for p in (d.get("positions") or []):
+                    st = "open" if p.get("status") == "open" else "closed"
+                    if st == "open":
+                        openn += 1
+                    else:
+                        closed += 1
+                        if (p.get("pnl") or 0) > 0:
+                            wins += 1
+                    trades.append(_trade(
+                        p.get("symbol"), p.get("v4_direction") or p.get("direction"),
+                        p.get("qty"), p.get("entry_price"), p.get("entry_time"),
+                        p.get("exit_price"), p.get("exit_time"), p.get("pnl"),
+                        p.get("pnl_pct"), st, p.get("exit_reason"), "INTRADAY"))
+            else:  # v5 / v5_classic — multi-pool
+                regime = d.get("regime", "—")
+                s = d.get("summary", {})
+                realized = s.get("total_pnl", 0) or 0
+                closed = s.get("trades", 0)
+                wins = s.get("wins", 0)
+                for pool, pdata in (d.get("pools") or {}).items():
+                    for p in pdata.get("closed", []):
+                        trades.append(_trade(
+                            p.get("symbol"), p.get("position_type") or p.get("direction"),
+                            p.get("qty"), p.get("entry_price"), p.get("entry_time"),
+                            p.get("exit_price"), p.get("exit_time"), p.get("pnl"),
+                            p.get("pnl_pct"), "closed", p.get("reason"), pool))
+                    for p in pdata.get("positions", []):
+                        openn += 1
+                        trades.append(_trade(
+                            p.get("symbol"), p.get("position_type") or p.get("direction"),
+                            p.get("qty"), p.get("entry_price"), p.get("entry_time"),
+                            None, None, p.get("unrealized_pnl"), None, "open",
+                            p.get("reason"), pool))
+        # newest-first by exit_time then entry_time
+        trades.sort(key=lambda t: (t["exit_time"] or "", t["entry_time"] or ""), reverse=True)
+        out[eng] = {
+            "regime": regime,
+            "summary": {
+                "realized_pnl": round(realized, 0), "closed": closed, "open": openn,
+                "win_rate": round(100 * wins / closed) if closed else None,
+            },
+            "trades": trades,
+        }
+
+    fleet_realized = sum(e["summary"]["realized_pnl"] for e in out.values())
+    fleet_open = sum(e["summary"]["open"] for e in out.values())
+    fleet_closed = sum(e["summary"]["closed"] for e in out.values())
+    fleet_wins = sum(round((e["summary"]["win_rate"] or 0) / 100 * e["summary"]["closed"]) for e in out.values())
+    return jsonify({
+        "date": TODAY,
+        "engines": out,
+        "roster": ENGINES,                    # dynamic order from launch-market.sh
+        "colors": _roster_colors(ENGINES),    # so the frontend never hardcodes engines
+        "fleet": {
+            "realized_pnl": round(fleet_realized, 0), "open": fleet_open, "closed": fleet_closed,
+            "win_rate": round(100 * fleet_wins / fleet_closed) if fleet_closed else None,
+        },
+    })
+
+
+@app.route("/api/live-dates")
+def api_live_dates():
+    """Last N trading sessions that have data, for the /live day-wise history strip.
+    Returns dates (desc) with fleet realized P&L + trade count per day. Read-only.
+    Added 2026-06-06."""
+    import re
+    from pathlib import Path
+    BASE = Path(os.path.dirname(__file__)).parent / "docs" / "paper-trades"
+    ENGINES = _active_engines()
+    try:
+        limit = int(request.args.get("limit", 7))
+    except ValueError:
+        limit = 7
+    # collect distinct dates that have a date-stamped file in any live engine
+    dates = set()
+    for eng in ENGINES:
+        d = BASE / eng
+        if not d.is_dir():
+            continue
+        for f in d.glob("2*.json"):
+            m = re.match(r"(\d{4}-\d{2}-\d{2})\.json$", f.name)
+            if m:
+                dates.add(m.group(1))
+    out = []
+    for day in sorted(dates, reverse=True)[:limit]:
+        pnl = 0.0
+        trades = 0
+        for eng in ENGINES:
+            f = BASE / eng / f"{day}.json"
+            if not f.exists():
+                continue
+            try:
+                j = json.load(open(f))
+            except (json.JSONDecodeError, IOError):
+                continue
+            if eng == "v4":
+                pnl += j.get("realized_pnl", 0) or 0
+                trades += len([p for p in (j.get("positions") or []) if p.get("status") != "open"])
+            else:
+                s = j.get("summary", {})
+                pnl += s.get("total_pnl", 0) or 0
+                trades += s.get("trades", 0)
+        out.append({"date": day, "pnl": round(pnl, 0), "trades": trades})
+    return jsonify({"sessions": out})
+
+
+@app.route("/api/lab")
+def api_lab():
+    """A/B experiments for the Lab page — challenger vs live. Reads the live engine
+    dirs + the two sibling A/B dirs. Supports ?date=. Read-only. (re-added 2026-06-06)"""
+    from datetime import date
+    from pathlib import Path
+    TODAY = request.args.get("date") or date.today().isoformat()
+    HOME = Path.home() / "Documents" / "tinker" / "projects"
+
+    def _v4(base):
+        f = base / "docs" / "paper-trades" / "v4" / (TODAY + ".json")
+        if not f.exists():
+            return None
+        try:
+            d = json.load(open(f))
+        except (json.JSONDecodeError, IOError):
+            return None
+        pos = d.get("positions", [])
+        cl = [p for p in pos if p.get("status") != "open"]
+        w = sum(1 for p in cl if (p.get("pnl") or 0) > 0)
+        return {"realized_pnl": round(d.get("realized_pnl", 0) or 0), "closed": len(cl),
+                "open": len(pos) - len(cl), "win_rate": round(100 * w / len(cl)) if cl else None,
+                "longs": sum(1 for p in pos if p.get("v4_direction") == "BUY"),
+                "shorts": sum(1 for p in pos if p.get("v4_direction") == "SELL"),
+                "started": d.get("started_at", "—"),
+                "regime": "BEAR" if d.get("bear_mode") else ("VIX-HIGH" if d.get("vix_high_mode") else "NEUTRAL")}
+
+    def _v5(base):
+        f = base / "docs" / "paper-trades" / "v5" / (TODAY + ".json")
+        if not f.exists():
+            return None
+        try:
+            d = json.load(open(f))
+        except (json.JSONDecodeError, IOError):
+            return None
+        s = d.get("summary", {})
+        openn = sum(len(p.get("positions", [])) for p in d.get("pools", {}).values())
+        return {"realized_pnl": round(s.get("total_pnl", 0) or 0), "closed": s.get("trades", 0),
+                "open": openn, "win_rate": round(100 * s.get("wins", 0) / s.get("trades", 1)) if s.get("trades") else None,
+                "longs": s.get("longs", 0), "shorts": s.get("shorts", 0),
+                "started": d.get("started_at", "—"), "regime": d.get("regime", "—")}
+
+    LIVE = HOME / "tradepilot"
+    OLD = HOME / "tradepilot-oldengine-ab"
+    LO = HOME / "tradepilot-v5-longonly-ab"
+
+    def card(label, stat, extra=None):
+        if stat is None:
+            return {"label": label, "live": False}
+        c = {"label": label, "live": True}
+        c.update(stat)
+        if extra:
+            c.update(extra)
+        return c
+
+    def delta(ch, bl):
+        if ch and ch.get("live") and bl and bl.get("live"):
+            return round(ch["realized_pnl"] - bl["realized_pnl"])
+        return None
+
+    v4_live, v4_old = _v4(LIVE), _v4(OLD)
+    v5_live, v5_lo = _v5(LIVE), _v5(LO)
+    ch4 = card("A/B · OLD 5-tree", v4_old)
+    bl4 = card("LIVE · 1,735-tree", v4_live)
+    ch5 = card("A/B · LONG-ONLY", v5_lo, {"gate_ok": (v5_lo or {}).get("shorts", 0) == 0})
+    bl5 = card("LIVE · with shorts", v5_live)
+    experiments = [
+        {"id": "v4", "title": "v4 model — 5-tree challenger vs live 1,735-tree",
+         "hypothesis": "the simple 5-tree model beats the overfit May-4 retrain",
+         "status": "TESTING", "challenger": ch4, "baseline": bl4, "delta": delta(ch4, bl4)},
+        {"id": "v5", "title": "v5 short arm — long-only challenger vs live with-shorts",
+         "hypothesis": "removing the edgeless short arm improves v5",
+         "status": "TESTING", "challenger": ch5, "baseline": bl5, "delta": delta(ch5, bl5)},
+    ]
+
+    # --- our in-house shadow A/B (same project): v5_noml & v5_apr vs live v5 ---
+    def _eng(eng):
+        f = LIVE / "docs" / "paper-trades" / eng / (TODAY + ".json")
+        if not f.exists():
+            return None
+        try:
+            d = json.load(open(f))
+        except (json.JSONDecodeError, IOError):
+            return None
+        s = d.get("summary", {})
+        openn = sum(len(p.get("positions", [])) for p in d.get("pools", {}).values())
+        return {"realized_pnl": round(s.get("total_pnl", 0) or 0), "closed": s.get("trades", 0),
+                "open": openn, "win_rate": round(100 * s.get("wins", 0) / s.get("trades", 1)) if s.get("trades") else None,
+                "longs": s.get("longs", 0), "shorts": s.get("shorts", 0),
+                "started": d.get("started_at", "—"), "regime": d.get("regime", "—")}
+
+    SHADOW_START = "2026-06-15"   # shadows began this day — only compare from here (apples-to-apples)
+    def _cum(eng):  # running A/B total = gross P&L summed over the shadow period only
+        import glob, re, os
+        t = 0
+        for f in glob.glob(str(LIVE / "docs" / "paper-trades" / eng / "2026-*.json")):
+            b = os.path.basename(f)
+            if not re.match(r"\d{4}-\d{2}-\d{2}\.json$", b) or b[:10] < SHADOW_START:
+                continue
+            try:
+                t += json.load(open(f)).get("summary", {}).get("total_pnl", 0) or 0
+            except Exception:
+                pass
+        return round(t)
+
+    bl_v5 = card("LIVE · v5", _eng("v5"))
+    cum_v5 = _cum("v5")
+    experiments += [
+        {"id": "v5_noml", "title": "ML removal — v5_noml (no dead ML) vs live v5",
+         "hypothesis": "removing the IC-0.006 ML (dead weight) improves v5",
+         "status": "TESTING", "challenger": card("A/B · NO-ML", _eng("v5_noml")),
+         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_noml")), bl_v5),
+         "cum_delta": _cum("v5_noml") - cum_v5},
+        {"id": "v5_apr", "title": "April settings — v5_apr (loose exits + re-arm) vs live v5",
+         "hypothesis": "April-style exits restore the right tail",
+         "status": "TESTING", "challenger": card("A/B · APRIL", _eng("v5_apr")),
+         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_apr")), bl_v5),
+         "cum_delta": _cum("v5_apr") - cum_v5},
+        {"id": "v5_cut", "title": "v5_cut — faster wrong-way cut + tighter short + 450-name universe",
+         "hypothesis": "cut losers fast + don't short strength + scan wider = better margin",
+         "status": "TESTING", "challenger": card("A/B · CUT", _eng("v5_cut")),
+         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_cut")), bl_v5),
+         "cum_delta": _cum("v5_cut") - cum_v5},
+    ]
+    return jsonify({"date": TODAY, "experiments": experiments})
 
 
 @app.route("/api/recent-scans")

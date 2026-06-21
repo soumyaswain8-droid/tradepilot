@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SARATHI · LAB — Beta / Testing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#04060a; --panel:#080d14; --line:#16202e; --ink:#cde3f0; --dim:#5d7286; --faint:#33485c;
+    --cy:#22d3ee; --cy-dim:#0e5e6b; --grn:#34d399; --red:#fb6a76; --amb:#f5c451;
+    --mono:'JetBrains Mono',monospace; --disp:'Chakra Petch',sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%}
+  body{background:#000;color:var(--ink);font-family:var(--mono);font-size:12.5px;min-height:100vh;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .exp{animation:fadeUp .5s var(--ease-out) both}
+  .exp:nth-child(2){animation-delay:.08s}
+  .card,.chip{transition:transform .18s var(--ease-out),border-color .18s var(--ease-out),background .18s var(--ease-out)}
+  .chip:hover{transform:translateY(-2px)} .chip:active{transform:scale(.97)}
+  @media (prefers-reduced-motion:reduce){.exp{animation:none}}
+  .top{display:flex;align-items:center;gap:16px;padding:13px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#070c13,#05080d)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;letter-spacing:.18em}
+  .brand .pulse{width:9px;height:9px;border-radius:50%;background:var(--amb);box-shadow:0 0 10px var(--amb);animation:bp 1.6s infinite}
+  @keyframes bp{50%{opacity:.35;transform:scale(.8)}}
+  .beta{font-size:9px;font-family:var(--disp);letter-spacing:.18em;color:var(--amb);border:1px solid #5a4a1e;background:rgba(245,196,81,.08);padding:3px 9px;border-radius:5px}
+  .sub{color:var(--dim);font-size:11px}
+  .sessions{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid var(--line);background:#06090f;overflow-x:auto}
+  .slbl{font-family:var(--disp);font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+  .chips{display:flex;gap:7px}
+  .chip{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 12px;border:1px solid var(--line);border-radius:7px;cursor:pointer;transition:all .14s;white-space:nowrap}
+  .chip:hover{border-color:rgba(34,211,238,.5)} .chip.on{border-color:var(--cy);background:rgba(34,211,238,.10)}
+  .chip .cd{font-size:11px;font-weight:600;font-family:var(--disp);color:var(--ink)} .chip .cp{font-size:9px}
+  .chip.live .cd{color:var(--grn)}
+  .pos{color:var(--grn)} .neg{color:var(--red)} .zero{color:var(--dim)}
+  .wrap{padding:24px 20px;max-width:1180px}
+  .exp{margin-bottom:30px;border:1px solid var(--line);border-radius:12px;background:rgba(8,13,20,.5);overflow:hidden}
+  .exp .eh{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .exp .et{font-family:var(--disp);font-size:14px;font-weight:600;color:var(--ink)}
+  .exp .hyp{color:var(--dim);font-size:11px}
+  .status{font-size:9px;font-family:var(--disp);letter-spacing:.14em;padding:3px 8px;border-radius:5px;border:1px solid #5a4a1e;color:var(--amb);background:rgba(245,196,81,.08)}
+  .cmp{display:grid;grid-template-columns:1fr 130px 1fr;gap:0;align-items:stretch}
+  .card{padding:18px 20px} .card.ch{border-right:1px solid var(--line)} .card.bl{border-left:1px solid var(--line)}
+  .card .name{font-size:11px;color:var(--dim);letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .pnl{font-family:var(--disp);font-size:34px;font-weight:700;line-height:1}
+  .meta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:11px;color:var(--dim)}
+  .meta b{color:var(--ink);font-weight:600}
+  .delta{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(34,211,238,.03);gap:3px}
+  .delta .d{font-family:var(--disp);font-size:20px;font-weight:700} .delta .l{font-size:8.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;text-align:center}
+  .gate{font-size:9px;padding:1px 6px;border-radius:4px;letter-spacing:.04em}
+  .gate.ok{color:var(--grn);background:rgba(52,211,153,.1);border:1px solid #18402f} .gate.bad{color:var(--red);background:rgba(251,106,118,.1);border:1px solid #4a1d22}
+  .wait{color:var(--faint);font-style:italic;font-size:12px;padding:14px 0}
+  .foot{padding:10px 20px;border-top:1px solid var(--line);color:var(--faint);font-size:10px;display:flex;gap:20px}
+  .foot .r{margin-left:auto}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><span class="pulse"></span> SARATHI · LAB</div>
+    <span class="beta">◇ BETA / TESTING</span>
+    <span class="sub">A/B experiments — challenger vs live, in one place</span>
+    <span class="sub" style="margin-left:auto" id="upd">—</span>
+  </div>
+  <div class="sessions">
+    <span class="slbl">◷ Sessions · 1w</span>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="wrap" id="exps"></div>
+  <div class="foot">
+    <span>auto-refresh <b style="color:var(--ink)">10s</b></span>
+    <span id="date-note"></span>
+    <span class="r">v0.1 · lab · folds the :8899 A/B view into the app · Sarathi</span>
+  </div>
+
+<script>
+const Q=new URLSearchParams(location.search);
+// Validate ?date= to strict YYYY-MM-DD (else null) — prevents reflected XSS via
+// date-note innerHTML and param injection into the fetch URL.
+let VIEW=(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'')?d:null;})(Q.get('date'));
+const apiUrl=()=>'/api/lab'+(VIEW?('?date='+VIEW):'');
+const inr=n=>(n>0?'+':n<0?'−':'')+'₹'+Math.abs(Math.round(n||0)).toLocaleString('en-IN');
+const cls=n=>n>0?'pos':n<0?'neg':'zero';
+const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function marketOpen(){if(VIEW)return false;const ist=new Date(Date.now()+(new Date().getTimezoneOffset()*60000)+5.5*3600000);const dow=ist.getDay(),mn=ist.getHours()*60+ist.getMinutes();return dow>=1&&dow<=5&&mn>=555&&mn<=930;}
+
+function cardHTML(c,isCh){
+  if(!c||!c.live) return '<div class="card '+(isCh?'ch':'bl')+'"><div class="name">'+esc(c?c.label:'')+'</div><div class="wait">waiting for engine…</div></div>';
+  var gate = c.gate_ok!==undefined ? '<span class="gate '+(c.gate_ok?'ok':'bad')+'">'+(c.gate_ok?'gate ok · 0 shorts':'GATE FAIL · '+c.shorts+' shorts')+'</span>' : '';
+  return '<div class="card '+(isCh?'ch':'bl')+'">'
+    +'<div class="name">'+esc(c.label)+' '+gate+'</div>'
+    +'<div class="pnl '+cls(c.realized_pnl)+'">'+inr(c.realized_pnl)+'</div>'
+    +'<div class="meta"><span>Closed <b>'+c.closed+'</b> · Open <b>'+c.open+'</b></span>'
+    +'<span>Win <b>'+(c.win_rate==null?'—':c.win_rate+'%')+'</b></span>'
+    +'<span>L/S <b>'+c.longs+'/'+c.shorts+'</b></span>'
+    +'<span>Regime <b>'+esc(c.regime||'—')+'</b></span>'
+    +'<span>Start <b>'+esc(c.started)+'</b></span></div></div>';
+}
+function expHTML(e){
+  var d=e.delta;
+  var mid = (d==null)?'<div class="l">— vs —</div>'
+    :'<div class="d '+cls(d)+'">'+inr(d)+'</div><div class="l">A/B − live (day)</div>';
+  if(e.cum_delta!=null){  // running A/B total over the shadow period
+    mid += '<div class="d '+cls(e.cum_delta)+'" style="font-size:15px;margin-top:6px">'+inr(e.cum_delta)+'</div><div class="l">A/B − live (week)</div>';
+  }
+  return '<div class="exp"><div class="eh"><span class="et">'+esc(e.title)+'</span>'
+    +'<span class="status">'+esc(e.status)+'</span><span class="hyp">▸ '+esc(e.hypothesis)+'</span></div>'
+    +'<div class="cmp">'+cardHTML(e.challenger,true)+'<div class="delta">'+mid+'</div>'+cardHTML(e.baseline,false)+'</div></div>';
+}
+async function loadSessions(){
+  try{const r=await fetch('/api/live-dates?limit=7'); const d=await r.json();
+    const items=[{date:null,label:'LIVE',live:true}].concat((d.sessions||[]).map(s=>({date:s.date,label:s.date.slice(5),pnl:s.pnl,trades:s.trades})));
+    document.getElementById('chips').innerHTML=items.map(c=>
+      '<div class="chip '+((c.live&&marketOpen())?'live ':'')+(VIEW===(c.date||null)?'on':'')+'" onclick="selectSession('+(c.date?("'"+c.date+"'"):'null')+')">'
+      +'<span class="cd">'+c.label+'</span><span class="cp '+(c.live?'zero':cls(c.pnl))+'">'+(c.live?(marketOpen()?'today':'closed'):(c.trades?inr(c.pnl):'—'))+'</span></div>').join('');
+  }catch(e){}
+}
+function selectSession(date){VIEW=date; loadSessions(); tick();}
+async function tick(){
+  try{const r=await fetch(apiUrl()); const d=await r.json();
+    document.getElementById('exps').innerHTML=(d.experiments||[]).map(expHTML).join('');
+    document.getElementById('upd').textContent='last update '+new Date().toTimeString().slice(0,8);
+    document.getElementById('date-note').innerHTML = VIEW?('REVIEW <b style="color:var(--amb)">'+VIEW+'</b>'):'';
+  }catch(e){console.error(e);}
+}
+tick(); loadSessions(); setInterval(tick,10000); setInterval(loadSessions,60000);
+</script>
+<script src="/static/pageswitch.js"></script>
+</body>
+</html>

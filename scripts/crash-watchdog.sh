@@ -36,10 +36,18 @@ HEARTBEAT_MAX_AGE_SEC=2700
 TODAY=$(date +%Y-%m-%d)
 declare -a ENGINES=(
   # Active engines (3) — must match launch-market.sh ENGINES array.
-  # Sprint 1 consolidation (2026-05-15, CEO option 3B): v5_6/v5_7/v5_8/v6 retired.
-  "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
+  # Foundation review 2026-06-11 (TP-CLN-001): v4 retired (no alpha, t=1.51 n.s.);
+  # v7_regime added here (was missing from watchdog since 2026-06-09 — wouldn't auto-restart).
+  # "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
+  "v7_regime|scripts/v7_regime-paper-trade.py|docs/paper-trades/v7_regime/${TODAY}.json|python3 scripts/v7_regime-paper-trade.py"
+  # SHADOW A/B (TP-CLN-009): v5 with ml weight=0. Remove when experiment ends.
+  "v5_noml|scripts/v5_noml-paper-trade.py|docs/paper-trades/v5_noml/${TODAY}.json|python3 scripts/v5_noml-paper-trade.py"
+  # SHADOW A/B (TP-CLN-011): v5 with April settings (FLAT_EXIT off, REARM=6). Remove when done.
+  "v5_apr|scripts/v5_apr-paper-trade.py|docs/paper-trades/v5_apr/${TODAY}.json|python3 scripts/v5_apr-paper-trade.py"
+  # SHADOW (TP-QUANT): v5_cut = ML-removed + wrong-way-cut + tighter short + wide universe.
+  "v5_cut|scripts/v5_cut-paper-trade.py|docs/paper-trades/v5_cut/${TODAY}.json|python3 scripts/v5_cut-paper-trade.py"
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
   # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
   # "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"

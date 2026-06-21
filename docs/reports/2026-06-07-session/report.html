@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Charter,Georgia,'Times New Roman',serif;color:#1a2230;font-size:11.5pt;line-height:1.62}
+h1,h2,h3,.disp{font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif}
+code,.mono{font-family:'Courier New',Courier,monospace}
+.page{padding:0.9in 0.85in;page-break-after:always;position:relative}
+.page:last-child{page-break-after:auto}
+
+/* cover */
+.cover{background:linear-gradient(155deg,#05080f 0%,#0a1626 45%,#0c2638 100%);color:#dbeefc;height:100vh;padding:1in 0.9in;page-break-after:always;display:flex;flex-direction:column}
+.cover .badge{font-family:'Avenir Next',sans-serif;font-size:10pt;letter-spacing:.32em;color:#2bd6e6;text-transform:uppercase}
+.cover h1{font-size:38pt;font-weight:800;letter-spacing:-.01em;margin:.5in 0 .12in;line-height:1.05;color:#fff}
+.cover .sub{font-size:14pt;color:#7fa6c0;font-family:'Avenir Next',sans-serif}
+.cover .mark{width:60px;height:60px;border:2px solid #2bd6e6;border-radius:50%;position:relative;margin-bottom:.4in}
+.cover .mark:after{content:'';position:absolute;inset:11px;border:2px solid #5bf08a;border-radius:50%;border-right-color:transparent}
+.cover .meta{margin-top:auto;border-top:1px solid rgba(120,180,220,.2);padding-top:.3in;font-family:'Avenir Next',sans-serif;font-size:10.5pt;color:#9fc2da}
+.cover .meta b{color:#dbeefc}
+.cover .stripe{display:flex;gap:0;margin:.4in 0}
+.cover .stripe div{flex:1;height:4px}
+
+h2{font-size:17pt;color:#0c2638;border-bottom:2px solid #2bd6e6;padding-bottom:5px;margin:0 0 14px}
+h2 .n{color:#2bd6e6;font-weight:800;margin-right:10px}
+h3{font-size:12.5pt;color:#16324a;margin:18px 0 6px}
+p{margin:0 0 9px}
+.lead{font-size:12pt;color:#33485c}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt;page-break-inside:avoid}
+th{background:linear-gradient(135deg,#0c2638,#16324a);color:#fff;text-align:left;padding:7px 9px;font-family:'Avenir Next',sans-serif;font-size:8.5pt;letter-spacing:.05em;text-transform:uppercase}
+td{padding:6px 9px;border-bottom:1px solid #e3eaf0;vertical-align:top}
+tr:nth-child(even) td{background:#f6f9fb}
+.num{font-family:'Courier New',monospace;text-align:right}
+.pos{color:#0a8f4f;font-weight:700}.neg{color:#c8324b;font-weight:700}
+.box{border:1px solid #cfe0ec;border-left:4px solid #2bd6e6;background:#f3fafd;padding:11px 14px;border-radius:5px;margin:12px 0;page-break-inside:avoid}
+.box.warn{border-left-color:#e6a700;background:#fffaf0}
+.box.win{border-left-color:#0a8f4f;background:#f1faf4}
+.box .h{font-family:'Avenir Next',sans-serif;font-size:9pt;letter-spacing:.1em;text-transform:uppercase;color:#0c2638;font-weight:700;margin-bottom:4px}
+ul{margin:6px 0 10px;padding-left:20px}li{margin:3px 0}
+code{background:#eef3f7;padding:1px 5px;border-radius:3px;font-size:9pt;color:#0c2638}
+.foot{position:absolute;bottom:.45in;left:.85in;right:.85in;display:flex;justify-content:space-between;font-family:'Avenir Next',sans-serif;font-size:8pt;color:#9fb2c2;border-top:1px solid #e3eaf0;padding-top:5px}
+.tag{display:inline-block;font-family:'Avenir Next',sans-serif;font-size:7.5pt;letter-spacing:.06em;padding:2px 7px;border-radius:4px;text-transform:uppercase}
+.tag.done{background:#e4f6ec;color:#0a8f4f}.tag.open{background:#fff2e0;color:#b97400}.tag.crit{background:#fdeaee;color:#c8324b}
+.kvtab td:first-child{font-family:'Avenir Next',sans-serif;color:#5a7287;width:36%}
+</style></head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="mark"></div>
+  <div class="badge">Surya AI · TradePilot · Engineering Audit</div>
+  <h1>Engineering Session Report</h1>
+  <div class="sub">Root-cause diagnosis · A/B forward-test harness · ops hardening · dashboard rebuild</div>
+  <div class="stripe"><div style="background:#28e0f0"></div><div style="background:#5bf08a"></div><div style="background:#c77dff"></div><div style="background:#ffce5b"></div></div>
+  <div class="meta">
+    <div><b>Period</b> &nbsp; 2026-06-05 → 2026-06-07</div>
+    <div><b>System</b> &nbsp; TradePilot autonomous trading fleet (v4 · v5 · v5_classic)</div>
+    <div><b>Author</b> &nbsp; Surya AI &nbsp;·&nbsp; soumya@suryaai.co.in</div>
+    <div><b>Classification</b> &nbsp; Internal · audit record</div>
+    <div><b>Generated</b> &nbsp; 2026-06-07</div>
+  </div>
+</div>
+
+<!-- EXEC SUMMARY -->
+<div class="page">
+  <h2><span class="n">§0</span>Executive Summary</h2>
+  <p class="lead">This session diagnosed why TradePilot stopped making money, built a faithful forward-test to validate the fix, hardened the market-open automation, and rebuilt the live dashboard. The headline: the collapse was an <b>engineering regression, not a market</b>, and the simple pre-regression model is winning the live A/B.</p>
+  <table>
+    <tr><th>Area</th><th>Outcome</th><th>Status</th></tr>
+    <tr><td>v4 root cause</td><td>May-4 overfit retrain (5-tree → 1,735-tree) broke a working engine; old model wins A/B by <span class="pos">+₹25,220</span> Day-1</td><td><span class="tag done">Diagnosed</span></td></tr>
+    <tr><td>v5 root cause</td><td>Fair-weather long engine; short arm has no edge in bear (the regime it deploys most)</td><td><span class="tag done">Diagnosed</span></td></tr>
+    <tr><td>A/B harness</td><td>Isolated forward-test of both challengers, automated via launchd</td><td><span class="tag done">Live</span></td></tr>
+    <tr><td>Ops reliability</td><td>launchd exit-78 fixed &amp; verified; wake + caffeinate + hotspot wired; Rust dropped</td><td><span class="tag done">Hardened</span></td></tr>
+    <tr><td>Dashboard</td><td>FLEET COMMAND sci-fi /live on real data; unified nav; A/B page; market-state sync</td><td><span class="tag done">Shipped</span></td></tr>
+    <tr><td>Monday readiness</td><td>Fully automated if the Mac is awake at 09:10 (laptop-wake the only residual risk)</td><td><span class="tag open">1 dep</span></td></tr>
+  </table>
+  <div class="box win"><div class="h">Bottom line</div>Neither engine has a robust all-weather edge — but v4's loss was self-inflicted (an overfit retrain) and is reversible. The decision to revert v4 to the 5-tree model awaits 2–3 clean A/B sessions; the CEO-override freeze expires <b>2026-07-15</b>.</div>
+  <div class="foot"><span>Surya AI · TradePilot Engineering Audit</span><span>2026-06-05 → 06-07</span></div>
+</div>
+
+<!-- 1 DIAGNOSIS -->
+<div class="page">
+  <h2><span class="n">§1</span>Root-Cause Diagnosis</h2>
+  <h3>1.1 &nbsp; v4 — the May-4 overfit retrain</h3>
+  <p>v4 was gross-profitable through early May, then went flat-to-negative. A controlled comparison holding the <i>market regime constant</i> ruled out the market:</p>
+  <table>
+    <tr><th>Regime</th><th>OLD engine (pre-May-4)</th><th>NEW engine (post-May-6)</th></tr>
+    <tr><td>SIDEWAYS</td><td class="pos">+₹6,520 / day</td><td class="neg">−₹5,846 / day</td></tr>
+    <tr><td>BEAR</td><td class="pos">+₹12,993 / day</td><td>+₹1,392 / day (9× worse)</td></tr>
+  </table>
+  <p>The culprit (commit <code>1d174bc</code>, May 4): the ML model was retrained from a <b>5-tree</b> LightGBM into a <b>1,735-tree</b> model on the <i>same 22 features</i> — a 350× complexity explosion. Real-trade quality collapsed in step: win rate 61%→38%, per-trade edge +₹141→−₹8, hold time 97→172 min. Classic overfitting.</p>
+  <div class="box warn"><div class="h">Bias caught</div>An early "clean controlled experiment" leaned on 3–4-day samples (the project's own <i>don't-rush-findings</i> rule). The robust evidence is structural — the 350× tree explosion — not the small P&amp;L windows. May-6's +₹196k was largely a NaN/cache price artifact, not a real day.</div>
+
+  <h3>1.2 &nbsp; v5 — a fair-weather long engine</h3>
+  <p>v5's code never changed (Apr-16 → May-3 identical), so its decline was market + positioning, not a regression. Its edge is <b>long-heavy harvesting of market up-days</b>; its short arm is regime-conditional:</p>
+  <table>
+    <tr><th>v5 short arm</th><th>Trades</th><th>Avg / trade</th><th>Win rate</th></tr>
+    <tr><td>SIDEWAYS</td><td class="num">217</td><td class="pos">+₹166</td><td class="num">59%</td></tr>
+    <tr><td>BEAR</td><td class="num">416</td><td>+₹3</td><td class="num">39%</td></tr>
+  </table>
+  <p>The engine deploys shorts <i>most</i> in bear (416 vs 217) — exactly where they don't work. Even in bear, v5's longs (+₹103/trade) beat its shorts (+₹3). Fix path: gate shorts out of bear, or run long-only.</p>
+
+  <h3>1.3 &nbsp; The disk-full incident</h3>
+  <p>Mid-session the machine was at 100% / 686 MB free — the live engine's writes were failing (empty cache dirs). Freed 2.2 GB by removing regenerable Rust build output (<code>engine/target</code>), likely a contributing factor to stale-cache symptoms.</p>
+  <div class="foot"><span>§1 · Root-Cause Diagnosis</span><span>Surya AI · TradePilot</span></div>
+</div>
+
+<!-- 2 A/B -->
+<div class="page">
+  <h2><span class="n">§2</span>A/B Forward-Test Harness</h2>
+  <p>A faithful historical backtest was <b>not possible</b> — the engine's intraday decision inputs were never persisted and there is no v4 backtest harness. The only honest validation is a live forward A/B, so two isolated challenger engines run alongside the live fleet:</p>
+  <ul>
+    <li><b>v4 challenger</b> — the pre-May-4 5-tree engine (<code>tradepilot-oldengine-ab/</code>), with a ported NaN-price guard + a 09:30 warm-up guard for apples-to-apples timing.</li>
+    <li><b>v5 challenger</b> — current v5 with shorts disabled (<code>V5_LONG_ONLY=1</code>, <code>tradepilot-v5-longonly-ab/</code>).</li>
+  </ul>
+  <h3>Day-1 result (2026-06-05, clean session)</h3>
+  <table>
+    <tr><th>Experiment</th><th>Challenger</th><th>Baseline (live)</th><th>Delta</th></tr>
+    <tr><td>v4 model</td><td class="pos">+₹21,171 · 72% WR</td><td class="neg">−₹4,049 · 41% WR</td><td class="pos">+₹25,220</td></tr>
+    <tr><td>v5 short arm</td><td>−₹8 · 54% WR · gate ok</td><td class="neg">−₹1,902 · 42% WR</td><td class="pos">+₹1,894</td></tr>
+  </table>
+  <div class="box"><div class="h">Reading</div>v4 is a strong, clean signal (capital-normalized +0.78% vs −0.18% — not leverage). v5 is near-breakeven / inconclusive (one confounded day: regime mismatch + 15 unrealized open positions). Decision needs 2–3 more clean sessions.</div>
+  <div class="foot"><span>§2 · A/B Forward-Test</span><span>Surya AI · TradePilot</span></div>
+</div>
+
+<!-- 3 OPS -->
+<div class="page">
+  <h2><span class="n">§3</span>Operational Reliability</h2>
+  <p>The worst recent P&amp;L days were not trading failures — the engine simply <b>didn't launch on time</b> (the Mac failed to wake / launchd failed to fire). Fixes:</p>
+  <table>
+    <tr><th>Issue</th><th>Root cause</th><th>Fix</th></tr>
+    <tr><td>launchd exit-78</td><td>flaky <code>bash -c</code> under launchd; logs under <code>~/Documents</code> (TCC)</td><td>direct <code>python3</code> invocation + logs to <code>~/Library/Logs</code> — engines-on, preflight, exec-eod all now exit 0; 09:10 fire verified via kickstart</td></tr>
+    <tr><td>Mac not waking</td><td>pmset repeating wake self-clears</td><td>re-set <code>wakepoweron MTWRF 08:45</code>; residual laptop limitation → plug-in + lid-open</td></tr>
+    <tr><td>processes sleep-killed</td><td>idle sleep killed nohup engines mid-morning</td><td><code>caffeinate</code> owned by launch-market.sh through the session</td></tr>
+    <tr><td>network drop</td><td>no auto-reconnect</td><td>wifi-watchdog wired in → falls back to hotspot "Pro"</td></tr>
+    <tr><td>A/B not automated</td><td>only live engines in launchd</td><td>new <code>com.tradepilot.v2.ab-engines</code> job (09:12 weekdays → launch-ab.sh)</td></tr>
+    <tr><td>Rust execution layer</td><td>extra failure mode, low value</td><td>dropped — made optional; Python runs solo</td></tr>
+  </table>
+  <div class="box warn"><div class="h">Residual risk</div>The one link that can't be made bulletproof on a laptop is wake-from-sleep. Durable fix = move the fleet to an always-on box (cloud VM / Mac mini) before the 2026-07-15 override expiry.</div>
+  <div class="foot"><span>§3 · Operational Reliability</span><span>Surya AI · TradePilot</span></div>
+</div>
+
+<!-- 4 DASHBOARD -->
+<div class="page">
+  <h2><span class="n">§4</span>Dashboard Rebuild</h2>
+  <p>The live dashboard (<code>:5050/live</code>) was rebuilt into a sci-fi tactical command interface — <b>FLEET COMMAND</b> — wired to real data, with design choices grounded in verified research (Emil Kowalski's motion principles; "taste = restraint"; impeccable execution).</p>
+  <ul>
+    <li><b>/live</b> — engine array with equity-curve sparklines · tactical radar (engine pods + orbiting trade blips + target-locks + fleet-P&amp;L reactor core) · per-stock telemetry detail · 1-week session browser.</li>
+    <li><b>Craft from research</b> — <code>tabular-nums</code> so live numbers don't jitter (the #1 trading-UI fix); Emil's exact easing curves; staggered one-shot entrance; restraint — <i>no</i> animation on the 5s refresh.</li>
+    <li><b>Unified nav</b> — a top-right switcher (Desk · Market · Live · A/B · Agents) on every dashboard; market-state logic (OPEN only weekday 09:15–15:30 IST) synced across /live and /lab.</li>
+    <li><b>A/B page</b> (<code>/lab</code>) — the challenger-vs-live experiments in-app, with the long-only gate badge.</li>
+    <li><b>Security</b> — a reflected-XSS via the <code>?date=</code> param (date-note + fetch URL) was found by automated review and fixed by strict <code>YYYY-MM-DD</code> validation at intake.</li>
+  </ul>
+  <p>A standalone multi-tab <b>vision mockup</b> (Desk/Market/Live/Agents reimagined) was also produced for design exploration, kept separate from production.</p>
+  <div class="foot"><span>§4 · Dashboard Rebuild</span><span>Surya AI · TradePilot</span></div>
+</div>
+
+<!-- 5 MONDAY + NEXT -->
+<div class="page">
+  <h2><span class="n">§5</span>Monday Readiness &amp; Next Steps</h2>
+  <h3>Monday 2026-06-08 — automated sequence</h3>
+  <table class="kvtab">
+    <tr><td>08:45 IST</td><td>pmset wake (the one unreliable link → plug in + lid open)</td></tr>
+    <tr><td>09:10</td><td>engines-on → launch-market.sh: caffeinate + wifi→"Pro" + 3 live engines + dashboard</td></tr>
+    <tr><td>09:12</td><td>ab-engines → both A/B challengers (caffeinated)</td></tr>
+    <tr><td>~09:20</td><td>verify: /live MARKET=OPEN + trades populate; /lab cards fill</td></tr>
+    <tr><td>15:31 / 15:35</td><td>EOD reports + shutdown; read A/B Day-2 deltas</td></tr>
+  </table>
+  <div class="box"><div class="h">Verdict</div><b>READY</b> — the full stack fires hands-off provided the Mac is awake at 09:10. All launchd jobs exit 0 and the fire is verified.</div>
+  <h3>Decisions &amp; open items</h3>
+  <table>
+    <tr><th>Item</th><th>Owner / trigger</th></tr>
+    <tr><td>Revert v4 to the 5-tree model</td><td>after 2–3 clean A/B sessions confirm the +₹25k edge holds</td></tr>
+    <tr><td>v5 short arm — gate out of bear or run long-only</td><td>after a cleaner v5 A/B (fix regime mismatch + force-close)</td></tr>
+    <tr><td>Move fleet off the laptop (always-on box)</td><td>before 2026-07-15 override expiry — ends the wake-risk class</td></tr>
+    <tr><td>Restore Rust risk layer (optional)</td><td>only if Python-only risk gates prove insufficient</td></tr>
+  </table>
+  <h3>Artifacts &amp; backups</h3>
+  <p class="mono" style="font-size:9pt">docs/MONDAY_SPEC.md · docs/DESIGN_CRAFT.md · docs/V4_ENGINE_PORT_SPEC.md · scripts/launch-ab.sh · prototype/templates/{live,lab}.html · prototype/static/pageswitch.js · docs/mockups/live-vision.html · all edited files backed up as *.bak-2026-06-0{5,6,7}</p>
+  <div class="foot"><span>§5 · Readiness &amp; Next Steps</span><span>Surya AI · TradePilot</span></div>
+</div>
+
+</body></html>

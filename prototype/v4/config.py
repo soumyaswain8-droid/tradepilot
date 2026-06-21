@@ -97,6 +97,19 @@ NIFTY_200_YF = [f"{s}.NS" for s in NIFTY_200_SYMBOLS]
 TRADING_UNIVERSE = "NIFTY_200"
 
 ACTIVE_SYMBOLS = NIFTY_200_SYMBOLS if TRADING_UNIVERSE == "NIFTY_200" else NIFTY_50_SYMBOLS
+
+# Env override: a UNIVERSE_FILE (one symbol/line) expands the scan universe for a
+# single engine (e.g. v5_cut) without touching the others. Used to scan more names
+# for more opportunities + learnings. Falls back to NIFTY_200 if file missing/empty.
+import os as _os
+_uf = _os.environ.get("UNIVERSE_FILE")
+if _uf and _os.path.exists(_uf):
+    try:
+        _syms = [l.strip().upper() for l in open(_uf) if l.strip() and not l.startswith("#")]
+        if len(_syms) >= 50:
+            ACTIVE_SYMBOLS = _syms
+    except Exception:
+        pass
 ACTIVE_SYMBOLS_YF = [f"{s}.NS" for s in ACTIVE_SYMBOLS]
 
 # ---------------------------------------------------------------------------
@@ -151,16 +164,17 @@ assert len(V4_FEATURE_COLS) == 19, f"Expected 19 features, got {len(V4_FEATURE_C
 # Composite Score Weights (must sum to 1.0)
 # ---------------------------------------------------------------------------
 COMPOSITE_WEIGHTS = {
-    "ml_score":   0.25,   # ML model prediction score
-    "rs_score":   0.20,   # Relative strength score
-    "orb_score":  0.15,   # Opening Range Breakout score
-    "vwap_score": 0.10,   # VWAP position score
-    "fii_score":  0.10,   # FII/DII flow score
-    "oi_score":   0.10,   # Open Interest / options score
-    "vol_score":  0.10,   # Volume analysis score
+    "ml_score":   0.0,     # REMOVED 2026-06-21: dead weight (walk-forward IC 0.006); shadow A/B
+                           # v5_noml beat v5 5/5 days, +5940 cumulative. Affects all engines.
+    "rs_score":   0.2667,  # Relative strength (renormalized from 0.20 / 0.75)
+    "orb_score":  0.20,    # Opening Range Breakout (from 0.15 / 0.75)
+    "vwap_score": 0.1333,  # VWAP position (from 0.10 / 0.75)
+    "fii_score":  0.1333,  # FII/DII flow
+    "oi_score":   0.1333,  # Open Interest / options
+    "vol_score":  0.1334,  # Volume analysis (absorbs rounding to keep sum = 1.0)
 }
 
-assert abs(sum(COMPOSITE_WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
+assert abs(sum(COMPOSITE_WEIGHTS.values()) - 1.0) < 1e-6, "Weights must sum to 1.0"
 
 # ---------------------------------------------------------------------------
 # Classification Thresholds (percentile-based)

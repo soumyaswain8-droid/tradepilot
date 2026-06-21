@@ -10,7 +10,7 @@ Usage:
 CLI:
     python3 -m prototype.v5.signal_engine
 """
-import logging, sys, time
+import logging, os, sys, time
 from pathlib import Path
 from typing import List, Optional
 
@@ -47,8 +47,10 @@ _SIDEWAYS_SELL_PCT = 0.10  # SIDEWAYS: shrink SELL to bottom 10%
 # RCA showed mechanical bottom-percentile flipped good stocks into SHORT in BEAR regime
 # (e.g. 04-28: stock score=55 with change_pct=+0.3% became SHORT — guaranteed loss).
 # Now bottom-ranked stocks must ALSO satisfy these absolute conditions to be SHORTed.
-SHORT_REQUIRE_NEGATIVE_CHANGE_PCT = -0.5  # stock must be down at least this much vs prev close
-SHORT_REQUIRE_MAX_SCORE = 35              # stock's composite score must be below this (out of 100)
+# Env-tunable (v5_cut tightens these so we don't short names that aren't clearly weak —
+# the watchdog's wrong-way-shorts-on-rising-names problem, e.g. Adani complex/BIOCON).
+SHORT_REQUIRE_NEGATIVE_CHANGE_PCT = float(os.environ.get("SHORT_REQ_CHG_PCT", "-0.5"))  # must be down ≥ this
+SHORT_REQUIRE_MAX_SCORE = float(os.environ.get("SHORT_REQ_MAX_SCORE", "35"))            # composite must be below this
 
 
 def score_for_short(stock: dict, nifty_change: float) -> dict:

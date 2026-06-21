@@ -1,7 +1,10 @@
 #!/bin/bash
 # FULL BATTLE LAUNCH — everything needed for today's market.
 # Use this as the single command after laptop restart or every morning.
-# Triggered automatically Mon-Fri 09:10 IST via launchd (com.tradepilot.v2.launch-market).
+# Triggered automatically Mon-Fri 08:50 IST via launchd (com.soumya.tradepilot-launch),
+# 5 min after the 08:45 pmset wake. Launches the COMPLETE stack incl. profit + missed-opps
+# validation watchdogs (TP-CLN-005). Redundant 09:10 market_go launcher disabled 2026-06-14
+# to stop the double-launch/mid-session restart; launch-market self-gates via --smoke.
 #
 # Launches:
 #   1. Rust engine (execution/risk layer)
@@ -96,13 +99,38 @@ stop_caffeinate() {
 }
 
 ENGINES=(
-  # Active engines: 3 (post-Sprint-1 consolidation per CEO option 3B, 2026-05-15).
-  # Rationale: focus rebuild effort on a smaller A/B set. v5_6/v5_7/v5_8/v6
-  # explore different strategies and add maintenance cost during the 8-week rebuild.
-  # State files preserved; can be revived after rebuild via uncomment.
-  "v4|scripts/v4-paper-trade.py"
+  # Active engines: 3 (post-foundation-review consolidation, 2026-06-11).
+  # Rationale: run only validated, profit-making engines.
+  #   v5         — VALIDATED: market-neutral alpha t=3.0 (NIFTY regression),
+  #                survives honest fills (t=2.73) and realistic 23bps costs (t=2.52).
+  #   v5_classic — real alpha t=2.39, market-neutral. Secondary.
+  #   v7_regime  — regime-gate experiment (kept; see below).
+  #
+  # RETIRED 2026-06-11 (foundation review, TP-CLN-001) — state files preserved:
+  #   v4 has NO significant alpha (regression alpha t=1.51 n.s.; beta-driven t=2.01).
+  #   Its 2-month +273k was 72% from ONE over-leveraged day (2026-05-06: gate
+  #   disabled, deployed Rs 6.8M); median day Rs 0; negative without top-3 days.
+  #   Confirmed live: worst engine on 2 of its last 3 sessions (-13881, -5133, down days).
+  #   To revive: uncomment here AND in crash-watchdog.sh together.
+  # "v4|scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py"
+
+  # SHADOW A/B (TP-CLN-009, started 2026-06-15): v5 with ml_score weight=0 (dead-weight
+  # ML; TP-CLN-008 proved selection-neutral). Same code as v5, one param differs; own
+  # state/log, telegram silenced. Compare net P&L vs v5 over ~5-10 sessions, then either
+  # commit weight=0 to config.py or revert. Re-comment this line to end the experiment.
+  "v5_noml|scripts/v5_noml-paper-trade.py"
+
+  # SHADOW A/B (TP-CLN-011, started 2026-06-15): v5 with "April settings" restored —
+  # FLAT_EXIT disabled + WINNER_REARM_MAX=6 (reverses the 2026-05-04 right-tail cap).
+  # Compare RISK-ADJUSTED return vs v5, not raw P&L. Re-comment to end the experiment.
+  "v5_apr|scripts/v5_apr-paper-trade.py"
+
+  # SHADOW (TP-QUANT, 2026-06-21): v5_cut = ML-removed + faster wrong-way cut + tighter
+  # short-gate + ~450-name universe. Built from this week's watchdog findings to lift
+  # the profit margin. Compare risk-adjusted vs v5. Re-comment to end.
+  "v5_cut|scripts/v5_cut-paper-trade.py"
 
   # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
   # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).
@@ -160,6 +188,8 @@ if [ "${1:-}" = "--status" ]; then
   printf "  %-18s %s\n" "laptop-heartbeat" "$(pgrep -f 'laptop-heartbeat.sh' | head -1 || echo '-')"
   printf "  %-18s %s\n" "auto-stop-eod"    "$(pgrep -f 'auto-stop-eod.sh' | head -1 || echo '-')"
   printf "  %-18s %s\n" "satish-schedule"  "$(pgrep -f 'satish-schedule.sh' | head -1 || echo '-')"
+  printf "  %-18s %s\n" "profit-watchdog"  "$(pgrep -f 'profit-watchdog.py' | head -1 || echo '-')"
+  printf "  %-18s %s\n" "missed-opps-wd"   "$(pgrep -f 'missed-opportunities-watchdog.py' | head -1 || echo '-')"
   echo ""
   # Show OUR caffeinate (PID-tracked, owned by launch-market.sh) rather than any
   # stranger caffeinate that might happen to be on the system.
@@ -180,6 +210,8 @@ if [ "${1:-}" = "--stop" ]; then
   pkill -f "scripts/laptop-heartbeat.sh" 2>/dev/null
   pkill -f "scripts/auto-stop-eod.sh"   2>/dev/null
   pkill -f "scripts/satish-schedule.sh" 2>/dev/null
+  pkill -f "profit-watchdog.py"         2>/dev/null
+  pkill -f "missed-opportunities-watchdog.py" 2>/dev/null
   pkill -f "tradepilot-engine"          2>/dev/null
   if [ -f /tmp/tradepilot-wifi-watchdog.pid ]; then
     kill "$(cat /tmp/tradepilot-wifi-watchdog.pid)" 2>/dev/null && echo "  ✓ wifi-watchdog stopped"
@@ -329,6 +361,24 @@ if grep -q "^SATISH_TELEGRAM_CHAT_ID=[0-9]" .env 2>/dev/null; then
 else
   echo "  ⊘ SATISH_TELEGRAM_CHAT_ID not set — skipping. Run manually once Satish messages bot."
 fi
+
+# [10/11] Profit-watchdog — 30-min P&L snapshots (TP-CLN-005: was started by hand every morning)
+echo "[10/11] Launching profit-watchdog (validation: what we're earning)..."
+if pgrep -f "profit-watchdog.py" > /dev/null 2>&1; then
+  echo "  ✓ already running"
+else
+  nohup python3 ./scripts/profit-watchdog.py > "logs/profit-watchdog-${TODAY}.log" 2>&1 &
+  echo "  ✓ profit-watchdog (PID $!)"
+fi
+
+# [11/11] Missed-opportunities-watchdog — 180s cycle (TP-CLN-005)
+# Kill any stale instance first (it has no EOD self-stop, and a survivor would keep
+# the old undated log and skip a fresh dated one) — so every day gets ONE clean
+# dated log 09:00..15:35. Fixes the 2026-06-18 mixed-multi-day-log bug.
+echo "[11/11] Launching missed-opps-watchdog (validation: left on the table)..."
+pkill -f "missed-opportunities-watchdog.py" 2>/dev/null && sleep 1
+nohup python3 ./scripts/missed-opportunities-watchdog.py > "logs/missed-opps-watchdog-${TODAY}.log" 2>&1 &
+echo "  ✓ missed-opps-watchdog (PID $!) — fresh dated log logs/missed-opps-watchdog-${TODAY}.log"
 
 # Verify
 echo ""

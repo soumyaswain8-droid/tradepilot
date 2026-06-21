@@ -12,9 +12,21 @@
 # │ Output: PASS / FAIL / WARN per check. Exit code = number of fails.   │
 # │                                                                       │
 # │ Usage:                                                                │
-# │   ./scripts/sarathi-verify.sh           # run all checks             │
-# │   ./scripts/sarathi-verify.sh --quiet   # only show fails            │
-# │   ./scripts/sarathi-verify.sh --smoke   # only runtime smoke tests   │
+# │   ./scripts/sarathi-verify.sh             # run all checks           │
+# │   ./scripts/sarathi-verify.sh --quiet     # only show fails          │
+# │   ./scripts/sarathi-verify.sh --smoke     # import/compile smoke     │
+# │   ./scripts/sarathi-verify.sh --smoke-engine  # DRY-BOOT each engine │
+# │                                                                       │
+# │ Smoke vs smoke-engine:                                                │
+# │   --smoke        STATIC-ish: import + syntax-compile the engine       │
+# │                  scripts. Fast (~2s). Does NOT run run(), so it       │
+# │                  cannot catch startup SystemExits (the 2026-05-18     │
+# │                  incident: a tight check_model_freshness killed v5    │
+# │                  at 09:30 open and --smoke never noticed).            │
+# │   --smoke-engine S2-PM-001: actually DRY-BOOTS each active engine in  │
+# │                  an isolated, no-trade mode under a short timeout and │
+# │                  FAILS if any engine errors during startup. Delegates │
+# │                  to scripts/team/cadence/preflight.py --smoke-engine. │
 # │                                                                       │
 # │ Wired into launch-market.sh as pre-launch gate.                      │
 # ╰──────────────────────────────────────────────────────────────────────╯
@@ -22,6 +34,16 @@
 set -uo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_ROOT"
+
+# ── --smoke-engine: delegate to the Python preflight dry-boot (S2-PM-001) ──
+# This is a *real* engine boot (isolated, no-trade, short timeout), unlike the
+# import-only --smoke below. Kept as a thin passthrough so launch-market.sh and
+# operators have one consistent entrypoint. preflight.py owns the active-engine
+# derivation (parsed from launch-market.sh's ENGINES array) and the safety env
+# (TRADEPILOT_SMOKE=1 + isolated TRADEPILOT_STATE_DIR + no-net).
+if [[ "${1:-}" == "--smoke-engine" ]]; then
+  exec python3 "$PROJECT_ROOT/scripts/team/cadence/preflight.py" --smoke-engine
+fi
 
 QUIET="${1:-}"
 SMOKE_ONLY=""

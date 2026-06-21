@@ -1,0 +1,182 @@
+{
+  "date": "2026-06-11",
+  "generated_at": "2026-06-11T19:23:24.071622",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": -5132.76,
+      "trades": 73,
+      "wins": 20,
+      "losses": 53,
+      "longs": 73,
+      "shorts": 0,
+      "win_rate": 27.4,
+      "open_positions": 0,
+      "best_trade": 803.88,
+      "worst_trade": -424.0,
+      "avg_win": 206.9,
+      "avg_loss": -174.92,
+      "exit_reasons": {
+        "TARGET": 4,
+        "SIGNAL_EXIT": 16,
+        "STOPLOSS": 11,
+        "TIME_EXIT": 42
+      },
+      "n_closed": 73,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 2341.07,
+      "trades": 59,
+      "wins": 30,
+      "losses": 29,
+      "longs": 9,
+      "shorts": 50,
+      "win_rate": 50.8,
+      "open_positions": 0,
+      "best_trade": 597.6,
+      "worst_trade": -207.9,
+      "avg_win": 122.39,
+      "avg_loss": -45.88,
+      "exit_reasons": {
+        "STOPLOSS": 18,
+        "TARGET": 6,
+        "FLAT_FORCE_EXIT": 10,
+        "TIME_EXIT": 20,
+        "SIGNAL_FLIP": 5
+      },
+      "n_closed": 59,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 690.4,
+      "trades": 61,
+      "wins": 30,
+      "losses": 31,
+      "longs": 9,
+      "shorts": 52,
+      "win_rate": 49.2,
+      "open_positions": 1,
+      "best_trade": 361.5,
+      "worst_trade": -336.15,
+      "avg_win": 105.76,
+      "avg_loss": -76.67,
+      "exit_reasons": {
+        "STOPLOSS": 27,
+        "TARGET": 3,
+        "SIGNAL_FLIP": 10,
+        "TIME_EXIT": 21
+      },
+      "n_closed": 61,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "ENRIN",
+      "ICICIAMC",
+      "IDEA",
+      "IRCTC",
+      "JSWENERGY",
+      "LICHSGFIN",
+      "MARICO",
+      "MCX",
+      "TORNTPHARM",
+      "VEDL",
+      "YESBANK"
+    ],
+    "v4|v5_classic": [
+      "ADANIGREEN",
+      "ATGL",
+      "AUROPHARMA",
+      "BHARATFORG",
+      "IDEA",
+      "JSWENERGY",
+      "LICHSGFIN",
+      "LODHA",
+      "NESTLEIND",
+      "VEDL",
+      "YESBANK"
+    ],
+    "v5|v5_classic": [
+      "ADANIPOWER",
+      "BAJFINANCE",
+      "BANKBARODA",
+      "BHEL",
+      "BLUESTARCO",
+      "CANBK",
+      "COROMANDEL",
+      "GAIL",
+      "HDFCAMC",
+      "HINDPETRO",
+      "HINDUNILVR",
+      "IDEA",
+      "IOC",
+      "JSWENERGY",
+      "JUBLFOOD",
+      "LICHSGFIN",
+      "LTM",
+      "MFSL",
+      "MPHASIS",
+      "OFSS",
+      "PAYTM",
+      "PFC",
+      "PNB",
+      "RECLTD",
+      "SHRIRAMFIN",
+      "SRF",
+      "TATACOMM",
+      "TATAPOWER",
+      "TCS",
+      "TECHM",
+      "TRENT",
+      "TVSMOTOR",
+      "UPL",
+      "VEDL",
+      "VMM",
+      "YESBANK"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +2,341 across 59 trades (50.8% win).",
+    "Laggard: <b>v4</b> with Rs -5,133 across 73 trades (27.4% win).",
+    "<b>v4</b>: STOPLOSS (11) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: STOPLOSS (18) >= TARGET (6). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (27) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v4</b>: 27.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5</b>: 50.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 49.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

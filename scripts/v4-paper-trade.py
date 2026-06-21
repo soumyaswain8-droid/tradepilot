@@ -535,7 +535,7 @@ def deploy_into_buys(state):
     # scans run normal logic.
     preflight_mode = state.get("preflight_mode", "NORMAL")
     if preflight_mode == "LATE_ENTRY":
-        from prototype.v4.preflight import apply_late_start_filter, kelly_scale_for_mode
+        from v4.preflight import apply_late_start_filter, kelly_scale_for_mode
         symbols = [b["symbol"] for b in new_buys]
         filtered_signals, ctx, mode_label = apply_late_start_filter(new_buys, symbols)
         if not filtered_signals:
@@ -948,7 +948,7 @@ def run():
     # late-mode filters: skip overextended stocks, reject LONGs with DOWN trend,
     # reject SHORTs with UP trend. If boot > 14:00, skip first deploy entirely.
     # Stores mode_label in state so deploy_into_buys can read it and adjust Kelly.
-    from prototype.v4.preflight import is_late_start, should_skip_first_deploy
+    from v4.preflight import is_late_start, should_skip_first_deploy
     now = datetime.now()
     if is_late_start(now):
         if should_skip_first_deploy(now):

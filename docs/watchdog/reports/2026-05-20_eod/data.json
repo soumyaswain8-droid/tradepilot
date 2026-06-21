@@ -1,0 +1,174 @@
+{
+  "date": "2026-05-20",
+  "generated_at": "2026-05-20T15:35:34.724307",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 5048.1,
+      "trades": 76,
+      "wins": 41,
+      "losses": 35,
+      "longs": 76,
+      "shorts": 0,
+      "win_rate": 53.9,
+      "open_positions": 0,
+      "best_trade": 760.5,
+      "worst_trade": -448.0,
+      "avg_win": 255.35,
+      "avg_loss": -154.89,
+      "exit_reasons": {
+        "SIGNAL_EXIT": 25,
+        "TARGET": 8,
+        "STOPLOSS": 8,
+        "TIME_EXIT": 35
+      },
+      "n_closed": 76,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 790.15,
+      "trades": 40,
+      "wins": 19,
+      "losses": 21,
+      "longs": 15,
+      "shorts": 25,
+      "win_rate": 47.5,
+      "open_positions": 2,
+      "best_trade": 359.6,
+      "worst_trade": -235.5,
+      "avg_win": 116.83,
+      "avg_loss": -75.24,
+      "exit_reasons": {
+        "STOPLOSS": 18,
+        "FLAT_FORCE_EXIT": 7,
+        "TIME_EXIT": 8,
+        "TARGET": 4,
+        "SIGNAL_FLIP": 3
+      },
+      "n_closed": 40,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 482.39,
+      "trades": 39,
+      "wins": 17,
+      "losses": 22,
+      "longs": 11,
+      "shorts": 28,
+      "win_rate": 43.6,
+      "open_positions": 3,
+      "best_trade": 561.4,
+      "worst_trade": -239.8,
+      "avg_win": 125.45,
+      "avg_loss": -75.01,
+      "exit_reasons": {
+        "STOPLOSS": 21,
+        "TIME_EXIT": 11,
+        "TARGET": 3,
+        "SIGNAL_FLIP": 4
+      },
+      "n_closed": 39,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "COFORGE",
+      "ENRIN",
+      "GVT&D",
+      "HINDALCO",
+      "INFY",
+      "KPITTECH",
+      "M&M",
+      "TECHM",
+      "TVSMOTOR",
+      "ZYDUSLIFE"
+    ],
+    "v4|v5_classic": [
+      "COFORGE",
+      "ENRIN",
+      "GVT&D",
+      "HINDALCO",
+      "IDEA",
+      "KPITTECH",
+      "POWERINDIA",
+      "RADICO",
+      "TATACOMM",
+      "TECHM",
+      "TVSMOTOR",
+      "ZYDUSLIFE"
+    ],
+    "v5|v5_classic": [
+      "ABCAPITAL",
+      "ATGL",
+      "AUBANK",
+      "BEL",
+      "COFORGE",
+      "CONCOR",
+      "DMART",
+      "ENRIN",
+      "EXIDEIND",
+      "GLENMARK",
+      "GODFRYPHLP",
+      "GVT&D",
+      "HINDALCO",
+      "ICICIGI",
+      "ITC",
+      "KPITTECH",
+      "LODHA",
+      "LTF",
+      "LTM",
+      "M&MFIN",
+      "PFC",
+      "SAIL",
+      "TECHM",
+      "TVSMOTOR",
+      "UNITDSPR",
+      "VEDL",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v4</b> with Rs +5,048 across 76 trades (53.9% win).",
+    "Laggard: <b>v5_classic</b> with Rs +482 across 39 trades (43.6% win).",
+    "High-volume engines (50+ trades) averaged Rs 5,048; low-volume averaged Rs 636. <b>More trades = more profit today.</b>",
+    "<b>v4</b>: STOPLOSS (8) >= TARGET (8). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: STOPLOSS (18) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (21) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v4</b>: 53.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5</b>: 47.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 43.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

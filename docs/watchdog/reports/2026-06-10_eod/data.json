@@ -1,0 +1,178 @@
+{
+  "date": "2026-06-10",
+  "generated_at": "2026-06-10T15:50:25.938152",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": -13880.94,
+      "trades": 71,
+      "wins": 8,
+      "losses": 63,
+      "longs": 71,
+      "shorts": 0,
+      "win_rate": 11.3,
+      "open_positions": 0,
+      "best_trade": 483.0,
+      "worst_trade": -550.8,
+      "avg_win": 224.3,
+      "avg_loss": -252.83,
+      "exit_reasons": {
+        "TARGET": 3,
+        "STOPLOSS": 25,
+        "SIGNAL_EXIT": 14,
+        "TIME_EXIT": 29
+      },
+      "n_closed": 71,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 1228.69,
+      "trades": 53,
+      "wins": 31,
+      "losses": 22,
+      "longs": 15,
+      "shorts": 38,
+      "win_rate": 58.5,
+      "open_positions": 1,
+      "best_trade": 441.6,
+      "worst_trade": -249.5,
+      "avg_win": 88.58,
+      "avg_loss": -68.97,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "FLAT_FORCE_EXIT": 7,
+        "TARGET": 5,
+        "TIME_EXIT": 19,
+        "SIGNAL_FLIP": 7
+      },
+      "n_closed": 53,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 2611.91,
+      "trades": 47,
+      "wins": 31,
+      "losses": 16,
+      "longs": 12,
+      "shorts": 35,
+      "win_rate": 66.0,
+      "open_positions": 0,
+      "best_trade": 735.0,
+      "worst_trade": -170.5,
+      "avg_win": 120.47,
+      "avg_loss": -70.17,
+      "exit_reasons": {
+        "STOPLOSS": 14,
+        "TARGET": 7,
+        "TIME_EXIT": 20,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 47,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "AUROPHARMA",
+      "BRITANNIA",
+      "COLPAL",
+      "COROMANDEL",
+      "DABUR",
+      "DMART",
+      "HINDUNILVR",
+      "ICICIGI",
+      "MAXHEALTH",
+      "NESTLEIND",
+      "POLICYBZR"
+    ],
+    "v4|v5_classic": [
+      "AUROPHARMA",
+      "BANKINDIA",
+      "BRITANNIA",
+      "COLPAL",
+      "DABUR",
+      "HDFCLIFE",
+      "HINDUNILVR",
+      "ICICIGI",
+      "NESTLEIND",
+      "POLICYBZR",
+      "VOLTAS"
+    ],
+    "v5|v5_classic": [
+      "360ONE",
+      "ABCAPITAL",
+      "AUBANK",
+      "AUROPHARMA",
+      "BRITANNIA",
+      "COALINDIA",
+      "COLPAL",
+      "DABUR",
+      "ETERNAL",
+      "FEDERALBNK",
+      "GODREJPROP",
+      "HDFCAMC",
+      "HINDPETRO",
+      "HINDUNILVR",
+      "HUDCO",
+      "ICICIGI",
+      "INDIANB",
+      "INDUSINDBK",
+      "INDUSTOWER",
+      "JINDALSTEL",
+      "JSWENERGY",
+      "KALYANKJIL",
+      "KPITTECH",
+      "M&MFIN",
+      "MUTHOOTFIN",
+      "NESTLEIND",
+      "OIL",
+      "PIIND",
+      "PNB",
+      "POLICYBZR",
+      "SBILIFE",
+      "YESBANK"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +2,612 across 47 trades (66.0% win).",
+    "Laggard: <b>v4</b> with Rs -13,881 across 71 trades (11.3% win).",
+    "Low-volume engines outperformed \u2014 selectivity beat volume today (low-vol avg Rs 2,612 vs high-vol Rs -6,326).",
+    "<b>v4</b>: STOPLOSS (25) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: STOPLOSS (15) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (14) >= TARGET (7). Consider widening SL or tightening entry filters.",
+    "<b>v4</b>: 11.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5</b>: 58.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

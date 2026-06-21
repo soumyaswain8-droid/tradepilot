@@ -1,0 +1,166 @@
+{
+  "date": "2026-05-29",
+  "generated_at": "2026-05-29T15:35:25.887770",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": -12815.07,
+      "trades": 93,
+      "wins": 20,
+      "losses": 73,
+      "longs": 93,
+      "shorts": 0,
+      "win_rate": 21.5,
+      "open_positions": 0,
+      "best_trade": 859.8,
+      "worst_trade": -969.4,
+      "avg_win": 288.05,
+      "avg_loss": -254.47,
+      "exit_reasons": {
+        "SIGNAL_EXIT": 45,
+        "STOPLOSS": 16,
+        "TARGET": 4,
+        "TIME_EXIT": 28
+      },
+      "n_closed": 93,
+      "n_open": 0
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -1466.92,
+      "trades": 34,
+      "wins": 8,
+      "losses": 26,
+      "longs": 34,
+      "shorts": 0,
+      "win_rate": 23.5,
+      "open_positions": 1,
+      "best_trade": 390.0,
+      "worst_trade": -344.0,
+      "avg_win": 170.79,
+      "avg_loss": -108.97,
+      "exit_reasons": {
+        "STOPLOSS": 10,
+        "SIGNAL_FLIP": 13,
+        "TARGET": 2,
+        "FLAT_FORCE_EXIT": 9
+      },
+      "n_closed": 34,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -605.04,
+      "trades": 22,
+      "wins": 7,
+      "losses": 15,
+      "longs": 22,
+      "shorts": 0,
+      "win_rate": 31.8,
+      "open_positions": 2,
+      "best_trade": 905.0,
+      "worst_trade": -435.0,
+      "avg_win": 268.14,
+      "avg_loss": -165.47,
+      "exit_reasons": {
+        "TARGET": 2,
+        "STOPLOSS": 8,
+        "SIGNAL_FLIP": 12
+      },
+      "n_closed": 22,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v4|v5": [
+      "COFORGE",
+      "CONCOR",
+      "GMRAIRPORT",
+      "HYUNDAI",
+      "INDUSTOWER",
+      "JUBLFOOD",
+      "KALYANKJIL",
+      "LODHA",
+      "LT",
+      "MAZDOCK",
+      "MUTHOOTFIN",
+      "PATANJALI",
+      "PHOENIXLTD",
+      "RADICO",
+      "SIEMENS",
+      "TECHM",
+      "YESBANK"
+    ],
+    "v4|v5_classic": [
+      "ADANIGREEN",
+      "INDUSTOWER",
+      "JUBLFOOD",
+      "KALYANKJIL",
+      "LODHA",
+      "LT",
+      "MAZDOCK",
+      "PHOENIXLTD",
+      "RADICO",
+      "SIEMENS",
+      "TECHM",
+      "YESBANK"
+    ],
+    "v5|v5_classic": [
+      "INDUSTOWER",
+      "JUBLFOOD",
+      "KALYANKJIL",
+      "LODHA",
+      "LT",
+      "MAZDOCK",
+      "PHOENIXLTD",
+      "RADICO",
+      "SIEMENS",
+      "TECHM",
+      "VEDL",
+      "YESBANK"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -605 across 22 trades (31.8% win).",
+    "Laggard: <b>v4</b> with Rs -12,815 across 93 trades (21.5% win).",
+    "Low-volume engines outperformed \u2014 selectivity beat volume today (low-vol avg Rs -1,036 vs high-vol Rs -12,815).",
+    "<b>v4</b>: STOPLOSS (16) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: STOPLOSS (10) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (13). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (8) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (12). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v4</b>: 21.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5</b>: 23.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 31.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

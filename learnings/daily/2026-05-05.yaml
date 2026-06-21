@@ -1,0 +1,42 @@
+combined_pnl: 44284.1986179352
+date: '2026-05-05'
+insights:
+- ✅ Combined P&L Rs +44,284 is +51% vs 3-day baseline. Strong day.
+- ✅ v5 vs v5_classic gap closed to Rs -163. Rust fix holding.
+- '● Week 3 target not yet hit: v5 Rs +10,591 < Rs 28,000. Need: Tier models hold
+  WR > 80%?'
+- ⚠ v4 took 0 trades today. Likely dormant or over-filtered.
+per_engine:
+  v4:
+    losses: 0
+    pnl: 0
+    trades: 0
+    wins: 0
+    wr: 0
+  v5:
+    losses: 14
+    pnl: 10590.531685447699
+    trades: 62
+    wins: 48
+    wr: 77.41935483870968
+  v5_6:
+    losses: 11
+    pnl: 14068.467739448555
+    trades: 63
+    wins: 52
+    wr: 82.53968253968253
+  v5_7:
+    losses: 10
+    pnl: 9197.479831619266
+    trades: 55
+    wins: 45
+    wr: 81.81818181818183
+  v5_classic:
+    losses: 12
+    pnl: 10427.719361419682
+    trades: 59
+    wins: 47
+    wr: 79.66101694915254
+phase_change: Universe 201 → 539 (tiered models)
+phase_week: 3
+storage: local-only per project rule

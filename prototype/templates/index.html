@@ -3627,76 +3627,22 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
       </div>
     </div>
 
-    <!-- ═══ ENGINE ARENA — v5.2 vs v5.3 vs v5.4 Live Comparison ═══ -->
+    <!-- ═══ ENGINE ARENA — All 7 Active Engines Live Status ═══ -->
     <div id="engineArena" class="glass" style="padding:16px;border-radius:14px;margin-top:16px;border-left:3px solid #8B5CF6">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#8B5CF6,#6366F1);display:flex;align-items:center;justify-content:center;font-size:15px">&#9876;</div>
           <div>
             <div style="font-size:14px;font-weight:700;color:var(--text)">Engine Arena</div>
-            <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">V5.2 &bull; V5.3 &bull; V5.6 LIVE STATUS</div>
+            <div id="arenaSubtitle" style="font-size:9px;color:var(--text-dim);letter-spacing:1px">7 ACTIVE ENGINES &bull; LIVE</div>
           </div>
         </div>
         <button onclick="loadEngineArena()" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:10px;cursor:pointer;font-weight:600;letter-spacing:0.5px">Refresh</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="arenaGrid">
-        <!-- v5.2 Card -->
-        <div style="background:var(--abyss);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#F43F5E,#FB7185)"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:18px;font-weight:800;color:var(--text)">v5.2</div>
-            <span style="font-size:8px;font-weight:700;padding:3px 8px;border-radius:50px;background:rgba(244,63,94,0.1);color:#F43F5E">F&O</span>
-          </div>
-          <div style="font-size:8px;color:var(--text-ghost);margin-bottom:8px">Options + Derivatives</div>
-          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">P&L</span><span id="arena52Pnl" style="font-weight:700">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Trades</span><span id="arena52Trades" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Win Rate</span><span id="arena52WR" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Positions</span><span id="arena52Pos" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Capital</span><span id="arena52Cap" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Regime</span><span id="arena52Regime" style="font-weight:600">--</span></div>
-          </div>
-          <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:8px;overflow:hidden"><div id="arena52Bar" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,#F43F5E,#FB7185);transition:width 1s"></div></div>
-        </div>
-
-        <!-- v5.3 Card -->
-        <div style="background:var(--abyss);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#F59E0B,#FCD34D)"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:18px;font-weight:800;color:var(--text)">v5.3</div>
-            <span style="font-size:8px;font-weight:700;padding:3px 8px;border-radius:50px;background:rgba(245,158,11,0.1);color:#F59E0B">STAGED</span>
-          </div>
-          <div style="font-size:8px;color:var(--text-ghost);margin-bottom:8px">3-Stage Conviction Entry</div>
-          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">P&L</span><span id="arena53Pnl" style="font-weight:700">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Trades</span><span id="arena53Trades" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Win Rate</span><span id="arena53WR" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Confirmed</span><span id="arena53Confirmed" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Cancelled</span><span id="arena53Cancelled" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Regime</span><span id="arena53Regime" style="font-weight:600">--</span></div>
-          </div>
-          <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:8px;overflow:hidden"><div id="arena53Bar" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,#F59E0B,#FCD34D);transition:width 1s"></div></div>
-        </div>
-
-        <!-- v5.6 Card -->
-        <div style="background:var(--abyss);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#10B981,#34D399,#6EE7B7)"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:18px;font-weight:800;color:var(--text)">v5.6</div>
-            <span style="font-size:8px;font-weight:700;padding:3px 8px;border-radius:50px;background:rgba(16,185,129,0.12);color:#10B981">DARVAS</span>
-          </div>
-          <div style="font-size:8px;color:var(--text-ghost);margin-bottom:8px">Darvas Box Breakout</div>
-          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">P&L</span><span id="arena56Pnl" style="font-weight:700">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Long P&L</span><span id="arena56LongPnl" style="font-weight:600;color:var(--green)">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Short P&L</span><span id="arena56ShortPnl" style="font-weight:600;color:#F43F5E">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Trades</span><span id="arena56Trades" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Win Rate</span><span id="arena56WR" style="font-weight:600">--</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Regime</span><span id="arena56Regime" style="font-weight:600">--</span></div>
-          </div>
-          <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:8px;overflow:hidden"><div id="arena56Bar" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,#10B981,#34D399,#6EE7B7);transition:width 1s"></div></div>
-        </div>
+      <!-- Card grid populated by loadEngineArena() — see ENGINE_META in JS -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px" id="arenaGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-ghost);font-size:11px">Loading engine fleet&hellip;</div>
       </div>
 
       <!-- Open Positions Table -->
@@ -6711,87 +6657,177 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 // ═══════════════ ENGINE ARENA ═══════════════
+// Renders all 7 ACTIVE engines from /api/engine-status (live state files).
+// The legacy /api/engine-arena endpoint serves retired engines (v5.2/v5.3) and
+// is intentionally not used here.
+var ENGINE_META = {
+  'v4':         { label:'v4',         desc:'Composite Scorer',     tag:'COMPOSITE',  color:'#6366F1', accent:'#818CF8' },
+  'v5':         { label:'v5',         desc:'Multi-Pool + Short',   tag:'MULTI-POOL', color:'#10B981', accent:'#34D399' },
+  'v5_classic': { label:'v5_classic', desc:'Long-Only Classic',    tag:'CLASSIC',    color:'#8B5CF6', accent:'#A78BFA' },
+  'v5_6':       { label:'v5_6',       desc:'Darvas Box Breakout',  tag:'DARVAS',     color:'#22D3EE', accent:'#67E8F9' },
+  'v5_7':       { label:'v5_7',       desc:'Intraday Box Revert',  tag:'MEAN-REV',   color:'#F59E0B', accent:'#FCD34D' },
+  'v5_8':       { label:'v5_8',       desc:'Regime-Aware',         tag:'REGIME',     color:'#EC4899', accent:'#F9A8D4' },
+  'v6':         { label:'v6',         desc:'v4 Signals + Track A', tag:'BOLT-ON',    color:'#EF4444', accent:'#FCA5A5' }
+};
+var ENGINE_ORDER = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6'];
+
 function loadEngineArena(){
-  fetch('/api/engine-arena').then(function(r){return r.json()}).then(function(data){
+  fetch('/api/engine-status').then(function(r){return r.json()}).then(function(data){
     function fmtPnl(v){
-      if(!v && v!==0) return '--';
-      var s=v>=0?'+':''; return 'Rs '+s+Math.round(v).toLocaleString();
+      if(v == null || isNaN(v)) return '--';
+      var s = v >= 0 ? '+' : '−';
+      return 'Rs ' + s + Math.abs(Math.round(v)).toLocaleString('en-IN');
     }
-    function pnlColor(v){ return v>=0?'var(--green)':'var(--red)'; }
-    function wr(w,t){ return t>0? w+'W/'+(t-w)+'L ('+Math.round(w/t*100)+'%)' : 'No trades'; }
+    function pnlColor(v){ return v >= 0 ? 'var(--green)' : 'var(--red)'; }
+    function fmtCap(v){ return 'Rs ' + ((v||0)/100000).toFixed(1) + 'L'; }
+    function wr(w, t){
+      if(!t) return 'No trades';
+      return w + 'W/' + (t-w) + 'L (' + Math.round(w/t*100) + '%)';
+    }
 
-    // v5.2
-    var e52=data['v5.2']||{};
-    var el;
-    el=document.getElementById('arena52Pnl'); if(el){el.textContent=fmtPnl(e52.pnl);el.style.color=pnlColor(e52.pnl);}
-    el=document.getElementById('arena52Trades'); if(el) el.textContent=e52.trades||'0';
-    el=document.getElementById('arena52WR'); if(el) el.textContent=wr(e52.wins||0,e52.trades||0);
-    el=document.getElementById('arena52Pos'); if(el) el.textContent=(e52.positions||[]).length+' open';
-    el=document.getElementById('arena52Cap'); if(el) el.textContent='Rs '+(Math.round((e52.capital||1000000)/100000)*100000/100000).toFixed(1)+'L';
-    el=document.getElementById('arena52Regime'); if(el) el.textContent=e52.regime||'?';
-    el=document.getElementById('arena52Bar'); if(el) el.style.width=Math.min(100,Math.max(2,((e52.trades||0)*5)))+'%';
+    var byName = {};
+    (data.engines || []).forEach(function(e){ byName[e.engine] = e; });
 
-    // v5.3
-    var e53=data['v5.3']||{};
-    el=document.getElementById('arena53Pnl'); if(el){el.textContent=fmtPnl(e53.pnl);el.style.color=pnlColor(e53.pnl);}
-    el=document.getElementById('arena53Trades'); if(el) el.textContent=e53.trades||'0';
-    el=document.getElementById('arena53WR'); if(el) el.textContent=wr(e53.wins||0,e53.trades||0);
-    el=document.getElementById('arena53Confirmed'); if(el) el.textContent=e53.confirmed||'0';
-    el=document.getElementById('arena53Cancelled'); if(el) el.textContent=e53.cancelled||'0';
-    el=document.getElementById('arena53Regime'); if(el) el.textContent=e53.regime||'?';
-    el=document.getElementById('arena53Bar'); if(el) el.style.width=Math.min(100,Math.max(2,((e53.confirmed||0)*10)))+'%';
+    // Subtitle: fleet aggregate
+    var totalPnl = 0, totalTrades = 0, totalOpen = 0;
+    ENGINE_ORDER.forEach(function(n){
+      var e = byName[n] || {};
+      totalPnl += (e.pnl || 0);
+      totalTrades += (e.trades || 0);
+      totalOpen += (e.open || 0);
+    });
+    var sub = document.getElementById('arenaSubtitle');
+    if(sub) sub.textContent = '7 ACTIVE ENGINES • FLEET ' + fmtPnl(totalPnl).toUpperCase() + ' • ' + totalTrades + ' TRADES • ' + totalOpen + ' OPEN';
 
-    // v5.6 (Darvas)
-    var e56=data['v5.6']||{};
-    el=document.getElementById('arena56Pnl'); if(el){el.textContent=fmtPnl(e56.pnl);el.style.color=pnlColor(e56.pnl);}
-    el=document.getElementById('arena56LongPnl'); if(el){el.textContent=fmtPnl(e56.long_pnl);el.style.color=pnlColor(e56.long_pnl);}
-    el=document.getElementById('arena56ShortPnl'); if(el){el.textContent=fmtPnl(e56.short_pnl);el.style.color=pnlColor(e56.short_pnl);}
-    el=document.getElementById('arena56Trades'); if(el) el.textContent=(e56.trades||0);
-    var wr56=(e56.trades||0)>0?Math.round((e56.wins||0)/e56.trades*100):0;
-    el=document.getElementById('arena56WR'); if(el) el.textContent=(e56.wins||0)+'W / '+(e56.losses||0)+'L ('+wr56+'%)';
-    el=document.getElementById('arena56Regime'); if(el) el.textContent=e56.regime||'?';
-    el=document.getElementById('arena56Bar'); if(el) el.style.width=Math.min(100,Math.max(2,((e56.trades||0)*3)))+'%';
+    // Card grid
+    var grid = document.getElementById('arenaGrid');
+    if(!grid) return;
+    grid.textContent = '';
 
-    // Positions table
-    var tbody=document.getElementById('arenaPositionsBody');
-    if(tbody){
-      tbody.textContent='';
-      var allPos=[];
-      ['v5.2','v5.3','v5.6','v5.7','v5_classic'].forEach(function(eng){
-        (data[eng]||{positions:[]}).positions.forEach(function(p){ allPos.push(p); });
+    ENGINE_ORDER.forEach(function(name){
+      var e = byName[name] || {};
+      var meta = ENGINE_META[name];
+      var card = document.createElement('div');
+      card.style.cssText = 'background:var(--abyss);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden';
+
+      // Top accent stripe
+      var stripe = document.createElement('div');
+      stripe.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,' + meta.color + ',' + meta.accent + ')';
+      card.appendChild(stripe);
+
+      // Header: engine name + tag pill
+      var header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+      var nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-size:18px;font-weight:800;color:var(--text)';
+      nameEl.textContent = meta.label;
+      header.appendChild(nameEl);
+      var tag = document.createElement('span');
+      tag.style.cssText = 'font-size:8px;font-weight:700;padding:3px 8px;border-radius:50px;background:' + meta.color + '22;color:' + meta.color;
+      tag.textContent = meta.tag;
+      header.appendChild(tag);
+      card.appendChild(header);
+
+      // Description
+      var desc = document.createElement('div');
+      desc.style.cssText = 'font-size:8px;color:var(--text-ghost);margin-bottom:10px;letter-spacing:0.4px';
+      desc.textContent = meta.desc.toUpperCase();
+      card.appendChild(desc);
+
+      // Big P&L number
+      var pnlEl = document.createElement('div');
+      pnlEl.style.cssText = 'font-size:16px;font-weight:800;margin-bottom:10px;color:' + pnlColor(e.pnl || 0);
+      pnlEl.textContent = fmtPnl(e.pnl || 0);
+      card.appendChild(pnlEl);
+
+      // Stat rows
+      var stats = [
+        ['Trades',    String(e.trades || 0)],
+        ['Win Rate',  wr(e.wins || 0, e.trades || 0)],
+        ['Open',      String(e.open || 0) + ' position' + (e.open === 1 ? '' : 's')],
+        ['Capital',   fmtCap(e.capital)],
+        ['Cash',      fmtCap(e.cash)],
+        ['Kill Tier', e.kill_switch_tier != null ? 'T' + e.kill_switch_tier : '—']
+      ];
+      var statsBox = document.createElement('div');
+      statsBox.style.cssText = 'display:flex;flex-direction:column;gap:5px;font-size:11px';
+      stats.forEach(function(pair){
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:space-between';
+        var l = document.createElement('span');
+        l.style.color = 'var(--text-dim)';
+        l.textContent = pair[0];
+        var r = document.createElement('span');
+        r.style.fontWeight = '600';
+        // Highlight kill-switch tiers > 0
+        if(pair[0] === 'Kill Tier' && pair[1] !== 'T0' && pair[1] !== '—') r.style.color = 'var(--red)';
+        r.textContent = pair[1];
+        row.appendChild(l);
+        row.appendChild(r);
+        statsBox.appendChild(row);
       });
-      if(allPos.length===0){
-        var tr=document.createElement('tr');
-        var td=document.createElement('td');
-        td.setAttribute('colspan','7');
-        td.style.cssText='padding:12px;text-align:center;color:var(--text-ghost);font-size:11px';
-        td.textContent='No open positions across experimental engines';
+      card.appendChild(statsBox);
+
+      // Activity bar (proportional to trade count)
+      var barOuter = document.createElement('div');
+      barOuter.style.cssText = 'height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:10px;overflow:hidden';
+      var barInner = document.createElement('div');
+      var barWidth = Math.min(100, Math.max(2, (e.trades || 0) * 4));
+      barInner.style.cssText = 'height:100%;width:' + barWidth + '%;border-radius:2px;background:linear-gradient(90deg,' + meta.color + ',' + meta.accent + ');transition:width 1s';
+      barOuter.appendChild(barInner);
+      card.appendChild(barOuter);
+
+      grid.appendChild(card);
+    });
+
+    // Positions table — keep existing tbody, repopulate from engine-status open positions
+    // Note: /api/engine-status doesn't include per-position detail, so fall back to /api/engine-arena ONLY for positions table.
+    fetch('/api/engine-arena').then(function(r){return r.json()}).then(function(legacyData){
+      var tbody = document.getElementById('arenaPositionsBody');
+      if(!tbody) return;
+      tbody.textContent = '';
+      var allPos = [];
+      Object.keys(legacyData || {}).forEach(function(eng){
+        var positions = (legacyData[eng] || {}).positions || [];
+        positions.forEach(function(p){ allPos.push(p); });
+      });
+      if(allPos.length === 0){
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.setAttribute('colspan', '7');
+        td.style.cssText = 'padding:12px;text-align:center;color:var(--text-ghost);font-size:11px';
+        td.textContent = 'No open positions';
         tr.appendChild(td); tbody.appendChild(tr);
-      } else {
-        allPos.forEach(function(p){
-          var tr=document.createElement('tr');
-          tr.style.borderBottom='1px solid var(--border)';
-          var engColors={'v5.2':'#F43F5E','v5.3':'#F59E0B','v5.6':'#10B981','v5.7':'#6366F1','v5_classic':'#8B5CF6'};
-          var cells=[
-            {text:p.engine, color:engColors[p.engine]||'var(--text)', weight:'700'},
-            {text:p.symbol, weight:'600'},
-            {text:p.direction, color:p.direction==='LONG'?'var(--green)':'#F43F5E', weight:'700', align:'center'},
-            {text:p.pool, align:'center'},
-            {text:p.entry_price?p.entry_price.toFixed(2):'--', align:'right'},
-            {text:p.sl_price?p.sl_price.toFixed(2):'--', align:'right'},
-            {text:p.target_price?p.target_price.toFixed(2):'--', align:'right'}
-          ];
-          cells.forEach(function(c){
-            var td=document.createElement('td');
-            td.style.cssText='padding:4px 6px;font-size:10px;text-align:'+(c.align||'left')+';color:'+(c.color||'var(--text)')+';font-weight:'+(c.weight||'400');
-            td.textContent=c.text;
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
+        return;
       }
-    }
-  }).catch(function(e){console.error('Engine Arena failed:',e)});
+      var engColors = {
+        'v4':'#6366F1','v5':'#10B981','v5_classic':'#8B5CF6',
+        'v5_6':'#22D3EE','v5.6':'#22D3EE',
+        'v5_7':'#F59E0B','v5.7':'#F59E0B',
+        'v5_8':'#EC4899','v6':'#EF4444'
+      };
+      allPos.forEach(function(p){
+        var tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border)';
+        var cells = [
+          {text:p.engine || '--', color:engColors[p.engine] || 'var(--text)', weight:'700'},
+          {text:p.symbol || '--', weight:'600'},
+          {text:p.direction || '--', color:p.direction === 'LONG' ? 'var(--green)' : '#F43F5E', weight:'700', align:'center'},
+          {text:p.pool || '--', align:'center'},
+          {text:p.entry_price ? p.entry_price.toFixed(2) : '--', align:'right'},
+          {text:p.sl_price ? p.sl_price.toFixed(2) : '--', align:'right'},
+          {text:p.target_price ? p.target_price.toFixed(2) : '--', align:'right'}
+        ];
+        cells.forEach(function(c){
+          var td = document.createElement('td');
+          td.style.cssText = 'padding:4px 6px;font-size:10px;text-align:' + (c.align || 'left') + ';color:' + (c.color || 'var(--text)') + ';font-weight:' + (c.weight || '400');
+          td.textContent = c.text;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }).catch(function(){});
+  }).catch(function(e){console.error('Engine Arena failed:', e)});
 }
 
 // ═══════════════ SMART PICKS ═══════════════
@@ -6940,5 +6976,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<script src="/static/pageswitch.js"></script>
 </body>
 </html>

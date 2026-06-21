@@ -68,6 +68,7 @@ echo "  ✓ all 7 engines stopped"
 
 # 3a. Stop profit-watchdog, heartbeat, satish-schedule (supplementary monitors)
 pkill -f "scripts/profit-watchdog.py"   2>/dev/null && echo "  ✓ profit-watchdog stopped"
+pkill -f "missed-opportunities-watchdog.py" 2>/dev/null && echo "  ✓ missed-opps-watchdog stopped (no more 24/7 stale-price spinning)"
 pkill -f "scripts/laptop-heartbeat.sh"  2>/dev/null && echo "  ✓ laptop-heartbeat stopped"
 pkill -f "scripts/satish-schedule.sh"   2>/dev/null && echo "  ✓ satish-schedule stopped"
 

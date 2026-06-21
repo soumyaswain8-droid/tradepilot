@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SARATHI · LIVE — Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#04060a; --panel:#080d14; --panel2:#0b121c; --line:#16202e;
+    --ink:#cde3f0; --dim:#5d7286; --faint:#33485c;
+    --cy:#22d3ee; --cy-dim:#0e5e6b; --grn:#34d399; --red:#fb6a76; --amb:#f5c451; --vio:#8b7cf6;
+    --glow:0 0 24px rgba(34,211,238,.35);
+    --mono:'JetBrains Mono',monospace; --disp:'Chakra Petch',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--mono);
+    font-size:12.5px; overflow:hidden;
+    background-image:
+      radial-gradient(circle at 50% 38%, rgba(34,211,238,.06), transparent 60%),
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:auto, 46px 46px, 46px 46px;
+  }
+  .scanlines:before{content:'';position:fixed;inset:0;pointer-events:none;z-index:99;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px);mix-blend-mode:overlay;opacity:.5}
+  .grid{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:1fr;height:100vh}
+  /* ---- top strip ---- */
+  .top{display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#070c13,#05080d)}
+  .brand{display:flex;align-items:center;gap:10px;padding:0 18px;border-right:1px solid var(--line);font-family:var(--disp);font-weight:700;letter-spacing:.18em}
+  .brand .pulse{width:9px;height:9px;border-radius:50%;background:var(--grn);box-shadow:0 0 10px var(--grn);animation:bp 1.6s infinite}
+  @keyframes bp{50%{opacity:.35;transform:scale(.8)}}
+  .stat{padding:9px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;min-width:84px}
+  .stat .k{font-size:9px;letter-spacing:.16em;color:var(--dim)}
+  .stat .v{font-size:14px;font-weight:600;font-family:var(--disp)}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:14px;padding:0 18px;font-size:11px}
+  .nav a{color:var(--dim);text-decoration:none}.nav a.on{color:var(--cy);text-shadow:var(--glow)}
+  .pos{color:var(--grn)}.neg{color:var(--red)}.zero{color:var(--dim)}
+  /* ---- body 3-pane ---- */
+  .body{display:grid;grid-template-columns:340px 1fr 380px;overflow:hidden}
+  .pane{overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  .pane.l{border-right:1px solid var(--line)}
+  .pane.r{border-left:1px solid var(--line);background:linear-gradient(180deg,#070b11,#05080d)}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);
+     font-family:var(--disp);font-size:11px;letter-spacing:.16em;color:var(--cy);text-transform:uppercase}
+  .ph .sub{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.05em}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line)}
+  .tab{flex:1;text-align:center;padding:7px;font-size:10px;letter-spacing:.12em;color:var(--dim);cursor:pointer;text-transform:uppercase}
+  .tab.on{color:var(--cy);background:rgba(34,211,238,.06);box-shadow:inset 0 -2px 0 var(--cy)}
+  .scroll{overflow-y:auto;flex:1;min-height:0}
+  .scroll::-webkit-scrollbar{width:6px}.scroll::-webkit-scrollbar-thumb{background:var(--cy-dim);border-radius:3px}
+  /* ---- trade rows ---- */
+  .row{display:grid;grid-template-columns:46px 1fr auto;gap:8px;padding:8px 12px;border-bottom:1px solid #0d151f;cursor:pointer;align-items:center}
+  .row:hover{background:rgba(34,211,238,.05)}
+  .row.sel{background:rgba(34,211,238,.10);box-shadow:inset 2px 0 0 var(--cy)}
+  .row .t{color:var(--faint);font-size:10px}
+  .row .sym{font-weight:600;font-size:12.5px}
+  .row .meta{font-size:9.5px;color:var(--dim);display:flex;gap:6px;margin-top:1px}
+  .tag{font-size:9px;padding:1px 5px;border:1px solid var(--line);border-radius:3px;color:var(--dim);letter-spacing:.06em}
+  .tag.v4{color:#7dd3fc;border-color:#1e4a5c}.tag.v5{color:#a78bfa;border-color:#3b3163}.tag.v5_classic{color:#5eead4;border-color:#1d4b46}
+  .dir{font-size:9px;letter-spacing:.08em}.dir.SHORT{color:var(--amb)}.dir.LONG,.dir.BUY{color:var(--cy)}.dir.HOLD{color:var(--faint)}
+  .row .pnl{text-align:right;font-weight:600;font-size:12.5px}
+  .row .st{font-size:8.5px;color:var(--faint);text-align:right}
+  /* ---- center radar ---- */
+  .center{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #radar{width:100%;height:100%}
+  .cap{position:absolute;top:14px;left:18px;font-family:var(--disp);font-size:11px;letter-spacing:.18em;color:var(--cy);text-transform:uppercase}
+  .legend{position:absolute;bottom:40px;left:18px;font-size:10px;color:var(--dim);display:flex;gap:16px}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .ticker{position:absolute;bottom:0;left:0;right:0;height:26px;border-top:1px solid var(--line);background:rgba(4,8,14,.8);
+    display:flex;align-items:center;overflow:hidden;font-size:10px;color:var(--dim)}
+  .ticker .run{white-space:nowrap;animation:scrollx 60s linear infinite;padding-left:100%}
+  @keyframes scrollx{to{transform:translateX(-100%)}}
+  /* ---- detail panel ---- */
+  .empty{padding:40px 20px;text-align:center;color:var(--faint);font-size:11px;line-height:2}
+  .det{padding:16px;display:none}
+  .det.show{display:block}
+  .det .hsym{font-family:var(--disp);font-size:30px;font-weight:700;letter-spacing:.02em;line-height:1}
+  .det .hrow{display:flex;align-items:center;gap:10px;margin:10px 0 18px;flex-wrap:wrap}
+  .badge{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--line);letter-spacing:.08em}
+  .det .big{font-family:var(--disp);font-size:38px;font-weight:700;line-height:1;margin:4px 0}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:14px}
+  .kv .cell{background:var(--panel);padding:10px 12px}
+  .kv .k{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+  .kv .v{font-size:14px;font-weight:600;font-family:var(--disp);margin-top:3px}
+  .journey{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+  .journey .bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--cy-dim),var(--cy));position:relative;margin:14px 0 6px}
+  .journey .dot{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--bg)}
+  .sec{font-family:var(--disp);font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:6px 0}
+  /* ---- bottom ---- */
+  .bot{display:flex;align-items:center;gap:22px;padding:7px 18px;border-top:1px solid var(--line);font-size:10px;color:var(--dim);background:#05080d}
+  .bot .r{margin-left:auto;color:var(--faint)}
+</style>
+</head>
+<body class="scanlines">
+<div class="grid">
+  <!-- TOP -->
+  <div class="top">
+    <div class="brand"><span class="pulse"></span> SARATHI · LIVE</div>
+    <div class="stat"><span class="k">TIME IST</span><span class="v" id="clock">—</span></div>
+    <div class="stat"><span class="k">MARKET</span><span class="v" id="mkt">—</span></div>
+    <div class="stat"><span class="k">ENGINES</span><span class="v">3/3</span></div>
+    <div class="stat"><span class="k">OPEN POS</span><span class="v" id="s-open">0</span></div>
+    <div class="stat"><span class="k">TRADES</span><span class="v" id="s-trades">0</span></div>
+    <div class="stat"><span class="k">WIN RATE</span><span class="v" id="s-wr">—</span></div>
+    <div class="stat"><span class="k">FLEET P&amp;L</span><span class="v" id="s-pnl">—</span></div>
+    <div class="nav"><a href="/dashboard">/dashboard</a><a href="/live" class="on">/live</a><a href="/landing">/landing</a></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+    <!-- LEFT: list -->
+    <div class="pane l">
+      <div class="tabs">
+        <div class="tab on" data-tab="trades" onclick="setTab('trades')">Positions &amp; Trades</div>
+        <div class="tab" data-tab="events" onclick="setTab('events')">Event Stream</div>
+      </div>
+      <div class="scroll" id="list"></div>
+    </div>
+
+    <!-- CENTER: radar -->
+    <div class="pane center">
+      <div class="cap">◢ Fleet Scan · 3 Engines</div>
+      <svg id="radar" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="legend">
+        <span><i style="background:#7dd3fc"></i>v4</span>
+        <span><i style="background:#a78bfa"></i>v5</span>
+        <span><i style="background:#5eead4"></i>v5_classic</span>
+      </div>
+      <div class="ticker"><div class="run" id="ticker">initializing live feed…</div></div>
+    </div>
+
+    <!-- RIGHT: detail -->
+    <div class="pane r">
+      <div class="ph">Stock Detail <span class="sub" id="det-eng"></span></div>
+      <div class="scroll">
+        <div class="empty" id="det-empty">◇<br/>SELECT A STOCK FROM THE LEFT<br/>to inspect entry / exit / regime / P&amp;L</div>
+        <div class="det" id="det"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bot">
+    <span>LAST UPDATE <b id="upd" style="color:var(--ink)">—</b></span>
+    <span>REFRESH <b style="color:var(--ink)">5s</b></span>
+    <span id="date-note"></span>
+    <span class="r">v0.2 · 3-engine redesign · Sarathi</span>
+  </div>
+</div>
+
+<script>
+const Q = new URLSearchParams(location.search);
+const DATE = Q.get('date'); // optional historical date for review
+const API = '/api/live-trades' + (DATE ? ('?date='+DATE) : '');
+const ENG_COLORS = {v4:'#7dd3fc', v5:'#a78bfa', v5_classic:'#5eead4'};
+let STATE = {engines:{}, fleet:{}}, TAB='trades', SEL=null, EVENTS=[];
+
+const inr = n => (n>0?'+':n<0?'−':'') + '₹' + Math.abs(Math.round(n||0)).toLocaleString('en-IN');
+const cls = n => n>0?'pos':n<0?'neg':'zero';
+const esc = s => (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function clock(){const d=new Date();const ist=new Date(d.getTime()+(d.getTimezoneOffset()*60000)+(5.5*3600000));
+  document.getElementById('clock').textContent=ist.toTimeString().slice(0,8);}
+setInterval(clock,1000);clock();
+
+function setTab(t){TAB=t;document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.tab===t));render();}
+
+function allTrades(){
+  const out=[];
+  for(const [eng,v] of Object.entries(STATE.engines||{}))
+    for(const t of (v.trades||[])) out.push({...t, engine:eng, regime:v.regime});
+  out.sort((a,b)=>((b.exit_time||b.entry_time||'')+'').localeCompare((a.exit_time||a.entry_time||'')+''));
+  return out;
+}
+
+function render(){
+  const list=document.getElementById('list');
+  if(TAB==='events'){
+    list.innerHTML = EVENTS.length? EVENTS.map(e=>`
+      <div class="row" style="grid-template-columns:46px 1fr;cursor:default">
+        <span class="t">${esc(e.time)}</span>
+        <div><span class="tag ${esc(e.engine)}">${esc(e.engine)}</span>
+          <span class="meta" style="margin-top:3px">${esc(e.msg||'')}</span></div>
+      </div>`).join('') : `<div class="empty">no events yet</div>`;
+    return;
+  }
+  const tr=allTrades();
+  list.innerHTML = tr.length? tr.map((t,i)=>`
+    <div class="row ${SEL&&SEL._k===t.engine+t.symbol+t.entry_time?'sel':''}" onclick='pick(${i})'>
+      <span class="t">${esc((t.exit_time&&t.exit_time!=='—')?t.exit_time:t.entry_time)}</span>
+      <div><span class="sym">${esc(t.symbol)}</span>
+        <div class="meta"><span class="tag ${esc(t.engine)}">${esc(t.engine)}</span>
+          <span class="dir ${esc(t.direction)}">${esc(t.direction)}</span>
+          <span>${esc(t.pool)}</span></div></div>
+      <div><div class="pnl ${cls(t.pnl)}">${t.pnl==null?'·':inr(t.pnl)}</div>
+        <div class="st">${esc(t.status)}${t.reason&&t.reason!=='—'?' · '+esc(t.reason):''}</div></div>
+    </div>`).join('') : `<div class="empty">no trades for this session${DATE?' ('+DATE+')':''}</div>`;
+  window.__tr = tr;
+}
+
+function pick(i){const t=window.__tr[i]; if(!t)return; t._k=t.engine+t.symbol+t.entry_time; SEL=t; renderDetail(); render();}
+
+function renderDetail(){
+  const t=SEL; if(!t)return;
+  document.getElementById('det-empty').style.display='none';
+  document.getElementById('det-eng').textContent='/'+t.engine;
+  const d=document.getElementById('det'); d.classList.add('show');
+  const held = (t.entry_time&&t.exit_time&&t.exit_time!=='—'&&t.entry_time!=='—')
+      ? mins(t.entry_time,t.exit_time)+'m' : (t.status==='open'?'open':'—');
+  const moved = (t.exit_price&&t.entry_price)? (((t.exit_price-t.entry_price)/t.entry_price)*100*(/(SHORT)/.test(t.direction)?-1:1)) : null;
+  d.innerHTML=`
+    <div class="hsym">${esc(t.symbol)}</div>
+    <div class="hrow">
+      <span class="badge dir ${esc(t.direction)}" style="border-color:currentColor">${esc(t.direction)}</span>
+      <span class="badge tag ${esc(t.engine)}">${esc(t.engine)}</span>
+      <span class="badge" style="color:var(--amb);border-color:#5a4a1e">REGIME · ${esc(t.regime)}</span>
+      <span class="badge" style="color:var(--dim)">${esc(t.pool)}</span>
+    </div>
+    <div class="sec">Realized P&amp;L</div>
+    <div class="big ${cls(t.pnl)}">${t.pnl==null?'OPEN':inr(t.pnl)}</div>
+    <div style="color:var(--dim);font-size:11px">${t.pnl_pct!=null?(t.pnl_pct>0?'+':'')+t.pnl_pct.toFixed(2)+'% on trade':''} ${t.reason&&t.reason!=='—'?' · exit: '+esc(t.reason):''}</div>
+    <div class="kv">
+      <div class="cell"><div class="k">Entry Time</div><div class="v">${esc(t.entry_time)}</div></div>
+      <div class="cell"><div class="k">Exit Time</div><div class="v">${esc(t.exit_time)}</div></div>
+      <div class="cell"><div class="k">Entry Price</div><div class="v">₹${esc(t.entry_price)}</div></div>
+      <div class="cell"><div class="k">Exit Price</div><div class="v">${t.exit_price?'₹'+esc(t.exit_price):'—'}</div></div>
+      <div class="cell"><div class="k">Quantity</div><div class="v">${esc(t.qty)}</div></div>
+      <div class="cell"><div class="k">Hold</div><div class="v">${held}</div></div>
+    </div>
+    <div class="journey">
+      <div class="sec">Price Journey ${moved!=null?'· '+(moved>0?'+':'')+moved.toFixed(2)+'%':''}</div>
+      <div class="bar"><div class="dot" style="left:0;background:var(--cy)"></div>
+        <div class="dot" style="left:100%;background:${t.pnl>0?'var(--grn)':t.pnl<0?'var(--red)':'var(--dim)'}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)">
+        <span>entry ₹${esc(t.entry_price)} @ ${esc(t.entry_time)}</span>
+        <span>${t.exit_price?'exit ₹'+esc(t.exit_price)+' @ '+esc(t.exit_time):'still open'}</span></div>
+    </div>`;
+}
+function mins(a,b){const p=s=>{const x=s.split(':').map(Number);return x[0]*60+x[1]+(x[2]||0)/60;};return Math.round(p(b)-p(a));}
+
+/* ---------- CENTER RADAR ---------- */
+function drawRadar(){
+  const svg=document.getElementById('radar'); const C=400, R=300;
+  const engines=Object.keys(STATE.engines||{}); if(!engines.length){svg.innerHTML='';return;}
+  let s=`<defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(34,211,238,.5)"/><stop offset="100%" stop-color="rgba(34,211,238,0)"/></radialGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+  for(let i=1;i<=4;i++) s+=`<circle cx="${C}" cy="${C}" r="${R*i/4}" fill="none" stroke="#13202e" stroke-width="1"/>`;
+  s+=`<line x1="${C-R}" y1="${C}" x2="${C+R}" y2="${C}" stroke="#0e1a26"/><line x1="${C}" y1="${C-R}" x2="${C}" y2="${C+R}" stroke="#0e1a26"/>`;
+  s+=`<g><path d="M${C},${C} L${C},${C-R} A${R},${R} 0 0 1 ${C+R*Math.sin(.5)},${C-R*Math.cos(.5)} Z" fill="url(#core)" opacity=".5">
+      <animateTransform attributeName="transform" type="rotate" from="0 ${C} ${C}" to="360 ${C} ${C}" dur="6s" repeatCount="indefinite"/></path></g>`;
+  const fp=STATE.fleet||{}; const fc=(fp.realized_pnl||0)>0?'#34d399':(fp.realized_pnl||0)<0?'#fb6a76':'#22d3ee';
+  s+=`<circle cx="${C}" cy="${C}" r="58" fill="url(#core)"/>
+      <circle cx="${C}" cy="${C}" r="46" fill="#06101a" stroke="${fc}" stroke-width="1.5" filter="url(#g)"/>
+      <text x="${C}" y="${C-4}" text-anchor="middle" fill="${fc}" font-family="Chakra Petch" font-size="22" font-weight="700">${inr(fp.realized_pnl)}</text>
+      <text x="${C}" y="${C+14}" text-anchor="middle" fill="#5d7286" font-size="9" letter-spacing="2">FLEET P&amp;L</text>
+      <text x="${C}" y="${C+30}" text-anchor="middle" fill="#33485c" font-size="8">${fp.closed||0} TRADES · ${fp.open||0} OPEN · ${fp.win_rate==null?'—':fp.win_rate+'% WR'}</text>`;
+  engines.forEach((eng,idx)=>{
+    const ang=(-90 + idx*(360/engines.length))*Math.PI/180;
+    const ex=C+Math.cos(ang)*R*0.62, ey=C+Math.sin(ang)*R*0.62;
+    const v=STATE.engines[eng], col=ENG_COLORS[eng]||'#22d3ee';
+    const p=v.summary.realized_pnl||0, pc=p>0?'#34d399':p<0?'#fb6a76':'#5d7286';
+    const act=(v.trades||[]).length; const rad=14+Math.min(act,40)*0.5;
+    s+=`<line x1="${C}" y1="${C}" x2="${ex}" y2="${ey}" stroke="${col}" stroke-width="1" opacity=".4"/>`;
+    s+=`<circle cx="${ex}" cy="${ey}" r="${rad}" fill="rgba(34,211,238,.04)" stroke="${col}" stroke-width="1.5" filter="url(#g)">
+        <animate attributeName="r" values="${rad};${rad+4};${rad}" dur="2.4s" repeatCount="indefinite"/></circle>`;
+    s+=`<text x="${ex}" y="${ey-rad-10}" text-anchor="middle" fill="${col}" font-family="Chakra Petch" font-size="13" font-weight="700">${eng}</text>`;
+    s+=`<text x="${ex}" y="${ey+4}" text-anchor="middle" fill="${pc}" font-family="Chakra Petch" font-size="12" font-weight="600">${inr(p)}</text>`;
+    s+=`<text x="${ex}" y="${ey+rad+16}" text-anchor="middle" fill="#5d7286" font-size="8.5">${act}t · ${v.summary.win_rate==null?'—':v.summary.win_rate+'%'} · ${esc(v.regime)}</text>`;
+  });
+  svg.innerHTML=s;
+}
+
+/* ---------- POLL ---------- */
+async function tick(){
+  try{
+    const r=await fetch(API); STATE=await r.json();
+    const f=STATE.fleet||{};
+    document.getElementById('s-open').textContent=f.open||0;
+    document.getElementById('s-trades').textContent=f.closed||0;
+    document.getElementById('s-wr').textContent=(f.win_rate==null?'—':f.win_rate+'%');
+    const pe=document.getElementById('s-pnl'); pe.textContent=inr(f.realized_pnl); pe.className='v '+cls(f.realized_pnl);
+    const m=document.getElementById('mkt'); const hr=new Date().getUTCHours()+5+(new Date().getUTCMinutes()+30)/60;
+    m.textContent=(hr>=9.25&&hr<=15.5&&!DATE)?'OPEN':'CLOSED'; m.style.color=(m.textContent==='OPEN')?'var(--grn)':'var(--dim)';
+    document.getElementById('upd').textContent=new Date().toTimeString().slice(0,8);
+    if(DATE) document.getElementById('date-note').innerHTML='REVIEW <b style="color:var(--amb)">'+DATE+'</b>';
+    render(); drawRadar();
+    if(SEL){const tr=allTrades().find(x=>x.engine+x.symbol+x.entry_time===SEL._k); if(tr){SEL={...tr,_k:SEL._k};renderDetail();}}
+  }catch(e){console.error(e);}
+  try{const er=await fetch('/api/recent-scans'); const ed=await er.json(); EVENTS=(ed.events||[]).filter(e=>['v4','v5','v5_classic'].includes(e.engine));
+    document.getElementById('ticker').textContent=EVENTS.slice(0,20).map(e=>`${e.time} ${e.engine} ▸ ${e.msg}`).join('      ·      ')||'awaiting events…';
+    if(TAB==='events')render();}catch(e){}
+}
+tick(); setInterval(tick,5000);
+</script>
+</body>
+</html>

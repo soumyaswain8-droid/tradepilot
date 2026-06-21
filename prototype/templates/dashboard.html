@@ -650,11 +650,16 @@ table.dt {
 /* ─── ENGINE ARENA ─── */
 .arena-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0;
 }
-.arena-col { padding: 10px 12px; border-right: 1px solid var(--line-faint); }
+.arena-col { padding: 10px 12px; border-right: 1px solid var(--line-faint); border-bottom: 1px solid var(--line-faint); }
 .arena-col:last-child { border-right: none; }
+.arena-col .nm-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.arena-col .badge { font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.arena-col .badge.ok { background: var(--green-soft, #d1fae5); color: var(--green); }
+.arena-col .badge.warn { background: #fef3c7; color: #92400e; }
+.arena-col .badge.dead { background: #fee2e2; color: #991b1b; }
 .arena-col .v {
   font-family: var(--led);
   font-size: 11px; line-height: 1;
@@ -1556,8 +1561,8 @@ table.dt {
       </section>
 
       <!-- ── ENGINE ARENA ── -->
-      <section class="panel c4" id="p-arena">
-        <div class="panel-head"><span class="num">08</span> Engine Arena <span class="meta">v5 family</span></div>
+      <section class="panel c12" id="p-arena">
+        <div class="panel-head"><span class="num">08</span> Engine Arena <span class="meta" id="arenaMeta">all 7 active engines · live</span></div>
         <div class="panel-body tight">
           <div class="arena-grid" id="arenaGrid">
             <div class="dt-empty" style="grid-column:1/-1">Loading…</div>
@@ -2240,33 +2245,66 @@ table.dt {
   }
 
   // ─── 08: Engine Arena ───────────────────────────
+  // Reads /api/engine-status (same source as Engine Leaderboard).
+  // Shows all 7 active engines: v4, v5, v5_classic, v5_6, v5_7, v5_8, v6.
   function renderArena() {
     var d = state.arena;
     var grid = $('arenaGrid');
+    var metaEl = $('arenaMeta');
     if (!grid) return;
     clear(grid);
-    if (!d) {
+    if (!d || !d.engines || !d.engines.length) {
       grid.appendChild(el('div', { class: 'dt-empty', style: 'grid-column:1/-1' }, 'Loading…'));
       return;
     }
-    var keys = Object.keys(d);
-    keys.slice(0, 3).forEach(function(k) {
-      var e = d[k];
+    // /api/engine-status returns engines sorted by rank already.
+    // Sort by canonical engine order so layout is stable.
+    var ENGINE_ORDER = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6'];
+    var byName = {};
+    (d.engines || []).forEach(function(e) { byName[e.engine] = e; });
+    var ordered = ENGINE_ORDER.map(function(n) { return byName[n]; }).filter(Boolean);
+
+    if (metaEl) {
+      var totalPnl = ordered.reduce(function(s, e) { return s + (e.pnl || 0); }, 0);
+      var totalTrades = ordered.reduce(function(s, e) { return s + (e.trades || 0); }, 0);
+      metaEl.textContent = ordered.length + ' engines · fleet ' + (totalPnl >= 0 ? '+' : '') + fmtR(totalPnl) + ' · ' + totalTrades + ' trades';
+    }
+
+    ordered.forEach(function(e) {
       var col = el('div', { class: 'arena-col' });
-      col.appendChild(el('div', { class: 'nm' }, k));
-      var pnl = e.cumulative_pnl || e.pnl || 0;
-      var pnlEl = el('div', { class: 'v', style: 'font-family:var(--led);font-size:18px;color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') }, (pnl >= 0 ? '+' : '') + fmtR(pnl));
+
+      // Header row: engine name + status badge
+      var nmRow = el('div', { class: 'nm-row' });
+      nmRow.appendChild(el('div', { class: 'nm' }, e.engine));
+      var status = (e.status || 'ok').toLowerCase();
+      var badgeClass = status === 'ok' ? 'badge ok' : status === 'dead' ? 'badge dead' : 'badge warn';
+      nmRow.appendChild(el('span', { class: badgeClass }, status));
+      col.appendChild(nmRow);
+
+      // Big P&L number
+      var pnl = e.pnl || 0;
+      var pnlEl = el('div', {
+        class: 'v',
+        style: 'font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-0.01em;color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + ';margin-bottom:8px'
+      }, (pnl >= 0 ? '+' : '−') + '₹' + Math.abs(Math.round(pnl)).toLocaleString('en-IN'));
       col.appendChild(pnlEl);
+
+      // Detail rows
+      var wr = (e.wr != null) ? (Math.round(e.wr * 100) / 100).toFixed(1) + '%' : '—';
+      var tier = (e.kill_switch_tier != null) ? 'T' + e.kill_switch_tier : '—';
       [
-        ['CAPITAL', fmtR(e.capital || 0)],
-        ['REGIME', e.regime || '—'],
-        ['TRADES', (e.trades || 0)],
-        ['WINS · LOSSES', (e.wins || 0) + ' · ' + (e.losses || 0)],
-        ['L/S', (e.longs || 0) + ' / ' + (e.shorts || 0)]
+        ['TRADES', e.trades || 0],
+        ['WIN RATE', wr],
+        ['OPEN', e.open || 0],
+        ['CAPITAL', '₹' + ((e.capital || 0) / 100000).toFixed(1) + 'L'],
+        ['CASH', '₹' + ((e.cash || 0) / 100000).toFixed(1) + 'L'],
+        ['KILL TIER', tier]
       ].forEach(function(pair) {
         var row = el('div', { class: 'arena-row' });
         row.appendChild(el('span', { class: 'l' }, pair[0]));
-        row.appendChild(el('span', { class: 'vv' }, String(pair[1])));
+        var vvClass = 'vv';
+        if (pair[0] === 'KILL TIER' && tier !== 'T0' && tier !== '—') vvClass += ' down';
+        row.appendChild(el('span', { class: vvClass }, String(pair[1])));
         col.appendChild(row);
       });
       grid.appendChild(col);
@@ -2425,7 +2463,7 @@ table.dt {
     });
   }
   function loadArena() {
-    return get('/api/engine-arena').then(function(d) {
+    return get('/api/engine-status').then(function(d) {
       if (d) state.arena = d;
       renderArena();
     });
@@ -2871,5 +2909,6 @@ table.dt {
 
 })();
 </script>
+<script src="/static/pageswitch.js"></script>
 </body>
 </html>

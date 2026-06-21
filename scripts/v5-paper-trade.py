@@ -18,12 +18,26 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 PROJECT_ROOT = Path(__file__).parent.parent
-TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / "v5"
+# Engine identity is env-overridable so a shadow (e.g. ENGINE_NAME=v5_noml) can run
+# ALONGSIDE live v5 with its own state dir + log for A/B testing. Default = live v5.
+ENGINE = os.environ.get("ENGINE_NAME", "v5")
+TRADE_DIR = PROJECT_ROOT / "docs" / "paper-trades" / ENGINE
 LOG_DIR = PROJECT_ROOT / "logs"
 sys.path.insert(0, str(PROJECT_ROOT / "prototype"))
 sys.path.insert(0, str(PROJECT_ROOT))
+# Optional composite-weight override for shadow A/B. ML_SCORE_WEIGHT=0 tests removing
+# the dead-weight ML (TP-CLN-008: proven selection-neutral, IC=0.006). Mutates the
+# shared COMPOSITE_WEIGHTS dict IN PLACE (renormalizing the other 6 factors to sum 1)
+# so composite_scorer's binding sees it; affects ONLY this process. No-op if unset.
+_ml_w = os.environ.get("ML_SCORE_WEIGHT")
+if _ml_w is not None:
+    from prototype.v4.config import COMPOSITE_WEIGHTS as _CW
+    _t = float(_ml_w); _oth = {k: v for k, v in _CW.items() if k != "ml_score"}
+    _s = sum(_oth.values()) or 1.0; _scale = (1.0 - _t) / _s
+    for _k in _oth: _CW[_k] = _oth[_k] * _scale
+    _CW["ml_score"] = _t
 from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
-LOG_FILE = LOG_DIR / "v5-paper-trade.log"
+LOG_FILE = LOG_DIR / f"{ENGINE}-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -50,6 +64,10 @@ FLAT_EXIT_WINDOW_END    = os.environ.get("FLAT_EXIT_WINDOW_END",   "14:00")
 
 # Task 1.4 — Cost modeling (Indian retail intraday: brokerage + STT + slippage)
 COST_BPS_ROUND_TRIP = float(os.environ.get("COST_BPS_ROUND_TRIP", "12"))
+
+# v5_cut: cut any position this far underwater intraday (% loss). 0 = off (default,
+# so v5/v5_noml/etc are unchanged). The watchdog-driven "stop holding losers" fix.
+WRONGWAY_CUT_PCT = float(os.environ.get("WRONGWAY_CUT_PCT", "0"))
 
 
 def cost_for_trade(qty: int, entry_price: float, exit_price: float) -> float:
@@ -234,7 +252,7 @@ def _state_file():
 
 def fresh_state(capital=None):
     cap = capital or TOTAL_CAPITAL
-    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": "v5",
+    return {"date": datetime.now().strftime("%Y-%m-%d"), "engine": ENGINE,
             "started_at": datetime.now().strftime("%H:%M:%S"),
             "total_capital": cap, "regime": "SIDEWAYS",
             "premarket": {}, "risk_state": {},
@@ -611,6 +629,13 @@ def scan_positions(state, pm, rm):
             reason = "FLAT_FORCE_EXIT"
             log(f"  {sym}: FLAT_FORCE_EXIT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
             to_close.append((pool_name, pos, px, reason)); continue
+        # WRONGWAY_CUT (v5_cut, env-gated, default off): cut a position as soon as it's
+        # this far underwater intraday — stops the "hold the loser all day" bleed the
+        # watchdog flagged (e.g. ADANIENT held wrong-way 82 cycles on 06-19).
+        if WRONGWAY_CUT_PCT > 0 and pnl_pct <= -WRONGWAY_CUT_PCT:
+            reason = "WRONGWAY_CUT"
+            log(f"  {sym}: WRONGWAY_CUT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
+            to_close.append((pool_name, pos, px, reason)); continue
         if is_short:
             if px >= pos["sl_price"]: reason = "STOPLOSS"
             elif px <= pos["target_price"]: reason = "TARGET"
@@ -802,11 +827,11 @@ def push_to_devpilot(state):
             "INSERT INTO learnings (project,category,title,content,source,tags,active,created_at,updated_at) "
             "VALUES (%s,%s,%s,%s,'v5-paper-trade',%s,true,NOW(),NOW())",
             ("tradepilot", "paper-trade",
-             f"v5 {today}: {_fmt(s.get('total_pnl',0))} ({pp:+.2f}%) | {s.get('trades',0)}t | {wr:.0f}%w",
-             json.dumps({"engine": "v5", "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
+             f"{ENGINE} {today}: {_fmt(s.get('total_pnl',0))} ({pp:+.2f}%) | {s.get('trades',0)}t | {wr:.0f}%w",
+             json.dumps({"engine": ENGINE, "capital": TOTAL_CAPITAL, "regime": state.get("regime", "?"),
                          "pnl": s.get("total_pnl", 0), "trades": s.get("trades", 0),
                          "wins": s.get("wins", 0), "longs": s.get("longs", 0), "shorts": s.get("shorts", 0)}),
-             ["paper-trade", "v5", today, state.get("regime", "").lower()]))
+             ["paper-trade", ENGINE, today, state.get("regime", "").lower()]))
         conn.commit(); cur.close(); conn.close(); log("  Saved to DevPilot DB")
     except Exception as e: log(f"  DevPilot push failed: {e}")
 

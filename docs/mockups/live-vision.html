@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SARATHI // FLEET COMMAND — vision mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000208; --ink:#d6ecf5; --dim:#5f7a8c; --faint:#2c4150;
+  --cy:#28e0f0; --cy2:#0a8fa3; --grn:#5bf08a; --red:#ff5d73; --amb:#ffce5b; --mag:#c77dff;
+  --line:rgba(40,224,240,.14); --glass:rgba(8,16,24,.5);
+  --eo:cubic-bezier(.23,1,.32,1); --edraw:cubic-bezier(.32,.72,0,1);
+  --mono:'JetBrains Mono',monospace; --disp:'Chakra Petch',sans-serif; --hud:'Orbitron',sans-serif;
+}
+*{box-sizing:border-box} html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:12px;overflow:hidden;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 60% at 50% 42%,rgba(40,224,240,.08),transparent 70%),
+             radial-gradient(ellipse 40% 40% at 85% 90%,rgba(199,125,255,.05),transparent 70%)}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.scan{position:fixed;left:0;right:0;height:2px;z-index:61;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(40,224,240,.5),transparent);animation:scan 7s linear infinite;opacity:.35}
+@keyframes scan{0%{top:-2px}100%{top:100%}}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:59;box-shadow:inset 0 0 220px rgba(0,0,0,.9)}
+
+.app{position:relative;z-index:1;display:grid;grid-template-rows:54px 40px 1fr 30px;height:100vh}
+.hud{display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(10,20,30,.7),rgba(2,4,8,.4));backdrop-filter:blur(8px)}
+.logo{display:flex;align-items:center;gap:12px;padding:0 22px;border-right:1px solid var(--line)}
+.logo .mark{width:26px;height:26px;position:relative}
+.logo .mark:before,.logo .mark:after{content:'';position:absolute;inset:0;border:1.5px solid var(--cy);border-radius:50%}
+.logo .mark:after{inset:6px;border-color:var(--grn);border-right-color:transparent;animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo .nm{font-family:var(--disp);font-weight:700;letter-spacing:.22em;font-size:14px}.logo .nm b{color:var(--cy)}
+.hstat{padding:8px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:88px}
+.hstat .k{font-size:8.5px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+.hstat .v{font-size:14px;font-weight:600;font-family:var(--disp)}.hstat .v.hud{font-family:var(--hud);font-weight:700;letter-spacing:.02em}
+.bars{display:inline-flex;gap:2px;align-items:flex-end;height:12px}
+.bars i{width:3px;background:var(--grn);border-radius:1px;animation:bar 1.4s var(--eo) infinite alternate}
+.bars i:nth-child(1){height:4px}.bars i:nth-child(2){height:7px;animation-delay:.2s}.bars i:nth-child(3){height:10px;animation-delay:.4s}.bars i:nth-child(4){height:12px;animation-delay:.6s}
+@keyframes bar{from{opacity:.3}to{opacity:1}}
+.right-hud{margin-left:auto;display:flex;align-items:center;gap:18px;padding:0 22px;font-size:10px;color:var(--dim);letter-spacing:.08em}
+.led{display:inline-flex;align-items:center;gap:7px}.led b{width:8px;height:8px;border-radius:50%;background:var(--grn);box-shadow:0 0 10px var(--grn);animation:bp 1.6s infinite}
+@keyframes bp{50%{opacity:.4}}
+
+/* TAB BAR */
+.tabbar{display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:rgba(2,5,9,.6);backdrop-filter:blur(6px)}
+.tab{display:flex;align-items:center;gap:9px;padding:0 26px;cursor:pointer;font-family:var(--disp);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);border-right:1px solid var(--line);transition:color .16s var(--eo),background .16s var(--eo);position:relative}
+.tab .ic{font-size:13px;color:var(--faint)}
+.tab:hover{color:var(--ink);background:rgba(40,224,240,.04)}
+.tab.on{color:var(--cy);background:rgba(40,224,240,.07)}
+.tab.on .ic{color:var(--cy)}
+.tab.on:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--cy);box-shadow:0 0 12px var(--cy)}
+.tab .sub{font-family:var(--mono);font-size:8px;color:var(--faint);letter-spacing:.05em;text-transform:none}
+.tabmeta{margin-left:auto;display:flex;align-items:center;padding:0 22px;font-size:9.5px;color:var(--faint);letter-spacing:.1em}
+
+/* shared chrome */
+.viewport{position:relative;overflow:hidden}
+.view{position:absolute;inset:0;display:none;flex-direction:column;animation:fadeUp .45s var(--eo) both}
+.view.on{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes bloom{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.bracket{position:absolute;width:14px;height:14px;border:1px solid var(--cy);opacity:.5;z-index:2;pointer-events:none}
+.bracket.tl{top:8px;left:8px;border-right:0;border-bottom:0}.bracket.tr{top:8px;right:8px;border-left:0;border-bottom:0}
+.bracket.bl{bottom:8px;left:8px;border-right:0;border-top:0}.bracket.br{bottom:8px;right:8px;border-left:0;border-top:0}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--line);font-family:var(--disp);font-size:10.5px;letter-spacing:.18em;color:var(--cy);text-transform:uppercase}
+.ch .dot{width:6px;height:6px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy);margin-right:8px;display:inline-block}
+.scroll{overflow-y:auto;flex:1;min-height:0}.scroll::-webkit-scrollbar{width:5px}.scroll::-webkit-scrollbar-thumb{background:var(--cy2);border-radius:3px}
+.pos{color:var(--grn)}.neg{color:var(--red)}.zero{color:var(--dim)}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:10px;position:relative;backdrop-filter:blur(4px)}
+.label{font-family:var(--disp);font-size:9px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+
+/* ---- LIVE view (radar 3-col) ---- */
+.live{display:grid;grid-template-columns:300px 1fr 340px;height:100%}
+.col{overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative}
+.col.l{border-right:1px solid var(--line)}.col.r{border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(8,14,22,.4),transparent)}
+.eng{padding:13px 16px;border-bottom:1px solid rgba(40,224,240,.07);transition:background .16s var(--eo)}
+.eng:hover{background:rgba(40,224,240,.04)}
+.eng .top{display:flex;align-items:center;justify-content:space-between}.eng .nm{font-family:var(--disp);font-weight:600;font-size:13px}
+.eng .st{font-size:8px;letter-spacing:.12em;padding:2px 7px;border-radius:4px;border:1px solid var(--line);color:var(--grn)}
+.eng .pnl{font-family:var(--hud);font-size:20px;font-weight:700;margin:7px 0 2px}.eng .meta{font-size:9.5px;color:var(--dim);display:flex;gap:12px}
+.spark{height:26px;margin-top:9px;width:100%}
+.radar-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#radar{width:100%;height:100%}
+.readout{position:absolute;font-size:9.5px;color:var(--cy);letter-spacing:.06em;opacity:.7}.readout.tl{top:18px;left:22px}.readout.tr{top:18px;right:22px;text-align:right}
+.readout .big{font-family:var(--hud);font-size:13px;color:var(--ink)}
+.legend{position:absolute;bottom:16px;left:22px;display:flex;gap:18px;font-size:10px;color:var(--dim)}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.det{padding:18px}.det .sym{font-family:var(--hud);font-size:30px;font-weight:900;line-height:1}
+.det .row1{display:flex;gap:9px;margin:11px 0 16px;flex-wrap:wrap}
+.badge{font-size:9.5px;padding:3px 9px;border-radius:5px;border:1px solid var(--line);letter-spacing:.07em}
+.badge.dir{color:var(--cy);border-color:rgba(40,224,240,.4)}.badge.reg{color:var(--amb);border-color:rgba(255,206,91,.35)}
+.det .big{font-family:var(--hud);font-size:34px;font-weight:700;line-height:1}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:6px}
+.kv .c{background:rgba(6,12,20,.8);padding:10px 12px}.kv .k{font-size:8.5px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase}.kv .v{font-size:14px;font-weight:600;font-family:var(--disp);margin-top:3px}
+.path{height:60px;margin-top:6px;border:1px solid var(--line);border-radius:8px;background:rgba(6,12,20,.6)}
+.riskbar{height:6px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}.riskbar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--grn),var(--amb),var(--red));border-radius:3px}
+
+/* ---- DESK view ---- */
+.desk{padding:18px;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;grid-auto-rows:min-content}
+.kpi{padding:16px;grid-column:span 1}
+.kpi .label{margin-bottom:8px}.kpi .num{font-family:var(--hud);font-size:30px;font-weight:700;line-height:1}.kpi .sub{font-size:10px;color:var(--dim);margin-top:6px}
+.idx{padding:14px;grid-column:span 2}
+.idx .top{display:flex;justify-content:space-between;align-items:baseline}.idx .nm{font-family:var(--disp);font-weight:600;font-size:13px}.idx .px{font-family:var(--hud);font-size:18px;font-weight:700}
+.idxchart{height:60px;width:100%;margin-top:8px}
+.postable{grid-column:span 4;padding:0}.postable .ch{border-radius:10px 10px 0 0}
+.ptrow{display:grid;grid-template-columns:1.4fr .8fr .8fr 1fr 1fr 1fr;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(40,224,240,.06);font-size:11.5px;align-items:center}
+.ptrow.head{color:var(--dim);font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+.ptrow .sym{font-weight:600}.side{font-size:9px;padding:1px 6px;border-radius:4px;letter-spacing:.06em}.side.B{color:var(--grn);border:1px solid rgba(91,240,138,.3)}.side.S{color:var(--mag);border:1px solid rgba(199,125,255,.3)}
+.ticket{grid-column:span 4;padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:5px}.fld input,.fld select{background:rgba(2,8,14,.8);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:9px 11px;font-family:var(--mono);font-size:13px;outline:none}
+.fld input:focus,.fld select:focus{border-color:var(--cy);box-shadow:0 0 12px rgba(40,224,240,.2)}
+.btn{padding:11px 22px;border-radius:8px;font-family:var(--disp);font-weight:600;letter-spacing:.1em;border:1px solid;cursor:pointer;transition:transform .16s var(--eo),box-shadow .16s var(--eo)}
+.btn:active{transform:scale(.97)}
+.btn.buy{color:var(--grn);border-color:var(--grn);background:rgba(91,240,138,.08)}.btn.buy:hover{box-shadow:0 0 18px rgba(91,240,138,.3)}
+.btn.sell{color:var(--red);border-color:var(--red);background:rgba(255,93,115,.08)}.btn.sell:hover{box-shadow:0 0 18px rgba(255,93,115,.3)}
+
+/* ---- MARKET view ---- */
+.market{padding:18px;overflow-y:auto}
+.mk-h{font-family:var(--disp);font-size:11px;letter-spacing:.18em;color:var(--cy);text-transform:uppercase;margin:6px 0 12px;display:flex;align-items:center;gap:8px}
+.picks{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:26px}
+.pick{padding:13px;position:relative;overflow:hidden;transition:transform .18s var(--eo),border-color .18s var(--eo)}
+.pick:hover{transform:translateY(-3px);border-color:var(--cy)}
+.pick .sym{font-family:var(--disp);font-weight:700;font-size:14px}.pick .px{font-family:var(--hud);font-size:16px;font-weight:700;margin:4px 0}.pick .chg{font-size:11px}
+.pick .ps{height:24px;width:100%;margin-top:6px}
+.sectors{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.sec{padding:13px;cursor:pointer;transition:transform .16s var(--eo),border-color .16s var(--eo)}
+.sec:hover{transform:translateY(-2px);border-color:var(--cy)} .sec:active{transform:scale(.98)}
+.sec .nm{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--cy)}.sec .d{font-size:9.5px;color:var(--dim);margin-top:3px}
+
+/* ---- AGENTS view ---- */
+.agents{display:grid;grid-template-columns:1fr 380px;height:100%}
+.afleet{position:relative;overflow:hidden;border-right:1px solid var(--line)}
+#agnet{width:100%;height:100%}
+.afeed{display:flex;flex-direction:column;min-height:0}
+.act{padding:12px 16px;border-bottom:1px solid rgba(40,224,240,.06);animation:fadeUp .4s var(--eo) both}
+.act .t{font-size:9px;color:var(--faint);letter-spacing:.08em}.act .who{font-family:var(--disp);font-weight:600;font-size:12px;color:var(--cy)}
+.act .msg{font-size:11px;color:var(--ink);margin-top:3px}.act .tag{font-size:8px;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--amb);margin-left:6px}
+
+/* foot */
+.foot{display:flex;align-items:center;border-top:1px solid var(--line);background:rgba(2,4,8,.7);font-size:10px;color:var(--dim);overflow:hidden}
+.foot .lbl{padding:0 14px;border-right:1px solid var(--line);color:var(--cy);letter-spacing:.14em;white-space:nowrap;height:100%;display:flex;align-items:center;font-family:var(--disp)}
+.stream{white-space:nowrap;animation:stream 38s linear infinite;padding-left:100%}@keyframes stream{to{transform:translateX(-100%)}}
+.stream b{color:var(--grn)}.stream .s{color:var(--mag)}.stream .x{color:var(--faint);margin:0 14px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div><div class="grain"></div><div class="scan"></div><div class="vignette"></div>
+
+<div class="app">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="logo"><span class="mark"></span><span class="nm">SARATHI<b>//</b>FLEET</span></div>
+    <div class="hstat"><span class="k">Stardate</span><span class="v" id="clock">13:42:08</span></div>
+    <div class="hstat"><span class="k">Market</span><span class="v" style="color:var(--grn)">OPEN</span></div>
+    <div class="hstat"><span class="k">Engines</span><span class="v">3 / 3</span></div>
+    <div class="hstat"><span class="k">Fleet P&amp;L</span><span class="v hud pos" id="cPnl">+₹0</span></div>
+    <div class="right-hud"><span class="led"><b></b>UPLINK STABLE</span><span>SIGNAL <span class="bars"><i></i><i></i><i></i><i></i></span></span><span style="color:var(--cy)">v0.3 · VISION</span></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabbar">
+    <div class="tab on" data-v="live"   onclick="show('live')"><span class="ic">◎</span> Live <span class="sub">tactical</span></div>
+    <div class="tab"    data-v="desk"   onclick="show('desk')"><span class="ic">▤</span> Desk <span class="sub">trading</span></div>
+    <div class="tab"    data-v="market" onclick="show('market')"><span class="ic">◳</span> Market <span class="sub">scanner</span></div>
+    <div class="tab"    data-v="agents" onclick="show('agents')"><span class="ic">⬡</span> Agents <span class="sub">fleet ops</span></div>
+    <div class="tabmeta" id="tabmeta">TACTICAL SCAN · SECTOR NSE-451</div>
+  </div>
+
+  <!-- VIEWPORT -->
+  <div class="viewport">
+    <!-- LIVE -->
+    <div class="view on" id="v-live">
+      <div class="live">
+        <div class="col l"><span class="bracket tl"></span><span class="bracket bl"></span>
+          <div class="ch"><span><span class="dot"></span>Engine Array</span><span style="color:var(--faint)">3 ONLINE</span></div>
+          <div class="scroll" id="engines"></div></div>
+        <div class="col"><span class="bracket tl"></span><span class="bracket tr"></span><span class="bracket bl"></span><span class="bracket br"></span>
+          <div class="radar-wrap">
+            <div class="readout tl"><div>FLEET TACTICAL SCAN</div><div class="big">SECTOR · NSE-451</div><div id="ro-scan">SWEEP 0°</div></div>
+            <div class="readout tr"><div>RANGE 0–100 BPS</div><div class="big">REGIME · BEAR</div><div>RESCAN 30s</div></div>
+            <svg id="radar" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="legend"><span><i style="background:#28e0f0"></i>v4</span><span><i style="background:#c77dff"></i>v5</span><span><i style="background:#5bf08a"></i>v5_classic</span><span><i style="background:#ffce5b"></i>lock</span></div>
+          </div></div>
+        <div class="col r"><span class="bracket tr"></span><span class="bracket br"></span>
+          <div class="ch"><span><span class="dot"></span>Target Detail</span><span style="color:var(--faint)">/v4</span></div>
+          <div class="scroll"><div class="det" id="det"></div></div></div>
+      </div>
+    </div>
+
+    <!-- DESK -->
+    <div class="view" id="v-desk">
+      <div class="desk" id="deskGrid"></div>
+    </div>
+
+    <!-- MARKET -->
+    <div class="view" id="v-market">
+      <div class="market">
+        <div class="mk-h"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--cy);display:inline-block;box-shadow:0 0 8px var(--cy)"></span> Top Picks · ML Ranked</div>
+        <div class="picks" id="picks"></div>
+        <div class="mk-h">Sector Scan · NSE</div>
+        <div class="sectors" id="sectors"></div>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="view" id="v-agents">
+      <div class="agents">
+        <div class="afleet"><span class="bracket tl"></span><span class="bracket bl"></span>
+          <div class="ch"><span><span class="dot"></span>Agent Fleet · Network</span><span style="color:var(--faint)">5 ACTIVE</span></div>
+          <svg id="agnet" viewBox="0 0 800 700" preserveAspectRatio="xMidYMid meet"></svg></div>
+        <div class="afeed"><span class="bracket tr"></span><span class="bracket br"></span>
+          <div class="ch"><span><span class="dot"></span>Decision Feed</span><span style="color:var(--faint)">LIVE</span></div>
+          <div class="scroll" id="agfeed"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOT -->
+  <div class="foot"><span class="lbl">◈ DATA-STREAM</span><div class="stream" id="stream"></div></div>
+</div>
+
+<script>
+const inr=n=>(n>0?'+':n<0?'−':'')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN');
+const cls=n=>n>0?'pos':n<0?'neg':'zero';
+const spark=(d,w=250,h=26)=>{const mx=Math.max(...d),mn=Math.min(...d),r=mx-mn||1;return d.map((v,i)=>`${i?'L':'M'}${(i/(d.length-1))*w},${h-((v-mn)/r)*h}`).join(' ');};
+
+/* ===== DATA (mock) ===== */
+const ENG=[
+  {id:'v4',col:'#28e0f0',pnl:18420,trades:41,wr:72,regime:'NEUTRAL',spark:[3,5,4,7,6,9,8,11,10,13]},
+  {id:'v5',col:'#c77dff',pnl:-2310,trades:60,wr:42,regime:'BEAR',spark:[8,7,9,6,7,5,6,4,5,4]},
+  {id:'v5_classic',col:'#5bf08a',pnl:6240,trades:33,wr:64,regime:'BEAR',spark:[2,3,3,5,4,6,7,6,8,9]},
+];
+const STOCKS=[
+  {eng:'v4',sym:'JSWSTEEL',dir:'LONG',pnl:1568,lock:true},{eng:'v4',sym:'CONCOR',dir:'LONG',pnl:-220},{eng:'v4',sym:'COFORGE',dir:'LONG',pnl:3615,lock:true},
+  {eng:'v5',sym:'COALINDIA',dir:'SHORT',pnl:3220,lock:true},{eng:'v5',sym:'SWIGGY',dir:'SHORT',pnl:-86},{eng:'v5',sym:'VEDL',dir:'SHORT',pnl:-109},
+  {eng:'v5_classic',sym:'PERSISTENT',dir:'SHORT',pnl:412},{eng:'v5_classic',sym:'TCS',dir:'SHORT',pnl:880,lock:true},
+];
+const fleetPnl=ENG.reduce((a,e)=>a+e.pnl,0), fleetTr=ENG.reduce((a,e)=>a+e.trades,0);
+const POS=[
+  {sym:'COFORGE',side:'B',qty:24,avg:1168.8,ltp:1285.4,pnl:3615},{sym:'JSWSTEEL',side:'B',qty:43,avg:1297.4,ltp:1333.9,pnl:1568},
+  {sym:'COALINDIA',side:'S',qty:244,avg:452.7,ltp:439.5,pnl:3220},{sym:'TCS',side:'S',qty:18,avg:3104,ltp:3055,pnl:880},
+  {sym:'SWIGGY',side:'S',qty:120,avg:252.3,ltp:254.4,pnl:-252},
+];
+const PICKS=[
+  {sym:'HCLTECH',px:1402.2,chg:3.53,up:1},{sym:'TECHM',px:1441.5,chg:2.63,up:1},{sym:'WIPRO',px:194.9,chg:1.95,up:1},
+  {sym:'INFY',px:1300.8,chg:1.97,up:1},{sym:'TCS',px:2450.7,chg:1.76,up:1},{sym:'ONGC',px:287.2,chg:-0.30,up:0},
+];
+const SECTORS=[['NIFTY 50','Top 50 large-cap'],['Bank','Banking sector'],['IT','Tech sector'],['Pharma','Pharma sector'],['Auto','Auto & ancillaries'],['Energy','Power & oil'],['Metals','Metals & mining'],['FMCG','Consumer staples'],['Realty','Real estate'],['Defence','Defence & ship']];
+const AGENTS=[
+  {id:'Sarathi',role:'Risk / Audit',col:'#28e0f0'},{id:'Alpha Hunter',role:'Quant Research',col:'#c77dff'},
+  {id:'Exec Analyst',role:'Slippage',col:'#ffce5b'},{id:'Architect',role:'Systems',col:'#5bf08a'},{id:'Intel',role:'Market Intel',col:'#ff5d73'},
+];
+const ACTS=[
+  ['Sarathi','DAT launch-gate PASS · 27/27 checks','OK'],['Alpha Hunter','Sector RS gate flagged 6 mid-cap shorts','SIGNAL'],
+  ['Exec Analyst','STOPLOSS slippage 283bps → recommend limit+sweep','RISK'],['Architect','Engine array healthy · 3/3 · rust off','SYS'],
+  ['Intel','FII −4,447cr · DII +4,360cr · regime BEAR','DATA'],['Sarathi','No unresolved BLOCKs · tape clean','OK'],
+];
+
+/* ===== counters ===== */
+function countUp(el,to,fmt,dur=1000){const t0=performance.now();(function f(t){let p=Math.min(1,(t-t0)/dur);p=1-Math.pow(1-p,3);el.textContent=fmt(to*p);if(p<1)requestAnimationFrame(f);})(t0);}
+countUp(document.getElementById('cPnl'),fleetPnl,v=>inr(v));
+
+/* ===== LIVE ===== */
+document.getElementById('engines').innerHTML=ENG.map(e=>`
+  <div class="eng"><div class="top"><span class="nm" style="color:${e.col}">${e.id}</span><span class="st">● ONLINE</span></div>
+    <div class="pnl ${cls(e.pnl)}">${inr(e.pnl)}</div><div class="meta"><span>${e.trades} trades</span><span>WR ${e.wr}%</span><span>${e.regime}</span></div>
+    <svg class="spark" viewBox="0 0 250 26" preserveAspectRatio="none"><path d="${spark(e.spark)}" fill="none" stroke="${e.col}" stroke-width="1.5" opacity=".85"/></svg></div>`).join('');
+const SEL={sym:'COFORGE',eng:'v4',dir:'LONG',regime:'NEUTRAL',pool:'INTRADAY',pnl:3615,pnlpct:9.98,entry:1168.8,exit:1285.4,et:'09:41:12',xt:'11:58:30',qty:24,hold:137};
+document.getElementById('det').innerHTML=`
+  <div class="sym">${SEL.sym}</div>
+  <div class="row1"><span class="badge dir">${SEL.dir}</span><span class="badge" style="color:var(--cy);border-color:rgba(40,224,240,.4)">${SEL.eng}</span><span class="badge reg">REGIME · ${SEL.regime}</span><span class="badge" style="color:var(--dim)">${SEL.pool}</span></div>
+  <div class="label" style="margin:14px 0 5px">Realized P&amp;L</div><div class="big ${cls(SEL.pnl)}">${inr(SEL.pnl)}</div>
+  <div style="color:var(--dim);font-size:11px;margin-top:4px">+${SEL.pnlpct.toFixed(2)}% on trade · TARGET hit</div>
+  <div class="label" style="margin:16px 0 6px">Trade Telemetry</div>
+  <div class="kv"><div class="c"><div class="k">Entry</div><div class="v">${SEL.et}</div></div><div class="c"><div class="k">Exit</div><div class="v">${SEL.xt}</div></div>
+    <div class="c"><div class="k">Entry ₹</div><div class="v">${SEL.entry}</div></div><div class="c"><div class="k">Exit ₹</div><div class="v">${SEL.exit}</div></div>
+    <div class="c"><div class="k">Qty</div><div class="v">${SEL.qty}</div></div><div class="c"><div class="k">Hold</div><div class="v">${SEL.hold}m</div></div></div>
+  <div class="label" style="margin:16px 0 6px">Price Path · +9.98%</div>
+  <svg class="path" viewBox="0 0 300 60" preserveAspectRatio="none"><path d="M6,46 C60,40 90,30 140,26 S240,12 294,8" fill="none" stroke="var(--grn)" stroke-width="2"/><circle cx="6" cy="46" r="3.5" fill="var(--cy)"/><circle cx="294" cy="8" r="3.5" fill="var(--grn)"/></svg>
+  <div class="label" style="margin:16px 0 6px">Risk Utilization</div><div class="riskbar"><i></i></div>`;
+function radar(){const svg=document.getElementById('radar'),C=450,R=360;let s=`<defs>
+  <radialGradient id="core" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(40,224,240,.55)"/><stop offset="100%" stop-color="rgba(40,224,240,0)"/></radialGradient>
+  <radialGradient id="sweep" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(40,224,240,.35)"/><stop offset="100%" stop-color="rgba(40,224,240,0)"/></radialGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  for(let i=1;i<=5;i++){const rr=R*i/5;s+=`<circle cx="${C}" cy="${C}" r="${rr}" fill="none" stroke="rgba(40,224,240,.12)"><animate attributeName="r" values="0;${rr}" dur="${.5+i*.12}s" begin="0.1s" fill="freeze" calcMode="spline" keySplines="0.23 1 0.32 1" keyTimes="0;1"/></circle>`;}
+  for(let a=0;a<360;a+=30){const rd=a*Math.PI/180;s+=`<line x1="${C+Math.cos(rd)*(R-10)}" y1="${C+Math.sin(rd)*(R-10)}" x2="${C+Math.cos(rd)*R}" y2="${C+Math.sin(rd)*R}" stroke="rgba(40,224,240,.25)"/>`;}
+  s+=`<g><path d="M${C},${C} L${C},${C-R} A${R},${R} 0 0 1 ${C+R*Math.sin(.6)},${C-R*Math.cos(.6)} Z" fill="url(#sweep)"><animateTransform attributeName="transform" type="rotate" from="0 ${C} ${C}" to="360 ${C} ${C}" dur="5s" repeatCount="indefinite"/></path>
+    <line x1="${C}" y1="${C}" x2="${C}" y2="${C-R}" stroke="var(--cy)" stroke-width="1.5" opacity=".7"><animateTransform attributeName="transform" type="rotate" from="0 ${C} ${C}" to="360 ${C} ${C}" dur="5s" repeatCount="indefinite"/></line></g>`;
+  ENG.forEach((e,idx)=>{const ang=(-90+idx*120)*Math.PI/180,ex=C+Math.cos(ang)*R*0.5,ey=C+Math.sin(ang)*R*0.5,p=e.pnl,pc=p>0?'#5bf08a':p<0?'#ff5d73':'#5f7a8c';
+    s+=`<line x1="${C}" y1="${C}" x2="${ex}" y2="${ey}" stroke="${e.col}" stroke-width="1" opacity=".35"/><circle cx="${ex}" cy="${ey}" r="26" fill="rgba(40,224,240,.05)" stroke="${e.col}" stroke-width="1.5" filter="url(#glow)"><animate attributeName="r" values="26;30;26" dur="2.6s" repeatCount="indefinite"/></circle>
+      <text x="${ex}" y="${ey-36}" text-anchor="middle" fill="${e.col}" font-family="Chakra Petch" font-size="14" font-weight="700">${e.id}</text><text x="${ex}" y="${ey+5}" text-anchor="middle" fill="${pc}" font-family="Orbitron" font-size="12" font-weight="700">${inr(p)}</text>`;
+    STOCKS.filter(t=>t.eng===e.id).forEach((t,j)=>{const orad=70+j*26,oa=(j*70+idx*40),dur=14+j*3,bx=ex,by=ey-orad,col=t.dir==='SHORT'?'#c77dff':'#28e0f0';
+      s+=`<g><animateTransform attributeName="transform" type="rotate" from="${oa} ${ex} ${ey}" to="${oa+360} ${ex} ${ey}" dur="${dur}s" repeatCount="indefinite"/>
+        <circle cx="${bx}" cy="${by}" r="3.5" fill="${col}"><animate attributeName="opacity" values="1;.4;1" dur="2s" repeatCount="indefinite"/></circle>
+        ${t.lock?`<g stroke="#ffce5b" stroke-width="1.2" fill="none" opacity=".9"><path d="M${bx-9},${by-9} h5 M${bx-9},${by-9} v5 M${bx+9},${by-9} h-5 M${bx+9},${by-9} v5 M${bx-9},${by+9} h5 M${bx-9},${by+9} v-5 M${bx+9},${by+9} h-5 M${bx+9},${by+9} v-5"/></g>`:''}
+        <text x="${bx+11}" y="${by+3}" fill="${col}" font-family="JetBrains Mono" font-size="8.5" opacity=".85">${t.sym}</text></g>`;});});
+  const fc=fleetPnl>0?'#5bf08a':'#ff5d73';
+  s+=`<circle cx="${C}" cy="${C}" r="74" fill="url(#core)"/><circle cx="${C}" cy="${C}" r="58" fill="rgba(2,8,14,.85)" stroke="${fc}" stroke-width="1.5" filter="url(#glow)"><animate attributeName="stroke-opacity" values="1;.5;1" dur="3s" repeatCount="indefinite"/></circle>
+    <text x="${C}" y="${C-4}" text-anchor="middle" fill="${fc}" font-family="Orbitron" font-size="26" font-weight="900">${inr(fleetPnl)}</text><text x="${C}" y="${C+16}" text-anchor="middle" fill="#5f7a8c" font-size="9" letter-spacing="3">FLEET P&amp;L</text><text x="${C}" y="${C+32}" text-anchor="middle" fill="#2c4150" font-size="8">${fleetTr} TRADES · 8 OPEN · 61% WR</text>`;
+  svg.innerHTML=s;}
+radar();
+
+/* ===== DESK ===== */
+const idxData={'NIFTY 50':[23320,23410,23380,23300,23260,23368],'SENSEX':[74400,74320,74380,74250,74200,74231],'BANKNIFTY':[54200,54330,54280,54450,54510,54519]};
+document.getElementById('deskGrid').innerHTML=`
+  <div class="kpi panel"><span class="bracket tl"></span><div class="label">Portfolio P&amp;L</div><div class="num ${cls(fleetPnl)}">${inr(fleetPnl)}</div><div class="sub">+1.83% on ₹12.20L capital</div></div>
+  <div class="kpi panel"><div class="label">Day P&amp;L</div><div class="num pos">+₹7,431</div><div class="sub">134 trades · 61% win</div></div>
+  <div class="kpi panel"><div class="label">Win Rate</div><div class="num">61%</div><div class="sub">82 W · 52 L</div></div>
+  <div class="kpi panel"><span class="bracket tr"></span><div class="label">Buying Power</div><div class="num" style="color:var(--cy)">₹4.80L</div><div class="sub">deployed ₹7.40L / ₹12.20L</div></div>
+  ${['NIFTY 50','SENSEX','BANKNIFTY'].map((n,i)=>{const d=idxData[n],last=d[d.length-1],chg=((last-d[0])/d[0]*100);return `
+    <div class="idx panel" style="grid-column:span ${i===2?2:2}"><div class="top"><span class="nm">${n}</span><span class="px ${cls(chg)}">${last.toLocaleString('en-IN')}</span></div>
+      <div class="sub ${cls(chg)}" style="font-size:10px">${chg>0?'+':''}${chg.toFixed(2)}%</div>
+      <svg class="idxchart" viewBox="0 0 300 60" preserveAspectRatio="none"><path d="${spark(d,300,56).replace(/^M/,'M').replace(/,([\\d.]+)$/,'')}" fill="none" stroke="${chg>0?'#5bf08a':'#ff5d73'}" stroke-width="2"/></svg></div>`;}).join('')}
+  <div class="postable panel"><div class="ch"><span><span class="dot"></span>Open Positions</span><span style="color:var(--faint)">${POS.length} OPEN</span></div>
+    <div class="ptrow head"><span>Symbol</span><span>Side</span><span>Qty</span><span>Avg</span><span>LTP</span><span>P&amp;L</span></div>
+    ${POS.map(p=>`<div class="ptrow"><span class="sym">${p.sym}</span><span><span class="side ${p.side}">${p.side==='B'?'BUY':'SELL'}</span></span><span>${p.qty}</span><span>${p.avg}</span><span>${p.ltp}</span><span class="${cls(p.pnl)}">${inr(p.pnl)}</span></div>`).join('')}</div>
+  <div class="ticket panel"><span class="bracket bl"></span>
+    <div class="fld"><span class="label">Symbol</span><input value="RELIANCE"></div>
+    <div class="fld"><span class="label">Qty</span><input value="10"></div>
+    <div class="fld"><span class="label">Type</span><select><option>Market</option><option>Limit</option></select></div>
+    <button class="btn buy">BUY ⌘B</button><button class="btn sell">SELL ⌘S</button></div>`;
+
+/* ===== MARKET ===== */
+document.getElementById('picks').innerHTML=PICKS.map(p=>{const sd=p.up?[2,3,3,5,4,6,7,8]:[8,7,7,5,6,4,3,2],c=p.up?'#5bf08a':'#ff5d73';return `
+  <div class="pick panel"><div class="sym">${p.sym}</div><div class="px">${p.px.toLocaleString('en-IN')}</div><div class="chg ${p.up?'pos':'neg'}">${p.chg>0?'+':''}${p.chg}%</div>
+    <svg class="ps" viewBox="0 0 200 24" preserveAspectRatio="none"><path d="${spark(sd,200,22)}" fill="none" stroke="${c}" stroke-width="1.5"/></svg></div>`;}).join('');
+document.getElementById('sectors').innerHTML=SECTORS.map(s=>`<div class="sec panel"><div class="nm">${s[0]}</div><div class="d">${s[1]}</div></div>`).join('');
+
+/* ===== AGENTS network ===== */
+function agnet(){const svg=document.getElementById('agnet'),C=400,CY=330,R=210;let s=`<defs><filter id="g2"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  AGENTS.forEach((a,i)=>{const ang=(-90+i*(360/AGENTS.length))*Math.PI/180,x=C+Math.cos(ang)*R,y=CY+Math.sin(ang)*R;
+    s+=`<line x1="${C}" y1="${CY}" x2="${x}" y2="${y}" stroke="${a.col}" stroke-width="1" opacity=".3"/>
+      <circle cx="${x}" cy="${y}" r="30" fill="rgba(40,224,240,.05)" stroke="${a.col}" stroke-width="1.5" filter="url(#g2)"><animate attributeName="r" values="30;34;30" dur="${2.4+i*.2}s" repeatCount="indefinite"/></circle>
+      <circle cx="${x}" cy="${y}" r="4" fill="${a.col}"><animate attributeName="opacity" values="1;.4;1" dur="1.8s" repeatCount="indefinite"/></circle>
+      <text x="${x}" y="${y-40}" text-anchor="middle" fill="${a.col}" font-family="Chakra Petch" font-size="13" font-weight="700">${a.id}</text>
+      <text x="${x}" y="${y+48}" text-anchor="middle" fill="#5f7a8c" font-size="9">${a.role}</text>`;});
+  s+=`<circle cx="${C}" cy="${CY}" r="46" fill="rgba(40,224,240,.06)" stroke="var(--cy)" stroke-width="1.5" filter="url(#g2)"/>
+    <text x="${C}" y="${CY-2}" text-anchor="middle" fill="var(--cy)" font-family="Orbitron" font-size="15" font-weight="700">SARATHI</text><text x="${C}" y="${CY+15}" text-anchor="middle" fill="#5f7a8c" font-size="8" letter-spacing="2">ORCHESTRATOR</text>`;
+  svg.innerHTML=s;}
+document.getElementById('agfeed').innerHTML=ACTS.map((a,i)=>`<div class="act" style="animation-delay:${i*.05}s"><div class="t">11:4${i} IST</div><div class="who">${a[0]}<span class="tag">${a[2]}</span></div><div class="msg">${a[1]}</div></div>`).join('');
+agnet();
+
+/* ===== tabs ===== */
+const META={live:'TACTICAL SCAN · SECTOR NSE-451',desk:'TRADING DESK · PAPER · ₹12.20L',market:'MARKET SCANNER · 451 ASSETS',agents:'AGENT FLEET · 5 ACTIVE · ORCHESTRATED'};
+function show(v){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('on',el.id==='v-'+v));
+  document.getElementById('tabmeta').textContent=META[v]||'';}
+
+/* clock + stream */
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);},1000);
+let sweep=0;setInterval(()=>{sweep=(sweep+8)%360;const el=document.getElementById('ro-scan');if(el)el.textContent='SWEEP '+sweep+'°';},220);
+document.getElementById('stream').innerHTML=(STOCKS.concat(STOCKS)).map(t=>`11:5${Math.floor(Math.random()*9)} ${t.eng} ▸ <span class="${t.dir==='SHORT'?'s':''}">${t.dir}</span> <b>${t.sym}</b> ${inr(t.pnl)}`).join('<span class="x">·</span>');
+</script>
+</body>
+</html>

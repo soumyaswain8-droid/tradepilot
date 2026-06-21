@@ -1,0 +1,1342 @@
+{
+  "date": "2026-05-12",
+  "engine": "v5",
+  "started_at": "08:48:25",
+  "total_capital": 1206041.8,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-05-12T08:48:28",
+    "gap_prediction": {
+      "direction": "DOWN",
+      "magnitude_pct": -1.47,
+      "confidence": 0.81,
+      "source": "gift_nifty"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "volume_price_proxy"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": 0.19,
+      "asia_change": 0.6,
+      "details": {
+        "sp500": 0.19,
+        "hangseng": 0.58,
+        "nikkei": 0.62
+      }
+    },
+    "overall": {
+      "bias": "BEARISH",
+      "score": -1,
+      "size_multiplier": 0.5,
+      "reasons": [
+        "Gap-down -1.5% (gift_nifty)"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [
+        {
+          "symbol": "INDHOTEL",
+          "entry_price": 649.0,
+          "exit_price": 658.4,
+          "qty": 25,
+          "entry_time": "09:42:14",
+          "exit_time": "09:52:16",
+          "pnl": -235.0,
+          "pnl_pct": -1.45,
+          "reason": "STOPLOSS",
+          "pnl_gross": -235.0,
+          "pnl_net": -254.61,
+          "cost": 19.61,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "LTM",
+          "entry_price": 4207.0,
+          "exit_price": 4237.0,
+          "qty": 3,
+          "entry_time": "09:42:14",
+          "exit_time": "09:52:16",
+          "pnl": -90.0,
+          "pnl_pct": -0.71,
+          "reason": "STOPLOSS",
+          "pnl_gross": -90.0,
+          "pnl_net": -105.2,
+          "cost": 15.2,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "SUZLON",
+          "entry_price": 53.3,
+          "exit_price": 53.67,
+          "qty": 529,
+          "entry_time": "09:06:39",
+          "exit_time": "10:02:17",
+          "pnl": -195.73,
+          "pnl_pct": -0.69,
+          "reason": "STOPLOSS",
+          "pnl_gross": -195.73,
+          "pnl_net": -229.68,
+          "cost": 33.95,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ASHOKLEY",
+          "entry_price": 161.52,
+          "exit_price": 158.04,
+          "qty": 156,
+          "entry_time": "09:06:39",
+          "exit_time": "11:21:09",
+          "pnl": 542.88,
+          "pnl_pct": 2.15,
+          "reason": "TARGET",
+          "pnl_gross": 542.88,
+          "pnl_net": 512.97,
+          "cost": 29.91,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "CIPLA",
+          "entry_price": 1304.9,
+          "exit_price": 1300.8,
+          "qty": 15,
+          "entry_time": "09:06:39",
+          "exit_time": "11:30:54",
+          "pnl": 61.5,
+          "pnl_pct": 0.31,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 61.5,
+          "pnl_net": 38.05,
+          "cost": 23.45,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "CUMMINSIND",
+          "entry_price": 5238.5,
+          "exit_price": 5223.5,
+          "qty": 5,
+          "entry_time": "09:06:39",
+          "exit_time": "11:54:47",
+          "pnl": 75.0,
+          "pnl_pct": 0.29,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 75.0,
+          "pnl_net": 43.61,
+          "cost": 31.39,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "COLPAL",
+          "entry_price": 2139.0,
+          "exit_price": 2136.0,
+          "qty": 10,
+          "entry_time": "09:06:39",
+          "exit_time": "11:54:47",
+          "pnl": 30.0,
+          "pnl_pct": 0.14,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 30.0,
+          "pnl_net": 4.35,
+          "cost": 25.65,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "TCS",
+          "entry_price": 2311.0,
+          "exit_price": 2297.0,
+          "qty": 5,
+          "entry_time": "09:42:14",
+          "exit_time": "12:41:34",
+          "pnl": 70.0,
+          "pnl_pct": 0.61,
+          "reason": "STOPLOSS",
+          "pnl_gross": 70.0,
+          "pnl_net": 56.18,
+          "cost": 13.82,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "PERSISTENT",
+          "entry_price": 4872.5,
+          "exit_price": 4907.7,
+          "qty": 2,
+          "entry_time": "10:18:40",
+          "exit_time": "12:51:49",
+          "pnl": -70.4,
+          "pnl_pct": -0.72,
+          "reason": "STOPLOSS",
+          "pnl_gross": -70.4,
+          "pnl_net": -82.14,
+          "cost": 11.74,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "HYUNDAI",
+          "entry_price": 1872.8,
+          "exit_price": 1882.8,
+          "qty": 6,
+          "entry_time": "11:00:09",
+          "exit_time": "12:51:49",
+          "pnl": -60.0,
+          "pnl_pct": -0.53,
+          "reason": "STOPLOSS",
+          "pnl_gross": -60.0,
+          "pnl_net": -73.52,
+          "cost": 13.52,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ABB",
+          "entry_price": 6238.0,
+          "exit_price": 6243.0,
+          "qty": 2,
+          "entry_time": "10:18:40",
+          "exit_time": "13:30:27",
+          "pnl": -10.0,
+          "pnl_pct": -0.08,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -10.0,
+          "pnl_net": -24.98,
+          "cost": 14.98,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "FEDERALBNK",
+          "entry_price": 286.5,
+          "exit_price": 285.85,
+          "qty": 50,
+          "entry_time": "11:54:47",
+          "exit_time": "13:30:27",
+          "pnl": 32.5,
+          "pnl_pct": 0.23,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": 32.5,
+          "pnl_net": 15.33,
+          "cost": 17.17,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "BDL",
+          "entry_price": 1355.0,
+          "exit_price": 1353.2,
+          "qty": 10,
+          "entry_time": "13:10:26",
+          "exit_time": "13:30:27",
+          "pnl": 18.0,
+          "pnl_pct": 0.13,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": 18.0,
+          "pnl_net": 1.75,
+          "cost": 16.25,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "LTM",
+          "entry_price": 4168.7,
+          "exit_price": 4162.6,
+          "qty": 3,
+          "entry_time": "13:10:26",
+          "exit_time": "13:30:27",
+          "pnl": 18.3,
+          "pnl_pct": 0.15,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": 18.3,
+          "pnl_net": 3.3,
+          "cost": 15.0,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "KALYANKJIL",
+          "entry_price": 368.35,
+          "exit_price": 368.95,
+          "qty": 30,
+          "entry_time": "13:10:26",
+          "exit_time": "13:30:27",
+          "pnl": -18.0,
+          "pnl_pct": -0.16,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -18.0,
+          "pnl_net": -31.27,
+          "cost": 13.27,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "LTF",
+          "entry_price": 288.0,
+          "exit_price": 281.2,
+          "qty": 48,
+          "entry_time": "11:30:54",
+          "exit_time": "14:02:41",
+          "pnl": 326.4,
+          "pnl_pct": 2.36,
+          "reason": "TARGET",
+          "pnl_gross": 326.4,
+          "pnl_net": 310.01,
+          "cost": 16.39,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "INFY",
+          "entry_price": 1133.8,
+          "exit_price": 1140.9,
+          "qty": 13,
+          "entry_time": "10:18:40",
+          "exit_time": "14:26:16",
+          "pnl": -92.3,
+          "pnl_pct": -0.63,
+          "reason": "STOPLOSS",
+          "pnl_gross": -92.3,
+          "pnl_net": -110.04,
+          "cost": 17.74,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ADANIPOWER",
+          "entry_price": 212.5,
+          "exit_price": 210.71,
+          "qty": 64,
+          "entry_time": "13:52:40",
+          "exit_time": "14:26:16",
+          "pnl": 114.56,
+          "pnl_pct": 0.84,
+          "reason": "STOPLOSS",
+          "pnl_gross": 114.56,
+          "pnl_net": 98.31,
+          "cost": 16.25,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "DIXON",
+          "entry_price": 10400.0,
+          "exit_price": 10174.0,
+          "qty": 1,
+          "entry_time": "11:30:54",
+          "exit_time": "14:58:08",
+          "pnl": 226.0,
+          "pnl_pct": 2.17,
+          "reason": "TARGET",
+          "pnl_gross": 226.0,
+          "pnl_net": 213.66,
+          "cost": 12.34,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ATGL",
+          "entry_price": 603.1,
+          "exit_price": 590.75,
+          "qty": 21,
+          "entry_time": "12:31:32",
+          "exit_time": "15:08:08",
+          "pnl": 259.35,
+          "pnl_pct": 2.05,
+          "reason": "TARGET",
+          "pnl_gross": 259.35,
+          "pnl_net": 244.31,
+          "cost": 15.04,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "WIPRO",
+          "entry_price": 192.19,
+          "exit_price": 189.26,
+          "qty": 96,
+          "entry_time": "09:42:14",
+          "exit_time": "15:15:02",
+          "pnl": 281.28,
+          "pnl_pct": 1.52,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 281.28,
+          "pnl_net": 259.31,
+          "cost": 21.97,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "APLAPOLLO",
+          "entry_price": 1910.2,
+          "exit_price": 1878.8,
+          "qty": 8,
+          "entry_time": "10:18:40",
+          "exit_time": "15:15:02",
+          "pnl": 251.2,
+          "pnl_pct": 1.64,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 251.2,
+          "pnl_net": 233.01,
+          "cost": 18.19,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "HCLTECH",
+          "entry_price": 1161.9,
+          "exit_price": 1144.6,
+          "qty": 12,
+          "entry_time": "10:18:40",
+          "exit_time": "15:15:02",
+          "pnl": 207.6,
+          "pnl_pct": 1.49,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 207.6,
+          "pnl_net": 190.99,
+          "cost": 16.61,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "NYKAA",
+          "entry_price": 263.5,
+          "exit_price": 260.7,
+          "qty": 47,
+          "entry_time": "11:30:54",
+          "exit_time": "15:15:02",
+          "pnl": 131.6,
+          "pnl_pct": 1.06,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 131.6,
+          "pnl_net": 116.82,
+          "cost": 14.78,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "PHOENIXLTD",
+          "entry_price": 1758.8,
+          "exit_price": 1728.2,
+          "qty": 9,
+          "entry_time": "11:54:47",
+          "exit_time": "15:15:02",
+          "pnl": 275.4,
+          "pnl_pct": 1.74,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 275.4,
+          "pnl_net": 256.57,
+          "cost": 18.83,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ADANIPORTS",
+          "entry_price": 1716.1,
+          "exit_price": 1684.9,
+          "qty": 6,
+          "entry_time": "12:31:32",
+          "exit_time": "15:15:02",
+          "pnl": 187.2,
+          "pnl_pct": 1.82,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 187.2,
+          "pnl_net": 174.96,
+          "cost": 12.24,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "KALYANKJIL",
+          "entry_price": 367.85,
+          "exit_price": 360.5,
+          "qty": 45,
+          "entry_time": "13:52:40",
+          "exit_time": "15:15:02",
+          "pnl": 330.75,
+          "pnl_pct": 2.0,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 330.75,
+          "pnl_net": 311.08,
+          "cost": 19.67,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "HDFCAMC",
+          "entry_price": 2659.5,
+          "exit_price": 2629.2,
+          "qty": 5,
+          "entry_time": "13:52:40",
+          "exit_time": "15:15:02",
+          "pnl": 151.5,
+          "pnl_pct": 1.14,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 151.5,
+          "pnl_net": 135.63,
+          "cost": 15.87,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "BDL",
+          "entry_price": 1348.9,
+          "exit_price": 1330.9,
+          "qty": 9,
+          "entry_time": "13:52:40",
+          "exit_time": "15:15:02",
+          "pnl": 162.0,
+          "pnl_pct": 1.33,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 162.0,
+          "pnl_net": 147.53,
+          "cost": 14.47,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "LTM",
+          "entry_price": 4154.4,
+          "exit_price": 4135.9,
+          "qty": 2,
+          "entry_time": "13:52:40",
+          "exit_time": "15:15:02",
+          "pnl": 37.0,
+          "pnl_pct": 0.45,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 37.0,
+          "pnl_net": 27.05,
+          "cost": 9.95,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "ADANIENT",
+          "entry_price": 2406.5,
+          "exit_price": 2403.1,
+          "qty": 4,
+          "entry_time": "14:16:15",
+          "exit_time": "15:15:02",
+          "pnl": 13.6,
+          "pnl_pct": 0.14,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 13.6,
+          "pnl_net": 2.06,
+          "cost": 11.54,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "GODREJPROP",
+          "entry_price": 1719.8,
+          "exit_price": 1711.0,
+          "qty": 6,
+          "entry_time": "14:16:15",
+          "exit_time": "15:15:02",
+          "pnl": 52.8,
+          "pnl_pct": 0.51,
+          "reason": "TIME_EXIT",
+          "pnl_gross": 52.8,
+          "pnl_net": 40.45,
+          "cost": 12.35,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        },
+        {
+          "symbol": "UPL",
+          "entry_price": 626.7,
+          "exit_price": 627.0,
+          "qty": 4,
+          "entry_time": "14:48:07",
+          "exit_time": "15:15:02",
+          "pnl": -1.2,
+          "pnl_pct": -0.05,
+          "reason": "TIME_EXIT",
+          "pnl_gross": -1.2,
+          "pnl_net": -4.21,
+          "cost": 3.01,
+          "position_type": "SHORT",
+          "pool": "INTRADAY"
+        }
+      ],
+      "pnl": 3083.7881585693385
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "COALINDIA",
+          "entry_price": 465.25,
+          "qty": 11,
+          "cost": 5117.75,
+          "entry_time": "13:56:45",
+          "entry_date": "2026-05-11",
+          "sl_price": 460.6,
+          "target_price": 476.88,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 467.9,
+          "trough_price": 465.25,
+          "score": 71.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 456",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.88% above VWAP (461)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.73% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-4111 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+6748 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.7x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        }
+      ],
+      "closed": [
+        {
+          "symbol": "TORNTPHARM",
+          "entry_price": 4511.2,
+          "exit_price": 4449.9,
+          "qty": 1,
+          "entry_time": "12:01:14",
+          "exit_time": "09:16:40",
+          "pnl": -61.3,
+          "pnl_pct": -1.36,
+          "reason": "STOPLOSS",
+          "pnl_gross": -61.3,
+          "pnl_net": -66.68,
+          "cost": 5.38,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "IDEA",
+          "entry_price": 12.3,
+          "exit_price": 12.02,
+          "qty": 467,
+          "entry_time": "13:56:45",
+          "exit_time": "09:16:40",
+          "pnl": -130.76,
+          "pnl_pct": -2.28,
+          "reason": "STOPLOSS",
+          "pnl_gross": -130.76,
+          "pnl_net": -137.57,
+          "cost": 6.81,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "ADANIGREEN",
+          "entry_price": 1390.2,
+          "exit_price": 1359.6,
+          "qty": 3,
+          "entry_time": "13:56:45",
+          "exit_time": "09:26:41",
+          "pnl": -91.8,
+          "pnl_pct": -2.2,
+          "reason": "STOPLOSS",
+          "pnl_gross": -91.8,
+          "pnl_net": -96.75,
+          "cost": 4.95,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "ADANIPORTS",
+          "entry_price": 1767.3,
+          "exit_price": 1736.2,
+          "qty": 7,
+          "entry_time": "09:06:39",
+          "exit_time": "09:26:41",
+          "pnl": -217.7,
+          "pnl_pct": -1.76,
+          "reason": "STOPLOSS",
+          "pnl_gross": -217.7,
+          "pnl_net": -232.42,
+          "cost": 14.71,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "TATACONSUM",
+          "entry_price": 1252.9,
+          "exit_price": 1266.1,
+          "qty": 4,
+          "entry_time": "13:56:45",
+          "exit_time": "09:52:16",
+          "pnl": 52.8,
+          "pnl_pct": 1.05,
+          "reason": "STOPLOSS",
+          "pnl_gross": 52.8,
+          "pnl_net": 46.75,
+          "cost": 6.05,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "ZYDUSLIFE",
+          "entry_price": 956.95,
+          "exit_price": 946.5,
+          "qty": 21,
+          "entry_time": "09:06:39",
+          "exit_time": "10:18:39",
+          "pnl": -219.45,
+          "pnl_pct": -1.09,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -219.45,
+          "pnl_net": -243.43,
+          "cost": 23.98,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "HYUNDAI",
+          "entry_price": 1906.9,
+          "exit_price": 1895.7,
+          "qty": 9,
+          "entry_time": "09:06:39",
+          "exit_time": "10:18:39",
+          "pnl": -100.8,
+          "pnl_pct": -0.59,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -100.8,
+          "pnl_net": -121.33,
+          "cost": 20.53,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "BANKINDIA",
+          "entry_price": 143.86,
+          "exit_price": 143.93,
+          "qty": 106,
+          "entry_time": "09:06:39",
+          "exit_time": "10:18:40",
+          "pnl": 7.42,
+          "pnl_pct": 0.05,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 7.42,
+          "pnl_net": -10.88,
+          "cost": 18.3,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "MAXHEALTH",
+          "entry_price": 1037.95,
+          "exit_price": 1039.7,
+          "qty": 16,
+          "entry_time": "09:06:39",
+          "exit_time": "11:00:09",
+          "pnl": 28.0,
+          "pnl_pct": 0.17,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 28.0,
+          "pnl_net": 8.05,
+          "cost": 19.95,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "BIOCON",
+          "entry_price": 394.9,
+          "exit_price": 400.85,
+          "qty": 13,
+          "entry_time": "12:01:14",
+          "exit_time": "11:21:09",
+          "pnl": 77.35,
+          "pnl_pct": 1.51,
+          "reason": "STOPLOSS",
+          "pnl_gross": 77.35,
+          "pnl_net": 71.14,
+          "cost": 6.21,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "NTPC",
+          "entry_price": 399.6,
+          "exit_price": 395.35,
+          "qty": 52,
+          "entry_time": "10:18:40",
+          "exit_time": "12:04:48",
+          "pnl": -221.0,
+          "pnl_pct": -1.06,
+          "reason": "STOPLOSS",
+          "pnl_gross": -221.0,
+          "pnl_net": -245.8,
+          "cost": 24.8,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "INDUSTOWER",
+          "entry_price": 411.25,
+          "exit_price": 405.75,
+          "qty": 12,
+          "entry_time": "12:01:14",
+          "exit_time": "12:14:50",
+          "pnl": -66.0,
+          "pnl_pct": -1.34,
+          "reason": "STOPLOSS",
+          "pnl_gross": -66.0,
+          "pnl_net": -71.88,
+          "cost": 5.88,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "MARICO",
+          "entry_price": 848.35,
+          "exit_price": 834.0,
+          "qty": 5,
+          "entry_time": "13:56:45",
+          "exit_time": "14:02:41",
+          "pnl": -71.75,
+          "pnl_pct": -1.69,
+          "reason": "STOPLOSS",
+          "pnl_gross": -71.75,
+          "pnl_net": -76.8,
+          "cost": 5.05,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "LAURUSLABS",
+          "entry_price": 1271.5,
+          "exit_price": 1268.3,
+          "qty": 4,
+          "entry_time": "13:56:45",
+          "exit_time": "14:26:16",
+          "pnl": -12.8,
+          "pnl_pct": -0.25,
+          "reason": "STOPLOSS",
+          "pnl_gross": -12.8,
+          "pnl_net": -18.9,
+          "cost": 6.1,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "ONGC",
+          "entry_price": 298.75,
+          "exit_price": 295.3,
+          "qty": 63,
+          "entry_time": "10:18:40",
+          "exit_time": "14:48:07",
+          "pnl": -217.35,
+          "pnl_pct": -1.15,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -217.35,
+          "pnl_net": -239.81,
+          "cost": 22.46,
+          "position_type": "LONG",
+          "pool": "SWING"
+        },
+        {
+          "symbol": "MCX",
+          "entry_price": 3209.9,
+          "exit_price": 3162.4,
+          "qty": 1,
+          "entry_time": "13:56:45",
+          "exit_time": "14:58:08",
+          "pnl": -47.5,
+          "pnl_pct": -1.48,
+          "reason": "STOPLOSS",
+          "pnl_gross": -47.5,
+          "pnl_net": -51.32,
+          "cost": 3.82,
+          "position_type": "LONG",
+          "pool": "SWING"
+        }
+      ],
+      "pnl": -1292.6426683044488
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": 1791.1454902648898,
+    "trades": 49,
+    "wins": 28,
+    "losses": 21,
+    "longs": 16,
+    "shorts": 33,
+    "scan_count": 31,
+    "rescore_count": 11,
+    "total_pnl_net": 1034.0108847610138,
+    "total_cost": 757.1346055038756
+  },
+  "last_rescore_time": "14:46:17",
+  "last_signals": [
+    {
+      "symbol": "VEDL",
+      "direction": "BUY",
+      "score": 58.7,
+      "pool": "INVESTMENT",
+      "entry_price": 303.1,
+      "sl_price": 297.04,
+      "target_price": 310.98,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.76% below VWAP (306)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative strength +1.58% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 303.1,
+      "change_pct": 1.5750670241287017,
+      "trend": "Sideways",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 1
+    },
+    {
+      "symbol": "UNITDSPR",
+      "direction": "BUY",
+      "score": 54.6,
+      "pool": "INVESTMENT",
+      "entry_price": 1254.3,
+      "sl_price": 1235.49,
+      "target_price": 1279.39,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1254.3,
+      "change_pct": -0.9319958928994515,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 2
+    },
+    {
+      "symbol": "YESBANK",
+      "direction": "HOLD",
+      "score": 48.6,
+      "pool": "NONE",
+      "entry_price": 22.18,
+      "sl_price": 21.6,
+      "target_price": 22.62,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -1.18% below VWAP (22)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.29% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -2.3%",
+          "type": "negative"
+        }
+      ],
+      "price": 22.18,
+      "change_pct": -2.2907488986784124,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 3
+    },
+    {
+      "symbol": "VBL",
+      "direction": "HOLD",
+      "score": 48.0,
+      "pool": "NONE",
+      "entry_price": 491.8,
+      "sl_price": 481.96,
+      "target_price": 499.18,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.97% below VWAP (497)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.90% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        }
+      ],
+      "price": 491.8,
+      "change_pct": -1.8950728106922003,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 4
+    },
+    {
+      "symbol": "ZYDUSLIFE",
+      "direction": "HOLD",
+      "score": 47.7,
+      "pool": "NONE",
+      "entry_price": 935.0,
+      "sl_price": 910.69,
+      "target_price": 953.7,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.94% below VWAP (944)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.29% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -2.3%",
+          "type": "negative"
+        }
+      ],
+      "price": 935.0,
+      "change_pct": -2.293745754741632,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 5
+    },
+    {
+      "symbol": "VMM",
+      "direction": "HOLD",
+      "score": 41.9,
+      "pool": "NONE",
+      "entry_price": 119.19,
+      "sl_price": 116.09,
+      "target_price": 121.57,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.99% below VWAP (120)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.30% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -2.3%",
+          "type": "negative"
+        }
+      ],
+      "price": 119.19,
+      "change_pct": -2.303278688524592,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 6
+    },
+    {
+      "symbol": "WIPRO",
+      "direction": "HOLD",
+      "score": 40.0,
+      "pool": "NONE",
+      "entry_price": 189.9,
+      "sl_price": 184.96,
+      "target_price": 193.7,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.83% below VWAP (191)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -3.45% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -3.4%",
+          "type": "negative"
+        }
+      ],
+      "price": 189.9,
+      "change_pct": -3.4472239170225754,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 7
+    },
+    {
+      "symbol": "VOLTAS",
+      "direction": "HOLD",
+      "score": 39.2,
+      "pool": "NONE",
+      "entry_price": 1274.5,
+      "sl_price": 1241.36,
+      "target_price": 1299.99,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -2.19% below VWAP (1303)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.45% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -2.4%",
+          "type": "negative"
+        }
+      ],
+      "price": 1274.5,
+      "change_pct": -2.4492920015308077,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 8
+    },
+    {
+      "symbol": "WAAREEENER",
+      "direction": "HOLD",
+      "score": 37.7,
+      "pool": "NONE",
+      "entry_price": 3125.5,
+      "sl_price": 3044.24,
+      "target_price": 3188.01,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -1.54% below VWAP (3174)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.60% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -2.6%",
+          "type": "negative"
+        }
+      ],
+      "price": 3125.5,
+      "change_pct": -2.595986038394421,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 9
+    },
+    {
+      "symbol": "UPL",
+      "direction": "SELL",
+      "score": 33.1,
+      "pool": "INTRADAY",
+      "entry_price": 626.7,
+      "sl_price": 629.83,
+      "target_price": 614.17,
+      "riskReward": 1.3,
+      "position_type": "SHORT",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -2.46% below VWAP (642)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -6.32% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "Volume surge (2.0x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -6.3%",
+          "type": "negative"
+        }
+      ],
+      "price": 626.7,
+      "change_pct": -6.3228699551569445,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 10,
+      "short_metrics": {
+        "short_score": 71.8,
+        "weakness": 66.9,
+        "rel_weakness_vs_nifty": -4.84,
+        "vol_confirm_selling": false,
+        "below_vwap": true,
+        "orb_breakdown": true,
+        "rs_weak": true
+      }
+    }
+  ],
+  "reentry_blocker": {
+    "max_sl": 2,
+    "sl_count": {
+      "TORNTPHARM|LONG": 1,
+      "IDEA|LONG": 1,
+      "ADANIGREEN|LONG": 1,
+      "ADANIPORTS|LONG": 1,
+      "INDHOTEL|SHORT": 1,
+      "LTM|SHORT": 1,
+      "TATACONSUM|LONG": 1,
+      "SUZLON|SHORT": 1,
+      "BIOCON|LONG": 1,
+      "NTPC|LONG": 1,
+      "INDUSTOWER|LONG": 1,
+      "TCS|SHORT": 1,
+      "PERSISTENT|SHORT": 1,
+      "HYUNDAI|SHORT": 1,
+      "MARICO|LONG": 1,
+      "INFY|SHORT": 1,
+      "ADANIPOWER|SHORT": 1,
+      "LAURUSLABS|LONG": 1,
+      "MCX|LONG": 1
+    }
+  },
+  "alpha_hunter_ran": true,
+  "rearmable": {
+    "ASHOKLEY": {
+      "direction": "SELL",
+      "remaining": 3,
+      "expires_at_minute": 360
+    },
+    "LTF": {
+      "direction": "SELL",
+      "remaining": 3,
+      "expires_at_minute": 360
+    },
+    "DIXON": {
+      "direction": "SELL",
+      "remaining": 3,
+      "expires_at_minute": 360
+    },
+    "ATGL": {
+      "direction": "SELL",
+      "remaining": 3,
+      "expires_at_minute": 360
+    }
+  }
+}

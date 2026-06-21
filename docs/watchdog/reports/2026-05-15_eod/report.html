@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>TradePilot EOD Report — 2026-05-15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..800,0..100&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══ TradePilot EOD Report — editorial fintech (matches landing/dashboard) ═══ */
+@page { size: A4; margin: 16mm 14mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #FAF7F0; --paper-2: #F1ECE0; --paper-3: #E8E1CD;
+  --ink: #0E0F12; --ink-2: #2A2C32; --ink-3: #5C5F66; --ink-4: #8A8D94;
+  --line: #0E0F12; --line-soft: rgba(14,15,18,0.18); --hairline: rgba(14,15,18,0.14);
+  --saffron: #E07F2C; --saffron-2: #C46419; --saffron-3: #F3D8B6;
+  --up: #0E7C4E; --down: #A1242C;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Manrope', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+body {
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  color: var(--ink);
+  line-height: 1.55;
+  background: var(--paper);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 350;
+  font-variation-settings: "opsz" 96, "SOFT" 30;
+  letter-spacing: -0.018em;
+  line-height: 1.05;
+}
+h1 { font-size: 36pt; }
+h2 { font-size: 20pt; margin: 1.4em 0 0.4em; }
+h3 { font-size: 13pt; margin: 1em 0 0.3em; font-weight: 500; font-variation-settings: "opsz" 36; }
+em { font-style: italic; font-variation-settings: "opsz" 96, "SOFT" 100; color: var(--saffron); }
+
+/* ─── Cover / masthead ─── */
+.masthead {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 30px;
+  align-items: end;
+}
+.masthead .ttl { display: flex; flex-direction: column; gap: 6px; }
+.masthead .eyebrow {
+  font-family: var(--mono);
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--saffron);
+}
+.masthead .meta {
+  font-family: var(--mono);
+  font-size: 8.5pt;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+/* ─── Section numbers (№ 01 / № 02 / ...) ─── */
+.section-num {
+  font-family: var(--mono);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--saffron);
+  text-transform: uppercase;
+  margin-top: 1.2em;
+  margin-bottom: 4px;
+}
+
+/* ─── KPI strip ─── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+.kpi {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 14px 16px 12px;
+  position: relative;
+}
+.kpi.pos { background: var(--paper-2); }
+.kpi .label {
+  font-family: var(--mono);
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}
+.kpi .value {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 22pt;
+  letter-spacing: -0.025em;
+  margin-top: 2px;
+  line-height: 1;
+}
+.kpi.pos .value { color: var(--up); }
+.kpi.neg .value { color: var(--down); }
+.kpi .small { font-size: 8.5pt; color: var(--ink-3); margin-top: 6px; font-family: var(--sans); }
+.kpi.featured { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.kpi.featured .label { color: rgba(250,247,240,0.55); }
+.kpi.featured .value { color: var(--saffron); }
+.kpi.featured .small { color: rgba(250,247,240,0.7); }
+
+/* ─── Tables ─── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 14px;
+  font-size: 9.5pt;
+  border: 1px solid var(--line);
+}
+thead th {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 7px 10px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 9.5pt;
+}
+tbody tr:last-child td { border-bottom: none; }
+tr.row-win td { background: rgba(14,124,78,0.04); }
+tr.row-loss td { background: rgba(161,36,44,0.04); }
+tr.row-lead td { background: rgba(224,127,44,0.08); font-weight: 600; }
+tr.row-lead td:first-child { position: relative; }
+tr.row-lead td:first-child::before {
+  content: '★';
+  color: var(--saffron);
+  margin-right: 4px;
+}
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.green { color: var(--up); font-weight: 600; }
+.red { color: var(--down); font-weight: 600; }
+.muted { color: var(--ink-3); }
+.small { font-size: 8.5pt; }
+
+/* ─── Insight blocks (editorial pull-quote treatment) ─── */
+.insight {
+  border-left: 3px solid var(--saffron);
+  padding: 10px 14px;
+  margin: 8px 0;
+  background: var(--paper-2);
+  font-family: var(--sans);
+  font-size: 10pt;
+  line-height: 1.55;
+}
+.insight.warn { border-left-color: var(--down); background: rgba(161,36,44,0.04); }
+.insight.good { border-left-color: var(--up); background: rgba(14,124,78,0.04); }
+.insight b { color: var(--ink); font-weight: 700; }
+
+/* ─── Chart frames ─── */
+.chart { text-align: center; margin: 8px 0 14px; }
+.chart img {
+  max-width: 100%;
+  border: 1px solid var(--line-soft);
+  background: var(--paper);
+  padding: 4px;
+}
+
+/* ─── Misc ─── */
+p.lede {
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  color: var(--ink-2);
+  font-weight: 430;
+  max-width: 70ch;
+  margin: 4px 0 12px;
+}
+.page-break { page-break-before: always; }
+.footer {
+  font-family: var(--mono);
+  font-size: 8pt;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  margin-top: 2em;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+}
+</style></head>
+<body>
+
+<header class="masthead">
+  <div class="ttl">
+    <span class="eyebrow">№ EOD REPORT  ·  TRADEPILOT</span>
+    <h1>The fleet, <em>2026-05-15.</em></h1>
+  </div>
+  <div class="meta">
+    Engines covered &nbsp;·&nbsp; <b style="color:var(--ink);">7</b><br>
+    Generated &nbsp;·&nbsp; 15:35:08
+  </div>
+</header>
+
+<div class="section-num">№ 01  ·  AT A GLANCE</div>
+
+<div class="kpi-row">
+  <div class="kpi featured"><div class="label">Day's Winner</div>
+    <div class="value">v6</div>
+    <div class="small">Rs +306  ·  44 trades  ·  56.8% wins</div>
+  </div>
+  <div class="kpi pos"><div class="label">Engines Profitable</div>
+    <div class="value">2 <span style="font-size:11pt;color:var(--ink-3);font-weight:500;">/ 7</span></div>
+    <div class="small">Negative: 5</div>
+  </div>
+  <div class="kpi"><div class="label">Best Single Trade</div>
+    <div class="value">Rs +686</div>
+    <div class="small">v4  ·  TMPV</div>
+  </div>
+</div>
+
+<div class="section-num">№ 02  ·  SCOREBOARD</div>
+<p class="lede">Per-engine performance ranked by net P&L. Star marks the day's leader; rows tinted by outcome.</p>
+<table><thead><tr>
+  <th>Rank</th><th>Engine</th><th class="num">Trades</th><th class="num">Win %</th>
+  <th class="num">Avg Win</th><th class="num">Avg Loss</th><th class="num">Net P&L</th>
+</tr></thead><tbody>
+<tr class="row-lead">
+  <td>1</td>
+  <td><b>v6</b></td>
+  <td class="num">44</td>
+  <td class="num">56.8%</td>
+  <td class="num green">Rs +81</td>
+  <td class="num red">Rs -95</td>
+  <td class="num green">Rs +306</td>
+</tr>
+<tr class="row-win">
+  <td>2</td>
+  <td><b>v5_7</b></td>
+  <td class="num">39</td>
+  <td class="num">48.7%</td>
+  <td class="num green">Rs +83</td>
+  <td class="num red">Rs -79</td>
+  <td class="num green">Rs +1</td>
+</tr>
+<tr class="row-loss">
+  <td>3</td>
+  <td><b>v5</b></td>
+  <td class="num">47</td>
+  <td class="num">51.1%</td>
+  <td class="num green">Rs +62</td>
+  <td class="num red">Rs -82</td>
+  <td class="num red">Rs -391</td>
+</tr>
+<tr class="row-loss">
+  <td>4</td>
+  <td><b>v5_classic</b></td>
+  <td class="num">47</td>
+  <td class="num">51.1%</td>
+  <td class="num green">Rs +70</td>
+  <td class="num red">Rs -93</td>
+  <td class="num red">Rs -457</td>
+</tr>
+<tr class="row-loss">
+  <td>5</td>
+  <td><b>v5_6</b></td>
+  <td class="num">42</td>
+  <td class="num">50.0%</td>
+  <td class="num green">Rs +66</td>
+  <td class="num red">Rs -113</td>
+  <td class="num red">Rs -996</td>
+</tr>
+<tr class="row-loss">
+  <td>6</td>
+  <td><b>v5_8</b></td>
+  <td class="num">56</td>
+  <td class="num">28.6%</td>
+  <td class="num green">Rs +68</td>
+  <td class="num red">Rs -60</td>
+  <td class="num red">Rs -1,321</td>
+</tr>
+<tr class="row-loss">
+  <td>7</td>
+  <td><b>v4</b></td>
+  <td class="num">81</td>
+  <td class="num">23.5%</td>
+  <td class="num green">Rs +227</td>
+  <td class="num red">Rs -170</td>
+  <td class="num red">Rs -6,202</td>
+</tr>
+<tr><td>-</td><td>v5_2</td><td colspan="5" class="muted">no_data</td></tr>
+<tr><td>-</td><td>v5_3</td><td colspan="5" class="muted">no_data</td></tr>
+</tbody></table>
+
+<div class="chart"><img src="charts/scoreboard.png" alt="Scoreboard"></div>
+
+<div class="page-break"></div>
+
+<div class="section-num">№ 03  ·  TIMELINE</div>
+<h2>How the day <em>unfolded.</em></h2>
+<p class="lede">Cumulative profit per engine through the trading session. 30-minute snapshots from the profit-watchdog. Where lines diverge, that's where the engines started disagreeing about the regime.</p>
+<div class="chart"><img src="charts/pnl_timeline.png" alt="PnL Timeline"></div>
+
+<div class="section-num">№ 04  ·  EFFICIENCY</div>
+<h2>Trade volume <em>vs.</em> hit rate.</h2>
+<p class="lede">Bubble size is absolute P&L. Top-right of the plot — high win rate at high volume — is the engine you want to scale. Bottom-left is the one to retire or refactor.</p>
+<div class="chart"><img src="charts/winrate_bubble.png" alt="Win Rate vs Trades"></div>
+
+<div class="page-break"></div>
+
+<div class="section-num">№ 05  ·  EXIT MIX</div>
+<h2>Where the trades <em>ended.</em></h2>
+<p class="lede">A useful diagnostic: an engine dominated by STOPLOSS exits is being stopped out by noise; an engine dominated by SIGNAL_EXIT is reading regime shifts; an engine dominated by TARGET is letting winners run.</p>
+<div class="chart"><img src="charts/exit_mix.png" alt="Exit Mix"></div>
+
+<div class="section-num">№ 06  ·  OVERLAP</div>
+<h2>Where engines <em>agreed.</em></h2>
+<p class="lede">Symbols touched by two engines today, and the P&L gap between them. High overlap with very different outcomes points at the part of the logic that decides the trade.</p>
+<table><thead><tr><th>Pair</th><th class='num'>Shared symbols</th><th class='num'>P&L gap (a - b)</th><th>Sample</th></tr></thead><tbody><tr><td><b>v5</b> vs <b>v5_classic</b></td><td class='num'>36</td><td class='num'>Rs +66</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, AUBANK, BANKBARODA, BHARTIARTL...</td></tr>
+<tr><td><b>v5_classic</b> vs <b>v6</b></td><td class='num'>35</td><td class='num'>Rs -762</td><td class='small muted'>ADANIENT, ADANIGREEN, ADANIPORTS, ALKEM, AUBANK, BANKBARODA...</td></tr>
+<tr><td><b>v5_classic</b> vs <b>v5_7</b></td><td class='num'>34</td><td class='num'>Rs -458</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, ADANIPORTS, AUBANK, BHARTIARTL...</td></tr>
+<tr><td><b>v5_classic</b> vs <b>v5_6</b></td><td class='num'>33</td><td class='num'>Rs +540</td><td class='small muted'>ABCAPITAL, ADANIENSOL, ADANIENT, ADANIGREEN, ADANIPORTS, BANKBARODA...</td></tr>
+<tr><td><b>v5</b> vs <b>v6</b></td><td class='num'>32</td><td class='num'>Rs -696</td><td class='small muted'>ADANIENT, ADANIGREEN, AUBANK, BANKBARODA, BHEL, BIOCON...</td></tr>
+<tr><td><b>v5</b> vs <b>v5_6</b></td><td class='num'>31</td><td class='num'>Rs +606</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, BANKBARODA, BHEL, BIOCON...</td></tr>
+<tr><td><b>v5</b> vs <b>v5_7</b></td><td class='num'>31</td><td class='num'>Rs -392</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, AUBANK, BHARTIARTL, BHEL...</td></tr>
+<tr><td><b>v5_6</b> vs <b>v6</b></td><td class='num'>30</td><td class='num'>Rs -1,302</td><td class='small muted'>ADANIENT, ADANIGREEN, ADANIPORTS, ADANIPOWER, BANKBARODA, BHEL...</td></tr>
+<tr><td><b>v5_7</b> vs <b>v6</b></td><td class='num'>29</td><td class='num'>Rs -305</td><td class='small muted'>ADANIENT, ADANIGREEN, ADANIPORTS, AUBANK, BHEL, BIOCON...</td></tr>
+<tr><td><b>v4</b> vs <b>v5_8</b></td><td class='num'>28</td><td class='num'>Rs -4,881</td><td class='small muted'>ABCAPITAL, ADANIENT, BHARTIARTL, BIOCON, BLUESTARCO, COALINDIA...</td></tr>
+<tr><td><b>v5_6</b> vs <b>v5_7</b></td><td class='num'>28</td><td class='num'>Rs -997</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, ADANIPORTS, BHEL, BIOCON...</td></tr>
+<tr><td><b>v5</b> vs <b>v5_8</b></td><td class='num'>27</td><td class='num'>Rs +931</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, AUBANK, BHARTIARTL, BHEL...</td></tr>
+<tr><td><b>v5_classic</b> vs <b>v5_8</b></td><td class='num'>25</td><td class='num'>Rs +865</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, AUBANK, BHARTIARTL, BHEL...</td></tr>
+<tr><td><b>v5_7</b> vs <b>v5_8</b></td><td class='num'>24</td><td class='num'>Rs +1,322</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, AUBANK, BHARTIARTL, BHEL...</td></tr>
+<tr><td><b>v5_6</b> vs <b>v5_8</b></td><td class='num'>22</td><td class='num'>Rs +325</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIGREEN, ADANIPOWER, BHEL, BIOCON...</td></tr>
+<tr><td><b>v5_8</b> vs <b>v6</b></td><td class='num'>21</td><td class='num'>Rs -1,627</td><td class='small muted'>ADANIENT, ADANIGREEN, ADANIPOWER, AUBANK, BHEL, BIOCON...</td></tr>
+<tr><td><b>v4</b> vs <b>v5</b></td><td class='num'>14</td><td class='num'>Rs -5,811</td><td class='small muted'>ABCAPITAL, ADANIENT, BHARTIARTL, BIOCON, BSE, KOTAKBANK...</td></tr>
+<tr><td><b>v4</b> vs <b>v5_classic</b></td><td class='num'>14</td><td class='num'>Rs -5,745</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIPORTS, BHARTIARTL, BIOCON, BLUESTARCO...</td></tr>
+<tr><td><b>v4</b> vs <b>v5_7</b></td><td class='num'>14</td><td class='num'>Rs -6,203</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIPORTS, BHARTIARTL, BIOCON, BLUESTARCO...</td></tr>
+<tr><td><b>v4</b> vs <b>v5_6</b></td><td class='num'>12</td><td class='num'>Rs -5,206</td><td class='small muted'>ABCAPITAL, ADANIENT, ADANIPORTS, BIOCON, BLUESTARCO, BSE...</td></tr>
+<tr><td><b>v4</b> vs <b>v6</b></td><td class='num'>11</td><td class='num'>Rs -6,508</td><td class='small muted'>ADANIENT, ADANIPORTS, BIOCON, BLUESTARCO, BSE, KOTAKBANK...</td></tr></tbody></table>
+
+<div class="page-break"></div>
+
+<div class="section-num">№ 07  ·  TONIGHT'S TUNE-UPS</div>
+<h2>Patterns the watchdog <em>surfaced.</em></h2>
+<p class="lede">Auto-extracted observations from the day's data — starting points for the post-market review, not conclusions in themselves. Verify against the per-engine detail in section 08 before acting.</p>
+<div class="insight good">Winner: <b>v6</b> with Rs +306 across 44 trades (56.8% win).</div>
+<div class="insight warn">Laggard: <b>v4</b> with Rs -6,202 across 81 trades (23.5% win).</div>
+<div class="insight">Low-volume engines outperformed — selectivity beat volume today (low-vol avg Rs -308 vs high-vol Rs -3,762).</div>
+<div class="insight good">v5 trade-throttling fix <b>worked</b>: v5 did 47 trades today vs 42 for v5.6 (yesterday v5 was stuck at 10).</div>
+<div class="insight warn"><b>v4</b>: STOPLOSS (18) >= TARGET (5). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5</b>: STOPLOSS (21) >= TARGET (1). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5_classic</b>: STOPLOSS (21) >= TARGET (1). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5_6</b>: STOPLOSS (11) >= TARGET (4). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5_7</b>: STOPLOSS (18) >= TARGET (1). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5_8</b>: STOPLOSS (21) >= TARGET (4). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v6</b>: STOPLOSS (9) >= TARGET (3). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v4</b>: 23.5% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5</b>: 51.1% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_classic</b>: 51.1% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_6</b>: 50.0% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_7</b>: 48.7% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_8</b>: 28.6% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v6</b>: 56.8% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+
+<div class="section-num">№ 08  ·  PER-ENGINE DETAIL</div>
+
+<h3>v4 — Rs -6,202 · 81 trades · 23.5%</h3>
+<p class="small muted">Regime: ? · open positions at EOD: 0 · exits: TIME_EXIT:37 · SIGNAL_EXIT:21 · STOPLOSS:18 · TARGET:5</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>TMPV</td><td class='num green'>Rs +686</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>PATANJALI</td><td class='num green'>Rs +680</td><td class='small muted'>TARGET</td></tr><tr><td>3</td><td>KOTAKBANK</td><td class='num green'>Rs +525</td><td class='small muted'>TARGET</td></tr><tr><td>4</td><td>LGEINDIA</td><td class='num green'>Rs +452</td><td class='small muted'>TARGET</td></tr><tr><td>5</td><td>MCX</td><td class='num green'>Rs +353</td><td class='small muted'>TARGET</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>IDEA</td><td class='num red'>Rs -549</td><td class='small muted'>SIGNAL_EXIT</td></tr><tr><td>2</td><td>PERSISTENT</td><td class='num red'>Rs -394</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>OFSS</td><td class='num red'>Rs -387</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>ASHOKLEY</td><td class='num red'>Rs -377</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>HDFCBANK</td><td class='num red'>Rs -376</td><td class='small muted'>SIGNAL_EXIT</td></tr></tbody></table>
+
+
+<h3>v5 — Rs -391 · 47 trades · 51.1%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 3 · exits: STOPLOSS:21 · TIME_EXIT:14 · FLAT_FORCE_EXIT:6 · SIGNAL_FLIP:5 · TARGET:1</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>IOC</td><td class='num green'>Rs +436</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>BPCL</td><td class='num green'>Rs +228</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>3</td><td>HINDZINC</td><td class='num green'>Rs +139</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>MANKIND</td><td class='num green'>Rs +127</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>DIVISLAB</td><td class='num green'>Rs +84</td><td class='small muted'>TIME_EXIT</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>HINDALCO</td><td class='num red'>Rs -246</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>ADANIGREEN</td><td class='num red'>Rs -221</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>BHEL</td><td class='num red'>Rs -200</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>IDFCFIRSTB</td><td class='num red'>Rs -141</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>VEDL</td><td class='num red'>Rs -136</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+
+
+<h3>v5_classic — Rs -457 · 47 trades · 51.1%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 0 · exits: STOPLOSS:21 · TIME_EXIT:17 · SIGNAL_FLIP:8 · TARGET:1</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>IOC</td><td class='num green'>Rs +439</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>ADANIPORTS</td><td class='num green'>Rs +269</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>3</td><td>BPCL</td><td class='num green'>Rs +224</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>4</td><td>HINDZINC</td><td class='num green'>Rs +139</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>HAL</td><td class='num green'>Rs +135</td><td class='small muted'>TIME_EXIT</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>ADANIENSOL</td><td class='num red'>Rs -349</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>ADANIGREEN</td><td class='num red'>Rs -241</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>BHEL</td><td class='num red'>Rs -217</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>IDFCFIRSTB</td><td class='num red'>Rs -141</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>VEDL</td><td class='num red'>Rs -138</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+
+
+<h3>v5_6 — Rs -996 · 42 trades · 50.0%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 0 · exits: TIME_EXIT:16 · STOPLOSS:11 · SIGNAL_FLIP:11 · TARGET:4</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>BPCL</td><td class='num green'>Rs +236</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>2</td><td>ADANIPORTS</td><td class='num green'>Rs +230</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>3</td><td>BIOCON</td><td class='num green'>Rs +209</td><td class='small muted'>TARGET</td></tr><tr><td>4</td><td>HAL</td><td class='num green'>Rs +180</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>5</td><td>HINDZINC</td><td class='num green'>Rs +155</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>ADANIPOWER</td><td class='num red'>Rs -369</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>ADANIENSOL</td><td class='num red'>Rs -349</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>HINDALCO</td><td class='num red'>Rs -342</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>4</td><td>BHEL</td><td class='num red'>Rs -307</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>5</td><td>TATACOMM</td><td class='num red'>Rs -190</td><td class='small muted'>SIGNAL_FLIP</td></tr></tbody></table>
+
+
+<h3>v5_7 — Rs +1 · 39 trades · 48.7%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 0 · exits: STOPLOSS:18 · TIME_EXIT:12 · SIGNAL_FLIP:8 · TARGET:1</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>IOC</td><td class='num green'>Rs +436</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>ADANIPORTS</td><td class='num green'>Rs +263</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>3</td><td>BPCL</td><td class='num green'>Rs +224</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>4</td><td>HINDZINC</td><td class='num green'>Rs +149</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>HAL</td><td class='num green'>Rs +135</td><td class='small muted'>TIME_EXIT</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>ADANIGREEN</td><td class='num red'>Rs -229</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>BHEL</td><td class='num red'>Rs -213</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>VEDL</td><td class='num red'>Rs -137</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>TATACOMM</td><td class='num red'>Rs -120</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>5</td><td>ABCAPITAL</td><td class='num red'>Rs -109</td><td class='small muted'>SIGNAL_FLIP</td></tr></tbody></table>
+
+
+<h3>v5_8 — Rs -1,321 · 56 trades · 28.6%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 6 · exits: STOPLOSS:21 · SIGNAL_FLIP:20 · FLAT_FORCE_EXIT:7 · TARGET:4 · TIME_EXIT:4</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>TATACOMM</td><td class='num green'>Rs +306</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>MCX</td><td class='num green'>Rs +205</td><td class='small muted'>TARGET</td></tr><tr><td>3</td><td>BHARTIARTL</td><td class='num green'>Rs +201</td><td class='small muted'>TARGET</td></tr><tr><td>4</td><td>IOC</td><td class='num green'>Rs +109</td><td class='small muted'>TARGET</td></tr><tr><td>5</td><td>ADANIENT</td><td class='num green'>Rs +76</td><td class='small muted'>SIGNAL_FLIP</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>VEDL</td><td class='num red'>Rs -408</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>ADANIPOWER</td><td class='num red'>Rs -345</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>NATIONALUM</td><td class='num red'>Rs -214</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>HINDALCO</td><td class='num red'>Rs -192</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>HINDALCO</td><td class='num red'>Rs -169</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+
+
+<h3>v6 — Rs +306 · 44 trades · 56.8%</h3>
+<p class="small muted">Regime: BEAR · open positions at EOD: 1 · exits: TIME_EXIT:19 · FLAT_FORCE_EXIT:11 · STOPLOSS:9 · TARGET:3 · SIGNAL_FLIP:2</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>IOC</td><td class='num green'>Rs +327</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>ADANIENT</td><td class='num green'>Rs +302</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>HINDZINC</td><td class='num green'>Rs +220</td><td class='small muted'>TARGET</td></tr><tr><td>4</td><td>BPCL</td><td class='num green'>Rs +208</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>5</td><td>ADANIPORTS</td><td class='num green'>Rs +186</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>ADANIPOWER</td><td class='num red'>Rs -401</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>ADANIGREEN</td><td class='num red'>Rs -221</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>HINDALCO</td><td class='num red'>Rs -210</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>BHEL</td><td class='num red'>Rs -200</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>IDFCFIRSTB</td><td class='num red'>Rs -178</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+
+
+<div class="footer">
+  <span>TRADEPILOT  ·  watchdog  ·  2026-05-15</span>
+  <span>uncommitted engine diffs preserved on main</span>
+</div>
+</body></html>

@@ -95,6 +95,10 @@ def _record_send():
 
 def send_alert(message: str) -> bool:
     """Send a plain-text (Markdown-parsed) message to the configured chat."""
+    # Per-process kill switch so a shadow A/B engine (e.g. v5_noml) stays silent
+    # and doesn't double-notify. Defaults off — live engines are unaffected.
+    if os.environ.get("TELEGRAM_DISABLE") == "1":
+        return False
     cfg = _load_config()
     if not cfg.get("enabled"):
         return False

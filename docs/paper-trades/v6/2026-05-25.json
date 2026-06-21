@@ -1,0 +1,129 @@
+{
+  "date": "2026-05-25",
+  "engine": "v6",
+  "started_at": "10:38:19",
+  "total_capital": 1043889.84,
+  "regime": "BEAR",
+  "premarket": {
+    "timestamp": "2026-05-25T10:38:26",
+    "gap_prediction": {
+      "direction": "UP",
+      "magnitude_pct": 1.13,
+      "confidence": 0.79,
+      "source": "gift_nifty"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "volume_price_proxy"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": 0.37,
+      "asia_change": 2.0,
+      "details": {
+        "sp500": 0.37,
+        "hangseng": 0.86,
+        "nikkei": 3.14
+      }
+    },
+    "overall": {
+      "bias": "BULLISH",
+      "score": 1,
+      "size_multiplier": 0.8,
+      "reasons": [
+        "Gap-up +1.1% (gift_nifty)"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "UNITDSPR",
+          "entry_price": 1326.7,
+          "qty": 10,
+          "cost": 13267.0,
+          "entry_time": "09:46:04",
+          "entry_date": "2026-05-15",
+          "sl_price": 1313.43,
+          "target_price": 1359.87,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 1337.9,
+          "trough_price": 1326.7,
+          "score": 71.2,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1323",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.01% above VWAP (1318)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +3.90% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+187 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+684 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.3%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 10
+        }
+      ],
+      "closed": [],
+      "pnl": 0
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": 0,
+    "trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "longs": 0,
+    "shorts": 0,
+    "scan_count": 0,
+    "rescore_count": 0
+  },
+  "last_rescore_time": null,
+  "last_signals": []
+}

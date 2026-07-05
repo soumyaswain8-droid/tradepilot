@@ -60,9 +60,15 @@ existing engine), behavior is byte-for-byte identical.
 
 | Param | Today (hardcoded) | v8 value | File | Env var |
 |---|---|---|---|---|
-| Position cap | `MAX_POSITIONS_TOTAL = 20` | `5` | `prototype/v5/risk_manager.py` | `MAX_POSITIONS_TOTAL` |
-| Bracket target | `TARGET_PCT = 3.0` | `1.5` | `prototype/v5/alpha_hunter.py` | `TARGET_PCT` |
-| Stop | `TRAILING_STOP_PCT = 0.7` (trailing) | `0.75` **fixed** | `prototype/v5/alpha_hunter.py` | `STOP_PCT` + `STOP_MODE` |
+| Position cap | `MAX_POSITIONS_TOTAL = 20` | `5` | `prototype/v5/risk_manager.py:50` | `MAX_POSITIONS_TOTAL` |
+| Bracket target | `tgt = price * 1.02` fallback | `1.5` | `scripts/v5-paper-trade.py:495` (deploy_signals) | `TARGET_PCT` |
+| Stop | `_sl_pct = 0.015` + trailing (`v5-paper-trade.py:45,660`) | `0.75` **fixed** | `scripts/v5-paper-trade.py:493,650,660` | `STOP_PCT` + `STOP_MODE` |
+
+**Correction vs. earlier draft:** the primary bracket is set in `scripts/v5-paper-trade.py deploy_signals`
+(sl/tgt fallback at lines 493–495) and enforced with a trailing stop (lines 45, 650–666), **not** in
+`alpha_hunter.py` (a secondary rotation module). When `TARGET_PCT`/`STOP_PCT` are set, they *replace*
+the sl/tgt computed in `deploy_signals`; `STOP_MODE=fixed` disables the trailing branch so the stop
+stays at the fixed −0.75 level. Only the position cap lives in `risk_manager.py`.
 
 The stop change is not just a number — April used a **fixed** stop, current code **trails**. So a
 `STOP_MODE` flag (`fixed` \| `trailing`, default `trailing`) gates the behavior; `STOP_PCT` supplies
@@ -85,10 +91,14 @@ confirm avg entry time near market open) rather than assume it.
 ## 7. The 5-tree ML twin
 
 - **Model:** LightGBM at `n_estimators=5` (vs the retired ~1,735/2,000-tree overfit). Existing training
-  pipeline `scripts/train-tiered-models.py` already parameterizes `n_estimators`, so this is a
-  hyperparameter + output-path change, not new infra.
-- **Training data:** the **Apr–Jul labeled paper-trade history** we already have on disk (trade rows
-  with entry features and win/loss outcomes), reusing the existing feature computation.
+  pipeline `scripts/train-tiered-models.py` → `ml_engine.build_training_dataset()` already parameterizes
+  `n_estimators`, so this is a hyperparameter + output-path change, not new infra.
+- **Training data:** the **existing `ml_engine.build_training_dataset()` pipeline** — candle-derived
+  `TRAINING_FEATURES` with a forward-return `target` (the same data the retired big model used). This is
+  the pipeline already wired into the `ml_score` composite factor, so the 5-tree is a drop-in replacement
+  at the model-artifact level. (Earlier draft said "train on paper-trade rows"; corrected — the live
+  feature/label pipeline is candle-based, and reusing it is both cleaner and apples-to-apples with the
+  model it replaces.)
 - **Ship-gate (hard):** train, then evaluate on a time-held-out slice. Wire the model into `v8_ml`
   **only if** it improves top-5 selection hit-rate over the no-ML baseline. If it fails the gate,
   `v8_ml` launches at weight 0 (identical to `v8`) and we record "5-tree does not earn its slot" —
@@ -116,8 +126,9 @@ confirm avg entry time near market open) rather than assume it.
 ## 10. Deliverables
 
 1. `quant/universe_nifty50.txt` (new universe).
-2. Env-gated knobs in `prototype/v5/risk_manager.py` (`MAX_POSITIONS_TOTAL`) and
-   `prototype/v5/alpha_hunter.py` (`TARGET_PCT`, `STOP_PCT`, `STOP_MODE`) — all default-preserving.
+2. Env-gated knobs: `MAX_POSITIONS_TOTAL` in `prototype/v5/risk_manager.py:50`; `TARGET_PCT`, `STOP_PCT`,
+   `STOP_MODE` in `scripts/v5-paper-trade.py` (deploy_signals bracket + trailing gate) — all
+   default-preserving. Plus `ML_MODEL_PATH` in `prototype/v4/ml_engine.py:39` for the v8_ml 5-tree.
 3. `scripts/v8-paper-trade.py` and `scripts/v8_ml-paper-trade.py` wrappers.
 4. Two new lines in the `ENGINES` array in `scripts/launch-market.sh`.
 5. 5-tree training run + ship-gate evaluation (reuse `train-tiered-models.py`), model artifact under

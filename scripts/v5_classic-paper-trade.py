@@ -419,7 +419,12 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
         "qty": pos["qty"], "entry_time": pos["entry_time"],
         "exit_time": datetime.now().strftime("%H:%M:%S"),
         "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason,
-        "position_type": pos.get("position_type", "LONG"), "pool": pool_name})
+        "position_type": pos.get("position_type", "LONG"), "pool": pool_name,
+        # TP-RCA 2026-06-30: carry entry conviction into closed record ("store everything").
+        "score": pos.get("score"), "direction": pos.get("direction"),
+        "reasons": pos.get("reasons"), "sl_price": pos.get("sl_price"),
+        "target_price": pos.get("target_price"), "entry_date": pos.get("entry_date"),
+        "trailing_activated": pos.get("trailing_activated")})
     state["pools"][pool_name]["pnl"] += pnl
     state["pools"][pool_name]["positions"] = [
         p for p in state["pools"][pool_name]["positions"] if p["symbol"] != sym]

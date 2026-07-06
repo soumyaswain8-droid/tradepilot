@@ -293,6 +293,11 @@ else
   exit $EX_SMOKE_FAILED
 fi
 
+# [0.6/9] Git-hygiene guard — warn (never block) if live engine code is uncommitted.
+# Added 2026-07-06 after root-causing 15-day silent drift of the v5_flip roster.
+echo "[0.6/9] Git-hygiene check (uncommitted-code drift guard)..."
+./scripts/git-hygiene-check.sh || true
+
 # [1/9] Rust engine
 echo "[1/9] Starting Rust engine (execution + risk)..."
 if [ -f "./engine/target/release/tradepilot-engine" ]; then

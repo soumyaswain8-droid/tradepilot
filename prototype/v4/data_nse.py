@@ -65,11 +65,27 @@ def _get_nsepython():
 
 
 def _get_yfinance():
-    """Lazy-load yfinance."""
+    """Lazy-load yfinance.
+
+    Per-process tz/cookie cache isolation (TP-RCA, 2026-06-26): yfinance keeps a
+    shared SQLite cache at ~/Library/Caches/py-yfinance/. When multiple engine
+    processes (v5, v5_classic, v5_long, v5_cut) + the dashboard hit it concurrently,
+    SQLite throws OperationalError('unable to open database file') -> every download
+    returns None -> no signals -> no trades. That was the root cause of the all-day
+    2026-06-26 data stall. Give each process its own cache dir (keyed by ENGINE_NAME,
+    falling back to PID) so they never contend on one SQLite file.
+    """
     global _yfinance
     if _yfinance is None:
         try:
             import yfinance as yf
+            try:
+                _eng = os.environ.get("ENGINE_NAME") or f"pid{os.getpid()}"
+                _tzc = Path.home() / "Library" / "Caches" / "py-yfinance" / _eng
+                _tzc.mkdir(parents=True, exist_ok=True)
+                yf.set_tz_cache_location(str(_tzc))
+            except Exception as e:
+                logger.warning(f"yfinance per-process cache isolation failed (non-fatal): {e}")
             _yfinance = yf
         except ImportError:
             logger.error("yfinance not installed. Run: pip install yfinance")

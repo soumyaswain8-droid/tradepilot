@@ -119,6 +119,17 @@ def fetch_movers():
         log(f"FATAL: import failed: {e}")
         return []
 
+    # Per-process yfinance cache isolation (TP-RCA 2026-06-26): avoid the shared-SQLite
+    # 'unable to open database file' contention that stalled all data on 06-26.
+    try:
+        import os
+        from pathlib import Path
+        _tzc = Path.home() / "Library" / "Caches" / "py-yfinance" / (os.environ.get("ENGINE_NAME") or f"missedopps{os.getpid()}")
+        _tzc.mkdir(parents=True, exist_ok=True)
+        yf.set_tz_cache_location(str(_tzc))
+    except Exception:
+        pass
+
     yf_str = " ".join(ACTIVE_SYMBOLS_YF)
     try:
         df = yf.download(yf_str, period="2d", interval="1d",

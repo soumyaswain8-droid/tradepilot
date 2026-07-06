@@ -70,6 +70,13 @@ COST_BPS_ROUND_TRIP = float(os.environ.get("COST_BPS_ROUND_TRIP", "12"))
 # so v5/v5_noml/etc are unchanged). The watchdog-driven "stop holding losers" fix.
 WRONGWAY_CUT_PCT = float(os.environ.get("WRONGWAY_CUT_PCT", "0"))
 
+# v8 April-recipe bracket (env-gated, default None/"trailing" so all other engines are unchanged).
+# When TARGET_PCT and STOP_PCT are both set, deploy_signals uses a fixed % bracket off entry.
+# STOP_MODE="fixed" disables the trailing-stop trigger so the stop stays at the fixed level.
+_tp = os.environ.get("TARGET_PCT"); TARGET_PCT = float(_tp) if _tp is not None else None
+_sp = os.environ.get("STOP_PCT");   STOP_PCT   = float(_sp) if _sp is not None else None
+STOP_MODE = os.environ.get("STOP_MODE", "trailing")
+
 
 def cost_for_trade(qty: int, entry_price: float, exit_price: float) -> float:
     """Round-trip cost in INR using avg notional × bps. ~12 bps default."""
@@ -490,9 +497,15 @@ def deploy_signals(state, pm, rm, signals):
         cost = qty * price
         # #2 FIX: widen default SL on strong-gap mornings (|gap|>0.5%) — v5 was stopped out of CIPLA/DRREDDY right before they rallied on 04-24
         _gap = abs(float(state.get("premarket", {}).get("gap_prediction", {}).get("magnitude_pct", 0) or 0))
-        _sl_pct = 0.0225 if _gap > 0.5 else 0.015
-        sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
-        tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
+        if TARGET_PCT is not None and STOP_PCT is not None:
+            # v8: fixed April bracket off entry, ignoring signal-supplied sl/tgt
+            _is_buy = sig["direction"] == "BUY"
+            sl  = price * ((1 - STOP_PCT / 100)   if _is_buy else (1 + STOP_PCT / 100))
+            tgt = price * ((1 + TARGET_PCT / 100) if _is_buy else (1 - TARGET_PCT / 100))
+        else:
+            _sl_pct = 0.0225 if _gap > 0.5 else 0.015
+            sl = sig.get("sl_price", price * ((1 - _sl_pct) if sig["direction"] == "BUY" else (1 + _sl_pct)))
+            tgt = sig.get("target_price", price * (1.02 if sig["direction"] == "BUY" else 0.98))
         pos_type = sig.get("position_type", "LONG" if sig["direction"] == "BUY" else "SHORT")
         if is_reentry_blocked(state, sym, pos_type):  # learning 2026-04-17_003: 2-SL same-day block
             log(f"  {sym}: BLOCKED (reentry cap: 2 SL in {pos_type} today)")
@@ -647,7 +660,7 @@ def scan_positions(state, pm, rm):
         if is_short:
             if px >= pos["sl_price"]: reason = "STOPLOSS"
             elif px <= pos["target_price"]: reason = "TARGET"
-            elif pnl_pct >= TRAILING_TRIGGER_PCT:
+            elif STOP_MODE != "fixed" and pnl_pct >= TRAILING_TRIGGER_PCT:
                 if not pos.get("trailing_activated"):
                     pos["trailing_activated"] = True; pos["sl_price"] = entry
                     log(f"  {sym}: SHORT TRAILING -> SL@{entry:.2f}")
@@ -657,7 +670,7 @@ def scan_positions(state, pm, rm):
         else:
             if px <= pos["sl_price"]: reason = "STOPLOSS"
             elif px >= pos["target_price"]: reason = "TARGET"
-            elif pnl_pct >= TRAILING_TRIGGER_PCT:
+            elif STOP_MODE != "fixed" and pnl_pct >= TRAILING_TRIGGER_PCT:
                 if not pos.get("trailing_activated"):
                     pos["trailing_activated"] = True; pos["sl_price"] = entry
                     log(f"  {sym}: LONG TRAILING -> SL@{entry:.2f}")

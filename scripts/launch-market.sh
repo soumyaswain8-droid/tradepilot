@@ -144,6 +144,10 @@ ENGINES=(
   # week (engine doesn't adapt its mix to the tape today). Compare red-day behaviour vs v5.
   "v5_flip|scripts/v5_flip-paper-trade.py"
 
+  # V8 (TP-V8, 2026-07-06): April-recipe replica — NIFTY-50, top-5, long-only, +1.5/-0.75
+  # fixed bracket, early entry. Control twin (no ML). Target: recover April +1%/65%-WR profile.
+  "v8|scripts/v8-paper-trade.py"
+
   # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
   # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).
   # "v5_6|scripts/v5_6-paper-trade.py"     # Darvas-box breakout

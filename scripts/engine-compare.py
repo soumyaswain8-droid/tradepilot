@@ -15,8 +15,8 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ENGINES = ["v5", "v5_long", "v5_classic", "v5_cut", "v5_flip"]   # active lean roster
-LABELS = {"v5": "v5 (live)", "v5_long": "v5_long (RC-1 long-only)",
+ENGINES = ["v5", "v5_long", "v5_classic", "v5_cut", "v5_flip", "v8"]   # active lean roster
+LABELS = {"v5": "v5 (live)", "v5_long": "v5_long (RC-1 long-only)", "v8": "v8 (April replica)",
           "v5_classic": "v5_classic (frozen)", "v5_cut": "v5_cut",
           "v5_flip": "v5_flip (fast regime-flip)"}
 

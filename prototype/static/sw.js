@@ -1,5 +1,5 @@
 // TradePilot Service Worker - Caches app shell for offline/fast load
-var CACHE_NAME = 'tradepilot-v2';
+var CACHE_NAME = 'tradepilot-v3';   // bumped 2026-07-01 to purge stale /live shell
 var urlsToCache = ['/'];
 
 self.addEventListener('install', function(event) {
@@ -41,6 +41,6 @@ self.addEventListener('activate', function(event) {
         names.filter(function(n) { return n !== CACHE_NAME; })
              .map(function(n) { return caches.delete(n); })
       );
-    })
+    }).then(function() { return self.clients.claim(); })  // take control of open tabs immediately
   );
 });

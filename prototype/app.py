@@ -109,6 +109,11 @@ def lab_view():
     """A/B testing lab — challenger-vs-live experiments in one place."""
     return render_template("lab.html")
 
+@app.route("/decisions")
+def decisions_view():
+    """Decision dashboard — root-cause verdict, engine roster, and the RC roadmap (TP-RCA)."""
+    return render_template("decisions.html")
+
 
 @app.route("/api/missed-opportunities")
 def api_missed_opportunities():
@@ -465,12 +470,12 @@ def api_lab():
     v4_live, v4_old = _v4(LIVE), _v4(OLD)
     v5_live, v5_lo = _v5(LIVE), _v5(LO)
     ch4 = card("A/B · OLD 5-tree", v4_old)
-    bl4 = card("LIVE · 1,735-tree", v4_live)
+    bl4 = card("LIVE · v5", v5_live)   # re-baselined 2026-07-01: the v4 1,735-tree baseline is retired; compare the simple 5-tree vs live v5
     ch5 = card("A/B · LONG-ONLY", v5_lo, {"gate_ok": (v5_lo or {}).get("shorts", 0) == 0})
     bl5 = card("LIVE · with shorts", v5_live)
     experiments = [
-        {"id": "v4", "title": "v4 model — 5-tree challenger vs live 1,735-tree",
-         "hypothesis": "the simple 5-tree model beats the overfit May-4 retrain",
+        {"id": "v4", "title": "OLD 5-tree (simple model) vs live v5",
+         "hypothesis": "the simple 5-tree model beats the overfit 1,735-tree (note: leveraged/gross — read risk-adjusted)",
          "status": "TESTING", "challenger": ch4, "baseline": bl4, "delta": delta(ch4, bl4)},
         {"id": "v5", "title": "v5 short arm — long-only challenger vs live with-shorts",
          "hypothesis": "removing the edgeless short arm improves v5",
@@ -510,16 +515,11 @@ def api_lab():
     bl_v5 = card("LIVE · v5", _eng("v5"))
     cum_v5 = _cum("v5")
     experiments += [
-        {"id": "v5_noml", "title": "ML removal — v5_noml (no dead ML) vs live v5",
-         "hypothesis": "removing the IC-0.006 ML (dead weight) improves v5",
-         "status": "TESTING", "challenger": card("A/B · NO-ML", _eng("v5_noml")),
-         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_noml")), bl_v5),
-         "cum_delta": _cum("v5_noml") - cum_v5},
-        {"id": "v5_apr", "title": "April settings — v5_apr (loose exits + re-arm) vs live v5",
-         "hypothesis": "April-style exits restore the right tail",
-         "status": "TESTING", "challenger": card("A/B · APRIL", _eng("v5_apr")),
-         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_apr")), bl_v5),
-         "cum_delta": _cum("v5_apr") - cum_v5},
+        {"id": "v5_flip", "title": "v5_flip — fast intraday regime-flip vs live v5",
+         "hypothesis": "activating the BEAR 8/12 tilt on confirmed hard-down (< -0.6%) cuts red-day losses without false-triggering on green days",
+         "status": "TESTING", "challenger": card("A/B · FLIP", _eng("v5_flip")),
+         "baseline": bl_v5, "delta": delta(card("x", _eng("v5_flip")), bl_v5),
+         "cum_delta": _cum("v5_flip") - cum_v5},
         {"id": "v5_cut", "title": "v5_cut — faster wrong-way cut + tighter short + 450-name universe",
          "hypothesis": "cut losers fast + don't short strength + scan wider = better margin",
          "status": "TESTING", "challenger": card("A/B · CUT", _eng("v5_cut")),
@@ -539,7 +539,7 @@ def api_recent_scans():
     import re
     from pathlib import Path
 
-    ENGINES = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6']
+    ENGINES = ['v5', 'v5_classic', 'v5_long', 'v5_cut', 'v5_flip']   # current roster (2026-07-01; retired v4/v5_6/v5_7/v5_8/v6)
     LOG_DIR = Path(os.path.dirname(__file__)).parent / "logs"
 
     # Patterns to extract — each tuple: (regex, event_type)

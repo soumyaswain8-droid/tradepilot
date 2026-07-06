@@ -8,6 +8,7 @@
     { key: "live",   label: "Live",   sub: "Mission control", href: "/live",     icon: "◎", match: ["/live"] },
     { key: "lab",    label: "A/B",    sub: "Beta / testing",  href: "/lab",       icon: "◇", match: ["/lab"] },
     { key: "agents", label: "Agents", sub: "Sarathi team",   href: "/team",      icon: "⬡", match: ["/team", "/team_sarathi"] },
+    { key: "decide", label: "Decisions", sub: "Root-cause & RC roadmap", href: "/decisions", icon: "⚑", match: ["/decisions"] },
   ];
   var path = location.pathname.replace(/\/$/, "") || "/";
 

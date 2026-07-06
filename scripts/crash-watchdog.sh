@@ -35,19 +35,24 @@ HEARTBEAT_MAX_AGE_SEC=2700
 # launch_cmd = how to restart if crashed
 TODAY=$(date +%Y-%m-%d)
 declare -a ENGINES=(
-  # Active engines (3) — must match launch-market.sh ENGINES array.
-  # Foundation review 2026-06-11 (TP-CLN-001): v4 retired (no alpha, t=1.51 n.s.);
-  # v7_regime added here (was missing from watchdog since 2026-06-09 — wouldn't auto-restart).
+  # Active engines (5) — must match launch-market.sh ENGINES array.
+  # TP-RCA 2026-06-26 lightweight roster: v5 (live) + v5_classic (frozen benchmark)
+  # + v5_long (RC-1 long-only fix) + v5_cut (profit experiment). Retired v5_noml/v5_apr/v7_regime.
   # "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
   "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
-  "v7_regime|scripts/v7_regime-paper-trade.py|docs/paper-trades/v7_regime/${TODAY}.json|python3 scripts/v7_regime-paper-trade.py"
-  # SHADOW A/B (TP-CLN-009): v5 with ml weight=0. Remove when experiment ends.
-  "v5_noml|scripts/v5_noml-paper-trade.py|docs/paper-trades/v5_noml/${TODAY}.json|python3 scripts/v5_noml-paper-trade.py"
-  # SHADOW A/B (TP-CLN-011): v5 with April settings (FLAT_EXIT off, REARM=6). Remove when done.
-  "v5_apr|scripts/v5_apr-paper-trade.py|docs/paper-trades/v5_apr/${TODAY}.json|python3 scripts/v5_apr-paper-trade.py"
+  # RC-1 (TP-RCA 2026-06-26): v5_long = long-only NIFTY-200 (shorts disabled). Primary fix experiment.
+  "v5_long|scripts/v5_long-paper-trade.py|docs/paper-trades/v5_long/${TODAY}.json|python3 scripts/v5_long-paper-trade.py"
+  # RETIRED 2026-06-26 (TP-RCA audit): v7_regime flat vs v5 + WFO-negative (DSR 0.12). State preserved.
+  # "v7_regime|scripts/v7_regime-paper-trade.py|docs/paper-trades/v7_regime/${TODAY}.json|python3 scripts/v7_regime-paper-trade.py"
+  # RETIRED 2026-06-26 (TP-RCA audit): v5_noml redundant (ml=0 already global -> ran v5 twice).
+  # "v5_noml|scripts/v5_noml-paper-trade.py|docs/paper-trades/v5_noml/${TODAY}.json|python3 scripts/v5_noml-paper-trade.py"
+  # RETIRED 2026-06-26 (TP-RCA audit): v5_apr tracked v5 within +Rs78/9d — no info value.
+  # "v5_apr|scripts/v5_apr-paper-trade.py|docs/paper-trades/v5_apr/${TODAY}.json|python3 scripts/v5_apr-paper-trade.py"
   # SHADOW (TP-QUANT): v5_cut = ML-removed + wrong-way-cut + tighter short + wide universe.
   "v5_cut|scripts/v5_cut-paper-trade.py|docs/paper-trades/v5_cut/${TODAY}.json|python3 scripts/v5_cut-paper-trade.py"
+  # SHADOW (TP-RCA 2026-06-30): v5_flip = fast intraday regime-flip (5-min tape, BEAR 8/12 tilt on hard-down).
+  "v5_flip|scripts/v5_flip-paper-trade.py|docs/paper-trades/v5_flip/${TODAY}.json|python3 scripts/v5_flip-paper-trade.py"
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
   # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
   # "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"

@@ -116,21 +116,33 @@ ENGINES=(
   "v5|scripts/v5-paper-trade.py"
   "v5_classic|scripts/v5_classic-paper-trade.py"
 
-  # SHADOW A/B (TP-CLN-009, started 2026-06-15): v5 with ml_score weight=0 (dead-weight
-  # ML; TP-CLN-008 proved selection-neutral). Same code as v5, one param differs; own
-  # state/log, telegram silenced. Compare net P&L vs v5 over ~5-10 sessions, then either
-  # commit weight=0 to config.py or revert. Re-comment this line to end the experiment.
-  "v5_noml|scripts/v5_noml-paper-trade.py"
+  # RC-1 (TP-RCA, 2026-06-26): v5_long = v5 with shorts DISABLED (long-only), NIFTY-200.
+  # Root-cause finding (11-agent investigation): the SHORT book is the entire net bleed —
+  # longs +Rs1,149 vs shorts -Rs3,611 over 06-16..25; if shorts were flat v5 is net positive.
+  # The April engine that made money was long-only. Same v5 code, SHORT_REQ_MAX_SCORE=-1 makes
+  # shorts impossible. THE primary fix experiment. Compare net P&L + win-rate vs live v5.
+  "v5_long|scripts/v5_long-paper-trade.py"
 
-  # SHADOW A/B (TP-CLN-011, started 2026-06-15): v5 with "April settings" restored —
-  # FLAT_EXIT disabled + WINNER_REARM_MAX=6 (reverses the 2026-05-04 right-tail cap).
-  # Compare RISK-ADJUSTED return vs v5, not raw P&L. Re-comment to end the experiment.
-  "v5_apr|scripts/v5_apr-paper-trade.py"
+  # RETIRED 2026-06-26 (TP-RCA engine audit): v5_noml is REDUNDANT — config.py ships
+  # ml_score=0 globally since 06-21, so v5_noml runs identical selection code to v5 (it was
+  # literally running v5 twice). Experiment concluded (ML removed & committed). State preserved.
+  # "v5_noml|scripts/v5_noml-paper-trade.py"
+
+  # RETIRED 2026-06-26 (TP-RCA engine audit): v5_apr tracked v5 to within +Rs78 over 9
+  # sessions — no information value. FLAT_EXIT-off question deferred to RC-6 (clean single-
+  # variable test) if ever revisited. State preserved.
+  # "v5_apr|scripts/v5_apr-paper-trade.py"
 
   # SHADOW (TP-QUANT, 2026-06-21): v5_cut = ML-removed + faster wrong-way cut + tighter
   # short-gate + ~450-name universe. Built from this week's watchdog findings to lift
   # the profit margin. Compare risk-adjusted vs v5. Re-comment to end.
   "v5_cut|scripts/v5_cut-paper-trade.py"
+
+  # SHADOW (TP-RCA, 2026-06-30): v5_flip = fast intraday regime-flip. Re-checks the live
+  # tape every 5 min and activates the existing BEAR 8/12 slot tilt on a CONFIRMED hard-down
+  # (NIFTY < -0.6%), bidirectional (reverts on green), keeps both legs. Data-validated this
+  # week (engine doesn't adapt its mix to the tape today). Compare red-day behaviour vs v5.
+  "v5_flip|scripts/v5_flip-paper-trade.py"
 
   # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
   # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).
@@ -139,10 +151,10 @@ ENGINES=(
   # "v5_8|scripts/v5_8-paper-trade.py"     # v5 with regime slot-partition disabled
   # "v6|scripts/v6-paper-trade.py"         # v4 raw signals + Track A bolt-on
 
-  # A/B EXPERIMENT (live 2026-06-09): regime-gated long/short/flip. NOTE: daily-gate
-  # WFO showed no historical edge (DSR 0.12); running to validate the intraday Layer-2
-  # flip, which can't be backtested. Re-comment this line to pull it from the rotation.
-  "v7_regime|scripts/v7_regime-paper-trade.py"
+  # RETIRED 2026-06-26 (TP-RCA engine audit): v7_regime beat v5 by only +Rs1,684 over 9
+  # sessions and daily-gate WFO showed no edge (DSR 0.12). Parked from daily rotation; the
+  # long-only book (v5_long) tests the "do shorts help?" question more cleanly. State preserved.
+  # "v7_regime|scripts/v7_regime-paper-trade.py"
 
   # Still retired from earlier rounds:
   # "v5_2|scripts/v5_2-paper-trade.py"

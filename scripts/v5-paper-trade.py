@@ -43,7 +43,8 @@ TRADE_DIR.mkdir(parents=True, exist_ok=True)
 
 TOTAL_CAPITAL = 1_000_000  # Same Rs 10L as v4 for fair comparison
 TRAILING_TRIGGER_PCT, TRAILING_STEP_PCT = 1.0, 0.5
-SCAN_INTERVAL_MIN, RESCORE_INTERVAL_MIN = 10, 30
+SCAN_INTERVAL_MIN = int(os.environ.get("SCAN_INTERVAL_MIN", "10"))
+RESCORE_INTERVAL_MIN = int(os.environ.get("RESCORE_INTERVAL_MIN", "30"))
 FORCE_EXIT_HOUR, FORCE_EXIT_MIN = 15, 15
 POOL_NAMES = ["INTRADAY", "SWING", "POSITIONAL", "INVESTMENT"]
 
@@ -580,7 +581,14 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
         "exit_time": datetime.now().strftime("%H:%M:%S"),
         "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason,
         "pnl_gross": round(pnl_gross, 2), "pnl_net": round(pnl_net, 2), "cost": round(cost, 2),
-        "position_type": pos.get("position_type", "LONG"), "pool": pool_name})
+        "position_type": pos.get("position_type", "LONG"), "pool": pool_name,
+        # TP-RCA 2026-06-30: carry ENTRY CONVICTION into the closed record so we can
+        # validate conviction->P&L (previously captured on the open position then dropped
+        # at close — the gap that made conviction-weighting unprovable). "store everything".
+        "score": pos.get("score"), "direction": pos.get("direction"),
+        "reasons": pos.get("reasons"), "sl_price": pos.get("sl_price"),
+        "target_price": pos.get("target_price"), "entry_date": pos.get("entry_date"),
+        "trailing_activated": pos.get("trailing_activated")})
     state["pools"][pool_name]["pnl"] += pnl
     state["pools"][pool_name]["positions"] = [
         p for p in state["pools"][pool_name]["positions"] if p["symbol"] != sym]
@@ -688,6 +696,53 @@ def _should_rescore(state):
             year=datetime.now().year, month=datetime.now().month, day=datetime.now().day)
         return (datetime.now() - t).total_seconds() >= RESCORE_INTERVAL_MIN * 60
     except Exception: return True
+
+_flip_st = {"off": 0, "on": 0}
+
+def _fast_flip(state, pm, rm):
+    """TP-RCA 2026-06-30 (v5_flip, env FAST_FLIP=1): fast INTRADAY regime tilt.
+
+    The slow daily regime is set once at launch and rarely flips, so the engine stays
+    long-heavy on red days (validated: short-share flat ~45% across UP/DOWN days). This
+    re-checks the live tape every scan and activates the EXISTING BEAR slot split (8L/12S)
+    intraday when the day is a CONFIRMED hard-down (NIFTY < -0.6%, validated threshold —
+    mild-down still favours longs). Bidirectional: reverts to SIDEWAYS on a confirmed green
+    reversal (captures the 2nd-half up-trend). Keeps both legs (never 0 longs). Re-arm on
+    TARGET already works both directions. Confirmation (2 reads) + hysteresis = anti-whipsaw.
+    Live v5 is unaffected (flag off). No new code-path for direction yet — that needs the
+    conviction data we just started logging.
+    """
+    if os.environ.get("FAST_FLIP") != "1":
+        return
+    try:
+        import yfinance as yf  # per-process cache already set via data_nse._get_yfinance
+        n = yf.download("^NSEI", period="1d", interval="5m", progress=False)
+        if not len(n):
+            return
+        o = float(n["Open"].iloc[0]); c = float(n["Close"].iloc[-1])
+        pct = 100 * (c - o) / o
+    except Exception as e:
+        log(f"  fast-flip tape fetch failed (non-fatal): {e}")
+        return
+    HARD_DOWN, GREEN = -0.6, 0.15        # validated: short-tilt only on confirmed hard-down
+    cur = state.get("regime", "SIDEWAYS")
+    if pct <= HARD_DOWN:
+        _flip_st["off"] += 1; _flip_st["on"] = 0
+    elif pct >= GREEN:
+        _flip_st["on"] += 1; _flip_st["off"] = 0
+    else:
+        _flip_st["off"] = _flip_st["on"] = 0
+    new = None
+    if _flip_st["off"] >= 2 and cur != "BEAR":
+        new = "BEAR"
+    elif _flip_st["on"] >= 2 and cur == "BEAR":
+        new = "SIDEWAYS"
+    if new:
+        state["regime"] = new
+        if pm: pm.set_regime(new)
+        if rm: rm.regime = new
+        log(f"  FAST-FLIP: tape {pct:+.2f}% -> regime {cur} -> {new} (slot tilt now active)")
+
 
 def rescore_and_redeploy(state, pm, rm):
     generate_signals = _mods.get("signals")
@@ -869,7 +924,7 @@ def run():
         if wait > 0:
             log(f"\n  Next scan in {wait/60:.0f}m..."); time.sleep(wait)
         # Reuse pm/rm — don't reinitialize (that wipes positions!)
-        scan_positions(state, pm, rm); rescore_and_redeploy(state, pm, rm)
+        scan_positions(state, pm, rm); _fast_flip(state, pm, rm); rescore_and_redeploy(state, pm, rm)
 
         # ALPHA HUNTER: at 10:00-10:15 AM, scan for counter-trend winners
         now_h, now_m = datetime.now().hour, datetime.now().minute

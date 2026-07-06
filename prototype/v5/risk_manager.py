@@ -47,7 +47,8 @@ VIX_TIERS = [(13, 1.0), (18, 0.85), (25, 0.60), (999, 0.40)]
 RECOVERY_LADDER = [(3, 0.25), (7, 0.50), (14, 0.75)]  # (day_threshold, mult)
 RECOVERY_EARLY_RESTORE_DAYS = 5  # consecutive profitable days to skip to 100%
 
-MAX_POSITIONS_TOTAL = 20
+import os as _os  # local alias; module already imports pathlib etc. above
+MAX_POSITIONS_TOTAL = int(_os.environ.get("MAX_POSITIONS_TOTAL", "20"))
 # #1 FIX (Option B partition): reserve slots per direction so SHORTs aren't starved
 # by LONG-biased score-desc queue order in the first morning scan.
 # Regime-aware defaults: BEAR favours SHORTs, BULL favours LONGs.

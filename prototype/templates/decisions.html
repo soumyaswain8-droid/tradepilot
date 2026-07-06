@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePilot — Decision Dashboard</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#131a26; --panel2:#0f1622; --line:#222e42;
+    --ink:#e6edf6; --mut:#8aa0b8; --dim:#5d7088;
+    --green:#2ecc71; --greenbg:#0f2a1e; --red:#ff5d5d; --redbg:#2a1316;
+    --amber:#f5b945; --amberbg:#2a2310; --indigo:#7c8cff; --indigobg:#171c34;
+    --teal:#39d0d8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+       -webkit-font-smoothing:antialiased;padding:32px 28px 64px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:26px;font-weight:750;letter-spacing:-.3px}
+  h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--mut);margin:34px 0 14px}
+  .sub{color:var(--mut);font-size:13.5px;margin-top:4px}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+  .t-done{background:var(--greenbg);color:var(--green);border:1px solid #1d4a33}
+  .t-now{background:var(--amberbg);color:var(--amber);border:1px solid #5a4a17}
+  .t-next{background:var(--indigobg);color:var(--indigo);border:1px solid #2e3870}
+  .t-kill{background:var(--redbg);color:var(--red);border:1px solid #5a2226}
+  .t-hold{background:#1a2230;color:var(--dim);border:1px solid var(--line)}
+  .grid{display:grid;gap:16px}
+  .c3{grid-template-columns:repeat(3,1fr)} .c2{grid-template-columns:repeat(2,1fr)} .c4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:840px){.c3,.c2,.c4{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .kpi .n{font-size:30px;font-weight:780;letter-spacing:-.5px}
+  .kpi .l{color:var(--mut);font-size:12.5px;margin-top:3px}
+  .pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)}
+  .verdict{background:linear-gradient(135deg,#15233a,#101727);border:1px solid #28406b;border-radius:16px;padding:22px 24px}
+  .verdict .big{font-size:19px;font-weight:700;line-height:1.4}
+  .verdict .big b{color:var(--green)} .verdict .big s{color:var(--red);text-decoration:none}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.7px;
+     padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid #1a2433;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .mono{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12.5px}
+  .rmap{position:relative;padding-left:26px}
+  .rmap::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+  .step{position:relative;margin-bottom:14px}
+  .step::before{content:'';position:absolute;left:-26px;top:4px;width:14px;height:14px;border-radius:50%;
+     background:var(--panel);border:2px solid var(--dim)}
+  .step.done::before{background:var(--green);border-color:var(--green)}
+  .step.now::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 4px var(--amberbg)}
+  .step.next::before{border-color:var(--indigo)}
+  .step .h{font-weight:700;font-size:14.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .step .d{color:var(--mut);font-size:13px;margin-top:3px}
+  .foot{color:var(--dim);font-size:12px;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+  a{color:var(--teal);text-decoration:none} a:hover{text-decoration:underline}
+  .pill{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:auto}
+  .lead{border-left:3px solid var(--indigo);padding-left:14px;color:var(--mut);font-size:13.5px;margin:6px 0 2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div style="margin-bottom:10px"><a href="/dashboard" style="font-size:12.5px;color:var(--teal)">&larr; Back to trading dashboard</a></div>
+    <h1>TradePilot — Decision Dashboard</h1>
+    <div class="sub">Root-cause closed · lean 4-engine roster live · RC-1 long-only racing v5 &nbsp;|&nbsp; Updated 2026-06-26 &nbsp;·&nbsp; 11-agent investigation + watchdog validation</div>
+  </header>
+
+  <!-- VERDICT -->
+  <h2>The Verdict</h2>
+  <div class="verdict">
+    <div class="big">The <s>short book</s> is the entire net bleed. Your <b>longs make money</b>; your shorts lose more than the whole loss. The April engine that worked was <b>long-only</b> — that is the whole explanation.</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid c4" style="margin-top:16px">
+    <div class="card kpi"><div class="n pos">+₹1,149</div><div class="l">LONG book net P&L · 213 trades · 41.8% WR</div></div>
+    <div class="card kpi"><div class="n neg">−₹3,611</div><div class="l">SHORT book net P&L · 241 trades · 34.4% WR</div></div>
+    <div class="card kpi"><div class="n neu">6.2%</div><div class="l">of all exits hit TARGET (shorts just 4.1%)</div></div>
+    <div class="card kpi"><div class="n">32–38%</div><div class="l">of ₹10L actually deployed — 60%+ idle</div></div>
+  </div>
+  <div class="lead" style="margin-top:14px">Window 2026-06-16 → 06-25 · 454 trades · verified to the rupee against the EOD / profit / missed-opps watchdogs. If shorts were merely flat, v5 would be net positive.</div>
+
+  <!-- ROADMAP -->
+  <h2>Roadmap — the fix sequence</h2>
+  <div class="card">
+    <div class="rmap">
+
+      <div class="step done">
+        <div class="h">RC-1 · Long-only shadow (<span class="mono">v5_long</span>) <span class="tag t-done">Built · live tomorrow</span></div>
+        <div class="d">v5 with shorts disabled, NIFTY-200 universe. Zero code change (env flag). Wired into the launch + watchdog. Races live v5 from the next 08:50 auto-launch. <b>This is the primary fix experiment.</b></div>
+      </div>
+
+      <div class="step now">
+        <div class="h">Engine cleanup · 6 → 4 lean roster <span class="tag t-done">Done</span></div>
+        <div class="d">Retired v5_noml (ran v5 twice), v5_apr (no info value), v7_regime (flat + WFO-negative). Stack is now fast + focused: ~half the CPU/yfinance load, zero loss of decision quality.</div>
+      </div>
+
+      <div class="step next">
+        <div class="h">RC-2 · Short-gate v5 itself <span class="tag t-next">After v5_long proves out (~2 wks)</span></div>
+        <div class="d">If v5_long beats v5, fold the fix into live v5: gate shorts to confirmed-weak names/regimes only (shorts <i>can</i> win — Metals NATIONALUM +₹1,380, HINDZINC +₹855 — so filter, don't blanket-ban).</div>
+      </div>
+
+      <div class="step next">
+        <div class="h">RC-3 · Fix entry timing <span class="tag t-next">Queued</span></div>
+        <div class="d">Collapse the SHORT_BLOCK 60-min window + add an immediate 2nd deploy pass at the open. Prize: ~₹1,850 + 6.8pp win-rate. Bounded but real (~19% of trades arrive late).</div>
+      </div>
+
+      <div class="step next">
+        <div class="h">RC-4 · Concentrate capital <span class="tag t-next">Queued</span></div>
+        <div class="d">Fewer, larger positions; deploy more of the idle ₹10L. Killing shorts already frees short-slots + capital toward the profitable long book — this finishes the job.</div>
+      </div>
+
+      <div class="step">
+        <div class="h">RC-5 · Tighten / remove the 2.25% gap-day stop <span class="tag t-hold">Low priority</span></div>
+        <div class="d">Minor real cost (~₹764, one day). Park until the big levers land.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ROSTER -->
+  <h2>Engine roster — lean &amp; fast</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Engine</th><th>Role</th><th>Tests</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">v5</td><td>Live baseline (with shorts)</td><td>The current strategy — the thing to beat</td><td><span class="tag t-now">Active</span></td></tr>
+        <tr><td class="mono">v5_classic</td><td>Frozen April benchmark</td><td>"Has the rebuild helped?" — the one true control</td><td><span class="tag t-now">Active</span></td></tr>
+        <tr><td class="mono">v5_long</td><td>RC-1 long-only, NIFTY-200</td><td><b>Do shorts hurt?</b> — the primary fix</td><td><span class="tag t-done">Active · new</span></td></tr>
+        <tr><td class="mono">v5_cut</td><td>Profit-lift experiment</td><td>Faster cut + tighter short + 450 universe</td><td><span class="tag t-now">Active · probation</span></td></tr>
+        <tr><td class="mono">v5_noml</td><td>—</td><td>Redundant: ML already 0 globally (ran v5 twice)</td><td><span class="tag t-kill">Retired</span></td></tr>
+        <tr><td class="mono">v5_apr</td><td>—</td><td>Tracked v5 within +₹78/9d — no info value</td><td><span class="tag t-kill">Retired</span></td></tr>
+        <tr><td class="mono">v7_regime</td><td>—</td><td>Flat vs v5 + WFO-negative (DSR 0.12)</td><td><span class="tag t-kill">Retired</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- WHAT'S CLEARED -->
+  <h2>Cleared — stop worrying about these</h2>
+  <div class="grid c2">
+    <div class="card"><table>
+      <tr><td><b>FLAT_FORCE_EXIT</b></td><td>Innocent — it <i>helped</i> (+₹30, +₹299 on the days it was blamed)</td></tr>
+      <tr><td><b>ML removal</b></td><td>No effect — ML never picked winners (IC 0.006)</td></tr>
+    </table></div>
+    <div class="card"><table>
+      <tr><td><b>Crashes</b></td><td>Refuted — zero engine restarts all window</td></tr>
+      <tr><td><b>Dashboard / over-trading</b></td><td>Not in trade path / a symptom, not the cause</td></tr>
+    </table></div>
+  </div>
+
+  <div class="foot">
+    Evidence trail: <span class="mono">docs/reports/ROOT_CAUSE_ANALYSIS_2026-06-24.pdf</span> ·
+    <span class="mono">…_II_2026-06-26.pdf</span> · 10 learnings in DevPilot store · project memory <span class="mono">tradepilot-root-cause</span>.<br>
+    Stack: live Yahoo Finance (NIFTY-200) → composite score → long/short → 4 pools → risk vetoes. ₹10L paper capital per engine. Auto-launch 08:50 IST Mon–Fri. Daily four-way compare → Telegram 15:40.
+  </div>
+
+</div>
+</body>
+</html>

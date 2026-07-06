@@ -1,0 +1,24 @@
+combined_pnl: -1016.0140332031248
+date: '2026-06-29'
+insights:
+- ⚠ Combined P&L Rs -1,016 is -139% vs baseline. Investigate.
+- ✅ v5 vs v5_classic gap closed to Rs +1,843. Rust fix holding.
+- ⚠ v5_classic win rate dropped to 59% (32W/22L). Below 60% is abnormal.
+- '● Week 4 target not yet hit: v5 Rs -1,430 < Rs 40,000. Need: Full roadmap target
+  met?'
+per_engine:
+  v5:
+    losses: 32
+    pnl: -1429.5585351562486
+    trades: 56
+    wins: 24
+    wr: 42.857142857142854
+  v5_classic:
+    losses: 22
+    pnl: 413.5445019531238
+    trades: 54
+    wins: 32
+    wr: 59.25925925925925
+phase_change: Capital Rs 10L → 15L per engine
+phase_week: 4
+storage: local-only per project rule

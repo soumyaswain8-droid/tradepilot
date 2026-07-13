@@ -199,6 +199,41 @@ def get_prices_batch(symbols):
     return prices
 
 
+def _tape_is_fresh(df, now=None, max_age_min=15):
+    """True iff df (a yf 1-min download) has a last bar within max_age_min of now.
+
+    Pure function — no network — so the outage guard is unit-testable
+    (tests/test_data_guard.py). Added after 2026-07-08/10: DNS was down from open,
+    signals came off cached CSVs, and deploy_signals opened positions the engine
+    could never price again (exit=None, Rs 0 audits).
+    """
+    import pandas as pd
+    if df is None or len(df) == 0:
+        return False
+    try:
+        last = df.index[-1]
+        ref = now if now is not None else pd.Timestamp.now(tz=getattr(df.index, "tz", None))
+        if getattr(last, "tzinfo", None) is None and getattr(ref, "tzinfo", None) is not None:
+            ref = ref.tz_localize(None)
+        elif getattr(last, "tzinfo", None) is not None and getattr(ref, "tzinfo", None) is None:
+            last = last.tz_localize(None)
+        return (ref - last) <= pd.Timedelta(minutes=max_age_min)
+    except Exception:
+        return False
+
+
+def _live_tape_ok(max_age_min=15):
+    """Fetch a 1-min NIFTY bar and check freshness. DATA_GUARD=0 disables (default on)."""
+    if os.environ.get("DATA_GUARD", "1") != "1":
+        return True
+    try:
+        import yfinance as yf
+        n = yf.download("^NSEI", period="1d", interval="1m", progress=False)
+    except Exception:
+        return False
+    return _tape_is_fresh(n, max_age_min=max_age_min)
+
+
 def get_vix():
     try:
         import yfinance as yf
@@ -437,6 +472,12 @@ def _tg_exit(trade):
 
 def deploy_signals(state, pm, rm, signals):
     if not pm or not signals: return 0
+    # DATA-GUARD (2026-07-12): never open NEW positions off a dead/stale tape.
+    # On 07-08 and 07-10 DNS was down from open — signals came from cached CSVs and
+    # the engine entered trades it could never price again. Exits are NOT gated.
+    if not _live_tape_ok():
+        log("  [DATA-GUARD] live tape unavailable/stale — blocking new entries this scan")
+        return 0
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
     rust_validated = 0

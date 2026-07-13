@@ -1612,13 +1612,18 @@ def api_bots_geopolitical():
         import requests as req
 
         # Source 1: Google News RSS for market keywords
+        # when:1d = Google-side recency filter. Without it the relevance-ranked feed
+        # surfaces re-crawled evergreen items re-stamped with fresh pubDates (an April
+        # "Good Friday" story showed as "4h ago" on 2026-07-12).
         rss_feeds = [
-            ("https://news.google.com/rss/search?q=indian+stock+market+today&hl=en-IN&gl=IN", "India Market"),
-            ("https://news.google.com/rss/search?q=nifty+sensex+today&hl=en-IN&gl=IN", "India Market"),
-            ("https://news.google.com/rss/search?q=RBI+policy+india&hl=en-IN&gl=IN", "RBI Policy"),
-            ("https://news.google.com/rss/search?q=FII+DII+india+market&hl=en-IN&gl=IN", "FII/DII"),
-            ("https://news.google.com/rss/search?q=global+markets+recession+fed&hl=en-IN&gl=IN", "Global"),
-            ("https://news.google.com/rss/search?q=crude+oil+price+today&hl=en-IN&gl=IN", "Commodities"),
+            # Topic feed, not search: search relevance ranking resurfaces re-crawled
+            # evergreen items (pubDate re-stamped to today), topic headlines are real news.
+            ("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en", "India Market"),
+            ("https://news.google.com/rss/search?q=nifty+sensex+today+when:1d&hl=en-IN&gl=IN", "India Market"),
+            ("https://news.google.com/rss/search?q=RBI+policy+india+when:1d&hl=en-IN&gl=IN", "RBI Policy"),
+            ("https://news.google.com/rss/search?q=FII+DII+india+market+when:1d&hl=en-IN&gl=IN", "FII/DII"),
+            ("https://news.google.com/rss/search?q=global+markets+recession+fed+when:1d&hl=en-IN&gl=IN", "Global"),
+            ("https://news.google.com/rss/search?q=crude+oil+price+today+when:1d&hl=en-IN&gl=IN", "Commodities"),
         ]
 
         import xml.etree.ElementTree as ET
@@ -1641,6 +1646,13 @@ def api_bots_geopolitical():
 
                     desc = item.findtext("description", "")
                     pub_date = item.findtext("pubDate", "")
+
+                    # Belt-and-braces with when:1d — drop anything Google still
+                    # serves with an old (or unparseable) pubDate.
+                    from news_utils import clean_summary, is_recent
+                    if not is_recent(pub_date, max_age_h=48):
+                        continue
+                    desc = clean_summary(desc)
 
                     # Parse time ago
                     time_ago = "recently"

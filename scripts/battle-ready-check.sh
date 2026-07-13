@@ -56,7 +56,13 @@ echo ""
 echo "[rust engine]"
 chk "Rust source (main)"    "engine/src/main.rs"
 chk "Rust source (risk)"    "engine/src/risk/mod.rs"
-chk "Rust release binary"   "engine/target/release/tradepilot-engine"
+# Rust binary is OPTIONAL since 2026-06-05 (dropped as execution layer; Python
+# engines run solo via rust_bridge offline-fallback — see launch-market.sh [1/9]).
+if [ -e "engine/target/release/tradepilot-engine" ]; then
+  echo "  OK    Rust release binary (optional)"
+else
+  echo "  INFO  Rust release binary absent (optional — disabled 2026-06-05)"
+fi
 echo ""
 echo "[ML models]"
 chk "production model"      "prototype/v4/models/lgbm_intraday.txt"

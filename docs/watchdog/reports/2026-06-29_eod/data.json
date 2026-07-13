@@ -1,0 +1,134 @@
+{
+  "date": "2026-06-29",
+  "generated_at": "2026-06-29T15:36:01.032753",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -1429.56,
+      "trades": 56,
+      "wins": 24,
+      "losses": 32,
+      "longs": 21,
+      "shorts": 35,
+      "win_rate": 42.9,
+      "open_positions": 6,
+      "best_trade": 268.8,
+      "worst_trade": -587.25,
+      "avg_win": 72.71,
+      "avg_loss": -99.21,
+      "exit_reasons": {
+        "STOPLOSS": 23,
+        "TARGET": 4,
+        "FLAT_FORCE_EXIT": 9,
+        "TIME_EXIT": 14,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 56,
+      "n_open": 6
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 413.54,
+      "trades": 54,
+      "wins": 32,
+      "losses": 22,
+      "longs": 20,
+      "shorts": 34,
+      "win_rate": 59.3,
+      "open_positions": 1,
+      "best_trade": 615.2,
+      "worst_trade": -386.83,
+      "avg_win": 98.55,
+      "avg_loss": -124.55,
+      "exit_reasons": {
+        "STOPLOSS": 21,
+        "TARGET": 5,
+        "TIME_EXIT": 19,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 54,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENT",
+      "ADANIGREEN",
+      "ASHOKLEY",
+      "ASTRAL",
+      "AUBANK",
+      "BANKBARODA",
+      "BPCL",
+      "CANBK",
+      "CUMMINSIND",
+      "EXIDEIND",
+      "HAL",
+      "HEROMOTOCO",
+      "HINDPETRO",
+      "HUDCO",
+      "HYUNDAI",
+      "ICICIBANK",
+      "ICICIGI",
+      "INDHOTEL",
+      "INDIGO",
+      "IOC",
+      "IRCTC",
+      "M&M",
+      "M&MFIN",
+      "MANKIND",
+      "MAXHEALTH",
+      "MFSL",
+      "NESTLEIND",
+      "PREMIERENE",
+      "PRESTIGE",
+      "SIEMENS",
+      "SUPREMEIND",
+      "TATACONSUM",
+      "TMCV",
+      "TORNTPHARM",
+      "TVSMOTOR",
+      "UNITDSPR",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +414 across 54 trades (59.3% win).",
+    "Laggard: <b>v5</b> with Rs -1,430 across 56 trades (42.9% win).",
+    "<b>v5</b>: STOPLOSS (23) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (21) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 42.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 59.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

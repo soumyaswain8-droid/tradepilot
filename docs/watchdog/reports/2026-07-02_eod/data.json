@@ -1,0 +1,138 @@
+{
+  "date": "2026-07-02",
+  "generated_at": "2026-07-02T15:35:07.305681",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -68.18,
+      "trades": 69,
+      "wins": 31,
+      "losses": 38,
+      "longs": 31,
+      "shorts": 38,
+      "win_rate": 44.9,
+      "open_positions": 10,
+      "best_trade": 472.0,
+      "worst_trade": -263.4,
+      "avg_win": 100.25,
+      "avg_loss": -85.84,
+      "exit_reasons": {
+        "STOPLOSS": 26,
+        "FLAT_FORCE_EXIT": 16,
+        "TARGET": 1,
+        "TIME_EXIT": 6,
+        "SIGNAL_FLIP": 20
+      },
+      "n_closed": 69,
+      "n_open": 10
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 256.14,
+      "trades": 59,
+      "wins": 26,
+      "losses": 33,
+      "longs": 27,
+      "shorts": 32,
+      "win_rate": 44.1,
+      "open_positions": 3,
+      "best_trade": 426.6,
+      "worst_trade": -531.0,
+      "avg_win": 111.93,
+      "avg_loss": -80.42,
+      "exit_reasons": {
+        "STOPLOSS": 28,
+        "TARGET": 1,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 18
+      },
+      "n_closed": 59,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ABB",
+      "ALKEM",
+      "BAJAJ-AUTO",
+      "BAJAJFINSV",
+      "BANKBARODA",
+      "BHARTIARTL",
+      "BHEL",
+      "BLUESTARCO",
+      "BSE",
+      "CGPOWER",
+      "CHOLAFIN",
+      "COFORGE",
+      "DABUR",
+      "DLF",
+      "DMART",
+      "DRREDDY",
+      "ENRIN",
+      "ETERNAL",
+      "EXIDEIND",
+      "GMRAIRPORT",
+      "GODREJCP",
+      "HDFCAMC",
+      "HINDPETRO",
+      "ICICIAMC",
+      "INFY",
+      "LODHA",
+      "LT",
+      "MAXHEALTH",
+      "MOTILALOFS",
+      "OBEROIRLTY",
+      "OFSS",
+      "PAYTM",
+      "PHOENIXLTD",
+      "POLYCAB",
+      "PRESTIGE",
+      "SBILIFE",
+      "SWIGGY",
+      "TATASTEEL",
+      "TECHM",
+      "UPL",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +256 across 59 trades (44.1% win).",
+    "Laggard: <b>v5</b> with Rs -68 across 69 trades (44.9% win).",
+    "<b>v5</b>: STOPLOSS (26) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (28) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 44.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 44.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

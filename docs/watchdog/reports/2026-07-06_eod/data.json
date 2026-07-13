@@ -1,0 +1,136 @@
+{
+  "date": "2026-07-06",
+  "generated_at": "2026-07-06T15:35:15.358126",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 1263.61,
+      "trades": 57,
+      "wins": 36,
+      "losses": 21,
+      "longs": 23,
+      "shorts": 34,
+      "win_rate": 63.2,
+      "open_positions": 6,
+      "best_trade": 429.6,
+      "worst_trade": -295.4,
+      "avg_win": 94.29,
+      "avg_loss": -96.98,
+      "exit_reasons": {
+        "STOPLOSS": 17,
+        "TARGET": 2,
+        "FLAT_FORCE_EXIT": 13,
+        "TIME_EXIT": 11,
+        "SIGNAL_FLIP": 14
+      },
+      "n_closed": 57,
+      "n_open": 6
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 980.14,
+      "trades": 45,
+      "wins": 22,
+      "losses": 23,
+      "longs": 21,
+      "shorts": 24,
+      "win_rate": 48.9,
+      "open_positions": 3,
+      "best_trade": 447.5,
+      "worst_trade": -235.2,
+      "avg_win": 124.47,
+      "avg_loss": -71.03,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 18
+      },
+      "n_closed": 45,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "AMBUJACEM",
+      "ASTRAL",
+      "BAJAJFINSV",
+      "BAJAJHLDNG",
+      "BHEL",
+      "BIOCON",
+      "BLUESTARCO",
+      "CGPOWER",
+      "CONCOR",
+      "DLF",
+      "DMART",
+      "DRREDDY",
+      "ENRIN",
+      "FEDERALBNK",
+      "GODFRYPHLP",
+      "HUDCO",
+      "ICICIAMC",
+      "INDUSINDBK",
+      "INFY",
+      "IREDA",
+      "LENSKART",
+      "LICHSGFIN",
+      "LODHA",
+      "LTF",
+      "LUPIN",
+      "M&MFIN",
+      "MUTHOOTFIN",
+      "OFSS",
+      "PAYTM",
+      "POLYCAB",
+      "POWERGRID",
+      "SRF",
+      "SUZLON",
+      "TCS",
+      "TMCV",
+      "ULTRACEMCO",
+      "UNITDSPR",
+      "VEDL",
+      "VMM",
+      "WIPRO"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +1,264 across 57 trades (63.2% win).",
+    "Laggard: <b>v5_classic</b> with Rs +980 across 45 trades (48.9% win).",
+    "<b>v5</b>: STOPLOSS (17) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (15) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (18). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: 48.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "date": "2026-07-09",
+  "engine": "v8",
+  "started_at": "08:50:14",
+  "total_capital": 999473.25,
+  "regime": "BEAR",
+  "premarket": {
+    "timestamp": "2026-07-09T08:50:14",
+    "gap_prediction": {
+      "direction": "FLAT",
+      "magnitude_pct": 0.0,
+      "confidence": 0.2,
+      "source": "unavailable"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "unavailable"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": null,
+      "asia_change": null,
+      "details": {
+        "sp500": null,
+        "hangseng": null,
+        "nikkei": null
+      }
+    },
+    "overall": {
+      "bias": "NEUTRAL",
+      "score": 0,
+      "size_multiplier": 0.6,
+      "reasons": [
+        "No strong signals \u2014 default neutral"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [],
+      "closed": [
+        {
+          "symbol": "UNITDSPR",
+          "entry_price": 1427.3,
+          "exit_price": 1410.3,
+          "qty": 13,
+          "entry_time": "09:06:26",
+          "exit_time": "09:22:06",
+          "pnl": -221.0,
+          "pnl_pct": -1.19,
+          "reason": "STOPLOSS",
+          "pnl_gross": -221.0,
+          "pnl_net": -243.13,
+          "cost": 22.13,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 81.1,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1424",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.34% above VWAP (1423)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.78% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+243 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+3791 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +2.4%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1416.6,
+          "target_price": 1448.71,
+          "entry_date": "2026-07-07",
+          "trailing_activated": false
+        }
+      ],
+      "pnl": -220.9993652343744
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": -220.9993652343744,
+    "trades": 1,
+    "wins": 0,
+    "losses": 1,
+    "longs": 1,
+    "shorts": 0,
+    "scan_count": 39,
+    "rescore_count": 1,
+    "total_pnl_net": -243.1326456152338,
+    "total_cost": 22.133280380859375
+  },
+  "last_rescore_time": "09:00:17",
+  "last_signals": [],
+  "reentry_blocker": {
+    "max_sl": 2,
+    "sl_count": {
+      "UNITDSPR|LONG": 1
+    }
+  },
+  "alpha_hunter_ran": true
+}

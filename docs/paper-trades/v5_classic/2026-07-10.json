@@ -1,0 +1,130 @@
+{
+  "date": "2026-07-10",
+  "engine": "v5_classic",
+  "started_at": "08:50:06",
+  "total_capital": 1254491.74,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-07-10T08:50:07",
+    "gap_prediction": {
+      "direction": "FLAT",
+      "magnitude_pct": 0.0,
+      "confidence": 0.2,
+      "source": "unavailable"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "unavailable"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": null,
+      "asia_change": null,
+      "details": {
+        "sp500": null,
+        "hangseng": null,
+        "nikkei": null
+      }
+    },
+    "overall": {
+      "bias": "NEUTRAL",
+      "score": 0,
+      "size_multiplier": 0.6,
+      "reasons": [
+        "No strong signals \u2014 default neutral"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "KALYANKJIL",
+          "entry_price": 443.65,
+          "qty": 12,
+          "cost": 5323.8,
+          "entry_time": "14:41:03",
+          "entry_date": "2026-07-09",
+          "sl_price": 437.88,
+          "target_price": 457.85,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 445.95,
+          "trough_price": 443.65,
+          "score": 89.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 409",
+              "type": "positive"
+            },
+            {
+              "text": "Price +4.12% above VWAP (426)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +17.82% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1963 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+790 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +18.6%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        }
+      ],
+      "closed": [],
+      "pnl": 0
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": 0,
+    "trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "longs": 0,
+    "shorts": 0,
+    "scan_count": 37,
+    "rescore_count": 12
+  },
+  "last_rescore_time": "14:46:36",
+  "last_signals": [],
+  "alpha_hunter_ran": true
+}

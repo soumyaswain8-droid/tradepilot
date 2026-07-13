@@ -1,0 +1,134 @@
+{
+  "date": "2026-06-23",
+  "generated_at": "2026-06-23T15:35:59.785287",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 3614.74,
+      "trades": 48,
+      "wins": 29,
+      "losses": 19,
+      "longs": 15,
+      "shorts": 33,
+      "win_rate": 60.4,
+      "open_positions": 2,
+      "best_trade": 843.2,
+      "worst_trade": -351.9,
+      "avg_win": 166.73,
+      "avg_loss": -64.24,
+      "exit_reasons": {
+        "STOPLOSS": 16,
+        "TARGET": 8,
+        "FLAT_FORCE_EXIT": 5,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 4
+      },
+      "n_closed": 48,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 3347.16,
+      "trades": 50,
+      "wins": 26,
+      "losses": 24,
+      "longs": 15,
+      "shorts": 35,
+      "win_rate": 52.0,
+      "open_positions": 0,
+      "best_trade": 823.55,
+      "worst_trade": -151.2,
+      "avg_win": 165.39,
+      "avg_loss": -39.71,
+      "exit_reasons": {
+        "STOPLOSS": 17,
+        "TARGET": 9,
+        "TIME_EXIT": 17,
+        "SIGNAL_FLIP": 7
+      },
+      "n_closed": 50,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIENT",
+      "ADANIGREEN",
+      "ASHOKLEY",
+      "ASTRAL",
+      "BANKBARODA",
+      "BANKINDIA",
+      "BHEL",
+      "BIOCON",
+      "CANBK",
+      "CGPOWER",
+      "CHOLAFIN",
+      "DRREDDY",
+      "ENRIN",
+      "GLENMARK",
+      "HINDZINC",
+      "IDFCFIRSTB",
+      "INDUSTOWER",
+      "LAURUSLABS",
+      "MANKIND",
+      "MOTHERSON",
+      "MUTHOOTFIN",
+      "NATIONALUM",
+      "PNB",
+      "POLICYBZR",
+      "PRESTIGE",
+      "RECLTD",
+      "SAIL",
+      "SBICARD",
+      "SIEMENS",
+      "SRF",
+      "SUNPHARMA",
+      "TCS",
+      "TORNTPHARM",
+      "UNIONBANK",
+      "VEDL",
+      "WIPRO",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +3,615 across 48 trades (60.4% win).",
+    "Laggard: <b>v5_classic</b> with Rs +3,347 across 50 trades (52.0% win).",
+    "<b>v5</b>: STOPLOSS (16) >= TARGET (8). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (17) >= TARGET (9). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: 52.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

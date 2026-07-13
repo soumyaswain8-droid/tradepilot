@@ -1,0 +1,26 @@
+combined_pnl: 0
+date: '2026-07-08'
+insights:
+- ⚠ Combined P&L Rs +0 is -100% vs baseline. Investigate.
+- ✅ v5 vs v5_classic gap closed to Rs +0. Rust fix holding.
+- ⚠ v5 trade count 0 vs baseline 58. May be throttled — check rejection logs.
+- ⚠ v5_classic trade count 0 vs baseline 49. May be throttled — check rejection logs.
+- '● Week 4 target not yet hit: v5 Rs +0 < Rs 40,000. Need: Full roadmap target met?'
+- ⚠ v5 took 0 trades today. Likely dormant or over-filtered.
+- ⚠ v5_classic took 0 trades today. Likely dormant or over-filtered.
+per_engine:
+  v5:
+    losses: 0
+    pnl: 0
+    trades: 0
+    wins: 0
+    wr: 0
+  v5_classic:
+    losses: 0
+    pnl: 0
+    trades: 0
+    wins: 0
+    wr: 0
+phase_change: Capital Rs 10L → 15L per engine
+phase_week: 4
+storage: local-only per project rule

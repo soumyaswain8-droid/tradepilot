@@ -1,0 +1,133 @@
+{
+  "date": "2026-06-24",
+  "generated_at": "2026-06-24T15:35:08.583903",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -2044.21,
+      "trades": 62,
+      "wins": 19,
+      "losses": 43,
+      "longs": 24,
+      "shorts": 38,
+      "win_rate": 30.6,
+      "open_positions": 8,
+      "best_trade": 372.5,
+      "worst_trade": -484.2,
+      "avg_win": 118.74,
+      "avg_loss": -138.72,
+      "exit_reasons": {
+        "STOPLOSS": 21,
+        "FLAT_FORCE_EXIT": 7,
+        "TARGET": 2,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 20
+      },
+      "n_closed": 62,
+      "n_open": 8
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 1854.75,
+      "trades": 56,
+      "wins": 32,
+      "losses": 24,
+      "longs": 24,
+      "shorts": 32,
+      "win_rate": 57.1,
+      "open_positions": 4,
+      "best_trade": 685.0,
+      "worst_trade": -457.2,
+      "avg_win": 150.34,
+      "avg_loss": -123.17,
+      "exit_reasons": {
+        "STOPLOSS": 20,
+        "TARGET": 3,
+        "TIME_EXIT": 14,
+        "SIGNAL_FLIP": 19
+      },
+      "n_closed": 56,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENT",
+      "AMBUJACEM",
+      "ASIANPAINT",
+      "AUROPHARMA",
+      "BHARATFORG",
+      "BPCL",
+      "CGPOWER",
+      "COROMANDEL",
+      "CUMMINSIND",
+      "ETERNAL",
+      "HDFCBANK",
+      "HEROMOTOCO",
+      "HINDPETRO",
+      "ICICIBANK",
+      "INDIGO",
+      "INFY",
+      "JSWENERGY",
+      "KEI",
+      "LAURUSLABS",
+      "M&MFIN",
+      "MANKIND",
+      "MARICO",
+      "NAUKRI",
+      "OFSS",
+      "POWERGRID",
+      "RVNL",
+      "SBILIFE",
+      "SHREECEM",
+      "SIEMENS",
+      "SRF",
+      "TATACONSUM",
+      "TATAINVEST",
+      "TCS",
+      "TORNTPHARM",
+      "TRENT",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +1,855 across 56 trades (57.1% win).",
+    "Laggard: <b>v5</b> with Rs -2,044 across 62 trades (30.6% win).",
+    "<b>v5</b>: STOPLOSS (21) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (20) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 30.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 57.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

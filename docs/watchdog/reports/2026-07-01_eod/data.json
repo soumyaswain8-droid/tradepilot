@@ -1,0 +1,143 @@
+{
+  "date": "2026-07-01",
+  "generated_at": "2026-07-01T15:35:04.369130",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -2527.19,
+      "trades": 77,
+      "wins": 36,
+      "losses": 41,
+      "longs": 29,
+      "shorts": 48,
+      "win_rate": 46.8,
+      "open_positions": 5,
+      "best_trade": 284.61,
+      "worst_trade": -721.05,
+      "avg_win": 53.12,
+      "avg_loss": -108.28,
+      "exit_reasons": {
+        "STOPLOSS": 31,
+        "FLAT_FORCE_EXIT": 21,
+        "TARGET": 1,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 77,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -2375.22,
+      "trades": 64,
+      "wins": 27,
+      "losses": 37,
+      "longs": 20,
+      "shorts": 44,
+      "win_rate": 42.2,
+      "open_positions": 0,
+      "best_trade": 316.2,
+      "worst_trade": -727.95,
+      "avg_win": 70.31,
+      "avg_loss": -115.51,
+      "exit_reasons": {
+        "STOPLOSS": 29,
+        "TARGET": 1,
+        "TIME_EXIT": 20,
+        "SIGNAL_FLIP": 14
+      },
+      "n_closed": 64,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIGREEN",
+      "ADANIPORTS",
+      "ASIANPAINT",
+      "AUROPHARMA",
+      "BDL",
+      "BHARATFORG",
+      "BLUESTARCO",
+      "CHOLAFIN",
+      "CIPLA",
+      "COALINDIA",
+      "COCHINSHIP",
+      "COROMANDEL",
+      "DABUR",
+      "DIVISLAB",
+      "ENRIN",
+      "GLENMARK",
+      "HCLTECH",
+      "HDFCAMC",
+      "HINDUNILVR",
+      "HINDZINC",
+      "IDFCFIRSTB",
+      "JINDALSTEL",
+      "JSWENERGY",
+      "KPITTECH",
+      "LICHSGFIN",
+      "LT",
+      "LTF",
+      "LUPIN",
+      "MANKIND",
+      "MFSL",
+      "MPHASIS",
+      "MUTHOOTFIN",
+      "NHPC",
+      "NYKAA",
+      "OIL",
+      "PAYTM",
+      "PREMIERENE",
+      "SAIL",
+      "SOLARINDS",
+      "SUZLON",
+      "TATACOMM",
+      "TATAELXSI",
+      "TITAN",
+      "TMPV",
+      "TORNTPHARM",
+      "WAAREEENER"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -2,375 across 64 trades (42.2% win).",
+    "Laggard: <b>v5</b> with Rs -2,527 across 77 trades (46.8% win).",
+    "<b>v5</b>: STOPLOSS (31) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (29) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 46.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 42.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

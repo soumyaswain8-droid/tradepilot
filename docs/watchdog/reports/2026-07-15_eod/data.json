@@ -1,0 +1,122 @@
+{
+  "date": "2026-07-15",
+  "generated_at": "2026-07-15T15:35:08.456243",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 1556.78,
+      "trades": 44,
+      "wins": 25,
+      "losses": 19,
+      "longs": 14,
+      "shorts": 30,
+      "win_rate": 56.8,
+      "open_positions": 5,
+      "best_trade": 1303.4,
+      "worst_trade": -414.8,
+      "avg_win": 128.43,
+      "avg_loss": -87.05,
+      "exit_reasons": {
+        "TARGET": 3,
+        "STOPLOSS": 9,
+        "FLAT_FORCE_EXIT": 8,
+        "TIME_EXIT": 14,
+        "SIGNAL_FLIP": 10
+      },
+      "n_closed": 44,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 2592.08,
+      "trades": 54,
+      "wins": 34,
+      "losses": 20,
+      "longs": 26,
+      "shorts": 28,
+      "win_rate": 63.0,
+      "open_positions": 2,
+      "best_trade": 1080.45,
+      "worst_trade": -356.2,
+      "avg_win": 156.93,
+      "avg_loss": -137.17,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "TARGET": 4,
+        "TIME_EXIT": 18,
+        "SIGNAL_FLIP": 20
+      },
+      "n_closed": 54,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIGREEN",
+      "ADANIPOWER",
+      "ATGL",
+      "BHARTIARTL",
+      "COALINDIA",
+      "CONCOR",
+      "DRREDDY",
+      "ETERNAL",
+      "HINDALCO",
+      "HINDUNILVR",
+      "HUDCO",
+      "JSWSTEEL",
+      "KALYANKJIL",
+      "LTF",
+      "MCX",
+      "NATIONALUM",
+      "OIL",
+      "PATANJALI",
+      "POLYCAB",
+      "POWERGRID",
+      "SBIN",
+      "TATACONSUM",
+      "VBL",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +2,592 across 54 trades (63.0% win).",
+    "Laggard: <b>v5</b> with Rs +1,557 across 44 trades (56.8% win).",
+    "High-volume engines (50+ trades) averaged Rs 2,592; low-volume averaged Rs 1,557. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (9) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (12) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (20). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 56.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

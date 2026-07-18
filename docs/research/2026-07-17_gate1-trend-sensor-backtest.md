@@ -61,3 +61,41 @@ NO-DATA days: 1 / 21
 | 2026-07-14 | TREND | +373 |
 | 2026-07-15 | TREND | +849 |
 | 2026-07-16 | TREND | -2,063 |
+
+
+---
+
+## Joint sweep (final)
+
+Grid: td∈(1.0, 0.6, 0.5, 0.4), bm∈(1.0, 2.0, 3.0), rd∈(6, 4), chop_th∈(25, 30, 35, 40, 45), trend_th∈(55, 60, 65, 70, 75) (trend_th>chop_th). Score computed inline (trend_mode.py untouched during sweep): `s = min(100, 0.4*min(100,tape/td) + 0.4*min(100,breadth*bm) + 0.2*(abs(regime)/rd*100))`. 600 combos evaluated.
+
+**Best combo: td=0.5, bm=1.0, rd=6, chop_th=45, trend_th=55 -> profit-capture 70%, loss-capture 54% (FAIL vs 70/70 gate)**
+
+
+### Top 10 combos (ranked by min(profit-capture, loss-capture))
+
+| td | bm | rd | chop_th | trend_th | profit-capture | loss-capture | min |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.5 | 1.0 | 6 | 45 | 55 | 70% | 54% | 54% |
+| 0.5 | 1.0 | 4 | 45 | 55 | 70% | 54% | 54% |
+| 1.0 | 2.0 | 4 | 45 | 55 | 49% | 52% | 49% |
+| 1.0 | 2.0 | 6 | 45 | 55 | 41% | 52% | 41% |
+| 1.0 | 2.0 | 6 | 45 | 60 | 41% | 52% | 41% |
+| 1.0 | 2.0 | 6 | 45 | 65 | 41% | 52% | 41% |
+| 1.0 | 2.0 | 4 | 45 | 60 | 41% | 52% | 41% |
+| 1.0 | 2.0 | 4 | 45 | 65 | 41% | 52% | 41% |
+| 0.6 | 1.0 | 6 | 40 | 55 | 41% | 46% | 41% |
+| 0.6 | 1.0 | 6 | 40 | 60 | 41% | 46% | 41% |
+
+**Best CHOP-separating combo (max loss-capture alone): td=1.0, bm=1.0, rd=6, chop_th=45, trend_th=55 -> profit-capture 17%, loss-capture 85%**
+
+
+### 2-tier P&L split (best CHOP-separating combo)
+
+| tier | days | v5 net P&L sum |
+|---|---:|---:|
+| CHOP-flagged | 16 | -14,578 |
+| non-CHOP (TREND/NEUTRAL) | 4 | +1,306 |
+
+
+**Verdict: FAIL vs 70/70 gate.**

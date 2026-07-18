@@ -123,6 +123,126 @@ def evaluate(chop_th, trend_th, sessions, pct20, closes_cache):
     return pc, lc, rows
 
 
+# ---------------------------------------------------------------------------
+# Joint normalization+threshold sweep (task-3 final Gate-1 calibration).
+# Does NOT touch trend_mode.py: the score is computed inline here per the
+# grid below, reusing the per-day tape/breadth/regime series computed once
+# (see _series_for_day) so the sweep itself is pure arithmetic -- no re-fetch,
+# no re-walk of the closes list per combo.
+# ---------------------------------------------------------------------------
+TD_GRID = (1.0, 0.6, 0.5, 0.4)
+BM_GRID = (1.0, 2.0, 3.0)
+RD_GRID = (6, 4)
+CHOP_GRID = (25, 30, 35, 40, 45)
+TREND_GRID = (55, 60, 65, 70, 75)
+
+
+def _series_for_day(closes, regime, pct20_today, pct20_prev):
+    """Precompute once per day: tape-efficiency at each 10-min step, plus the
+    (normalization-independent) breadth and regime raw values for that day."""
+    tape_series = [tape_efficiency(closes[:i]) for i in range(6, len(closes), 2)]
+    b = breadth_strength(pct20_today, pct20_prev)
+    r = REGIME_SCORE.get(regime, 0)
+    return tape_series, b, r
+
+
+def _modes_for_series(tape_series, b, r, chop_th, trend_th, td, bm, rd):
+    modes, cur, pending = set(), "CHOP", None
+    for t in tape_series:
+        s = min(100.0,
+                0.4 * min(100.0, t / td)
+                + 0.4 * min(100.0, b * bm)
+                + 0.2 * (abs(r) / rd * 100.0))
+        cur, pending = mode_for(s, pending, cur, chop_th, trend_th)
+        modes.add(cur)
+    return modes
+
+
+def evaluate_grid(chop_th, trend_th, td, bm, rd, sessions, series_cache):
+    trend_profit = chop_loss = tot_profit = tot_loss = 0.0
+    rows = []
+    for sess in sessions:
+        series = series_cache.get(sess["date"])
+        if series is None:
+            rows.append((sess["date"], "NO-DATA", sess["net"])); continue
+        tape_series, b, r = series
+        modes = _modes_for_series(tape_series, b, r, chop_th, trend_th, td, bm, rd)
+        day_class = "TREND" if "TREND" in modes else ("CHOP" if modes == {"CHOP"} else "NEUTRAL")
+        rows.append((sess["date"], day_class, sess["net"]))
+        if sess["net"] > 0:
+            tot_profit += sess["net"]
+            if day_class == "TREND": trend_profit += sess["net"]
+        else:
+            tot_loss += -sess["net"]
+            if day_class == "CHOP": chop_loss += -sess["net"]
+    pc = 100 * trend_profit / tot_profit if tot_profit else 0
+    lc = 100 * chop_loss / tot_loss if tot_loss else 0
+    return pc, lc, rows
+
+
+def run_joint_sweep(sessions, series_cache):
+    results = []
+    for td in TD_GRID:
+        for bm in BM_GRID:
+            for rd in RD_GRID:
+                for ct in CHOP_GRID:
+                    for tt in TREND_GRID:
+                        if tt <= ct:
+                            continue
+                        pc, lc, rows = evaluate_grid(ct, tt, td, bm, rd, sessions, series_cache)
+                        results.append({"td": td, "bm": bm, "rd": rd, "chop_th": ct, "trend_th": tt,
+                                        "pc": pc, "lc": lc, "rows": rows})
+    results.sort(key=lambda r: -min(r["pc"], r["lc"]))
+    return results
+
+
+def build_joint_section(results, sessions):
+    best = results[0]
+    verdict = "PASS" if best["pc"] >= 70 and best["lc"] >= 70 else "FAIL"
+    lines = ["\n\n---\n", "## Joint sweep (final)\n"]
+    lines.append(
+        f"Grid: td∈{TD_GRID}, bm∈{BM_GRID}, rd∈{RD_GRID}, chop_th∈{CHOP_GRID}, "
+        f"trend_th∈{TREND_GRID} (trend_th>chop_th). Score computed inline "
+        f"(trend_mode.py untouched during sweep): "
+        f"`s = min(100, 0.4*min(100,tape/td) + 0.4*min(100,breadth*bm) + 0.2*(abs(regime)/rd*100))`. "
+        f"{len(results)} combos evaluated.\n")
+    lines.append(
+        f"**Best combo: td={best['td']}, bm={best['bm']}, rd={best['rd']}, "
+        f"chop_th={best['chop_th']}, trend_th={best['trend_th']} -> "
+        f"profit-capture {best['pc']:.0f}%, loss-capture {best['lc']:.0f}% "
+        f"({verdict} vs 70/70 gate)**\n")
+
+    lines.append("\n### Top 10 combos (ranked by min(profit-capture, loss-capture))\n")
+    lines.append("| td | bm | rd | chop_th | trend_th | profit-capture | loss-capture | min |")
+    lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for r in results[:10]:
+        lines.append(f"| {r['td']} | {r['bm']} | {r['rd']} | {r['chop_th']} | {r['trend_th']} | "
+                     f"{r['pc']:.0f}% | {r['lc']:.0f}% | {min(r['pc'], r['lc']):.0f}% |")
+
+    # Best CHOP-separating combo specifically (max loss-capture alone) -- used
+    # for the 2-tier P&L question when no combo passes the joint 70/70 gate.
+    best_lc = max(results, key=lambda r: r["lc"])
+    lines.append(f"\n**Best CHOP-separating combo (max loss-capture alone): "
+                 f"td={best_lc['td']}, bm={best_lc['bm']}, rd={best_lc['rd']}, "
+                 f"chop_th={best_lc['chop_th']}, trend_th={best_lc['trend_th']} -> "
+                 f"profit-capture {best_lc['pc']:.0f}%, loss-capture {best_lc['lc']:.0f}%**\n")
+
+    if verdict != "PASS":
+        rows = best_lc["rows"]
+        chop_sum = sum(n for _, c, n in rows if c == "CHOP")
+        rest_sum = sum(n for _, c, n in rows if c not in ("CHOP", "NO-DATA"))
+        chop_days = [d for d, c, _ in rows if c == "CHOP"]
+        rest_days = [d for d, c, _ in rows if c not in ("CHOP", "NO-DATA")]
+        lines.append(
+            f"\n### 2-tier P&L split (best CHOP-separating combo)\n\n"
+            f"| tier | days | v5 net P&L sum |\n|---|---:|---:|\n"
+            f"| CHOP-flagged | {len(chop_days)} | {chop_sum:+,.0f} |\n"
+            f"| non-CHOP (TREND/NEUTRAL) | {len(rest_days)} | {rest_sum:+,.0f} |\n")
+
+    lines.append(f"\n**Verdict: {verdict} vs 70/70 gate.**\n")
+    return "\n".join(lines), best, verdict
+
+
 def main():
     sessions = _sessions()
     pct20 = {s["date"]: _pct20(s["date"]) for s in sessions}
@@ -165,11 +285,33 @@ def main():
     report.append(f"\nNO-DATA days: {no_data} / {len(rows)}\n")
     report.append("\n## Per-day (best thresholds)\n\n| date | class | v5 net |\n|---|---|---:|")
     report += [f"| {d} | {c} | {n:+,.0f} |" for d, c, n in rows]
+
+    # --- Joint normalization+threshold sweep (final Gate-1 calibration) ---
+    print("\nRunning joint normalization+threshold sweep...", file=sys.stderr)
+    series_cache = {}
+    for sess in sessions:
+        closes = closes_cache.get(sess["date"])
+        if closes is None:
+            series_cache[sess["date"]] = None
+            continue
+        p_today = pct20.get(sess["date"])
+        idx = sessions.index(sess)
+        p_prev = pct20.get(sessions[idx - 1]["date"]) if idx > 0 else None
+        series_cache[sess["date"]] = _series_for_day(closes, sess["regime"], p_today, p_prev)
+
+    joint_results = run_joint_sweep(sessions, series_cache)
+    joint_section, joint_best, joint_verdict = build_joint_section(joint_results, sessions)
+    report.append(joint_section)
+
     out = ROOT / "docs/research/2026-07-17_gate1-trend-sensor-backtest.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(report))
-    print("\n".join(report[:4])); print(f"report: {out}")
-    sys.exit(0 if pc >= 70 and lc >= 70 else 1)
+    print("\n".join(report[:4]))
+    print(f"\nJoint sweep best: td={joint_best['td']} bm={joint_best['bm']} rd={joint_best['rd']} "
+          f"chop_th={joint_best['chop_th']} trend_th={joint_best['trend_th']} -> "
+          f"pc={joint_best['pc']:.0f}% lc={joint_best['lc']:.0f}% ({joint_verdict})")
+    print(f"report: {out}")
+    sys.exit(0 if joint_verdict == "PASS" else 1)
 
 
 if __name__ == "__main__":

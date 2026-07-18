@@ -2,7 +2,7 @@
 
 **Best: chop_th=25, trend_th=55 -> profit-capture 0%, loss-capture 72% (FAIL vs 70/70 gate)**
 
-**Breadth-key finding:** `compute_breadth_indicators()` returns `pct_above_20dma` (not `pct_20`). Its underlying daily CSVs (`prototype/data/*_NS.csv`) only extend through 2026-06-08, before this backtest's 2026-06-16..07-16 window, so every in-window `date=` request silently clamps to that stale bar. `_pct20()` detects the clamp and returns `None` for all days in this window; `breadth_strength()` treats `None` as 0.0, so **the gate verdict below is effectively tape+regime only — breadth contributes nothing.**
+**Breadth-key finding:** key is `pct_above_20dma`; live breadth data was available for at least one in-window day.
 
 | chop<25 trend>=55 | profit-capture 0% | loss-capture 72% |
 | chop<25 trend>=60 | profit-capture 0% | loss-capture 72% |

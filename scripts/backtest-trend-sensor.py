@@ -9,16 +9,18 @@ Also sweeps thresholds (chop_th in 25..45, trend_th in 55..75, step 5).
 ADAPTATIONS vs. original brief draft (see task-3-report.md for detail):
   1. Breadth key: compute_breadth_indicators() returns `pct_above_20dma`,
      not `pct_20`.
-  2. Breadth is date-parameterized in signature but the underlying daily
-     stock CSVs (prototype/data/*_NS.csv) only extend through 2026-06-08 --
-     well before this backtest's window (2026-06-16..07-16). Calling
-     compute_breadth_indicators(date=<in-window date>) silently clamps to
-     the last available bar (2026-06-08) instead of raising, so every day
-     in the window would otherwise get the SAME stale breadth reading.
-     Fix: _pct20() detects this clamp (returned 'date' != requested date)
-     and returns None for those days. breadth_strength() already treats
-     None inputs as 0.0 (fail-closed), so the gate verdict below is, in
-     effect, judged on tape + regime only -- breadth contributes nothing.
+  2. compute_breadth_indicators()'s `date` return field is unreliable: in
+     prototype/v5/market_breadth.py, `latest_date` is overwritten on every
+     symbol iteration, so a single laggard symbol CSV can misreport the
+     `date` field even though `pct_above_20dma` was computed correctly for
+     the requested date (verified: same date param returns varying, date-
+     correct pct values across calls while `date` echoes a stale value).
+     Gating on `ind["date"] != date` therefore Noned out breadth on most
+     days for the wrong reason. Fix: _pct20() instead requires
+     `stocks_analyzed >= 100` (enough of the universe was actually sampled)
+     and `pct_above_20dma is not None`, ignoring the unreliable `date`
+     field entirely. breadth_strength() still treats None inputs as 0.0
+     (fail-closed) for any day that fails this robustness check.
   3. yfinance 1.2.0 returns MultiIndex columns (Price, Ticker) even for a
      single-ticker download, so `float(c)` on a "Close" cell throws
      TypeError (0-d array required). Columns are flattened after download.
@@ -60,9 +62,10 @@ def _sessions():
 def _pct20(date):
     try:
         ind = compute_breadth_indicators(date=date)
-        if ind.get("date") != date:
-            # Underlying CSVs don't cover this date -- clamped to stale data.
-            # Fail closed rather than reuse a stale reading across many days.
+        # `ind["date"]` is unreliable (overwritten per-symbol in market_breadth.py's
+        # latest_date tracking) -- don't gate on it. Instead require enough of the
+        # universe was sampled and a real pct value came back.
+        if ind.get("stocks_analyzed", 0) < 100 or ind.get("pct_above_20dma") is None:
             return None
         return ind.get("pct_above_20dma")
     except Exception:
@@ -144,6 +147,9 @@ def main():
         "**Breadth-key finding:** key is `pct_above_20dma`; live breadth data was available "
         "for at least one in-window day.\n"
     )
+    breadth_covered = sum(1 for v in pct20.values() if v is not None)
+    report.append(f"\nBreadth coverage: {breadth_covered} / {len(pct20)} days had non-None "
+                  f"`pct_above_20dma` (stocks_analyzed>=100 guard).\n")
 
     best = None
     for ct in (25, 30, 35, 40, 45):

@@ -48,3 +48,34 @@ def mode_for(score: float, prev_pending, cur_mode: str,
     if raw == prev_pending:
         return raw, None
     return cur_mode, raw
+
+
+# mode -> (max_new_entries, size_mult, alloc_mult, floor_percentile)
+LADDER = {
+    "CHOP":    (3,    0.40, 0.5, 75),
+    "NEUTRAL": (8,    0.70, 0.8, 50),
+    "TREND":   (None, 1.00, 1.0, 0),
+}
+
+
+def _percentile(sorted_vals, pct):
+    """Linear-interpolation percentile (matches numpy default)."""
+    if not sorted_vals:
+        return 0.0
+    k = (len(sorted_vals) - 1) * pct / 100.0
+    f = int(k)
+    c = min(f + 1, len(sorted_vals) - 1)
+    return sorted_vals[f] + (sorted_vals[c] - sorted_vals[f]) * (k - f)
+
+
+def apply_ladder(signals, mode):
+    """Filter+cap signals per mode. Returns (allowed, size_mult, alloc_mult)."""
+    max_new, size_mult, alloc_mult, floor_pct = LADDER.get(mode, LADDER["CHOP"])
+    ranked = sorted(signals, key=lambda s: -float(s.get("score", 0)))
+    if floor_pct:
+        scores = sorted(float(s.get("score", 0)) for s in signals)
+        floor_val = _percentile(scores, floor_pct)
+        ranked = [s for s in ranked if float(s.get("score", 0)) >= floor_val]
+    if max_new is not None:
+        ranked = ranked[:max_new]
+    return ranked, size_mult, alloc_mult

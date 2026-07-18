@@ -6,7 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from prototype.v5.trend_mode import tape_efficiency, breadth_strength, trend_score, mode_for
+from prototype.v5.trend_mode import tape_efficiency, breadth_strength, trend_score, mode_for, apply_ladder
 
 
 class TestTapeEfficiency(unittest.TestCase):
@@ -87,6 +87,42 @@ class TestModeHysteresis(unittest.TestCase):
         self.assertEqual(mode_for(34.9, None, "NEUTRAL")[1], "CHOP")
         self.assertEqual(mode_for(35.0, "X", "NEUTRAL")[0], "NEUTRAL")
         self.assertEqual(mode_for(65.0, None, "NEUTRAL")[1], "TREND")
+
+
+def _sigs(scores):
+    return [{"symbol": f"S{i}", "score": s} for i, s in enumerate(scores)]
+
+
+class TestApplyLadder(unittest.TestCase):
+    def test_trend_passes_through(self):
+        sigs = _sigs([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        allowed, size_m, alloc_m = apply_ladder(sigs, "TREND")
+        self.assertEqual(len(allowed), 10)
+        self.assertEqual((size_m, alloc_m), (1.0, 1.0))
+
+    def test_chop_top_quartile_max3(self):
+        sigs = _sigs(list(range(1, 13)))  # scores 1..12, quartile floor = 9.25
+        allowed, size_m, alloc_m = apply_ladder(sigs, "CHOP")
+        self.assertLessEqual(len(allowed), 3)
+        self.assertTrue(all(float(s["score"]) >= 9.25 for s in allowed))
+        self.assertEqual((size_m, alloc_m), (0.40, 0.5))
+        self.assertEqual([s["score"] for s in allowed], sorted([s["score"] for s in allowed], reverse=True))
+
+    def test_neutral_median_max8(self):
+        sigs = _sigs(list(range(1, 21)))  # 1..20, median 10.5
+        allowed, size_m, alloc_m = apply_ladder(sigs, "NEUTRAL")
+        self.assertLessEqual(len(allowed), 8)
+        self.assertTrue(all(float(s["score"]) >= 10.5 for s in allowed))
+        self.assertEqual((size_m, alloc_m), (0.70, 0.8))
+
+    def test_unknown_mode_fails_closed_as_chop(self):
+        sigs = _sigs([5, 6, 7, 8])
+        allowed, size_m, alloc_m = apply_ladder(sigs, "???")
+        self.assertEqual((size_m, alloc_m), (0.40, 0.5))
+
+    def test_empty_signals_ok(self):
+        allowed, _, _ = apply_ladder([], "CHOP")
+        self.assertEqual(allowed, [])
 
 
 if __name__ == "__main__":

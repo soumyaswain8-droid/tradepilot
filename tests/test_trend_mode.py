@@ -51,8 +51,9 @@ class TestBreadthStrength(unittest.TestCase):
 
 class TestTrendScore(unittest.TestCase):
     def test_weights(self):
-        # 0.4*50 + 0.4*50 + 0.2*(3/6*100) = 20+20+10 = 50
-        self.assertAlmostEqual(trend_score(50.0, 50.0, 3), 50.0)
+        # normalized: 0.4*min(100,20/0.4) + 0.4*min(100,20*3.0) + 0.2*min(100,2/4*100)
+        #           = 0.4*50 + 0.4*60 + 0.2*50 = 20+24+10 = 54
+        self.assertAlmostEqual(trend_score(20.0, 20.0, 2), 54.0)
 
     def test_regime_sign_ignored(self):
         self.assertEqual(trend_score(0, 0, -6), trend_score(0, 0, 6))

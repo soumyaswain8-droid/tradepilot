@@ -27,7 +27,19 @@ def breadth_strength(pct_20_today, pct_20_prev) -> float:
 
 
 def trend_score(tape: float, breadth: float, regime_score: int) -> float:
-    s = 0.4 * tape + 0.4 * breadth + 0.2 * (abs(regime_score or 0) / 6.0 * 100.0)
+    # Variant 3 (2026-07-18 recalibration, see docs/research/2026-07-17_gate1-
+    # trend-sensor-backtest.md + .superpowers/sdd/task-3-recal-report.md).
+    # Variant 1 (tape/0.6, breadth*2.0): profit-capture 0%. Variant 2
+    # (tape/0.4, breadth*2.5): profit-capture 9%. Both still capped by the
+    # regime term: REGIME_SCORE only ever supplies +-4 (BULL/BEAR) or 0
+    # (SIDEWAYS) in the Gate-1 harness, but the term was normalized against a
+    # theoretical +-6 ceiling, so it never contributed its full 0.2 weight on
+    # a real regime day either -- the same "compressed range" problem as tape
+    # and breadth. Normalizing regime against its actual +-4 ceiling (best of
+    # the backtest sweep) raised profit-capture further. Still clamped 0-100.
+    s = (0.4 * min(100.0, (tape or 0) / 0.4)
+         + 0.4 * min(100.0, (breadth or 0) * 3.0)
+         + 0.2 * min(100.0, abs(regime_score or 0) / 4.0 * 100.0))
     return max(0.0, min(100.0, s))
 
 

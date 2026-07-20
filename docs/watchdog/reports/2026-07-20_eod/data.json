@@ -1,0 +1,129 @@
+{
+  "date": "2026-07-20",
+  "generated_at": "2026-07-20T15:35:53.958770",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 911.2,
+      "trades": 48,
+      "wins": 23,
+      "losses": 25,
+      "longs": 30,
+      "shorts": 18,
+      "win_rate": 47.9,
+      "open_positions": 14,
+      "best_trade": 603.9,
+      "worst_trade": -180.09,
+      "avg_win": 115.12,
+      "avg_loss": -78.93,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "FLAT_FORCE_EXIT": 9,
+        "TIME_EXIT": 5,
+        "TARGET": 2,
+        "SIGNAL_FLIP": 17
+      },
+      "n_closed": 48,
+      "n_open": 14
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 2286.72,
+      "trades": 46,
+      "wins": 22,
+      "losses": 24,
+      "longs": 16,
+      "shorts": 30,
+      "win_rate": 47.8,
+      "open_positions": 5,
+      "best_trade": 1134.6,
+      "worst_trade": -220.0,
+      "avg_win": 163.07,
+      "avg_loss": -54.2,
+      "exit_reasons": {
+        "TARGET": 3,
+        "STOPLOSS": 15,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 13
+      },
+      "n_closed": 46,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIPOWER",
+      "ATGL",
+      "AUBANK",
+      "AXISBANK",
+      "BAJAJHLDNG",
+      "BHARATFORG",
+      "CONCOR",
+      "DLF",
+      "HYUNDAI",
+      "ICICIAMC",
+      "INFY",
+      "JIOFIN",
+      "JSWENERGY",
+      "JSWSTEEL",
+      "KOTAKBANK",
+      "MANKIND",
+      "MCX",
+      "MOTHERSON",
+      "MOTILALOFS",
+      "NMDC",
+      "OFSS",
+      "OIL",
+      "PNB",
+      "PREMIERENE",
+      "SBILIFE",
+      "SWIGGY",
+      "TCS",
+      "TRENT",
+      "TVSMOTOR",
+      "UNIONBANK",
+      "UPL"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +2,287 across 46 trades (47.8% win).",
+    "Laggard: <b>v5</b> with Rs +911 across 48 trades (47.9% win).",
+    "<b>v5</b>: STOPLOSS (15) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (17). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (15) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 47.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 47.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -72,5 +72,62 @@ class TestChopFilter(unittest.TestCase):
             self.assertLess(got[sym], base[sym])  # 0.4 size × 0.5 alloc < 1.0
 
 
+class TestRegimeSensorSwap(unittest.TestCase):
+    """REGIME_SENSOR (2026-07-20, design doc §5 'swap the score producer, not
+    the consumer'): default stays trendscore; REGIME_SENSOR=rrg routes
+    through _rrg_score_for_session instead. No network in tests -- fetches
+    mocked."""
+
+    def setUp(self):
+        os.environ["CHOP_FILTER"] = "1"
+        self.addCleanup(os.environ.pop, "CHOP_FILTER", None)
+        self.addCleanup(os.environ.pop, "REGIME_SENSOR", None)
+
+    def test_default_is_trendscore(self):
+        os.environ.pop("REGIME_SENSOR", None)
+        state = _state()
+        with mock.patch.object(v5, "_rrg_score_for_session") as rrg_mock, \
+             mock.patch("yfinance.download", side_effect=Exception("no network in tests")):
+            v5._update_trend_mode(state)
+        rrg_mock.assert_not_called()
+        self.assertIn("trend_components", state)  # trendscore path persists this key
+
+    def test_regime_sensor_rrg_routes_to_rrg_producer(self):
+        os.environ["REGIME_SENSOR"] = "rrg"
+        state = _state()
+        with mock.patch.object(v5, "_rrg_score_for_session", return_value=100.0) as rrg_mock:
+            v5._update_trend_mode(state)
+        rrg_mock.assert_called_once_with(state)
+        self.assertEqual(state["trend_mode"], "CHOP")   # 1st scan: hysteresis holds, TREND pending
+        self.assertEqual(state["trend_pending"], "TREND")
+        self.assertEqual(state["trend_score_last"], 100.0)
+
+    def test_regime_sensor_rrg_chop_score_flows_through_hysteresis(self):
+        os.environ["REGIME_SENSOR"] = "rrg"
+        state = _state()
+        with mock.patch.object(v5, "_rrg_score_for_session", return_value=0.0):
+            v5._update_trend_mode(state)
+        self.assertEqual(state["trend_mode"], "CHOP")
+        self.assertIsNone(state["trend_pending"])
+
+    def test_rrg_score_producer_fail_closed_on_fetch_error(self):
+        # _rrg_score_for_session itself: yfinance import/download blows up ->
+        # rotation_signal never gets real data -> None -> rrg_score -> 0.0.
+        state = _state()
+        with mock.patch("yfinance.download", side_effect=Exception("network down")):
+            score = v5._rrg_score_for_session(state)
+        self.assertEqual(score, 0.0)
+        self.assertIsNone(state["rrg_signal"]["signal"])
+
+    def test_rrg_score_cached_per_session_date(self):
+        from datetime import datetime
+        state = _state()
+        state["_rrg_score_cache"] = {"date": datetime.now().strftime("%Y-%m-%d"), "score": 100.0}
+        with mock.patch("yfinance.download") as dl:
+            score = v5._rrg_score_for_session(state)
+        self.assertEqual(score, 100.0)
+        dl.assert_not_called()  # cache hit for today's date, no re-fetch
+
+
 if __name__ == "__main__":
     unittest.main()

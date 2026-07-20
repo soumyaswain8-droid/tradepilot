@@ -809,45 +809,119 @@ def _fast_flip(state, pm, rm):
         log(f"  FAST-FLIP: tape {pct:+.2f}% -> regime {cur} -> {new} (slot tilt now active)")
 
 
-def _update_trend_mode(state):
-    """v5_chop sensor (spec 2026-07-17): recompute TrendScore + mode each scan.
+def _rrg_score_for_session(state):
+    """REGIME_SENSOR=rrg score producer (Gate-1 PASS, commit d23726e — see
+    prototype/v5/rrg_regime.py for the encoded config: form=count,
+    set=extended, N=1, threshold=-0.2143, pc85/lc73).
 
-    CHOP_FILTER=1 only. Breadth (daily-granularity) cached in state; tape from
-    the same 5-min ^NSEI fetch pattern as _fast_flip. Fail-closed: any missing
-    input contributes 0 -> mode decays toward CHOP.
+    Computed ONCE per session and cached in state["_rrg_score_cache"] keyed
+    by date -- the sensor is daily-bar-driven (no intraday component), so
+    recomputing it mid-session would just re-fetch the same closes for the
+    same answer (design doc §5/§7: "tilt input, not trading trigger", held
+    constant across the session). Fetches ~10 calendar days of daily closes
+    per ticker (enough for N=1 across weekends/holidays), using ONLY closes
+    strictly before today (no-lookahead -- any bar dated today is dropped).
+    Fail-closed: fetch failure or a None signal (NO-DATA, per rrg_regime's
+    fail-closed set-membership rules) -> score 0.0 (=> CHOP).
+    """
+    from prototype.v5.rrg_regime import (
+        rotation_signal, rrg_score, ALL_TICKERS, DEFENSIVE, CYCLICAL_EXTENDED,
+    )
+    today = datetime.now().strftime("%Y-%m-%d")
+    cache = state.get("_rrg_score_cache")
+    if cache and cache.get("date") == today:
+        return cache["score"]
+
+    closes_by_ticker = {}
+    try:
+        import yfinance as yf
+        import pandas as pd
+        for t in ALL_TICKERS:
+            try:
+                df = yf.download(t, period="10d", interval="1d", progress=False)
+                if df is None or len(df) == 0:
+                    continue
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                closes = df["Close"].dropna()
+                # NO-LOOKAHEAD: only closes strictly before today.
+                pairs = sorted((str(idx.date()), float(v)) for idx, v in closes.items()
+                                if str(idx.date()) < today)
+                if pairs:
+                    closes_by_ticker[t] = [v for _, v in pairs]
+            except Exception as e:
+                log(f"  [rrg] {t} fetch failed (fail-closed skip): {e}")
+    except Exception as e:
+        log(f"  [rrg] yfinance unavailable (fail-closed): {e}")
+
+    signal = rotation_signal(closes_by_ticker)
+    score = rrg_score(signal)
+    if signal is None:
+        log("  [rrg] NO-DATA this session (fail-closed to CHOP)")
+    def_present = sum(1 for t in DEFENSIVE if len(closes_by_ticker.get(t, [])) >= 2)
+    cyc_present = sum(1 for t in CYCLICAL_EXTENDED if len(closes_by_ticker.get(t, [])) >= 2)
+    # Amendment C parity (2026-07-20): persist raw signal + member counts so
+    # daily JSONs support Gate-2 post-hoc analysis without re-fetching bars.
+    state["rrg_signal"] = {
+        "signal": round(signal, 4) if signal is not None else None,
+        "defensive_present": def_present, "defensive_total": len(DEFENSIVE),
+        "cyclical_present": cyc_present, "cyclical_total": len(CYCLICAL_EXTENDED),
+    }
+    state["_rrg_score_cache"] = {"date": today, "score": score}
+    return score
+
+
+def _update_trend_mode(state):
+    """v5_chop sensor (spec 2026-07-17) + REGIME_SENSOR score-producer swap
+    (2026-07-20, design doc §5 "swap the score producer, not the
+    consumer"): recompute the mode-driving score each scan.
+
+    CHOP_FILTER=1 only. REGIME_SENSOR selects which score feeds the SAME
+    mode_for() hysteresis + apply_ladder() consumer either way:
+      - "trendscore" (default, unchanged): tape efficiency + breadth +
+        premarket regime, recomputed every scan from fresh intraday data.
+      - "rrg": prototype/v5/rrg_regime.py's Gate-1-PASSED rotation-count
+        sensor (see _rrg_score_for_session above), computed once per
+        session and cached.
+    Fail-closed: any missing input contributes 0 -> mode decays toward CHOP.
     """
     if os.environ.get("CHOP_FILTER") != "1":
         return
-    from prototype.v5.trend_mode import tape_efficiency, breadth_strength, trend_score, mode_for
-    tape = 0.0
-    try:
-        import yfinance as yf
-        n = yf.download("^NSEI", period="1d", interval="5m", progress=False)
-        if len(n):
-            tape = tape_efficiency([float(c) for c in n["Close"].dropna().values])
-    except Exception as e:
-        log(f"  [chop] tape fetch failed (fail-closed): {e}")
-    b = state.get("_breadth_cache")
-    if b is None:
+    from prototype.v5.trend_mode import mode_for
+    sensor = os.environ.get("REGIME_SENSOR", "trendscore")
+    if sensor == "rrg":
+        s = _rrg_score_for_session(state)
+    else:
+        from prototype.v5.trend_mode import tape_efficiency, breadth_strength, trend_score
+        tape = 0.0
         try:
-            from prototype.v5.market_breadth import compute_breadth_indicators
-            ind = compute_breadth_indicators()
-            b = {"today": ind.get("pct_20"), "prev": state.get("_pct20_prev")}
+            import yfinance as yf
+            n = yf.download("^NSEI", period="1d", interval="5m", progress=False)
+            if len(n):
+                tape = tape_efficiency([float(c) for c in n["Close"].dropna().values])
         except Exception as e:
-            log(f"  [chop] breadth failed (fail-closed): {e}")
-            b = {"today": None, "prev": None}
-        state["_breadth_cache"] = b
-    breadth = breadth_strength(b["today"], b["prev"])
-    regime_score = int(state.get("premarket", {}).get("regime_score", 0) or 0)
-    s = trend_score(tape, breadth, regime_score)
-    # Amendment C (2026-07-20): persist raw components so daily JSONs let us
-    # re-sweep any (td, bm, rd, thresholds) at the Gate-2 review without
-    # re-fetching bars.
-    state["trend_components"] = {"tape": round(tape, 2), "breadth": round(breadth, 2), "regime": regime_score}
+            log(f"  [chop] tape fetch failed (fail-closed): {e}")
+        b = state.get("_breadth_cache")
+        if b is None:
+            try:
+                from prototype.v5.market_breadth import compute_breadth_indicators
+                ind = compute_breadth_indicators()
+                b = {"today": ind.get("pct_20"), "prev": state.get("_pct20_prev")}
+            except Exception as e:
+                log(f"  [chop] breadth failed (fail-closed): {e}")
+                b = {"today": None, "prev": None}
+            state["_breadth_cache"] = b
+        breadth = breadth_strength(b["today"], b["prev"])
+        regime_score = int(state.get("premarket", {}).get("regime_score", 0) or 0)
+        s = trend_score(tape, breadth, regime_score)
+        # Amendment C (2026-07-20): persist raw components so daily JSONs let us
+        # re-sweep any (td, bm, rd, thresholds) at the Gate-2 review without
+        # re-fetching bars.
+        state["trend_components"] = {"tape": round(tape, 2), "breadth": round(breadth, 2), "regime": regime_score}
     cur = state.get("trend_mode", "CHOP")
     mode, pending = mode_for(s, state.get("trend_pending"), cur)
     if mode != cur:
-        log(f"  [chop] mode {cur} -> {mode} (TrendScore {s:.0f})")
+        log(f"  [chop] mode {cur} -> {mode} (score {s:.0f}, sensor={sensor})")
     state["trend_mode"], state["trend_pending"], state["trend_score_last"] = mode, pending, round(s, 1)
 
 

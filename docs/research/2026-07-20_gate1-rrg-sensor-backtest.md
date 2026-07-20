@@ -94,3 +94,105 @@ NO-DATA days for best combo: 0 / 21
 | ^NSEI | benchmark | 52 | 2026-05-04 | 2026-07-16 |
 
 ^NSEI trading-day calendar span in fetch window: 2026-05-04..2026-07-16 (52 trading days).
+
+
+---
+
+## Data-repair re-run (2026-07-20)
+
+Bounded data-repair pass, explicitly NOT a re-calibration: same forms, sets, lookbacks, and threshold-grid derivation as the original run above (zero new knobs). A symbol probe (period="1mo", daily; accept only >15 bars covering July 2026 with plausible thousands-level index closes) found a working replacement for **NIFTY Pvt Bank** -- `NIFTY_PVT_BANK.NS` (52 bars, 2026-05-04..2026-07-16, closes ~27,900-28,150) -- now substituted in place of the dead `NIFTYPVTBANK.NS` in the cyclical-extended-only set. **NIFTY Healthcare remains UNREPAIRABLE**: 12 candidate symbols tried (`^CNXHEALTH`, `NIFTYHEALTHCARE.NS`, `NIFTY-HEALTHCARE.NS`, `NIFTY_HEALTHCARE.BO`, `NIFTY100HEALTHCARE.NS`, `NIFTYHEALTHCARE25.NS`, `NIFTY_HEALTH.NS`, `^NSEIHEALTHCARE`, `NIFTY_HEALTHCARE25.NS`, `^NIFTYHEALTHCARE`, `^NSEHEALTHCARE`, `NIFTY_HEALTHCARE`), all returned no data. Per instruction, no substitute index (e.g. Consumption) was used -- the defensive set keeps falling back to its existing fail-closed 2/3-present handling, unchanged from the original run. **Only the cyclical-extended set changes** (6/7 -> 7/7 members present); the base set (which never included the pvt-bank ticker) is identical to the original run by construction.
+
+**Data-repair best: form=count, set=extended, N=1, threshold=-0.2143 -> profit-capture 85%, loss-capture 73% (PASS vs 70/70 gate)**
+
+Sensor (unchanged from original run): daily close-to-close relative return of each sector index vs ^NSEI (no JdK EMA machinery, per spec §3b), N-day lookback in {1,3,5}. `spread` form = mean(defensive rel) - mean(cyclical rel); `count` form = frac(defensive rel>0) - frac(cyclical rel>0), normalized by present-member set size that day. Day t is CHOP (risk-off/throttle) when signal >= threshold, else TREND -- a single-threshold binary classifier (approach b has no momentum term to justify a NEUTRAL band, unlike TrendScore's chop_th/trend_th hysteresis pair). Threshold grid = deciles of the in-window signal distribution plus 0.0, computed independently per (form, set-variant, N) combo.
+
+
+No-lookahead check: **PASSED** (21 sessions verified: last close date used for day t is strictly < t, by construction from the ^NSEI trading-day calendar position + explicit per-session assertion).
+
+
+NO-DATA days for best combo: 0 / 21
+
+
+### NO-DATA count by (set-variant, N)
+
+| set-variant | N | NO-DATA days |
+|---|---:|---:|
+| base | 1 | 0 |
+| base | 3 | 0 |
+| base | 5 | 0 |
+| extended | 1 | 0 |
+| extended | 3 | 0 |
+| extended | 5 | 0 |
+
+
+### Threshold grid used (best combo: count/extended/N=1)
+
+-0.5714, -0.4286, -0.3571, -0.2143, 0.0000, 0.0714, 0.1429, 0.2143, 0.3571
+
+
+## Top 10 combos (ranked by min(profit-capture, loss-capture))
+
+| form | set-variant | N | threshold | profit-capture | loss-capture | min |
+|---|---|---:|---:|---:|---:|---:|
+| count | extended | 1 | -0.2143 | 85% | 73% | 73% |
+| count | extended | 3 | 0.0000 | 87% | 72% | 72% |
+| count | extended | 1 | -0.4286 | 61% | 78% | 61% |
+| count | extended | 1 | -0.3571 | 61% | 78% | 61% |
+| spread | base | 1 | -0.0023 | 61% | 60% | 60% |
+| count | base | 1 | 0.0000 | 85% | 60% | 60% |
+| spread | extended | 1 | -0.0005 | 81% | 52% | 52% |
+| spread | extended | 1 | 0.0000 | 81% | 52% | 52% |
+| count | extended | 1 | 0.0000 | 92% | 52% | 52% |
+| spread | extended | 5 | 0.0064 | 70% | 52% | 52% |
+
+## Per-day (best combo: count/extended/N=1/th=-0.2143)
+
+| date | signal | class | v5 net |
+|---|---:|---|---:|
+| 2026-06-16 | -0.5714 | TREND | -2,473 |
+| 2026-06-17 | 0.2143 | CHOP | -1,540 |
+| 2026-06-18 | -0.4286 | TREND | -990 |
+| 2026-06-19 | -0.2143 | CHOP | +988 |
+| 2026-06-22 | 0.1429 | CHOP | -2,065 |
+| 2026-06-23 | -0.3571 | TREND | +3,039 |
+| 2026-06-24 | 0.4286 | CHOP | -3,177 |
+| 2026-06-25 | -0.5714 | TREND | +3,756 |
+| 2026-06-26 | 0.0714 | CHOP | -176 |
+| 2026-06-29 | 0.0714 | CHOP | -1,978 |
+| 2026-06-30 | 0.3571 | CHOP | -2,303 |
+| 2026-07-01 | -0.2143 | CHOP | -3,605 |
+| 2026-07-02 | -0.3571 | TREND | -1,211 |
+| 2026-07-03 | -0.4286 | TREND | +1,521 |
+| 2026-07-06 | 0.2143 | CHOP | +148 |
+| 2026-07-07 | -0.4286 | TREND | -2,350 |
+| 2026-07-09 | 0.2143 | CHOP | -2,433 |
+| 2026-07-13 | -0.8571 | TREND | +2,240 |
+| 2026-07-14 | -0.7143 | TREND | +373 |
+| 2026-07-15 | 0.8571 | CHOP | +849 |
+| 2026-07-16 | -0.2143 | CHOP | -2,063 |
+
+## CHOP vs non-CHOP P&L split (best combo)
+
+| tier | days | v5 net P&L sum |
+|---|---:|---:|
+| CHOP-flagged | 12 | -17,354 |
+| TREND (non-CHOP) | 9 | +3,905 |
+
+
+## Per-ticker coverage
+
+| ticker | class | bars | first | last |
+|---|---|---:|---|---|
+| NIFTY_FIN_SERVICE.NS | cyclical (extended-only) | 52 | 2026-05-04 | 2026-07-16 ⚠ .NS gap-risk symbol |
+| NIFTY_HEALTHCARE.NS | defensive | 0 | - | - ⚠ .NS gap-risk symbol |
+| NIFTY_PVT_BANK.NS | cyclical (extended-only) | 52 | 2026-05-04 | 2026-07-16 ⚠ .NS gap-risk symbol |
+| ^CNXAUTO | cyclical (base) | 52 | 2026-05-04 | 2026-07-16 |
+| ^CNXFMCG | defensive | 52 | 2026-05-04 | 2026-07-16 |
+| ^CNXMETAL | cyclical (base) | 52 | 2026-05-04 | 2026-07-16 |
+| ^CNXPHARMA | defensive | 52 | 2026-05-04 | 2026-07-16 |
+| ^CNXPSUBANK | cyclical (extended-only) | 52 | 2026-05-04 | 2026-07-16 |
+| ^CNXREALTY | cyclical (base) | 52 | 2026-05-04 | 2026-07-16 |
+| ^NSEBANK | cyclical (base) | 52 | 2026-05-04 | 2026-07-16 |
+| ^NSEI | benchmark | 52 | 2026-05-04 | 2026-07-16 |
+
+^NSEI trading-day calendar span in fetch window: 2026-05-04..2026-07-16 (52 trading days).

@@ -37,6 +37,14 @@ if _ml_w is not None:
     for _k in _oth: _CW[_k] = _oth[_k] * _scale
     _CW["ml_score"] = _t
 from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_model_freshness, is_reentry_blocked, record_reentry_sl
+# Risk Gate (Phase 0, spec 2026-07-20_risk_gate_three_state_verdict.md S5) --
+# log-only verdict module. Graceful import: RISK_GATE_LOG wiring below no-ops
+# if unavailable, same pattern as the other optional engine modules.
+try:
+    from prototype.v5.risk_gate import TradePlan, RiskGate
+except Exception as e:
+    TradePlan = RiskGate = None
+    print(f"[WARN] risk_gate: {e}")
 LOG_FILE = LOG_DIR / f"{ENGINE}-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
@@ -468,6 +476,98 @@ def _tg_exit(trade):
         pass
 
 
+# ═══════════════════════════ RISK GATE (log-only, Phase 0) ═══════════════════════════
+# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S5 "Phase 0" --
+# schema + gate module, wired in LOG-ONLY mode: the gate runs and records
+# verdicts, but execution still follows today's inline path unchanged. Runs
+# AFTER deploy_signals' own decisions are already locked in for this scan
+# (see prototype/v5/risk_gate.py's module docstring for why that ordering
+# matters). Verdicts are appended to
+# docs/paper-trades/<ENGINE>/YYYY-MM-DD_verdicts.json. Kill switch:
+# RISK_GATE_LOG=0 disables this block entirely (default ON -- behavior-neutral).
+
+def _verdicts_file():
+    return TRADE_DIR / f"{datetime.now().strftime('%Y-%m-%d')}_verdicts.json"
+
+
+def _build_trade_plan(sig, pool_budget_rs, score_threshold):
+    """One TradePlan per candidate signal (spec S4.1). Phase 0: invalidation
+    defaults to the recorded-not-enforced 'score_drop_below:<threshold>' form
+    (spec S7 Q3 lean). threshold = the lowest score among this scan's
+    candidates -- v5's BUY/SELL selection is regime-aware percentile cuts
+    (signal_engine.py), not a single fixed global score cutoff, so the
+    realized cutoff for this batch is the closest honest reading of "the
+    signal threshold in use" from engine context."""
+    price = sig.get("entry_price", sig.get("price", 0.0)) or 0.0
+    side = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
+    reasons = sig.get("reasons") or []
+    rationale = (f"{sig.get('direction', '?')} rank={sig.get('rank', '?')} "
+                 f"score={sig.get('score', 0)} chg={float(sig.get('change_pct', 0) or 0):+.2f}% "
+                 f"{'; '.join(str(r) for r in reasons[:2])}").strip()
+    return TradePlan(
+        symbol=sig.get("symbol", "?"),
+        side=side,
+        entry=float(price),
+        target=float(sig.get("target_price", price) or price),
+        stop=float(sig.get("sl_price", price) or price),
+        invalidation=f"score_drop_below:{score_threshold}",
+        size_rs=round(pool_budget_rs * 0.15, 2),
+        pool=sig.get("pool", "INTRADAY"),
+        score=float(sig.get("score", 0) or 0),
+        rationale=rationale,
+    )
+
+
+def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult):
+    """Evaluate every candidate through RiskGate and append rows to the daily
+    verdicts artifact. Log-only -- never touches execution. Caller wraps this
+    in its own try/except too (belt and suspenders) so a bug here can never
+    affect deployments."""
+    if not candidates or rm is None or RiskGate is None or TradePlan is None:
+        return
+    score_threshold = min(float(s.get("score", 0) or 0) for s in candidates)
+    gate = RiskGate(rm, score_threshold=score_threshold)
+    rows = []
+    for sig in candidates:
+        pool_name = sig.get("pool", "INTRADAY")
+        try:
+            budget = pm.get_pool_budget(pool_name) * alloc_mult
+        except Exception:
+            budget = 0.0
+        plan = _build_trade_plan(sig, budget, score_threshold)
+        pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
+        result = gate.evaluate(plan, position_type=pos_type)
+        rows.append({
+            "symbol": plan.symbol,
+            "plan": {
+                "symbol": plan.symbol, "side": plan.side, "entry": plan.entry,
+                "target": plan.target, "stop": plan.stop,
+                "invalidation": plan.invalidation, "size_rs": plan.size_rs,
+                "pool": plan.pool, "score": plan.score, "rationale": plan.rationale,
+            },
+            "verdict": result.verdict.value,
+            "reasons": result.reasons,
+            "checked_at": result.checked_at,
+            "inline_outcome": "deployed" if plan.symbol in deployed_syms else "filtered",
+            "engine": ENGINE,
+            "regime": state.get("regime", "?"),
+        })
+    if not rows:
+        return
+    path = _verdicts_file()
+    existing = {"date": datetime.now().strftime("%Y-%m-%d"), "engine": ENGINE, "verdicts": []}
+    if path.exists():
+        try:
+            loaded = json.loads(path.read_text())
+            if isinstance(loaded, dict) and isinstance(loaded.get("verdicts"), list):
+                existing = loaded
+        except (json.JSONDecodeError, OSError):
+            pass
+    existing["verdicts"].extend(rows)
+    existing["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    atomic_write_json(path, existing)
+
+
 # ═══════════════════════════ DEPLOY ═══════════════════════════
 
 def deploy_signals(state, pm, rm, signals):
@@ -490,6 +590,7 @@ def deploy_signals(state, pm, rm, signals):
             f"-> {len(signals)} signals, size x{_size_mult}, alloc x{_alloc_mult}")
 
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
+    initial_held = set(held)  # RISK_GATE_LOG: diff against `held` post-loop -> which candidates deployed
     count = 0
     rust_validated = 0
 
@@ -515,8 +616,10 @@ def deploy_signals(state, pm, rm, signals):
         allowed_dirs = ("BUY", "SELL")
 
     # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.
-    for sig in sorted([s for s in signals if s["direction"] in allowed_dirs],
-                      key=lambda s: -float(s.get("score", 0))):
+    # (named so RISK_GATE_LOG below can replay the exact same candidate set post-loop)
+    candidates = sorted([s for s in signals if s["direction"] in allowed_dirs],
+                        key=lambda s: -float(s.get("score", 0)))
+    for sig in candidates:
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
         if pool_name not in state["pools"] or pool_name == "NONE":
             continue
@@ -599,6 +702,16 @@ def deploy_signals(state, pm, rm, signals):
     if count:
         rust_note = f" ({rust_validated} Rust-validated)" if rust_validated else " (Python-only mode)"
         log(f"  Deployed {count} positions{rust_note}")
+
+    # RISK_GATE_LOG (default ON): log-only, runs AFTER the deploy decisions
+    # above are already final. Fail-open -- any exception here is swallowed
+    # and logged; it can never change `count` or what was deployed.
+    if os.environ.get("RISK_GATE_LOG", "1") == "1":
+        try:
+            _log_risk_gate_verdicts(state, pm, rm, candidates, held - initial_held, _alloc_mult)
+        except Exception as e:
+            log(f"  [RISK_GATE_LOG] failed: {e}")
+
     return count
 
 

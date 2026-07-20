@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 os.environ["ENGINE_NAME"]     = "v5_chop"
 os.environ["CHOP_FILTER"]     = "1"
 os.environ["ML_SCORE_WEIGHT"] = "0"
+os.environ["TELEGRAM_DISABLE"] = "1"   # shadow: only live v5 alerts
 
 target = str(Path(__file__).parent / "v5-paper-trade.py")
 sys.argv = [target] + sys.argv[1:]

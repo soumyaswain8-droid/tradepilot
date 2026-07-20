@@ -53,6 +53,7 @@ declare -a ENGINES=(
   "v5_cut|scripts/v5_cut-paper-trade.py|docs/paper-trades/v5_cut/${TODAY}.json|python3 scripts/v5_cut-paper-trade.py"
   # SHADOW (TP-RCA 2026-06-30): v5_flip = fast intraday regime-flip (5-min tape, BEAR 8/12 tilt on hard-down).
   "v5_flip|scripts/v5_flip-paper-trade.py|docs/paper-trades/v5_flip/${TODAY}.json|python3 scripts/v5_flip-paper-trade.py"
+  "v5_chop|scripts/v5_chop-paper-trade.py|docs/paper-trades/v5_chop/${TODAY}.json|python3 scripts/v5_chop-paper-trade.py"
   # V8 (TP-V8 2026-07-06): April-recipe replica (control twin).
   "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):

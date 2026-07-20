@@ -144,6 +144,11 @@ ENGINES=(
   # week (engine doesn't adapt its mix to the tape today). Compare red-day behaviour vs v5.
   "v5_flip|scripts/v5_flip-paper-trade.py"
 
+  # SHADOW (spec 2026-07-17): v5_chop = TrendScore chop filter (trade less +
+  # smaller in chop, full-size on confirmed trend). ML-free. Gate 2: 2 weeks
+  # vs v5 -> promote on better net + lower cost drag + no worse DD.
+  "v5_chop|scripts/v5_chop-paper-trade.py"
+
   # V8 (TP-V8, 2026-07-06): April-recipe replica — NIFTY-50, top-5, long-only, +1.5/-0.75
   # fixed bracket, early entry. Control twin (no ML). Target: recover April +1%/65%-WR profile.
   "v8|scripts/v8-paper-trade.py"

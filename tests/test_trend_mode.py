@@ -51,9 +51,10 @@ class TestBreadthStrength(unittest.TestCase):
 
 class TestTrendScore(unittest.TestCase):
     def test_weights(self):
-        # normalized: 0.4*min(100,20/0.4) + 0.4*min(100,20*3.0) + 0.2*min(100,2/4*100)
-        #           = 0.4*50 + 0.4*60 + 0.2*50 = 20+24+10 = 54
-        self.assertAlmostEqual(trend_score(20.0, 20.0, 2), 54.0)
+        # Gate-1 sweep's best CHOP-separating combo (td=1.0, bm=1.0, rd=6):
+        # 0.4*min(100,50/1.0) + 0.4*min(100,50*1.0) + 0.2*min(100,3/6*100)
+        #           = 0.4*50 + 0.4*50 + 0.2*50 = 20+20+10 = 50
+        self.assertAlmostEqual(trend_score(50.0, 50.0, 3), 50.0)
 
     def test_regime_sign_ignored(self):
         self.assertEqual(trend_score(0, 0, -6), trend_score(0, 0, 6))
@@ -85,9 +86,10 @@ class TestModeHysteresis(unittest.TestCase):
         self.assertIsNone(pending)
 
     def test_thresholds(self):
-        self.assertEqual(mode_for(34.9, None, "NEUTRAL")[1], "CHOP")
-        self.assertEqual(mode_for(35.0, "X", "NEUTRAL")[0], "NEUTRAL")
-        self.assertEqual(mode_for(65.0, None, "NEUTRAL")[1], "TREND")
+        # CHOP_TH=45, TREND_TH=55 (Gate-1 joint sweep, 2026-07-20 calibration).
+        self.assertEqual(mode_for(44.9, None, "NEUTRAL")[1], "CHOP")
+        self.assertEqual(mode_for(45.0, "X", "NEUTRAL")[0], "NEUTRAL")
+        self.assertEqual(mode_for(55.0, None, "NEUTRAL")[1], "TREND")
 
 
 def _sigs(scores):
@@ -109,12 +111,13 @@ class TestApplyLadder(unittest.TestCase):
         self.assertEqual((size_m, alloc_m), (0.40, 0.5))
         self.assertEqual([s["score"] for s in allowed], sorted([s["score"] for s in allowed], reverse=True))
 
-    def test_neutral_median_max8(self):
-        sigs = _sigs(list(range(1, 21)))  # 1..20, median 10.5
+    def test_neutral_passes_through(self):
+        # 2-tier design (approved 2026-07-20): Gate-1 killed the TREND leg,
+        # so only CHOP throttles — NEUTRAL is vanilla v5, same as TREND.
+        sigs = _sigs(list(range(1, 21)))  # 1..20
         allowed, size_m, alloc_m = apply_ladder(sigs, "NEUTRAL")
-        self.assertLessEqual(len(allowed), 8)
-        self.assertTrue(all(float(s["score"]) >= 10.5 for s in allowed))
-        self.assertEqual((size_m, alloc_m), (0.70, 0.8))
+        self.assertEqual(len(allowed), 20)
+        self.assertEqual((size_m, alloc_m), (1.0, 1.0))
 
     def test_unknown_mode_fails_closed_as_chop(self):
         sigs = _sigs([5, 6, 7, 8])

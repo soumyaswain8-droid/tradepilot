@@ -3,10 +3,21 @@
 Pure functions only — no network, no file IO — so tests run without market
 data. TrendScore measures trend STRENGTH (direction-neutral); direction is
 the signal engine's job. Fail-closed: missing inputs score 0 (=> CHOP).
+
+Calibration (2026-07-20, approved 2-tier design): Gate-1's joint normalization
++ threshold sweep (docs/research/2026-07-17_gate1-trend-sensor-backtest.md,
+"Joint sweep (final)" section, 600 combos over td/bm/rd/chop_th/trend_th)
+found NO combo clearing the 70/70 profit-capture/loss-capture gate — the
+sensor cannot isolate TREND days from the June-July data. The best
+CHOP-separating combo alone (td=1.0, bm=1.0, rd=6, chop_th=45, trend_th=55)
+reached profit-capture 17% / loss-capture 85%: it reliably flags bleed days
+as CHOP even though it can't cleanly flag green days as TREND. Given that,
+the design was cut to 2 tiers: CHOP throttles entries, everything else
+(NEUTRAL and TREND alike) trades vanilla v5 — see LADDER below.
 """
 
-CHOP_TH = 35.0
-TREND_TH = 65.0
+CHOP_TH = 45.0
+TREND_TH = 55.0
 
 
 def tape_efficiency(closes) -> float:
@@ -27,19 +38,15 @@ def breadth_strength(pct_20_today, pct_20_prev) -> float:
 
 
 def trend_score(tape: float, breadth: float, regime_score: int) -> float:
-    # Variant 3 (2026-07-18 recalibration, see docs/research/2026-07-17_gate1-
-    # trend-sensor-backtest.md + .superpowers/sdd/task-3-recal-report.md).
-    # Variant 1 (tape/0.6, breadth*2.0): profit-capture 0%. Variant 2
-    # (tape/0.4, breadth*2.5): profit-capture 9%. Both still capped by the
-    # regime term: REGIME_SCORE only ever supplies +-4 (BULL/BEAR) or 0
-    # (SIDEWAYS) in the Gate-1 harness, but the term was normalized against a
-    # theoretical +-6 ceiling, so it never contributed its full 0.2 weight on
-    # a real regime day either -- the same "compressed range" problem as tape
-    # and breadth. Normalizing regime against its actual +-4 ceiling (best of
-    # the backtest sweep) raised profit-capture further. Still clamped 0-100.
-    s = (0.4 * min(100.0, (tape or 0) / 0.4)
-         + 0.4 * min(100.0, (breadth or 0) * 3.0)
-         + 0.2 * min(100.0, abs(regime_score or 0) / 4.0 * 100.0))
+    # td=1.0, bm=1.0, rd=6 — the Gate-1 joint sweep's best CHOP-separating
+    # combo (docs/research/2026-07-17_gate1-trend-sensor-backtest.md, "Joint
+    # sweep (final)": profit-capture 17%, loss-capture 85%). No combo in the
+    # 600-combo grid cleared the 70/70 gate outright, so this is *not* a
+    # promoted TREND detector — it is kept only for its CHOP-flagging power,
+    # which is all the 2-tier ladder (CHOP-only throttle) needs.
+    s = (0.4 * min(100.0, (tape or 0) / 1.0)
+         + 0.4 * min(100.0, (breadth or 0) * 1.0)
+         + 0.2 * min(100.0, abs(regime_score or 0) / 6.0 * 100.0))
     return max(0.0, min(100.0, s))
 
 
@@ -63,9 +70,12 @@ def mode_for(score: float, prev_pending, cur_mode: str,
 
 
 # mode -> (max_new_entries, size_mult, alloc_mult, floor_percentile)
+# 2-tier design (approved 2026-07-20): Gate-1 could not clear the 70/70 gate
+# for a TREND leg (see trend_score docstring above), so only CHOP throttles
+# entries. NEUTRAL is treated identically to TREND — vanilla v5, unfiltered.
 LADDER = {
     "CHOP":    (3,    0.40, 0.5, 75),
-    "NEUTRAL": (8,    0.70, 0.8, 50),
+    "NEUTRAL": (None, 1.00, 1.0, 0),
     "TREND":   (None, 1.00, 1.0, 0),
 }
 

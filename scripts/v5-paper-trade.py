@@ -478,6 +478,17 @@ def deploy_signals(state, pm, rm, signals):
     if not _live_tape_ok():
         log("  [DATA-GUARD] live tape unavailable/stale — blocking new entries this scan")
         return 0
+
+    # CHOP-FILTER (spec 2026-07-17): trade less + smaller in chop. Entries only.
+    _chop_on = os.environ.get("CHOP_FILTER") == "1"
+    _size_mult = _alloc_mult = 1.0
+    if _chop_on:
+        _update_trend_mode(state)
+        from prototype.v5.trend_mode import apply_ladder
+        signals, _size_mult, _alloc_mult = apply_ladder(signals, state.get("trend_mode", "CHOP"))
+        log(f"  [chop] mode={state.get('trend_mode')} score={state.get('trend_score_last')} "
+            f"-> {len(signals)} signals, size x{_size_mult}, alloc x{_alloc_mult}")
+
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
     rust_validated = 0
@@ -525,12 +536,12 @@ def deploy_signals(state, pm, rm, signals):
             if not ok: log(f"  {sym}: BLOCKED ({reason})"); continue
         pool = pm.pools.get(pool_name)
         if not pool: continue
-        budget = pm.get_pool_budget(pool_name)
+        budget = pm.get_pool_budget(pool_name) * _alloc_mult
         if budget < 10000: continue
         price = sig.get("entry_price", sig.get("price", 0))
         base = budget * 0.15
 
-        sized = rm.get_position_size(pool_name, base) if rm else base
+        sized = (rm.get_position_size(pool_name, base) if rm else base) * _size_mult
 
         qty = safe_qty(budget, price, sized=sized)
 
@@ -796,6 +807,48 @@ def _fast_flip(state, pm, rm):
         if pm: pm.set_regime(new)
         if rm: rm.regime = new
         log(f"  FAST-FLIP: tape {pct:+.2f}% -> regime {cur} -> {new} (slot tilt now active)")
+
+
+def _update_trend_mode(state):
+    """v5_chop sensor (spec 2026-07-17): recompute TrendScore + mode each scan.
+
+    CHOP_FILTER=1 only. Breadth (daily-granularity) cached in state; tape from
+    the same 5-min ^NSEI fetch pattern as _fast_flip. Fail-closed: any missing
+    input contributes 0 -> mode decays toward CHOP.
+    """
+    if os.environ.get("CHOP_FILTER") != "1":
+        return
+    from prototype.v5.trend_mode import tape_efficiency, breadth_strength, trend_score, mode_for
+    tape = 0.0
+    try:
+        import yfinance as yf
+        n = yf.download("^NSEI", period="1d", interval="5m", progress=False)
+        if len(n):
+            tape = tape_efficiency([float(c) for c in n["Close"].dropna().values])
+    except Exception as e:
+        log(f"  [chop] tape fetch failed (fail-closed): {e}")
+    b = state.get("_breadth_cache")
+    if b is None:
+        try:
+            from prototype.v5.market_breadth import compute_breadth_indicators
+            ind = compute_breadth_indicators()
+            b = {"today": ind.get("pct_20"), "prev": state.get("_pct20_prev")}
+        except Exception as e:
+            log(f"  [chop] breadth failed (fail-closed): {e}")
+            b = {"today": None, "prev": None}
+        state["_breadth_cache"] = b
+    breadth = breadth_strength(b["today"], b["prev"])
+    regime_score = int(state.get("premarket", {}).get("regime_score", 0) or 0)
+    s = trend_score(tape, breadth, regime_score)
+    # Amendment C (2026-07-20): persist raw components so daily JSONs let us
+    # re-sweep any (td, bm, rd, thresholds) at the Gate-2 review without
+    # re-fetching bars.
+    state["trend_components"] = {"tape": round(tape, 2), "breadth": round(breadth, 2), "regime": regime_score}
+    cur = state.get("trend_mode", "CHOP")
+    mode, pending = mode_for(s, state.get("trend_pending"), cur)
+    if mode != cur:
+        log(f"  [chop] mode {cur} -> {mode} (TrendScore {s:.0f})")
+    state["trend_mode"], state["trend_pending"], state["trend_score_last"] = mode, pending, round(s, 1)
 
 
 def rescore_and_redeploy(state, pm, rm):

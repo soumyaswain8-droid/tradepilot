@@ -149,6 +149,16 @@ ENGINES=(
   # vs v5 -> promote on better net + lower cost drag + no worse DD.
   "v5_chop|scripts/v5_chop-paper-trade.py"
 
+  # SHADOW (RRG Gate-1 PASS, 2026-07-20, commit d23726e): v5_rrg = same
+  # 2-tier CHOP-throttle machinery as v5_chop, score producer swapped to
+  # prototype/v5/rrg_regime.py's daily defensive-vs-cyclical rotation COUNT
+  # sensor (form=count/extended/N=1/th=-0.2143, pc85/lc73 -- the sensor that
+  # cleared 70/70 where TrendScore couldn't). Premarket tilt held constant
+  # intraday ("tilt, not trigger"). Gate 2: 2 weeks vs v5, same criteria as
+  # v5_chop -- promote on better net + lower cost drag + no worse DD; early-
+  # kill if trailing v5 by >Rs5k after week 1. Re-comment to end.
+  "v5_rrg|scripts/v5_rrg-paper-trade.py"
+
   # V8 (TP-V8, 2026-07-06): April-recipe replica — NIFTY-50, top-5, long-only, +1.5/-0.75
   # fixed bracket, early entry. Control twin (no ML). Target: recover April +1%/65%-WR profile.
   "v8|scripts/v8-paper-trade.py"

@@ -41,9 +41,9 @@ from prototype.utils.signal_guards import safe_qty, atomic_write_json, check_mod
 # log-only verdict module. Graceful import: RISK_GATE_LOG wiring below no-ops
 # if unavailable, same pattern as the other optional engine modules.
 try:
-    from prototype.v5.risk_gate import TradePlan, RiskGate
+    from prototype.v5.risk_gate import TradePlan, RiskGate, Verdict
 except Exception as e:
-    TradePlan = RiskGate = None
+    TradePlan = RiskGate = Verdict = None
     print(f"[WARN] risk_gate: {e}")
 LOG_FILE = LOG_DIR / f"{ENGINE}-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -518,13 +518,18 @@ def _build_trade_plan(sig, pool_budget_rs, score_threshold):
     )
 
 
-def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult):
+def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult,
+                             drive_mode=False, promoted=None):
     """Evaluate every candidate through RiskGate and append rows to the daily
-    verdicts artifact. Log-only -- never touches execution. Caller wraps this
-    in its own try/except too (belt and suspenders) so a bug here can never
-    affect deployments."""
+    verdicts artifact. Log-only w.r.t. THIS function -- it never touches
+    execution itself. Caller wraps this in its own try/except too (belt and
+    suspenders) so a bug here can never affect deployments. When called from
+    a RISK_GATE_DRIVE=1 scan, `drive_mode`/`promoted` (spec S5 Phase 1)
+    annotate each row with whether the gate was actually steering that scan's
+    deployments and whether this symbol was promoted off the watchlist."""
     if not candidates or rm is None or RiskGate is None or TradePlan is None:
         return
+    promoted = promoted or set()
     score_threshold = min(float(s.get("score", 0) or 0) for s in candidates)
     gate = RiskGate(rm, score_threshold=score_threshold)
     rows = []
@@ -551,6 +556,8 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
             "inline_outcome": "deployed" if plan.symbol in deployed_syms else "filtered",
             "engine": ENGINE,
             "regime": state.get("regime", "?"),
+            "drive_mode": drive_mode,
+            "promoted_from_watchlist": bool(drive_mode and plan.symbol in promoted),
         })
     if not rows:
         return
@@ -566,6 +573,62 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
     existing["verdicts"].extend(rows)
     existing["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     atomic_write_json(path, existing)
+
+
+# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S5 Phase 1 --
+# RISK_GATE_DRIVE=1 (default OFF) makes the gate DRIVE execution instead of
+# only logging it. REJECTED -> skip. WATCHLIST -> defer THIS scan (recorded
+# in state["gate_watchlist"]; spec S7 Q1/Q2 -- re-evaluated fresh every scan,
+# no capital reserved, and it expires implicitly at EOD along with the rest
+# of daily state -- nothing here persists it past the trading day).
+# APPROVED -> deploy; if the symbol was on the watchlist this is a
+# promotion, annotated in the verdicts artifact by the caller.
+# Fail-CLOSED per spec: if the gate itself throws, fall back to the
+# well-tested inline path for THIS SCAN ONLY and log loudly -- a broken
+# gate module must never silently halt a shadow engine's whole session.
+def _gate_drive_filter(state, pm, rm, candidates, alloc_mult):
+    if RiskGate is None or TradePlan is None or Verdict is None or rm is None:
+        log("  [RISK_GATE_DRIVE] gate unavailable (no RiskGate/rm) — falling back to inline path")
+        return candidates, set(), {}
+    try:
+        watchlist = state.setdefault("gate_watchlist", {})
+        scan_no = state.get("summary", {}).get("scan_count", 0)
+        score_threshold = min(float(s.get("score", 0) or 0) for s in candidates) if candidates else 0.0
+        gate = RiskGate(rm, score_threshold=score_threshold)
+        approved, promoted, invalidation_map = [], set(), {}
+        for sig in candidates:
+            pool_name = sig.get("pool", "INTRADAY")
+            try:
+                budget = pm.get_pool_budget(pool_name) * alloc_mult
+            except Exception:
+                budget = 0.0
+            plan = _build_trade_plan(sig, budget, score_threshold)
+            pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
+            result = gate.evaluate(plan, position_type=pos_type)
+            sym = plan.symbol
+            invalidation_map[sym] = plan.invalidation
+            if result.verdict == Verdict.REJECTED:
+                watchlist.pop(sym, None)
+                log(f"  [GATE] {sym}: REJECTED — {'; '.join(result.reasons)}")
+                continue
+            if result.verdict == Verdict.WATCHLIST:
+                entry = watchlist.setdefault(
+                    sym, {"reasons": [], "first_seen_scan": scan_no, "times_deferred": 0})
+                entry["reasons"] = result.reasons
+                entry["times_deferred"] = entry.get("times_deferred", 0) + 1
+                log(f"  [GATE] {sym}: WATCHLIST (deferred {entry['times_deferred']}x, "
+                    f"since scan #{entry['first_seen_scan']})")
+                continue
+            # APPROVED
+            if sym in watchlist:
+                promoted.add(sym)
+                del watchlist[sym]
+                log(f"  [GATE] {sym}: APPROVED — promoted from WATCHLIST")
+            approved.append(sig)
+        return approved, promoted, invalidation_map
+    except Exception as e:
+        log(f"  [RISK_GATE_DRIVE] gate raised, falling back to inline path this scan: {e}")
+        return candidates, set(), {}
 
 
 # ═══════════════════════════ DEPLOY ═══════════════════════════
@@ -619,6 +682,12 @@ def deploy_signals(state, pm, rm, signals):
     # (named so RISK_GATE_LOG below can replay the exact same candidate set post-loop)
     candidates = sorted([s for s in signals if s["direction"] in allowed_dirs],
                         key=lambda s: -float(s.get("score", 0)))
+    all_candidates = candidates  # RISK_GATE_LOG below replays this full pre-gate set, drive or not
+    _drive_on = os.environ.get("RISK_GATE_DRIVE") == "1"
+    _gate_promoted, _gate_invalidation_map = set(), {}
+    if _drive_on:
+        candidates, _gate_promoted, _gate_invalidation_map = _gate_drive_filter(
+            state, pm, rm, candidates, _alloc_mult)
     for sig in candidates:
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
         if pool_name not in state["pools"] or pool_name == "NONE":
@@ -683,7 +752,7 @@ def deploy_signals(state, pm, rm, signals):
             # rust_ok is None = Rust offline, proceed with Python-only
 
         if not pm.deploy(pool_name, sym, qty, price, sl, tgt): continue
-        state["pools"][pool_name]["positions"].append({
+        new_pos = {
             "symbol": sym, "entry_price": round(price, 2), "qty": qty,
             "cost": round(cost, 2), "entry_time": datetime.now().strftime("%H:%M:%S"),
             "entry_date": datetime.now().strftime("%Y-%m-%d"),
@@ -691,7 +760,13 @@ def deploy_signals(state, pm, rm, signals):
             "position_type": pos_type, "pool": pool_name,
             "trailing_activated": False, "peak_price": round(price, 2),
             "trough_price": round(price, 2), "score": sig.get("score", 0),
-            "direction": sig["direction"], "reasons": sig.get("reasons", [])})
+            "direction": sig["direction"], "reasons": sig.get("reasons", [])}
+        # Phase 2 (spec S4.3): persist the TradePlan invalidation onto the
+        # position record at entry, DRIVE-mode only -- scan_positions'
+        # INVALIDATION_MONITOR reads it back at MONITOR time.
+        if _drive_on:
+            new_pos["invalidation"] = _gate_invalidation_map.get(sym, "")
+        state["pools"][pool_name]["positions"].append(new_pos)
         held.add(sym); count += 1
         tag = "SHORT" if pos_type == "SHORT" else "LONG "
         log(f"  {tag} {sym:>12} x{qty:<4d} @{price:.2f} SL:{sl:.2f} TGT:{tgt:.2f} [{pool_name}]")
@@ -708,7 +783,8 @@ def deploy_signals(state, pm, rm, signals):
     # and logged; it can never change `count` or what was deployed.
     if os.environ.get("RISK_GATE_LOG", "1") == "1":
         try:
-            _log_risk_gate_verdicts(state, pm, rm, candidates, held - initial_held, _alloc_mult)
+            _log_risk_gate_verdicts(state, pm, rm, all_candidates, held - initial_held, _alloc_mult,
+                                     drive_mode=_drive_on, promoted=_gate_promoted)
         except Exception as e:
             log(f"  [RISK_GATE_LOG] failed: {e}")
 
@@ -785,6 +861,42 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
               "qty": pos["qty"]})
 
 
+# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S4.3/S5
+# Phase 2 -- INVALIDATION_MONITOR=1 (default OFF). Evaluate ONLY the forms
+# cleanly computable from data already sitting in scan_positions' loop --
+# per spec S7 Q3 lean, we do NOT fetch new data or invent indicator plumbing
+# under this. `state["last_signals"]` is the most recent rescore's signal
+# batch (populated by rescore_and_redeploy the PRIOR cycle -- already in
+# state, nothing fetched here), so `score_drop_below:<n>` is enforceable.
+# `close_below:<ind>` (needs a moving-average series) and
+# `rrg_quadrant_exit:<sector>` (needs a per-sector quadrant read, not just
+# the session-level RRG tilt v5_rrg computes) have no data source in this
+# loop -- recorded as not_enforced, never invented. Never raises: malformed
+# or empty invalidation strings are ignored gracefully.
+def _check_invalidation(inv, sym, state):
+    if not inv or ":" not in str(inv):
+        return False, "not_enforced: malformed/empty invalidation string"
+    form, _, arg = str(inv).partition(":")
+    form = form.strip()
+    if form == "score_drop_below":
+        try:
+            threshold = float(arg)
+        except (TypeError, ValueError):
+            return False, f"not_enforced: bad threshold in '{inv}'"
+        sig_map = {s.get("symbol"): s for s in state.get("last_signals", []) if isinstance(s, dict)}
+        sig = sig_map.get(sym)
+        if not sig or sig.get("score") is None:
+            return False, "checked: no fresh rescore data for symbol this cycle"
+        try:
+            score = float(sig.get("score", 0) or 0)
+        except (TypeError, ValueError):
+            return False, "checked: unreadable score"
+        if score < threshold:
+            return True, f"score {score} < threshold {threshold}"
+        return False, f"checked: score {score} >= threshold {threshold}"
+    return False, f"not_enforced: form '{form}' has no data source in scan_positions"
+
+
 # ═══════════════════════════ SCAN ═══════════════════════════
 
 def scan_positions(state, pm, rm):
@@ -795,6 +907,7 @@ def scan_positions(state, pm, rm):
     unrealized, to_close = 0, []
     log(f"\n{'='*65}\n  SCAN #{state['summary']['scan_count']} | {len(all_pos)} positions\n{'='*65}")
     flat_window_active = _in_flat_exit_window()
+    _inv_monitor_on = os.environ.get("INVALIDATION_MONITOR") == "1"
     for pool_name, pos in all_pos:
         sym, entry = pos["symbol"], pos["entry_price"]
         if sym not in prices: log(f"  {sym}: no price"); continue
@@ -822,6 +935,17 @@ def scan_positions(state, pm, rm):
             reason = "WRONGWAY_CUT"
             log(f"  {sym}: WRONGWAY_CUT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
             to_close.append((pool_name, pos, px, reason)); continue
+        # INVALIDATION_MONITOR (Phase 2, env-gated, default off): thesis
+        # falsifier distinct from STOP/TARGET/AGED -- see _check_invalidation.
+        if _inv_monitor_on:
+            inv = pos.get("invalidation")
+            if inv:
+                triggered, note = _check_invalidation(inv, sym, state)
+                pos["invalidation_check"] = note
+                if triggered:
+                    reason = "INVALIDATED"
+                    log(f"  {sym}: INVALIDATED ({inv}) — {note}")
+                    to_close.append((pool_name, pos, px, reason)); continue
         if is_short:
             if px >= pos["sl_price"]: reason = "STOPLOSS"
             elif px <= pos["target_price"]: reason = "TARGET"

@@ -159,6 +159,19 @@ ENGINES=(
   # kill if trailing v5 by >Rs5k after week 1. Re-comment to end.
   "v5_rrg|scripts/v5_rrg-paper-trade.py"
 
+  # SHADOW (Gate-2, spec 2026-07-20_risk_gate_three_state_verdict.md, Phase
+  # 1+2): v5_gate = same v5 code, RiskGate DRIVES execution (RISK_GATE_DRIVE=1)
+  # instead of only logging verdicts (Phase 0 log-only shipped 2026-07-20,
+  # commits df90250/5682b22). Adds INVALIDATION_MONITOR=1 (Phase 2): open
+  # positions exit INVALIDATED on a triggered thesis falsifier, distinct from
+  # STOP/TARGET/AGED. NO CHOP_FILTER — isolates the gate effect on its own for
+  # clean four-way attribution (v5 / v5_chop / v5_rrg / v5_gate). Gate 2: 2
+  # weeks vs live v5 — promote on fewer chop-day trades w/ equal-or-better
+  # capture, gate never looser than inline, INVALIDATED exits beat the
+  # eventual stop; early-kill if trailing v5 by >Rs5k after week 1.
+  # Re-comment to end.
+  "v5_gate|scripts/v5_gate-paper-trade.py"
+
   # V8 (TP-V8, 2026-07-06): April-recipe replica — NIFTY-50, top-5, long-only, +1.5/-0.75
   # fixed bracket, early entry. Control twin (no ML). Target: recover April +1%/65%-WR profile.
   "v8|scripts/v8-paper-trade.py"

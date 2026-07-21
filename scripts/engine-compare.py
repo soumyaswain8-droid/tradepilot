@@ -15,11 +15,11 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ENGINES = ["v5", "v5_long", "v5_classic", "v5_cut", "v5_flip", "v8", "v5_chop", "v5_rrg"]   # active lean roster
+ENGINES = ["v5", "v5_long", "v5_classic", "v5_cut", "v5_flip", "v8", "v5_chop", "v5_rrg", "v5_gate"]   # active lean roster
 LABELS = {"v5": "v5 (live)", "v5_long": "v5_long (RC-1 long-only)", "v8": "v8 (April replica)",
           "v5_classic": "v5_classic (frozen)", "v5_cut": "v5_cut",
           "v5_flip": "v5_flip (fast regime-flip)", "v5_chop": "v5_chop (chop filter)",
-          "v5_rrg": "v5_rrg (RRG rotation filter)"}
+          "v5_rrg": "v5_rrg (RRG rotation filter)", "v5_gate": "v5_gate (risk gate drives execution)"}
 
 
 def _pnl(engine: str, d: str):

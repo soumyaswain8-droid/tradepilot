@@ -1,0 +1,121 @@
+{
+  "date": "2026-07-21",
+  "generated_at": "2026-07-21T15:35:15.781021",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -410.97,
+      "trades": 30,
+      "wins": 11,
+      "losses": 19,
+      "longs": 11,
+      "shorts": 19,
+      "win_rate": 36.7,
+      "open_positions": 10,
+      "best_trade": 177.6,
+      "worst_trade": -318.75,
+      "avg_win": 48.12,
+      "avg_loss": -85.48,
+      "exit_reasons": {
+        "STOPLOSS": 11,
+        "FLAT_FORCE_EXIT": 10,
+        "TIME_EXIT": 8,
+        "SIGNAL_FLIP": 1
+      },
+      "n_closed": 30,
+      "n_open": 10
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -424.98,
+      "trades": 45,
+      "wins": 13,
+      "losses": 32,
+      "longs": 16,
+      "shorts": 29,
+      "win_rate": 28.9,
+      "open_positions": 2,
+      "best_trade": 445.2,
+      "worst_trade": -370.0,
+      "avg_win": 145.4,
+      "avg_loss": -154.35,
+      "exit_reasons": {
+        "STOPLOSS": 16,
+        "TARGET": 3,
+        "TIME_EXIT": 17,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 45,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIPOWER",
+      "ASHOKLEY",
+      "BANKBARODA",
+      "BSE",
+      "CIPLA",
+      "CONCOR",
+      "DABUR",
+      "DIXON",
+      "ENRIN",
+      "EXIDEIND",
+      "HDFCBANK",
+      "IDEA",
+      "IDFCFIRSTB",
+      "INFY",
+      "JSWENERGY",
+      "KALYANKJIL",
+      "LAURUSLABS",
+      "MANKIND",
+      "MPHASIS",
+      "OIL",
+      "POWERGRID",
+      "SHRIRAMFIN",
+      "TATAPOWER",
+      "TCS",
+      "TMPV"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs -411 across 30 trades (36.7% win).",
+    "Laggard: <b>v5_classic</b> with Rs -425 across 45 trades (28.9% win).",
+    "<b>v5</b>: STOPLOSS (11) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (16) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 36.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 28.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

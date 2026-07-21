@@ -490,17 +490,30 @@ def _verdicts_file():
     return TRADE_DIR / f"{datetime.now().strftime('%Y-%m-%d')}_verdicts.json"
 
 
-def _build_trade_plan(sig, pool_budget_rs, score_threshold):
+def _build_trade_plan(sig, pool_budget_rs, score_threshold, rm=None):
     """One TradePlan per candidate signal (spec S4.1). Phase 0: invalidation
     defaults to the recorded-not-enforced 'score_drop_below:<threshold>' form
     (spec S7 Q3 lean). threshold = the lowest score among this scan's
     candidates -- v5's BUY/SELL selection is regime-aware percentile cuts
     (signal_engine.py), not a single fixed global score cutoff, so the
     realized cutoff for this batch is the closest honest reading of "the
-    signal threshold in use" from engine context."""
+    signal threshold in use" from engine context.
+
+    size_rs mirrors the deploy path's sizing (base 15% of budget, then
+    rm.get_position_size's multipliers + caps). The plan must carry the size
+    the engine would actually request: the raw 15% base exceeds the 10%
+    position cap, which made the gate reject 494/494 candidates on v5_gate's
+    first drive day (2026-07-21)."""
     price = sig.get("entry_price", sig.get("price", 0.0)) or 0.0
     side = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
     reasons = sig.get("reasons") or []
+    base = pool_budget_rs * 0.15
+    size = base
+    if rm is not None:
+        try:
+            size = rm.get_position_size(sig.get("pool", "INTRADAY"), base)
+        except Exception:
+            size = base
     rationale = (f"{sig.get('direction', '?')} rank={sig.get('rank', '?')} "
                  f"score={sig.get('score', 0)} chg={float(sig.get('change_pct', 0) or 0):+.2f}% "
                  f"{'; '.join(str(r) for r in reasons[:2])}").strip()
@@ -511,7 +524,7 @@ def _build_trade_plan(sig, pool_budget_rs, score_threshold):
         target=float(sig.get("target_price", price) or price),
         stop=float(sig.get("sl_price", price) or price),
         invalidation=f"score_drop_below:{score_threshold}",
-        size_rs=round(pool_budget_rs * 0.15, 2),
+        size_rs=round(size, 2),
         pool=sig.get("pool", "INTRADAY"),
         score=float(sig.get("score", 0) or 0),
         rationale=rationale,
@@ -539,7 +552,7 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
             budget = pm.get_pool_budget(pool_name) * alloc_mult
         except Exception:
             budget = 0.0
-        plan = _build_trade_plan(sig, budget, score_threshold)
+        plan = _build_trade_plan(sig, budget, score_threshold, rm=rm)
         pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
         result = gate.evaluate(plan, position_type=pos_type)
         rows.append({
@@ -602,7 +615,7 @@ def _gate_drive_filter(state, pm, rm, candidates, alloc_mult):
                 budget = pm.get_pool_budget(pool_name) * alloc_mult
             except Exception:
                 budget = 0.0
-            plan = _build_trade_plan(sig, budget, score_threshold)
+            plan = _build_trade_plan(sig, budget, score_threshold, rm=rm)
             pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
             result = gate.evaluate(plan, position_type=pos_type)
             sym = plan.symbol

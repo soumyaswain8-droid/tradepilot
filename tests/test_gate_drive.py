@@ -303,5 +303,46 @@ class TestInvalidationMonitor(_TmpTradeDir):
         self.assertEqual(pm.closed, [])
 
 
+class TestPlanSizeMirrorsRiskSizing(_TmpTradeDir):
+    """Regression (2026-07-21): v5_gate's first drive day rejected 494/494
+    candidates because TradePlan.size_rs carried the raw 15% base while
+    check_position_size caps at 10% of pool capital. The plan must carry
+    rm.get_position_size's clamped figure — the size the engine would
+    actually request — not the pre-adjustment base."""
+
+    class _ClampRM(FakeRM):
+        CAP = 30000.0  # models 10% of a 3L pool
+
+        def get_position_size(self, pool_name, base):
+            return min(base, self.CAP)
+
+        def check_position_size(self, cost_or_margin, pool_name):
+            if cost_or_margin > self.CAP:
+                return False, f"Position size Rs {cost_or_margin:,.0f} > 10% cap"
+            return True, "OK"
+
+    def test_build_trade_plan_uses_rm_clamped_size(self):
+        plan = v5._build_trade_plan(_sig("ABC", 80), 300000.0, 55.0, rm=self._ClampRM())
+        self.assertEqual(plan.size_rs, 30000.0)  # not 45000 (raw 15% base)
+
+    def test_build_trade_plan_without_rm_keeps_base(self):
+        plan = v5._build_trade_plan(_sig("ABC", 80), 300000.0, 55.0)
+        self.assertEqual(plan.size_rs, 45000.0)
+
+    def test_drive_filter_not_rejected_by_unclamped_base(self):
+        class BigBudgetPool(StubPool):
+            def get_pool_budget(self, pool):
+                return 300000.0  # 15% base = 45k > cap; clamped size = 30k fits
+        state = _state()
+        # two candidates: the low scorer defines the threshold (and soft-flags
+        # itself to WATCHLIST); ABC at +20 above it must clear APPROVED now
+        # that size_rs carries the clamped figure instead of the 45k base
+        approved, promoted, inv = v5._gate_drive_filter(
+            state, BigBudgetPool(), self._ClampRM(),
+            [_sig("ABC", 80), _sig("XYZ", 60)], 1.0)
+        self.assertEqual([s["symbol"] for s in approved], ["ABC"])
+        self.assertIn("XYZ", state["gate_watchlist"])
+
+
 if __name__ == "__main__":
     unittest.main()

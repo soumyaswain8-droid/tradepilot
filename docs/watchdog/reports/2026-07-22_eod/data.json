@@ -1,0 +1,122 @@
+{
+  "date": "2026-07-22",
+  "generated_at": "2026-07-22T15:35:06.149432",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -1983.86,
+      "trades": 60,
+      "wins": 26,
+      "losses": 34,
+      "longs": 25,
+      "shorts": 35,
+      "win_rate": 43.3,
+      "open_positions": 3,
+      "best_trade": 221.0,
+      "worst_trade": -319.0,
+      "avg_win": 39.32,
+      "avg_loss": -91.09,
+      "exit_reasons": {
+        "STOPLOSS": 20,
+        "FLAT_FORCE_EXIT": 13,
+        "SIGNAL_FLIP": 11,
+        "TIME_EXIT": 15,
+        "TARGET": 1
+      },
+      "n_closed": 60,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 451.7,
+      "trades": 49,
+      "wins": 20,
+      "losses": 29,
+      "longs": 16,
+      "shorts": 33,
+      "win_rate": 40.8,
+      "open_positions": 0,
+      "best_trade": 602.8,
+      "worst_trade": -242.0,
+      "avg_win": 119.07,
+      "avg_loss": -66.54,
+      "exit_reasons": {
+        "STOPLOSS": 17,
+        "SIGNAL_FLIP": 9,
+        "TARGET": 3,
+        "TIME_EXIT": 20
+      },
+      "n_closed": 49,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "BANKINDIA",
+      "COCHINSHIP",
+      "GLENMARK",
+      "GODREJPROP",
+      "GROWW",
+      "ICICIAMC",
+      "INDIANB",
+      "JIOFIN",
+      "JUBLFOOD",
+      "KPITTECH",
+      "LUPIN",
+      "M&MFIN",
+      "MOTHERSON",
+      "PRESTIGE",
+      "RELIANCE",
+      "SAIL",
+      "SBIN",
+      "SHRIRAMFIN",
+      "TATAINVEST",
+      "TMPV",
+      "VEDL",
+      "VMM",
+      "VOLTAS",
+      "WAAREEENER"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +452 across 49 trades (40.8% win).",
+    "Laggard: <b>v5</b> with Rs -1,984 across 60 trades (43.3% win).",
+    "Low-volume engines outperformed \u2014 selectivity beat volume today (low-vol avg Rs 452 vs high-vol Rs -1,984).",
+    "<b>v5</b>: STOPLOSS (20) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (17) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 43.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 40.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

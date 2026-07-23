@@ -64,6 +64,47 @@ def log_activity(agent: str, kind: str, summary: str,
     _append_jsonl(ACTIVITY_DIR / f"{_date_stamp()}.jsonl", record)
 
 
+_PAGER_STATE = AUDIT_DIR / ".pager_dedupe.json"
+_PAGER_COOLDOWN_S = 6 * 3600  # one page per unique block signature per 6h
+
+
+def _pager_should_send(record: dict) -> tuple[bool, int]:
+    """Dedupe the Telegram pager: one page per unique (agent, decision,
+    subject, rule_family, reason) signature per cooldown window, with a
+    suppressed-repeat counter surfaced on the next page. Guards against
+    per-scan gate checks turning one policy state into a 1,000+ message
+    storm (ML-001, 2026-07-23: 1,248 duplicate pages). State file writes
+    race across engine processes; worst case is an extra page, never a
+    storm. Any failure here means "send" — losing dedupe must not lose
+    the page itself."""
+    import hashlib
+    import time
+    try:
+        sig = hashlib.md5("|".join([
+            record["agent"], record["decision"], record["subject"],
+            record.get("rule_family") or "", record["reason"],
+        ]).encode()).hexdigest()
+        now = time.time()
+        try:
+            state = json.loads(_PAGER_STATE.read_text(encoding="utf-8"))
+        except Exception:
+            state = {}
+        ent = state.get(sig) or {"last_sent": 0, "suppressed": 0}
+        if now - ent.get("last_sent", 0) >= _PAGER_COOLDOWN_S:
+            suppressed = ent.get("suppressed", 0)
+            state[sig] = {"last_sent": now, "suppressed": 0}
+            state = {k: v for k, v in state.items()
+                     if now - v.get("last_sent", 0) < 7 * 86400}
+            _PAGER_STATE.write_text(json.dumps(state), encoding="utf-8")
+            return True, suppressed
+        ent["suppressed"] = ent.get("suppressed", 0) + 1
+        state[sig] = ent
+        _PAGER_STATE.write_text(json.dumps(state), encoding="utf-8")
+        return False, 0
+    except Exception:
+        return True, 0
+
+
 def log_audit(agent: str, action: str, decision: str,
               subject: str, evidence: dict[str, Any],
               reason: str, vetoable_by: list[str] | None = None,
@@ -90,20 +131,24 @@ def log_audit(agent: str, action: str, decision: str,
     # Non-blocking: ANY failure here must not affect the audit log write.
     if decision in ("BLOCK", "REJECT", "ESCALATE"):
         try:
-            import sys as _sys
-            _root = PROJECT_ROOT
-            if str(_root) not in _sys.path:
-                _sys.path.insert(0, str(_root))
-            from prototype.v5.telegram_bot import send_alert
-            short_subj = subject if len(subject) <= 60 else subject[:57] + "..."
-            short_reason = reason if len(reason) <= 200 else reason[:197] + "..."
-            msg = (f"🚨 *Sarathi {decision}*\n"
-                   f"*Agent:* `{agent}`\n"
-                   f"*Family:* `{rule_family or '-'}`\n"
-                   f"*Action:* {action}\n"
-                   f"*Subject:* `{short_subj}`\n"
-                   f"*Reason:* {short_reason}")
-            send_alert(msg)
+            send, suppressed = _pager_should_send(record)
+            if send:
+                import sys as _sys
+                _root = PROJECT_ROOT
+                if str(_root) not in _sys.path:
+                    _sys.path.insert(0, str(_root))
+                from prototype.v5.telegram_bot import send_alert
+                short_subj = subject if len(subject) <= 60 else subject[:57] + "..."
+                short_reason = reason if len(reason) <= 200 else reason[:197] + "..."
+                msg = (f"🚨 *Sarathi {decision}*\n"
+                       f"*Agent:* `{agent}`\n"
+                       f"*Family:* `{rule_family or '-'}`\n"
+                       f"*Action:* {action}\n"
+                       f"*Subject:* `{short_subj}`\n"
+                       f"*Reason:* {short_reason}")
+                if suppressed:
+                    msg += f"\n_(repeated {suppressed}x since last page)_"
+                send_alert(msg)
         except Exception:
             pass
     return record

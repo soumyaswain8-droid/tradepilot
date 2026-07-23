@@ -226,6 +226,22 @@ def check_model_freshness(
         if abort:
             raise SystemExit(msg)
         return False
+    # Retirement check (2026-07-23, ML-001 closed): a "retired" marker in
+    # verification_report.json means this model is no longer loaded by
+    # anything, so the age/CEO-override dance below is moot. Skip straight
+    # to a single info line and report fresh (no alert, no abort).
+    try:
+        import json as _json
+        vr_path = model_path.parent / "verification_report.json"
+        if vr_path.exists():
+            vr = _json.loads(vr_path.read_text(encoding="utf-8"))
+            if vr.get("retired"):
+                print(f"  [check_model_freshness] model retired "
+                      f"{vr['retired'].get('ts', '?')} — freshness check skipped")
+                return True
+    except Exception as _e:
+        print(f"  [check_model_freshness] retirement check error: {_e}")
+
     age_days = (datetime.now() - datetime.fromtimestamp(model_path.stat().st_mtime)).days
     if age_days > max_age_days:
         # Sprint 1 (2026-05-15): check for a CEO override in verification_report.json

@@ -92,9 +92,9 @@
   "overall": "BLOCK",
   "override": {
     "by": "soumya",
-    "ts": "2026-05-15T16:13:53+05:30",
-    "reason": "Legacy mode during 8-week rebuild. Restored May-9 pre-retrain model after May-13 retrain bled WR to 14-21%. Rebuild ships meta-labeled model + CPCV-validated retrain by 2026-07-15.",
-    "expires": "2026-07-15",
+    "ts": "2026-07-23T09:20:00+05:30",
+    "reason": "2-day BRIDGE only (expires Fri 07-25): pager storm fix \u2014 1,248 duplicate Telegram BLOCKs on 07-23 after the 07-22 forcing-function expiry. The underlying ML-001 decision (rebuild with CPCV vs retire the model) is still OPEN and owed. Prior override: 1-week extension (forcing function): ship meta-labeled model + CPCV-validated retrain by 2026-07-22. Original 8-week rebuild missed 07-15 deadline; v8_ml 5-tree attempt failed (neg",
+    "expires": "2026-07-25",
     "scope": "prototype/v4/models/lgbm_intraday.txt",
     "applies_to_engines": [
       "v4",
@@ -102,5 +102,10 @@
       "v5_classic"
     ]
   },
-  "legacy_exempt": true
+  "legacy_exempt": true,
+  "retired": {
+    "ts": "2026-07-23",
+    "by": "soumya",
+    "reason": "selection-neutral (IC 0.006); ML_SCORE_WEIGHT=0 fleet-wide; CPCV rebuild not pursued"
+  }
 }

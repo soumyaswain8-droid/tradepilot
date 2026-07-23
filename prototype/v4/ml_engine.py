@@ -690,6 +690,24 @@ def _get_model():
         logger.warning(f"No trained model at {MODEL_PATH}. Using neutral prediction.")
         return None
 
+    # Retirement check (2026-07-23, ML-001 closed). If verification_report.json
+    # carries a "retired" marker, skip the SARATHI-ML gate entirely — no audit
+    # spam, no ModelBlockedError — and fall back to the same neutral prediction
+    # path used when no model file exists. The model file stays on disk for
+    # history; nothing loads it once retired.
+    try:
+        _vr_path = MODEL_PATH.parent / "verification_report.json"
+        if _vr_path.exists():
+            _vr = json.loads(_vr_path.read_text(encoding="utf-8"))
+            if _vr.get("retired"):
+                logger.info(
+                    f"Model retired {_vr['retired'].get('ts', '?')} — "
+                    f"ML scoring disabled, neutral fallback"
+                )
+                return None
+    except Exception as e:
+        logger.warning(f"Retirement check error (proceeding to gate): {e}")
+
     # SARATHI-ML gate (added 2026-05-15, Sprint 1). Engines refuse to load
     # a model whose verification_report.json is missing, BLOCKed, or whose
     # CEO override has expired. Prevents the May-13 silent retrain pattern.

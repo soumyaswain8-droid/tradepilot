@@ -11,7 +11,7 @@ Replace the Stripe/Plaid-style light landing page with a dark, futuristic sci-fi
 
 ## Structure (fresh copy, same facts)
 1. **Nav** — glass bar + mono ticker strip.
-2. **Hero** — "Seven engines. One flight computer." Animated HUD: orbital ring with 7 pulsing engine nodes, self-drawing equity curve, mono telemetry readouts.
+2. **Hero** — "Seven engines. One flight computer." 3D holographic radar deck (CSS `perspective` + `rotateX(62°)` plane): rotating sweep, sonar pings, 7 pulsing engine nodes as upright billboards at projected orbit positions, hologram beam to a FLEET CORE tag, self-drawing equity curve card (`translateZ` depth), mono telemetry readout, starfield, mouse-parallax tilt (pointer:fine + motion-safe only). *(3D upgrade requested mid-build 2026-07-23.)*
 3. **№01 Fleet** — 7 engines as an SVG constellation/system diagram; engine cards with sparklines. Engines: v4 Composite, v5 Multi-pool, v5 Classic, v5_6 Darvas Box, v5_7 Mean-Revert, v5_8 Regime-Aware, v6 Bolt-On.
 4. **№02 Risk Shield** — concentric HUD shield rings for the layered defence; kill-switch tiers T0–T3 (−₹2.5K warn / −₹5K soft hold / −₹10K hard kill).
 5. **№03 Flight Log** — trading day as mission timeline (08:45 scoring → 09:15 deploy → 10m scans → 30m rescore → 15:15 force exit).

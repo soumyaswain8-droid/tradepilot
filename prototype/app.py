@@ -51,6 +51,7 @@ app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
             static_folder=os.path.join(os.path.dirname(__file__), "static"))
 CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
+app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)
 
 
 def get_model_meta():

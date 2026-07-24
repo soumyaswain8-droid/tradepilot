@@ -1,0 +1,126 @@
+{
+  "date": "2026-07-24",
+  "engine": "v8",
+  "started_at": "08:50:15",
+  "total_capital": 998277.69,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-07-24T08:50:16",
+    "gap_prediction": {
+      "direction": "FLAT",
+      "magnitude_pct": 0.0,
+      "confidence": 0.2,
+      "source": "unavailable"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "unavailable"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": null,
+      "asia_change": null,
+      "details": {
+        "sp500": null,
+        "hangseng": null,
+        "nikkei": null
+      }
+    },
+    "overall": {
+      "bias": "NEUTRAL",
+      "score": 0,
+      "size_multiplier": 0.6,
+      "reasons": [
+        "No strong signals \u2014 default neutral"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [],
+      "closed": [
+        {
+          "symbol": "OIL",
+          "entry_price": 454.75,
+          "exit_price": 451.3,
+          "qty": 35,
+          "entry_time": "09:25:55",
+          "exit_time": "11:01:53",
+          "pnl": -120.75,
+          "pnl_pct": -0.76,
+          "reason": "STOPLOSS",
+          "pnl_gross": -120.75,
+          "pnl_net": -139.78,
+          "cost": 19.03,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 60.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.20% above VWAP (453)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.16% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-819 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 451.34,
+          "target_price": 461.57,
+          "entry_date": "2026-07-23",
+          "trailing_activated": false
+        }
+      ],
+      "pnl": -120.75042724609375
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": -120.75042724609375,
+    "trades": 1,
+    "wins": 0,
+    "losses": 1,
+    "longs": 1,
+    "shorts": 0,
+    "scan_count": 39,
+    "rescore_count": 1,
+    "total_pnl_net": -139.7774769897461,
+    "total_cost": 19.02704974365234
+  },
+  "last_rescore_time": "09:00:19",
+  "last_signals": [],
+  "alpha_hunter_ran": true,
+  "reentry_blocker": {
+    "max_sl": 2,
+    "sl_count": {
+      "OIL|LONG": 1
+    }
+  }
+}

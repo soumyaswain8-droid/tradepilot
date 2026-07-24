@@ -52,6 +52,9 @@
   .delta .d{font-family:var(--disp);font-size:20px;font-weight:700} .delta .l{font-size:8.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;text-align:center}
   .gate{font-size:9px;padding:1px 6px;border-radius:4px;letter-spacing:.04em}
   .gate.ok{color:var(--grn);background:rgba(52,211,153,.1);border:1px solid #18402f} .gate.bad{color:var(--red);background:rgba(251,106,118,.1);border:1px solid #4a1d22}
+  .sdate{font-size:9px;color:var(--dim)}
+  .card.stale{outline:1px solid #5a4a1e}
+  .stale-banner{background:rgba(245,196,81,.15);color:var(--amb);border:1px solid #5a4a1e;border-radius:5px;padding:3px 8px;font-size:9.5px;font-weight:700;letter-spacing:.06em;margin-bottom:10px;text-align:center}
   .wait{color:var(--faint);font-style:italic;font-size:12px;padding:14px 0}
   .foot{padding:10px 20px;border-top:1px solid var(--line);color:var(--faint);font-size:10px;display:flex;gap:20px}
   .foot .r{margin-left:auto}
@@ -89,8 +92,11 @@ function marketOpen(){if(VIEW)return false;const ist=new Date(Date.now()+(new Da
 function cardHTML(c,isCh){
   if(!c||!c.live) return '<div class="card '+(isCh?'ch':'bl')+'"><div class="name">'+esc(c?c.label:'')+'</div><div class="wait">waiting for engine…</div></div>';
   var gate = c.gate_ok!==undefined ? '<span class="gate '+(c.gate_ok?'ok':'bad')+'">'+(c.gate_ok?'gate ok · 0 shorts':'GATE FAIL · '+c.shorts+' shorts')+'</span>' : '';
-  return '<div class="card '+(isCh?'ch':'bl')+'">'
-    +'<div class="name">'+esc(c.label)+' '+gate+'</div>'
+  var sdate = c.session_date ? '<span class="sdate">'+esc(c.session_date)+'</span>' : '';
+  var staleBanner = c.stale ? '<div class="stale-banner">⚠ HISTORICAL SESSION — '+esc(c.session_date)+' (not today)</div>' : '';
+  return '<div class="card '+(isCh?'ch':'bl')+(c.stale?' stale':'')+'">'
+    +staleBanner
+    +'<div class="name">'+esc(c.label)+' '+sdate+' '+gate+'</div>'
     +'<div class="pnl '+cls(c.realized_pnl)+'">'+inr(c.realized_pnl)+'</div>'
     +'<div class="meta"><span>Closed <b>'+c.closed+'</b> · Open <b>'+c.open+'</b></span>'
     +'<span>Win <b>'+(c.win_rate==null?'—':c.win_rate+'%')+'</b></span>'

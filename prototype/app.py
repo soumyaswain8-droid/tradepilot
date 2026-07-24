@@ -432,7 +432,7 @@ def api_lab():
                 "open": len(pos) - len(cl), "win_rate": round(100 * w / len(cl)) if cl else None,
                 "longs": sum(1 for p in pos if p.get("v4_direction") == "BUY"),
                 "shorts": sum(1 for p in pos if p.get("v4_direction") == "SELL"),
-                "started": d.get("started_at", "—"),
+                "started": d.get("started_at", "—"), "session_date": TODAY,
                 "regime": "BEAR" if d.get("bear_mode") else ("VIX-HIGH" if d.get("vix_high_mode") else "NEUTRAL")}
 
     def _v5(base):
@@ -448,12 +448,18 @@ def api_lab():
         return {"realized_pnl": round(s.get("total_pnl", 0) or 0), "closed": s.get("trades", 0),
                 "open": openn, "win_rate": round(100 * s.get("wins", 0) / s.get("trades", 1)) if s.get("trades") else None,
                 "longs": s.get("longs", 0), "shorts": s.get("shorts", 0),
-                "started": d.get("started_at", "—"), "regime": d.get("regime", "—")}
+                "started": d.get("started_at", "—"), "session_date": TODAY, "regime": d.get("regime", "—")}
 
     LIVE = HOME / "tradepilot"
     OLD = HOME / "tradepilot-oldengine-ab"
     LO = HOME / "tradepilot-v5-longonly-ab"
 
+    # BUGFIX (2026-07-21 forensic audit): cards previously showed challenger/baseline
+    # stats with no indication of which day's file they came from — historical day
+    # files (e.g. browsed via ?date=, or a stale carry-forward file under today's
+    # name) rendered indistinguishable from a genuine live "today" result. Every
+    # card now carries session_date (the filename actually read) + a stale flag
+    # so the frontend can badge anything that isn't literally today.
     def card(label, stat, extra=None):
         if stat is None:
             return {"label": label, "live": False}
@@ -461,6 +467,8 @@ def api_lab():
         c.update(stat)
         if extra:
             c.update(extra)
+        sd = c.get("session_date")
+        c["stale"] = bool(sd and sd != date.today().isoformat())
         return c
 
     def delta(ch, bl):
@@ -497,7 +505,7 @@ def api_lab():
         return {"realized_pnl": round(s.get("total_pnl", 0) or 0), "closed": s.get("trades", 0),
                 "open": openn, "win_rate": round(100 * s.get("wins", 0) / s.get("trades", 1)) if s.get("trades") else None,
                 "longs": s.get("longs", 0), "shorts": s.get("shorts", 0),
-                "started": d.get("started_at", "—"), "regime": d.get("regime", "—")}
+                "started": d.get("started_at", "—"), "session_date": TODAY, "regime": d.get("regime", "—")}
 
     SHADOW_START = "2026-06-15"   # shadows began this day — only compare from here (apples-to-apples)
     def _cum(eng):  # running A/B total = gross P&L summed over the shadow period only

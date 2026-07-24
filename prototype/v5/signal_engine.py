@@ -52,6 +52,15 @@ _SIDEWAYS_SELL_PCT = 0.10  # SIDEWAYS: shrink SELL to bottom 10%
 SHORT_REQUIRE_NEGATIVE_CHANGE_PCT = float(os.environ.get("SHORT_REQ_CHG_PCT", "-0.5"))  # must be down ≥ this
 SHORT_REQUIRE_MAX_SCORE = float(os.environ.get("SHORT_REQ_MAX_SCORE", "35"))            # composite must be below this
 
+# Variant C AND-gate (2026-07-24 backtest, docs/research/2026-07-24_short-confirm-backtest.md
+# §6, base commit 4f129bd): a SHORT candidate that clears Fix #1 (red + weak-scored) must
+# ALSO be below VWAP at entry before it's allowed to fire. VWAP-only backtested net-negative
+# (Variant B: -Rs742/12d, blocks more good shorts than bad); the red-day+below-VWAP AND-gate
+# backtested net-positive (Variant C: +Rs1,859/10d, catches 46/230 SHORTED_RISER). Fleet-wide
+# kill-switch so all variants sharing this module change together and the four-way comparison
+# stays internally consistent. SHORT_VWAP_GATE=0 restores exact pre-gate behavior.
+SHORT_VWAP_GATE = os.environ.get("SHORT_VWAP_GATE", "1") != "0"
+
 
 def score_for_short(stock: dict, nifty_change: float) -> dict:
     """Compute weakness score for a SELL (short) candidate."""
@@ -197,6 +206,17 @@ def generate_signals(regime: str = None) -> List[dict]:
             stock_score = stock.get("score", 100)
             actually_weak = (stock_change < SHORT_REQUIRE_NEGATIVE_CHANGE_PCT and
                              stock_score < SHORT_REQUIRE_MAX_SCORE)
+            # Variant C AND-gate: red-day (above) AND below-VWAP must BOTH hold. Only
+            # evaluated once Fix #1 already passed, so this can only narrow, never widen,
+            # the set of shorts that fire. Unknown VWAP state (above_vwap missing/None,
+            # i.e. it couldn't be computed at entry) is treated as NOT below-VWAP — the
+            # conservative reading of a confirmation gate: an unconfirmed signal shouldn't
+            # be allowed to pass a gate whose whole job is to confirm it.
+            if SHORT_VWAP_GATE and actually_weak:
+                below_vwap_confirmed = stock.get("above_vwap") is False
+                if not below_vwap_confirmed:
+                    logger.info(f"{stock.get('symbol', '?')} above VWAP — short blocked (SHORT_VWAP_GATE)")
+                    actually_weak = False
             if actually_weak:
                 direction, pos = "SELL", "SHORT"
                 short_data = score_for_short(stock, nifty_change)

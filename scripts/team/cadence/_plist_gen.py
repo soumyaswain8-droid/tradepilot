@@ -66,6 +66,15 @@ JOBS = [
      ["bash", ".claude/team/cadence/daily-standup.sh"],
      15, 50, WEEKDAYS, "standup.log"),
 
+    # EOD artifact auto-commit + push (2026-07-24): commits the day's
+    # generated artifacts (dailies/audits/EOD summaries/dashboard scores),
+    # pushes dev, fast-forwards main. 17:30 = well after the audit (~15:35)
+    # and eod-comparison (~16:11) writers. -DRAFT files excluded in-script
+    # (pending-review docs must never auto-publish).
+    ("eod-git-commit",
+     ["bash", "scripts/eod-git-commit.sh"],
+     17, 30, WEEKDAYS, "eod-git-commit.log"),
+
     ("due-alpha-hunter",
      ["python3", "scripts/team/cadence/check-due.py", "--mark", "alpha-hunter",
       "Weekly IC + feature drift audit"],

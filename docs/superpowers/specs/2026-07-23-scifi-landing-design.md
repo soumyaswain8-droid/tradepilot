@@ -5,9 +5,9 @@
 ## Goal
 Replace the Stripe/Plaid-style light landing page with a dark, futuristic sci-fi page — illustrative SVG designs and animated graphs — using assets from the aide design library.
 
-## Design tokens (from aide library)
-- **Palette:** "Combo 01: Tiffany + Dark Gray" (plate 45) — `#21F1A8` neon mint on `#171717` near-black. Elevated panels ~`#1D1F1E`. Dim red `#FF5C5C` reserved for down/risk semantics only.
-- **Fonts (aide fontlab, available=true):** Space Grotesk (display + body), JetBrains Mono (numbers, HUD labels). Google Fonts, same loading pattern as current page.
+## Design tokens
+- **2026-07-24 revision — brand-aligned with https://tradepilot.devpilot.co.in/ on user request** ("take reference from this link"). Night navy `#0A1120` bg / panels `#0F1A33`; marigold `#F5A623` = actions/accents; volt `#7C6BFF` = analysis (MA line, PICK, alternate headings); jade `#16C784` = up/profit; vermilion `#EA3943` = down/risk. Fonts: Archivo (display), Instrument Sans (body), IBM Plex Mono (data). Rounded panels (14px) and buttons (10px), reference-style HUD tiles (SIGNAL/CONVICTION/REGIME/RISK GATE) + volume bars + MA line in the hero chart.
+- *(Superseded v1, 2026-07-23: aide palette "Tiffany + Dark Gray" `#21F1A8`/`#171717`, Space Grotesk + JetBrains Mono.)*
 
 ## Structure (fresh copy, same facts)
 1. **Nav** — glass bar + mono ticker strip.

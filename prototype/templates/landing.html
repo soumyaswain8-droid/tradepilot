@@ -8,50 +8,58 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="icon" type="image/png" href="/static/icon-192.png">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   TRADEPILOT — Mission Control HUD
-   Aide palette: Combo 01 "Tiffany + Dark Gray" (#21F1A8 on #171717).
-   Aide fontlab: Space Grotesk (display/body) + JetBrains Mono (HUD).
-   Red #FF5C5C is reserved for down/risk semantics only.
+   TRADEPILOT — Mission Control, brand-aligned with tradepilot.devpilot.co.in
+   Night navy #0A1120 · marigold #F5A623 (actions) · volt #7C6BFF (analysis)
+   jade #16C784 (up/profit) · vermilion #EA3943 (down/risk).
+   Type: Archivo (display) · Instrument Sans (body) · IBM Plex Mono (data).
    ═══════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
 
 :root {
-  --void:      #111312;
-  --bg:        #171717;
-  --panel:     #1C1F1D;
-  --panel-2:   #212523;
-  --mint:      #21F1A8;
-  --mint-dim:  rgba(33, 241, 168, 0.55);
-  --mint-soft: rgba(33, 241, 168, 0.10);
-  --line:      rgba(33, 241, 168, 0.18);
-  --line-dim:  rgba(255, 255, 255, 0.08);
-  --ink:       #EDF2EF;
-  --ink-2:     #B7C0BB;
-  --ink-3:     #7E8883;
-  --red:       #FF5C5C;
-  --red-soft:  rgba(255, 92, 92, 0.12);
+  --void:      #060A15;
+  --bg:        #0A1120;
+  --panel:     #0F1A33;
+  --panel-2:   #16223F;
+  --acc:       #F5A623;
+  --acc-2:     #FFC663;
+  --acc-soft:  rgba(245, 166, 35, 0.12);
+  --volt:      #7C6BFF;
+  --volt-dim:  rgba(124, 107, 255, 0.14);
+  --up:        #16C784;
+  --up-dim:    rgba(22, 199, 132, 0.13);
+  --line:      #22305A;
+  --line-dim:  #17233F;
+  --ink:       #E8EDF9;
+  --ink-2:     #AAB6D0;
+  --ink-3:     #7683A3;
+  --red:       #EA3943;
+  --red-soft:  rgba(234, 57, 67, 0.13);
 
-  --display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
-  --mono:    'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --display: 'Archivo', -apple-system, system-ui, sans-serif;
+  --body:    'Instrument Sans', -apple-system, system-ui, sans-serif;
+  --mono:    'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+
+  --r:   14px;
+  --r-s: 10px;
 
   --maxw: 1180px;
   --gutter: clamp(20px, 4vw, 48px);
 }
 
-::selection { background: var(--mint); color: #0B1210; }
+::selection { background: var(--acc); color: #0A1120; }
 
 body {
   background: var(--bg);
   color: var(--ink-2);
-  font-family: var(--display);
+  font-family: var(--body);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -64,8 +72,8 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(rgba(33,241,168,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(33,241,168,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 0%, transparent 80%);
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 0%, transparent 80%);
@@ -78,9 +86,12 @@ b { color: var(--ink); font-weight: 500; }
 
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); position: relative; z-index: 1; }
 
-h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
+h1, h2, h3, h4 { color: var(--ink); font-family: var(--display); font-weight: 750; letter-spacing: -0.025em; }
 
-.grad { color: var(--mint); }
+.grad { color: var(--acc); }
+.grad.v { color: var(--volt); }
+.am { color: var(--acc); }
+.vo { color: var(--volt); }
 
 /* HUD label — every eyebrow on the page is an instrument label */
 .hud-label {
@@ -89,7 +100,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--mint);
+  color: var(--acc);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -97,7 +108,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .hud-label::before {
   content: "";
   width: 22px; height: 1px;
-  background: var(--mint);
+  background: var(--acc);
   opacity: 0.6;
 }
 
@@ -109,6 +120,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   letter-spacing: 0.04em;
   padding: 13px 22px;
   border: 1px solid var(--line);
+  border-radius: var(--r-s);
   color: var(--ink);
   transition: all 0.18s ease;
   white-space: nowrap;
@@ -116,13 +128,13 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .btn .arr { transition: transform 0.18s ease; }
 .btn:hover .arr { transform: translateX(3px); }
 .btn-solid {
-  background: var(--mint);
-  border-color: var(--mint);
-  color: #0B1210;
-  box-shadow: 0 0 24px rgba(33,241,168,0.25);
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #0A1120;
+  box-shadow: 0 0 24px rgba(245,166,35,0.25);
 }
-.btn-solid:hover { box-shadow: 0 0 38px rgba(33,241,168,0.45); }
-.btn-ghost:hover { border-color: var(--mint); color: var(--mint); background: var(--mint-soft); }
+.btn-solid:hover { box-shadow: 0 0 38px rgba(245,166,35,0.45); }
+.btn-ghost:hover { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
 
 /* ─── Ticker strip ─── */
 .ticker {
@@ -144,27 +156,27 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   padding-left: 100%;
 }
 .ticker-track span b { color: var(--ink-2); font-weight: 500; }
-.ticker-track .up { color: var(--mint); }
+.ticker-track .up { color: var(--up); }
 @keyframes ticker { to { transform: translateX(-100%); } }
 
 /* ─── Nav ─── */
 .nav {
   position: fixed; top: 30px; left: 0; right: 0; z-index: 50;
-  background: rgba(23, 23, 23, 0.82);
+  background: rgba(10, 17, 32, 0.85);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line-dim);
 }
 .nav-row { display: flex; align-items: center; justify-content: space-between; height: 62px; }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark { width: 30px; height: 30px; border-radius: 7px; overflow: hidden; box-shadow: 0 0 14px rgba(33,241,168,0.3); }
+.brand-mark { width: 30px; height: 30px; border-radius: 7px; overflow: hidden; box-shadow: 0 0 14px rgba(245,166,35,0.3); }
 .brand-name { font-weight: 700; font-size: 17px; color: var(--ink); letter-spacing: -0.01em; }
 .nav-links { display: flex; align-items: center; gap: 26px; }
 .nav-links > a:not(.btn) {
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
   color: var(--ink-3); transition: color 0.15s ease;
 }
-.nav-links > a:not(.btn):hover { color: var(--mint); }
+.nav-links > a:not(.btn):hover { color: var(--acc); }
 .nav .btn { padding: 9px 16px; font-size: 12px; }
 
 /* ─── Hero ─── */
@@ -172,7 +184,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .hero::after {
   content: "";
   position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 55% 60% at 72% 42%, rgba(33,241,168,0.07), transparent 70%);
+  background: radial-gradient(ellipse 55% 60% at 72% 42%, rgba(245,166,35,0.07), transparent 70%);
 }
 .hero-grid {
   display: grid;
@@ -193,7 +205,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   color: var(--ink-3);
   display: inline-flex; align-items: center; gap: 8px;
 }
-.hero-meta .it::before { content: "▪"; color: var(--mint); font-size: 8px; }
+.hero-meta .it::before { content: "▪"; color: var(--acc); font-size: 8px; }
 
 /* Page-load sequence */
 .anim-1, .anim-2, .anim-3, .anim-hud { opacity: 0; transform: translateY(14px); animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
@@ -208,9 +220,11 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   position: relative;
   max-width: 520px;
   margin-left: auto;
-  background: rgba(17, 19, 18, 0.92);
+  background: rgba(15, 26, 51, 0.92);
   border: 1px solid var(--line);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 44px rgba(33,241,168,0.08);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 44px rgba(245,166,35,0.08);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transform-style: preserve-3d;
@@ -230,13 +244,17 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .live-badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em;
-  color: var(--mint);
+  color: var(--up);
+  background: var(--up-dim);
+  border: 1px solid rgba(22, 199, 132, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
 }
 .live-badge::before {
   content: "";
   width: 7px; height: 7px; border-radius: 50%;
-  background: var(--mint);
-  box-shadow: 0 0 8px var(--mint);
+  background: var(--up);
+  box-shadow: 0 0 8px var(--up);
   animation: blink 1.4s steps(2) infinite;
 }
 .dash-head {
@@ -248,7 +266,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .dash-sym .e { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); margin-top: 3px; }
 .dash-px { text-align: right; font-family: var(--mono); }
 .dash-px .p { font-size: 23px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
-.dash-px .chg { font-size: 12px; font-weight: 500; color: var(--mint); margin-top: 2px; }
+.dash-px .chg { font-size: 12px; font-weight: 500; color: var(--up); margin-top: 2px; }
 .dash-ohlc {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
   color: var(--ink-3);
@@ -262,8 +280,8 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 /* Candles stagger in left to right */
 .cd { opacity: 0; animation: candlein 0.5s ease-out forwards; animation-delay: calc(0.2s + var(--i) * 0.07s); }
 .cd line { stroke-width: 1.2; }
-.cd.up line { stroke: var(--mint); }
-.cd.up rect { fill: var(--mint); }
+.cd.up line { stroke: var(--up); }
+.cd.up rect { fill: var(--up); }
 .cd.dn line { stroke: var(--red); }
 .cd.dn rect { fill: var(--red); fill-opacity: 0.9; }
 @keyframes candlein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -275,6 +293,23 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .mk-trail { animation-delay: 1.5s; }
 .mk-exit  { animation-delay: 2s; }
 @keyframes fadein { to { opacity: 1; } }
+
+/* HUD tiles — signal state, reference style */
+.dash-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line-dim);
+}
+.dash-tiles .tile { padding: 10px 14px; border-right: 1px solid var(--line-dim); }
+.dash-tiles .tile:last-child { border-right: 0; }
+.dash-tiles .tl {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+}
+.dash-tiles .tv { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.dash-tiles .tv.up { color: var(--up); }
+.dash-tiles .tv.am { color: var(--acc); }
+.dash-tiles .tv.vo { color: var(--volt); }
 
 /* Decision log — the auto-trade lifecycle, replayed */
 .dash-log {
@@ -292,15 +327,17 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .log-line .t { color: var(--ink-3); }
-.log-line .k { color: var(--mint); font-weight: 700; }
+.log-line .k { color: var(--acc); font-weight: 700; }
 .log-line .k.dim { opacity: 0.7; font-weight: 500; }
 .log-line .k.n { color: var(--ink-2); font-weight: 500; }
+.log-line .k.v { color: var(--volt); }
+.log-line .k.g { color: var(--up); }
 .cursor {
   display: inline-block;
   width: 7px; height: 12px;
   margin-left: 4px;
   vertical-align: -2px;
-  background: var(--mint);
+  background: var(--acc);
   animation: blink 1.1s steps(2) infinite;
 }
 
@@ -314,17 +351,17 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 }
 .stars::before {
   box-shadow:
-    820px 140px #21F1A8, 1050px 90px rgba(255,255,255,0.5), 1240px 210px rgba(33,241,168,0.6),
-    960px 320px rgba(255,255,255,0.35), 1330px 420px rgba(33,241,168,0.45), 740px 480px rgba(255,255,255,0.3),
-    1120px 540px rgba(33,241,168,0.5), 890px 60px rgba(255,255,255,0.4), 1390px 120px rgba(33,241,168,0.35),
-    640px 240px rgba(255,255,255,0.25), 1180px 380px rgba(255,255,255,0.45), 1290px 560px rgba(33,241,168,0.3);
+    820px 140px #F5A623, 1050px 90px rgba(255,255,255,0.5), 1240px 210px rgba(245,166,35,0.6),
+    960px 320px rgba(255,255,255,0.35), 1330px 420px rgba(245,166,35,0.45), 740px 480px rgba(255,255,255,0.3),
+    1120px 540px rgba(245,166,35,0.5), 890px 60px rgba(255,255,255,0.4), 1390px 120px rgba(245,166,35,0.35),
+    640px 240px rgba(255,255,255,0.25), 1180px 380px rgba(255,255,255,0.45), 1290px 560px rgba(245,166,35,0.3);
   animation: twinkle 7s ease-in-out infinite alternate;
 }
 .stars::after {
   box-shadow:
-    700px 120px rgba(33,241,168,0.4), 980px 200px rgba(255,255,255,0.3), 1150px 60px rgba(33,241,168,0.55),
-    1360px 300px rgba(255,255,255,0.4), 850px 400px rgba(33,241,168,0.35), 1230px 470px rgba(255,255,255,0.3),
-    1060px 590px rgba(33,241,168,0.4), 600px 380px rgba(255,255,255,0.25), 1420px 520px rgba(33,241,168,0.4),
+    700px 120px rgba(124,107,255,0.45), 980px 200px rgba(255,255,255,0.3), 1150px 60px rgba(124,107,255,0.55),
+    1360px 300px rgba(255,255,255,0.4), 850px 400px rgba(124,107,255,0.4), 1230px 470px rgba(255,255,255,0.3),
+    1060px 590px rgba(124,107,255,0.45), 600px 380px rgba(255,255,255,0.25), 1420px 520px rgba(124,107,255,0.45),
     920px 520px rgba(255,255,255,0.35);
   animation: twinkle 9s ease-in-out 2s infinite alternate;
 }
@@ -339,7 +376,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .section-head { max-width: 720px; margin-bottom: 54px; }
 .section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
 .section-head.center .hud-label { justify-content: center; }
-.section-head.center .hud-label::after { content: ""; width: 22px; height: 1px; background: var(--mint); opacity: 0.6; }
+.section-head.center .hud-label::after { content: ""; width: 22px; height: 1px; background: var(--acc); opacity: 0.6; }
 .section-head h2 { font-size: clamp(28px, 3.6vw, 42px); line-height: 1.12; margin: 16px 0 16px; }
 .section-head p { font-size: 16.5px; line-height: 1.65; }
 
@@ -348,11 +385,11 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .rv.in { opacity: 1; transform: none; }
 
 /* ─── Telemetry stats ─── */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-dim); border: 1px solid var(--line-dim); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-dim); border: 1px solid var(--line-dim); border-radius: var(--r); overflow: hidden; }
 .stat-card { background: var(--void); padding: 28px 26px 24px; position: relative; }
 .stat-card::before {
   content: ""; position: absolute; top: 0; left: 0;
-  width: 26px; height: 2px; background: var(--mint);
+  width: 26px; height: 2px; background: var(--acc);
 }
 .stat-card .lbl {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
@@ -360,7 +397,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 }
 .stat-card .num {
   font-family: var(--mono); font-size: clamp(22px, 2.4vw, 30px);
-  font-weight: 700; color: var(--mint); letter-spacing: -0.02em; margin-bottom: 10px;
+  font-weight: 700; color: var(--up); letter-spacing: -0.02em; margin-bottom: 10px;
 }
 .stat-card .sub { font-size: 12.5px; line-height: 1.5; color: var(--ink-3); }
 
@@ -373,18 +410,18 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 }
 .bar-row { display: grid; grid-template-columns: 150px 1fr 110px; gap: 16px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line-dim); }
 .bar-row .nm { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
-.bar-track { height: 8px; background: rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+.bar-track { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.06); position: relative; overflow: hidden; }
 .bar-fill {
   position: absolute; inset: 0 auto 0 0; width: 0;
-  background: linear-gradient(90deg, rgba(33,241,168,0.35), var(--mint));
+  background: linear-gradient(90deg, rgba(22,199,132,0.35), var(--up));
   transition: width 1.2s cubic-bezier(0.25, 0.8, 0.3, 1);
 }
 .in .bar-fill { width: var(--w); }
-.bar-row .val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--mint); text-align: right; }
+.bar-row .val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--up); text-align: right; }
 
 /* ─── Fleet cards ─── */
 .engines { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-.eng {
+.eng { border-radius: var(--r);
   background: var(--panel);
   border: 1px solid var(--line-dim);
   padding: 24px 22px 20px;
@@ -395,17 +432,17 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .eng:hover {
   border-color: var(--line);
   transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-4px);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.4), 0 0 24px rgba(33,241,168,0.08);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.4), 0 0 24px rgba(245,166,35,0.08);
 }
 .eng::before {
   content: ""; position: absolute; top: 14px; right: 14px;
   width: 7px; height: 7px; border-radius: 50%;
-  background: var(--mint);
-  box-shadow: 0 0 10px var(--mint);
+  background: var(--acc);
+  box-shadow: 0 0 10px var(--acc);
   opacity: 0.85;
 }
-.eng.lead { background: linear-gradient(160deg, rgba(33,241,168,0.09), var(--panel) 55%); border-color: var(--line); }
-.eng .id { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint); margin-bottom: 10px; }
+.eng.lead { background: linear-gradient(160deg, rgba(245,166,35,0.09), var(--panel) 55%); border-color: var(--line); }
+.eng .id { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); margin-bottom: 10px; }
 .eng .name { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 8px; letter-spacing: -0.01em; }
 .eng .philo { font-size: 13px; line-height: 1.55; color: var(--ink-3); flex: 1; }
 .eng .spark { margin: 16px 0 12px; }
@@ -430,7 +467,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   font-size: 14.5px; border-top: 1px solid var(--line-dim);
 }
 .split-text li::before {
-  content: "▸"; position: absolute; left: 2px; color: var(--mint); font-size: 12px; top: 13px;
+  content: "▸"; position: absolute; left: 2px; color: var(--acc); font-size: 12px; top: 13px;
 }
 
 .shield { position: relative; max-width: 480px; margin: 0 auto; }
@@ -451,13 +488,14 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   background: repeating-linear-gradient(180deg, var(--line) 0 6px, transparent 6px 12px);
 }
 .log-step { display: grid; grid-template-columns: 72px 36px 1fr; gap: 0 18px; padding: 20px 0; align-items: start; }
-.log-step .when { font-family: var(--mono); font-size: 11.5px; font-weight: 500; color: var(--mint); letter-spacing: 0.06em; text-align: right; padding-top: 5px; }
+.log-step .when { font-family: var(--mono); font-size: 11.5px; font-weight: 500; color: var(--acc); letter-spacing: 0.06em; text-align: right; padding-top: 5px; }
 .log-step .marker {
   width: 34px; height: 34px;
   border: 1px solid var(--line);
+  border-radius: var(--r-s);
   background: var(--void);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--mint);
+  font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--acc);
   position: relative; z-index: 1;
 }
 .log-step h4 { font-size: 17px; margin-bottom: 5px; }
@@ -468,6 +506,8 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
   max-width: 780px; margin: 0 auto;
   background: var(--void);
   border: 1px solid var(--line-dim);
+  border-radius: var(--r);
+  overflow: hidden;
   box-shadow: 0 24px 70px rgba(0,0,0,0.45);
 }
 .term-bar {
@@ -478,7 +518,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .term-bar i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.12); }
 .term-bar .t { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; color: var(--ink-3); margin-left: 8px; }
 .term-body { padding: 26px 28px 30px; font-family: var(--mono); font-size: 13.5px; line-height: 2; color: var(--ink-2); }
-.term-body .p { color: var(--mint); }
+.term-body .p { color: var(--acc); }
 .term-body .c { color: var(--ink-3); }
 .term-note { max-width: 780px; margin: 44px auto 0; font-size: 15.5px; line-height: 1.7; }
 .term-note p { margin-bottom: 16px; }
@@ -486,8 +526,10 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 /* ─── CTA banner ─── */
 .cta-banner {
   border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
   background:
-    radial-gradient(ellipse 70% 120% at 50% 130%, rgba(33,241,168,0.14), transparent 70%),
+    radial-gradient(ellipse 70% 120% at 50% 130%, rgba(245,166,35,0.14), transparent 70%),
     var(--void);
   text-align: center;
   padding: 76px 30px 70px;
@@ -497,8 +539,8 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .cta-banner::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(rgba(33,241,168,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(33,241,168,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(245,166,35,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,166,35,0.04) 1px, transparent 1px);
   background-size: 34px 34px;
 }
 .cta-banner h3 { font-size: clamp(26px, 3.4vw, 38px); margin: 16px 0 14px; position: relative; }
@@ -513,15 +555,15 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 .foot-col ul { list-style: none; }
 .foot-col li { margin-bottom: 9px; }
 .foot-col a { font-size: 13.5px; color: var(--ink-2); transition: color 0.15s ease; }
-.foot-col a:hover { color: var(--mint); }
+.foot-col a:hover { color: var(--acc); }
 .foot-bottom {
   display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   border-top: 1px solid var(--line-dim); padding-top: 22px;
   font-family: var(--mono); font-size: 11px; color: var(--ink-3);
 }
 .foot-bottom .pair { display: flex; gap: 18px; }
-.foot-bottom a:hover { color: var(--mint); }
-.disclaimer-block {
+.foot-bottom a:hover { color: var(--acc); }
+.disclaimer-block { border-radius: var(--r-s);
   margin-top: 22px; font-size: 11.5px; line-height: 1.65; color: var(--ink-3);
   border: 1px solid var(--line-dim); padding: 14px 18px;
 }
@@ -548,7 +590,7 @@ h1, h2, h3, h4 { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
 
 /* Focus visibility */
 a:focus-visible, button:focus-visible {
-  outline: 2px solid var(--mint);
+  outline: 2px solid var(--acc);
   outline-offset: 3px;
 }
 
@@ -611,7 +653,7 @@ a:focus-visible, button:focus-visible {
   <div class="wrap hero-grid">
     <div>
       <div class="hud-label anim-1">Mode A // Paper capital · live NSE feed</div>
-      <h1 class="anim-2">Seven engines.<br>One <span class="grad">flight computer.</span></h1>
+      <h1 class="anim-2">Seven engines.<br>One <span class="am">flight</span> <span class="vo">computer.</span></h1>
       <p class="hero-deck anim-3">
         Seven independent strategy engines fly in formation against the live NSE feed.
         Each carries its own conviction, its own risk frame, its own way of being wrong.
@@ -650,17 +692,17 @@ a:focus-visible, button:focus-visible {
       <div class="dash-ohlc">O <b>2,204</b> · H <b>2,244.2</b> · L <b>2,193.6</b> · VOL <b>15.4L</b></div>
 
       <div class="dash-chart">
-        <svg viewBox="0 0 460 190">
+        <svg viewBox="0 0 460 212">
           <!-- price gridlines -->
           <line x1="0" y1="155.8" x2="460" y2="155.8" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
           <line x1="0" y1="97.5" x2="460" y2="97.5" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
           <line x1="0" y1="39.2" x2="460" y2="39.2" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-          <text x="458" y="152" text-anchor="end" font-size="9" fill="#7E8883">2,200</text>
-          <text x="458" y="93.5" text-anchor="end" font-size="9" fill="#7E8883">2,220</text>
-          <text x="458" y="35.2" text-anchor="end" font-size="9" fill="#7E8883">2,240</text>
+          <text x="458" y="152" text-anchor="end" font-size="9" fill="#7683A3">2,200</text>
+          <text x="458" y="93.5" text-anchor="end" font-size="9" fill="#7683A3">2,220</text>
+          <text x="458" y="35.2" text-anchor="end" font-size="9" fill="#7683A3">2,240</text>
 
           <!-- pick badge -->
-          <text class="mk mk-pick" x="10" y="14" font-size="9.5" fill="#21F1A8" letter-spacing="1.5">▲ PICKED BY v4 · SCORE 87/100</text>
+          <text class="mk mk-pick" x="10" y="14" font-size="9.5" fill="#7C6BFF" letter-spacing="1.5">▲ PICKED BY v4 · SCORE 87/100</text>
 
           <!-- candles (staggered) -->
           <g class="cd dn" style="--i:0"><line x1="14" y1="138.3" x2="14" y2="161.7"/><rect x="8.5" y="144.2" width="11" height="11.6"/></g>
@@ -686,36 +728,73 @@ a:focus-visible, button:focus-visible {
           <g class="cd up" style="--i:20"><line x1="414" y1="26.9" x2="414" y2="45"/><rect x="408.5" y="27.5" width="11" height="11.7"/></g>
           <g class="cd dn" style="--i:21"><line x1="434" y1="24.6" x2="434" y2="42.1"/><rect x="428.5" y="27.5" width="11" height="9.9"/></g>
 
+          <!-- volt moving-average line, reference style -->
+          <path class="mk" style="animation-delay: 1.3s" d="M14,150 L34,158 L54,160 L74,159 L94,152 L114,143 L134,133 L154,124 L174,116 L194,110 L214,107 L234,108 L254,109 L274,104 L294,95 L314,85 L334,77 L354,70 L374,64 L394,55 L414,44 L434,36" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.85"/>
+
+          <!-- volume bars -->
+          <g class="mk" style="animation-delay: 0.7s">
+            <rect x="10" y="203" width="8" height="7" fill="#EA3943" opacity="0.4"/>
+            <rect x="30" y="201" width="8" height="9" fill="#EA3943" opacity="0.4"/>
+            <rect x="50" y="205" width="8" height="5" fill="#16C784" opacity="0.4"/>
+            <rect x="70" y="204" width="8" height="6" fill="#EA3943" opacity="0.4"/>
+            <rect x="90" y="202" width="8" height="8" fill="#16C784" opacity="0.4"/>
+            <rect x="110" y="198" width="8" height="12" fill="#16C784" opacity="0.4"/>
+            <rect x="130" y="201" width="8" height="9" fill="#16C784" opacity="0.4"/>
+            <rect x="150" y="204" width="8" height="6" fill="#EA3943" opacity="0.4"/>
+            <rect x="170" y="200" width="8" height="10" fill="#16C784" opacity="0.4"/>
+            <rect x="190" y="199" width="8" height="11" fill="#16C784" opacity="0.4"/>
+            <rect x="210" y="203" width="8" height="7" fill="#EA3943" opacity="0.4"/>
+            <rect x="230" y="202" width="8" height="8" fill="#EA3943" opacity="0.4"/>
+            <rect x="250" y="204" width="8" height="6" fill="#16C784" opacity="0.4"/>
+            <rect x="270" y="198" width="8" height="12" fill="#16C784" opacity="0.4"/>
+            <rect x="290" y="197" width="8" height="13" fill="#16C784" opacity="0.4"/>
+            <rect x="310" y="204" width="8" height="6" fill="#EA3943" opacity="0.4"/>
+            <rect x="330" y="199" width="8" height="11" fill="#16C784" opacity="0.4"/>
+            <rect x="350" y="203" width="8" height="7" fill="#EA3943" opacity="0.4"/>
+            <rect x="370" y="198" width="8" height="12" fill="#16C784" opacity="0.4"/>
+            <rect x="390" y="201" width="8" height="9" fill="#16C784" opacity="0.4"/>
+            <rect x="410" y="196" width="8" height="14" fill="#16C784" opacity="0.4"/>
+            <rect x="430" y="200" width="8" height="10" fill="#EA3943" opacity="0.4"/>
+          </g>
+
           <!-- ENTER: dashed entry-price line + marker + tag -->
           <g class="mk mk-entry">
-            <line x1="94" y1="144.2" x2="448" y2="144.2" stroke="#21F1A8" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="4 5"/>
-            <polygon points="114,166 108,176 120,176" fill="#21F1A8"/>
-            <rect x="126" y="160" width="124" height="18" rx="2" fill="#111312" fill-opacity="0.92" stroke="#21F1A8" stroke-opacity="0.35"/>
-            <text x="132" y="172.5" font-size="10" fill="#21F1A8">ENTER 09:42 · ₹2,204</text>
+            <line x1="94" y1="144.2" x2="448" y2="144.2" stroke="#F5A623" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="4 5"/>
+            <polygon points="114,166 108,176 120,176" fill="#F5A623"/>
+            <rect x="126" y="160" width="124" height="18" rx="6" fill="#0A1120" fill-opacity="0.92" stroke="#F5A623" stroke-opacity="0.35"/>
+            <text x="132" y="172.5" font-size="10" fill="#F5A623">ENTER 09:42 · ₹2,204</text>
           </g>
 
           <!-- TRAIL: stepped stop-loss line -->
           <g class="mk mk-trail">
-            <path d="M114,167.5 H174 V132.5 H254 V97.5 H334 V62.5 H414 V45 H448" fill="none" stroke="#FF5C5C" stroke-opacity="0.55" stroke-width="1.2" stroke-dasharray="5 4"/>
-            <text x="446" y="59" text-anchor="end" font-size="8.5" fill="#FF5C5C" fill-opacity="0.85" letter-spacing="1">TRAIL SL</text>
+            <path d="M114,167.5 H174 V132.5 H254 V97.5 H334 V62.5 H414 V45 H448" fill="none" stroke="#EA3943" stroke-opacity="0.55" stroke-width="1.2" stroke-dasharray="5 4"/>
+            <text x="446" y="59" text-anchor="end" font-size="8.5" fill="#EA3943" fill-opacity="0.85" letter-spacing="1">TRAIL SL</text>
           </g>
 
           <!-- EXIT: flag at the banked candle -->
           <g class="mk mk-exit">
-            <line x1="414" y1="26.9" x2="414" y2="13" stroke="#21F1A8" stroke-opacity="0.6" stroke-width="1"/>
-            <rect x="284" y="4" width="124" height="18" rx="2" fill="#111312" fill-opacity="0.92" stroke="#21F1A8" stroke-opacity="0.5"/>
-            <text x="290" y="16.5" font-size="10" fill="#21F1A8">EXIT 14:05 · ₹2,244</text>
+            <line x1="414" y1="26.9" x2="414" y2="13" stroke="#16C784" stroke-opacity="0.7" stroke-width="1"/>
+            <rect x="284" y="4" width="124" height="18" rx="4" fill="#0A1120" fill-opacity="0.92" stroke="#16C784" stroke-opacity="0.5"/>
+            <text x="290" y="16.5" font-size="10" fill="#16C784">EXIT 14:05 · ₹2,244</text>
           </g>
         </svg>
+      </div>
+
+      <!-- signal state, reference style -->
+      <div class="dash-tiles">
+        <div class="tile"><div class="tl">Signal</div><div class="tv up">LONG</div></div>
+        <div class="tile"><div class="tl">Conviction</div><div class="tv am">87%</div></div>
+        <div class="tile"><div class="tl">Regime</div><div class="tv vo">BULL</div></div>
+        <div class="tile"><div class="tl">Risk gate</div><div class="tv up">PASS</div></div>
       </div>
 
       <!-- the auto-trade lifecycle, as it happened -->
       <div class="dash-log">
         <div class="log-line" style="--i:0"><span class="t">09:15:02</span> <span class="k dim">SCAN</span> 512 symbols → 14 candidates</div>
-        <div class="log-line" style="--i:1"><span class="t">09:15:04</span> <span class="k">PICK</span> RELIANCE · score 87/100 · regime BULL</div>
+        <div class="log-line" style="--i:1"><span class="t">09:15:04</span> <span class="k v">PICK</span> RELIANCE · score 87/100 · regime BULL</div>
         <div class="log-line" style="--i:2"><span class="t">09:42:11</span> <span class="k">ENTER</span> long @ ₹2,204 · Kelly-capped ₹16,830</div>
         <div class="log-line" style="--i:3"><span class="t">11:20:36</span> <span class="k n">TRAIL</span> stop raised → breakeven +0.8%</div>
-        <div class="log-line" style="--i:4"><span class="t">14:05:48</span> <span class="k">EXIT</span> @ ₹2,244 · +1.8% banked<span class="cursor"></span></div>
+        <div class="log-line" style="--i:4"><span class="t">14:05:48</span> <span class="k g">EXIT</span> @ ₹2,244 · +1.8% banked<span class="cursor"></span></div>
       </div>
     </div>
     </div>
@@ -737,7 +816,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v4 · Composite Scorer</div>
         <div class="name">The workhorse.</div>
         <div class="philo">Multi-feature ML rank · Kelly cap · permissive re-entry on winners.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,30 L12,27 L24,28 L36,22 L48,18 L60,14 L72,10 L84,7 L100,3" stroke="#21F1A8" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,30 L12,27 L24,28 L36,22 L48,18 L60,14 L72,10 L84,7 L100,3" stroke="#F5A623" stroke-width="1.5" fill="none"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹1,96,789</div></div>
           <div><div class="l">Trades</div><div class="v">243</div></div>
@@ -748,7 +827,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v5 · Multi-pool</div>
         <div class="name">The portfolio mind.</div>
         <div class="philo">Splits capital across four pools — intraday, swing, positional, investment.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,28 L12,26 L24,29 L36,24 L48,25 L60,19 L72,16 L84,12 L100,9" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,28 L12,26 L24,29 L36,24 L48,25 L60,19 L72,16 L84,12 L100,9" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹27,968</div></div>
           <div><div class="l">Trades</div><div class="v">104</div></div>
@@ -759,7 +838,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v5 · Classic</div>
         <div class="name">The benchmark.</div>
         <div class="philo">v5 without Track A fixes — a control variant for clean A/B measurement.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,29 L12,28 L24,25 L36,26 L48,21 L60,20 L72,15 L84,13 L100,8" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,29 L12,28 L24,25 L36,26 L48,21 L60,20 L72,15 L84,13 L100,8" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹32,541</div></div>
           <div><div class="l">Trades</div><div class="v">109</div></div>
@@ -770,7 +849,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v5_6 · Darvas Box</div>
         <div class="name">Breakout reader.</div>
         <div class="philo">Finds tight ranges, sizes the box, rides the resolution.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,27 L12,27 L24,26 L36,27 L48,20 L60,21 L72,20 L84,14 L100,11" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,27 L12,27 L24,26 L36,27 L48,20 L60,21 L72,20 L84,14 L100,11" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹21,809</div></div>
           <div><div class="l">Trades</div><div class="v">90</div></div>
@@ -781,7 +860,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v5_7 · Mean-Revert</div>
         <div class="name">Buys the floor.</div>
         <div class="philo">Box theory inverted — when a stock pings two levels, fade it.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,26 L12,29 L24,23 L36,27 L48,20 L60,24 L72,16 L84,18 L100,10" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,26 L12,29 L24,23 L36,27 L48,20 L60,24 L72,16 L84,18 L100,10" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹29,723</div></div>
           <div><div class="l">Trades</div><div class="v">108</div></div>
@@ -792,7 +871,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v5_8 · Regime-Aware</div>
         <div class="name">Disciplined experiment.</div>
         <div class="philo">A live test — does the regime-slot partition help, or hurt? v5_8 is the answer.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,30 L12,25 L24,26 L36,20 L48,22 L60,15 L72,13 L84,9 L100,5" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,30 L12,25 L24,26 L36,20 L48,22 L60,15 L72,13 L84,9 L100,5" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹42,748</div></div>
           <div><div class="l">Trades</div><div class="v">119</div></div>
@@ -803,7 +882,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">v6 · Bolt-On</div>
         <div class="name">The hybrid.</div>
         <div class="philo">v4's signals running through v5's risk shell — the bridge between the two halves.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,28 L12,24 L24,26 L36,21 L48,23 L60,17 L72,18 L84,12 L100,9" stroke="#21F1A8" stroke-width="1.5" fill="none" opacity="0.75"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,28 L12,24 L24,26 L36,21 L48,23 L60,17 L72,18 L84,12 L100,9" stroke="#7C6BFF" stroke-width="1.5" fill="none" opacity="0.8"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹26,258</div></div>
           <div><div class="l">Trades</div><div class="v">104</div></div>
@@ -814,7 +893,7 @@ a:focus-visible, button:focus-visible {
         <div class="id">Fleet · Combined</div>
         <div class="name">Together.</div>
         <div class="philo">Each engine alone has weaknesses. The sum has been larger than the parts.</div>
-        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,31 L12,28 L24,26 L36,21 L48,17 L60,13 L72,9 L84,5 L100,2" stroke="#21F1A8" stroke-width="2" fill="none"/></svg></div>
+        <div class="spark"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M0,31 L12,28 L24,26 L36,21 L48,17 L60,13 L72,9 L84,5 L100,2" stroke="#F5A623" stroke-width="2" fill="none"/></svg></div>
         <div class="stat">
           <div><div class="l">Best day</div><div class="v">+₹3,77,836</div></div>
           <div><div class="l">Trades</div><div class="v">877</div></div>
@@ -829,7 +908,7 @@ a:focus-visible, button:focus-visible {
   <div class="wrap">
     <div class="section-head rv">
       <div class="hud-label">Phase 02 // Risk Shield</div>
-      <h2>Behavioral risk, <span class="grad">three layers deep.</span></h2>
+      <h2>Behavioral risk, <span class="grad v">three layers deep.</span></h2>
       <p>Most algorithmic blowups don't come from a bad strategy. They come from a strategy that worked yesterday meeting a market that doesn't fit. TradePilot's risk control isn't one stop-loss — it's a stack of independent checks, each with a different job.</p>
     </div>
 
@@ -850,42 +929,42 @@ a:focus-visible, button:focus-visible {
         <svg viewBox="0 0 460 510">
           <g class="breath">
             <!-- T0 clear · outermost -->
-            <circle cx="230" cy="250" r="212" fill="none" stroke="#21F1A8" stroke-opacity="0.5" stroke-width="1.5"/>
-            <circle cx="230" cy="250" r="205" fill="none" stroke="#21F1A8" stroke-opacity="0.14" stroke-width="12"/>
+            <circle cx="230" cy="250" r="212" fill="none" stroke="#16C784" stroke-opacity="0.55" stroke-width="1.5"/>
+            <circle cx="230" cy="250" r="205" fill="none" stroke="#16C784" stroke-opacity="0.14" stroke-width="12"/>
             <!-- T1 warn · rotating -->
-            <g class="rot-a"><circle cx="230" cy="250" r="162" fill="none" stroke="#21F1A8" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="6 6"/></g>
+            <g class="rot-a"><circle cx="230" cy="250" r="162" fill="none" stroke="#F5A623" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="6 6"/></g>
             <!-- T2 soft hold · counter-rotating -->
-            <g class="rot-b"><circle cx="230" cy="250" r="118" fill="none" stroke="#B7C0BB" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3 7"/></g>
+            <g class="rot-b"><circle cx="230" cy="250" r="118" fill="none" stroke="#AAB6D0" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3 7"/></g>
             <!-- T3 hard kill -->
-            <circle cx="230" cy="250" r="74" fill="none" stroke="#FF5C5C" stroke-opacity="0.6" stroke-width="1.5"/>
+            <circle cx="230" cy="250" r="74" fill="none" stroke="#EA3943" stroke-opacity="0.6" stroke-width="1.5"/>
             <circle cx="230" cy="250" r="68" fill="rgba(255,92,92,0.06)"/>
           </g>
 
           <!-- capital core -->
-          <circle cx="230" cy="250" r="30" fill="#171717" stroke="#21F1A8" stroke-opacity="0.5" stroke-width="1"/>
-          <text x="230" y="247" text-anchor="middle" font-size="9" fill="#7E8883" class="ring-label">CAPITAL</text>
-          <text x="230" y="262" text-anchor="middle" font-size="10" font-weight="700" fill="#EDF2EF">₹1.12L</text>
+          <circle cx="230" cy="250" r="30" fill="#0F1A33" stroke="#F5A623" stroke-opacity="0.5" stroke-width="1"/>
+          <text x="230" y="247" text-anchor="middle" font-size="9" fill="#7683A3" class="ring-label">CAPITAL</text>
+          <text x="230" y="262" text-anchor="middle" font-size="10" font-weight="700" fill="#E8EDF9">₹1.12L</text>
 
           <!-- tier pills stacked down the ring axis -->
           <g>
-            <rect x="115" y="26" width="230" height="24" rx="2" fill="#111312" fill-opacity="0.92" stroke="#21F1A8" stroke-opacity="0.4"/>
-            <text x="230" y="42" text-anchor="middle" fill="#21F1A8" class="pill-label">T0 · CLEAR · P&amp;L ≥ −₹2,500</text>
+            <rect x="115" y="26" width="230" height="24" rx="6" fill="#0A1120" fill-opacity="0.92" stroke="#16C784" stroke-opacity="0.45"/>
+            <text x="230" y="42" text-anchor="middle" fill="#16C784" class="pill-label">T0 · CLEAR · P&amp;L ≥ −₹2,500</text>
           </g>
           <g>
-            <rect x="115" y="76" width="230" height="24" rx="2" fill="#111312" fill-opacity="0.92" stroke="#21F1A8" stroke-opacity="0.25"/>
-            <text x="230" y="92" text-anchor="middle" fill="#21F1A8" fill-opacity="0.85" class="pill-label">T1 · WARN · ≤ −₹2,500</text>
+            <rect x="115" y="76" width="230" height="24" rx="6" fill="#0A1120" fill-opacity="0.92" stroke="#F5A623" stroke-opacity="0.25"/>
+            <text x="230" y="92" text-anchor="middle" fill="#F5A623" fill-opacity="0.85" class="pill-label">T1 · WARN · ≤ −₹2,500</text>
           </g>
           <g>
-            <rect x="115" y="120" width="230" height="24" rx="2" fill="#111312" fill-opacity="0.92" stroke="#B7C0BB" stroke-opacity="0.25"/>
-            <text x="230" y="136" text-anchor="middle" fill="#B7C0BB" class="pill-label">T2 · SOFT HOLD · ≤ −₹5,000</text>
+            <rect x="115" y="120" width="230" height="24" rx="6" fill="#0A1120" fill-opacity="0.92" stroke="#AAB6D0" stroke-opacity="0.25"/>
+            <text x="230" y="136" text-anchor="middle" fill="#AAB6D0" class="pill-label">T2 · SOFT HOLD · ≤ −₹5,000</text>
           </g>
           <g>
-            <rect x="115" y="164" width="230" height="24" rx="2" fill="#111312" fill-opacity="0.92" stroke="#FF5C5C" stroke-opacity="0.4"/>
-            <text x="230" y="180" text-anchor="middle" fill="#FF5C5C" class="pill-label">T3 · HARD KILL · ≤ −₹10,000</text>
+            <rect x="115" y="164" width="230" height="24" rx="6" fill="#0A1120" fill-opacity="0.92" stroke="#EA3943" stroke-opacity="0.4"/>
+            <text x="230" y="180" text-anchor="middle" fill="#EA3943" class="pill-label">T3 · HARD KILL · ≤ −₹10,000</text>
           </g>
 
           <!-- caption -->
-          <text x="230" y="500" text-anchor="middle" font-size="9.5" fill="#7E8883" class="ring-label">A LOSS MUST BREACH EVERY RING BEFORE IT REACHES CAPITAL</text>
+          <text x="230" y="500" text-anchor="middle" font-size="9.5" fill="#7683A3" class="ring-label">A LOSS MUST BREACH EVERY RING BEFORE IT REACHES CAPITAL</text>
         </svg>
       </div>
     </div>
@@ -951,7 +1030,7 @@ a:focus-visible, button:focus-visible {
   <div class="wrap">
     <div class="section-head center rv">
       <div class="hud-label">Phase 04 // Telemetry</div>
-      <h2>Real numbers, <span class="grad">not projections.</span></h2>
+      <h2>Real numbers, <span class="grad v">not projections.</span></h2>
       <p>Every figure on this page is the sum of state-file values written by the engines themselves and reconciled by the dashboard. Three trading days, the latest engine upgrade, and the arc that followed.</p>
     </div>
 

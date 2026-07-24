@@ -43,6 +43,17 @@ SIGNIFICANT_MOVE_PCT = 2.0  # mark movers >= +-2%
 MARKET_OPEN = (9, 15)
 MARKET_CLOSE = (15, 30)
 
+# TP-BUG 2026-07-24: during market hours ~10 paper-trade engines run concurrently,
+# each hitting yfinance without cache isolation. Their shared SQLite caches (cookies.db,
+# isin-tkr.db) plus simultaneous DNS resolution from a threads=True 200-symbol batch
+# routinely blow out curl's getaddrinfo thread pool, causing MOST of the batch download
+# to fail transiently (observed universe_size collapsing to 1-5 for hours on 07-23, vs.
+# 201/201 when run in isolation). These failures are transient, not permanent — retry
+# with backoff instead of silently publishing a near-empty "summary all zeros" snapshot.
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SEC = 8
+MIN_COVERAGE_RATIO = 0.5  # require >=50% of the configured universe before trusting a snapshot
+
 
 def log(msg):
     """Append to log file + print."""
@@ -85,8 +96,16 @@ def load_our_positions():
         except Exception:
             pass
 
-    # v5 family: positions_active.json
-    for eng in ["v5", "v5_classic", "v5_6", "v5_7", "v5_8", "v6"]:
+    # All other engines: auto-discover any docs/paper-trades/<engine>/positions_active.json.
+    # TP-BUG 2026-07-24: this used to be a hardcoded list — ["v5", "v5_classic", "v5_6",
+    # "v5_7", "v5_8", "v6"] — that went stale as new engines (v5_cut, v5_flip, v5_gate,
+    # v5_long, v5_chop, v5_rrg, v7_regime, v8) were added. Their held positions were
+    # silently dropped and got mis-classified as "on the table" opportunities instead of
+    # positions we already hold. Auto-discovering avoids this going stale again.
+    paper_trades_dir = ROOT / "docs" / "paper-trades"
+    engine_dirs = sorted(p.name for p in paper_trades_dir.iterdir() if p.is_dir() and p.name != "v4") \
+        if paper_trades_dir.is_dir() else []
+    for eng in engine_dirs:
         f = ROOT / "docs" / "paper-trades" / eng / "positions_active.json"
         if not f.exists():
             continue
@@ -110,14 +129,16 @@ def load_our_positions():
 
 
 def fetch_movers():
-    """Batch-fetch today's prices for NIFTY 200. Returns list of (symbol, last, prev, pct)."""
+    """Batch-fetch today's prices for NIFTY 200.
+    Returns (movers, expected_universe_size) — movers is a list of (symbol, last, prev, pct).
+    """
     try:
         import yfinance as yf
         import pandas as pd
         from config import ACTIVE_SYMBOLS_YF
     except ImportError as e:
         log(f"FATAL: import failed: {e}")
-        return []
+        return [], 0
 
     # Per-process yfinance cache isolation (TP-RCA 2026-06-26): avoid the shared-SQLite
     # 'unable to open database file' contention that stalled all data on 06-26.
@@ -131,28 +152,47 @@ def fetch_movers():
         pass
 
     yf_str = " ".join(ACTIVE_SYMBOLS_YF)
-    try:
-        df = yf.download(yf_str, period="2d", interval="1d",
-                         group_by="ticker", progress=False, timeout=30, threads=True)
-    except Exception as e:
-        log(f"yfinance batch failed: {e}")
-        return []
-
+    expected = len(ACTIVE_SYMBOLS_YF)
     movers = []
-    for sym in ACTIVE_SYMBOLS_YF:
+
+    for attempt in range(1, RETRY_ATTEMPTS + 1):
         try:
-            if isinstance(df.columns, pd.MultiIndex) and sym in df.columns.get_level_values(0):
-                s = df[sym]
-                if len(s) < 2:
+            # threads=8 (was True/unbounded): a 200-symbol threaded batch on top of
+            # ~10 other concurrently-running yfinance processes was self-inflicting
+            # DNS-resolution thread exhaustion. Bounding it lowers our own contribution.
+            df = yf.download(yf_str, period="2d", interval="1d",
+                             group_by="ticker", progress=False, timeout=30, threads=8)
+        except Exception as e:
+            log(f"yfinance batch failed (attempt {attempt}/{RETRY_ATTEMPTS}): {e}")
+            df = None
+
+        movers = []
+        if df is not None:
+            for sym in ACTIVE_SYMBOLS_YF:
+                try:
+                    if isinstance(df.columns, pd.MultiIndex) and sym in df.columns.get_level_values(0):
+                        s = df[sym]
+                        if len(s) < 2:
+                            continue
+                        today = float(s.iloc[-1]["Close"])
+                        prev = float(s.iloc[-2]["Close"])
+                        if prev > 0 and today > 0:
+                            chg = (today - prev) / prev * 100
+                            movers.append((sym.replace(".NS", ""), today, prev, chg))
+                except Exception:
                     continue
-                today = float(s.iloc[-1]["Close"])
-                prev = float(s.iloc[-2]["Close"])
-                if prev > 0 and today > 0:
-                    chg = (today - prev) / prev * 100
-                    movers.append((sym.replace(".NS", ""), today, prev, chg))
-        except Exception:
-            continue
-    return movers
+
+        coverage = (len(movers) / expected) if expected else 0.0
+        if coverage >= MIN_COVERAGE_RATIO:
+            return movers, expected
+        if attempt < RETRY_ATTEMPTS:
+            log(f"  ⚠ low universe coverage {len(movers)}/{expected} ({coverage:.0%}) on attempt "
+                f"{attempt}/{RETRY_ATTEMPTS} — retrying in {RETRY_BACKOFF_SEC}s")
+            time.sleep(RETRY_BACKOFF_SEC)
+
+    log(f"  ⚠ universe coverage still low after {RETRY_ATTEMPTS} attempts: "
+        f"{len(movers)}/{expected} ({(len(movers)/expected if expected else 0):.0%})")
+    return movers, expected
 
 
 def categorize(movers, our_positions):
@@ -197,9 +237,19 @@ def categorize(movers, our_positions):
 def snapshot():
     """Run one watchdog cycle."""
     log("─── Watchdog cycle ───")
-    movers = fetch_movers()
+    movers, expected = fetch_movers()
     if not movers:
         log("⚠ no movers fetched (yfinance failure?) — skipping cycle")
+        return
+
+    coverage = (len(movers) / expected) if expected else 0.0
+    if coverage < MIN_COVERAGE_RATIO:
+        # TP-BUG 2026-07-24: publishing a snapshot built from a tiny, non-representative
+        # slice of the universe produces an implausible near-zero "summary" (e.g. all 0s
+        # on a strong rally day). Skip the write and let the next cycle retry from scratch
+        # rather than overwrite a good prior snapshot with a misleading one.
+        log(f"⚠ universe coverage too low ({len(movers)}/{expected} = {coverage:.0%}) after retries "
+            f"— skipping write, keeping last good snapshot")
         return
 
     our_positions = load_our_positions()

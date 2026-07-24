@@ -229,6 +229,56 @@ class TestDriveVerdictsAnnotation(_TmpTradeDir):
             self.assertIn("promoted_from_watchlist", row)
 
 
+class TestVerdictsSurviveDataGuardBlock(_TmpTradeDir):
+    """2026-07-24 bug: deploy_signals returned 0 the instant _live_tape_ok()
+    failed, BEFORE all_candidates was ever built and BEFORE the RISK_GATE_LOG
+    block at the tail of the function ran. Every candidate that scan (which
+    DATA-GUARD legitimately vetoes from *deployment*) silently vanished from
+    the Phase-0 divergence artifact instead of being logged as filtered --
+    on 07-24 this cost v5_gate its first scan of the day (09:10:22, right at
+    market open when the tape is still catching up) while sibling log-only
+    engines that happened to scan a few minutes later logged fine. The audit
+    trail must capture every candidate + verdict regardless of whether
+    DATA-GUARD blocked that scan's entries; only actual deployment should be
+    suppressed."""
+
+    def test_data_guard_block_still_logs_verdicts(self):
+        os.environ["DATA_GUARD"] = "1"  # override _TmpTradeDir's default off
+        os.environ["RISK_GATE_LOG"] = "1"
+        pm, rm = StubPool(), FakeRM()
+        rm.pm = pm
+        state = _state()
+        with mock.patch.object(v5, "_live_tape_ok", return_value=False):
+            count = v5.deploy_signals(state, pm, rm, [_sig("A", 90), _sig("B", 70)])
+        self.assertEqual(count, 0)
+        self.assertEqual(pm.deployed, [])  # DATA-GUARD still vetoes real entries
+        path = v5._verdicts_file()
+        self.assertTrue(path.exists(),
+                         "verdicts artifact was never written -- DATA-GUARD block "
+                         "ate the whole scan's audit trail")
+        data = json.loads(path.read_text())
+        symbols = {row["symbol"] for row in data["verdicts"]}
+        self.assertEqual(symbols, {"A", "B"})
+        for row in data["verdicts"]:
+            self.assertEqual(row["inline_outcome"], "filtered")
+
+    def test_data_guard_block_accumulates_across_scans(self):
+        """A later successful scan must not clobber the blocked scan's rows --
+        multiple scans append, they never overwrite."""
+        os.environ["DATA_GUARD"] = "1"
+        os.environ["RISK_GATE_LOG"] = "1"
+        pm, rm = StubPool(), FakeRM()
+        rm.pm = pm
+        state = _state()
+        with mock.patch.object(v5, "_live_tape_ok", return_value=False):
+            v5.deploy_signals(state, pm, rm, [_sig("BLOCKED1", 90)])
+        with mock.patch.object(v5, "_live_tape_ok", return_value=True):
+            v5.deploy_signals(state, pm, rm, [_sig("LIVE1", 90)])
+        data = json.loads(v5._verdicts_file().read_text())
+        symbols = {row["symbol"] for row in data["verdicts"]}
+        self.assertEqual(symbols, {"BLOCKED1", "LIVE1"})
+
+
 # ═══════════════════════════ TASK 2: INVALIDATION_MONITOR ═══════════════════════════
 
 class TestInvalidationMonitor(_TmpTradeDir):

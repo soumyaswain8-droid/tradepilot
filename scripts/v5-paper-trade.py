@@ -651,9 +651,16 @@ def deploy_signals(state, pm, rm, signals):
     # DATA-GUARD (2026-07-12): never open NEW positions off a dead/stale tape.
     # On 07-08 and 07-10 DNS was down from open — signals came from cached CSVs and
     # the engine entered trades it could never price again. Exits are NOT gated.
-    if not _live_tape_ok():
+    # NOTE (2026-07-24 fix): this used to `return 0` here, which skipped candidate
+    # construction entirely and starved the RISK_GATE_LOG block at the tail of this
+    # function of `all_candidates` -- a DATA-GUARD trip (common right at market open
+    # while the tape is still catching up) silently erased that whole scan's rows
+    # from the Phase-0 divergence artifact instead of logging them as filtered.
+    # Deployment stays vetoed (`_data_guard_blocked` skips the entry loop below);
+    # only the audit trail is no longer skipped.
+    _data_guard_blocked = not _live_tape_ok()
+    if _data_guard_blocked:
         log("  [DATA-GUARD] live tape unavailable/stale — blocking new entries this scan")
-        return 0
 
     # CHOP-FILTER (spec 2026-07-17): trade less + smaller in chop. Entries only.
     _chop_on = os.environ.get("CHOP_FILTER") == "1"
@@ -701,7 +708,7 @@ def deploy_signals(state, pm, rm, signals):
     if _drive_on:
         candidates, _gate_promoted, _gate_invalidation_map = _gate_drive_filter(
             state, pm, rm, candidates, _alloc_mult)
-    for sig in candidates:
+    for sig in ([] if _data_guard_blocked else candidates):
         sym, pool_name = sig["symbol"], sig.get("pool", "INTRADAY")
         if pool_name not in state["pools"] or pool_name == "NONE":
             continue

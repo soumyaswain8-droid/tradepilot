@@ -1,0 +1,128 @@
+{
+  "date": "2026-07-28",
+  "generated_at": "2026-07-28T15:35:14.076262",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 1404.07,
+      "trades": 40,
+      "wins": 16,
+      "losses": 24,
+      "longs": 20,
+      "shorts": 20,
+      "win_rate": 40.0,
+      "open_positions": 9,
+      "best_trade": 574.4,
+      "worst_trade": -365.69,
+      "avg_win": 190.88,
+      "avg_loss": -75.0,
+      "exit_reasons": {
+        "FLAT_FORCE_EXIT": 17,
+        "STOPLOSS": 7,
+        "TIME_EXIT": 10,
+        "TARGET": 4,
+        "SIGNAL_FLIP": 2
+      },
+      "n_closed": 40,
+      "n_open": 9
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 2390.14,
+      "trades": 47,
+      "wins": 22,
+      "losses": 25,
+      "longs": 25,
+      "shorts": 22,
+      "win_rate": 46.8,
+      "open_positions": 6,
+      "best_trade": 2297.5,
+      "worst_trade": -1268.8,
+      "avg_win": 286.78,
+      "avg_loss": -156.76,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "TARGET": 7,
+        "TIME_EXIT": 16,
+        "SIGNAL_FLIP": 12
+      },
+      "n_closed": 47,
+      "n_open": 6
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "360ONE",
+      "BIOCON",
+      "BSE",
+      "CANBK",
+      "CGPOWER",
+      "COALINDIA",
+      "COFORGE",
+      "ETERNAL",
+      "GODFRYPHLP",
+      "HCLTECH",
+      "HUDCO",
+      "INDIANB",
+      "IRCTC",
+      "ITC",
+      "KALYANKJIL",
+      "KPITTECH",
+      "LAURUSLABS",
+      "LICHSGFIN",
+      "LODHA",
+      "LTM",
+      "MANKIND",
+      "NHPC",
+      "RVNL",
+      "SAIL",
+      "SWIGGY",
+      "TATAPOWER",
+      "TATASTEEL",
+      "TCS",
+      "TITAN",
+      "VMM",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +2,390 across 47 trades (46.8% win).",
+    "Laggard: <b>v5</b> with Rs +1,404 across 40 trades (40.0% win).",
+    "<b>v5</b>: STOPLOSS (7) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (12) >= TARGET (7). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 40.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 46.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

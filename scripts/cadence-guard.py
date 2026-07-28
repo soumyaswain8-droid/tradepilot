@@ -32,6 +32,8 @@ Run: python3 scripts/cadence-guard.py --check-session
 """
 import argparse
 import json
+import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -159,9 +161,33 @@ def check_cadence(quiet: bool = False) -> int:
 
 # ---------------------------------------------------------------- check B: session
 
+# Engines are started by launch-market.sh as `python3 scripts/<name>-paper-trade.py`.
+# Deliberately NOT pgrep: macOS pgrep has no -a flag (it is a Linux-ism, silently
+# ignored), and `pgrep -f` also matches the invoking shell whose argv contains the
+# pattern — which yields a FALSE "session is live" and would silence the very alarm
+# this script exists to raise. ps + explicit regex + self-exclusion is unambiguous.
+ENGINE_RE = re.compile(r"python[\d.]*\s+\S*scripts/[\w.]+-paper-trade\.py")
+
+
+def engine_procs() -> list[str]:
+    out = subprocess.run(["ps", "-Ao", "pid=,command="],
+                         capture_output=True, text=True).stdout
+    me = {str(os.getpid()), str(os.getppid())}
+    found = []
+    for ln in out.splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        pid, _, cmd = ln.partition(" ")
+        if pid in me:
+            continue
+        if ENGINE_RE.search(cmd):
+            found.append(f"{pid} {cmd[:90]}")
+    return found
+
+
 def engines_running() -> int:
-    out = subprocess.run(["pgrep", "-fa", "paper-trade"], capture_output=True, text=True).stdout
-    return len([l for l in out.splitlines() if l.strip()])
+    return len(engine_procs())
 
 
 def launched_today(today: str) -> bool:

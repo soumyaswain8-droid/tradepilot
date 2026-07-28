@@ -18,9 +18,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 LAUNCH_AGENTS = Path.home() / "Library" / "LaunchAgents"
 LAUNCH_AGENTS.mkdir(parents=True, exist_ok=True)
 # v2: bumped from "com.tradepilot" because macOS TCC cached denials against
-# v1 labels during the migration debugging on 2026-05-16. Bumping the
-# namespace gives all jobs a fresh TCC slate. If any v2 label gets denied
-# in future, bump to v3.
+# v1 labels during the migration debugging on 2026-05-16.
+#
+# CORRECTION (2026-07-28): do NOT bump to v3 if a job starts failing. The taint
+# is NOT on the label — it is on the StandardOutPath FILE. Each log file carries a
+# `com.apple.macl` xattr recording which code identity may open it; when that stops
+# matching launchd's, TCC denies the open, launchd aborts BEFORE exec, and the job
+# reports exit 78 (EX_CONFIG) having written nothing. Renaming the label or the log
+# filename only ever "worked" because it produced a NEW, clean file as a side effect.
+#
+# The actual fix is to remove/rotate the tainted file — the label can stay put.
+# `scripts/cadence-guard.py --check-cadence` does this automatically and is scheduled
+# below. Diagnosed by bisection: a bare `bash -c echo` probe exits 0, and flips to 78
+# purely by pointing its StandardOutPath at a tainted file.
 LABEL_PREFIX = "com.tradepilot.v2"
 
 # launchd weekday: Sunday=0, Monday=1, ..., Saturday=6.
@@ -95,6 +105,26 @@ JOBS = [
     ("bk-daily",
      ["python3", "scripts/team/cadence/nightly_backup.py"],
      23, 0, DAILY, "backup.log"),
+
+    # --- cadence-guard (2026-07-28) — makes silent failures loud -------------
+    # 08:40: heal TCC-tainted logs BEFORE the 08:50 preflight / 09:10 engines-on
+    # fire, so a tainted file can never silently kill the trading chain.
+    ("guard-cadence",
+     ["python3", "scripts/cadence-guard.py", "--check-cadence", "--quiet"],
+     8, 40, WEEKDAYS, "guard-cadence.log"),
+
+    # 09:30: assert the session actually started (engines alive / launcher ran
+    # today). Catches the 2026-07-27 case: Mac powered off through the 08:50
+    # window, launchd silently dropped the missed calendar job, zero trades.
+    ("guard-session",
+     ["python3", "scripts/cadence-guard.py", "--check-session", "--quiet"],
+     9, 30, WEEKDAYS, "guard-session.log"),
+
+    # 15:45: re-assert before the EOD summary is generated, so a lost session is
+    # annotated as an outage rather than banked as a genuine flat day.
+    ("guard-eod",
+     ["python3", "scripts/cadence-guard.py", "--check-session", "--quiet"],
+     15, 45, WEEKDAYS, "guard-eod.log"),
 ]
 
 # Standard PATH a launchd job sees (it's minimal by default; we extend for tooling).

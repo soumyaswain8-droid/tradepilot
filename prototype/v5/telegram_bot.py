@@ -117,15 +117,25 @@ def send_alert(message: str) -> bool:
             return False
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
     try:
-        resp = requests.post(
-            url,
-            json={"chat_id": chat_id, "text": message, "parse_mode": "Markdown"},
-            timeout=10,
-        )
+        resp = requests.post(url, json=payload, timeout=10)
         _record_send()
         if resp.status_code == 200:
             return True
+        # A body that isn't valid Markdown returns 400 "can't parse entities" and the
+        # message is DROPPED entirely. Unbalanced _ * [ ` are routine in the things we
+        # alert about — file paths (lgbm_intraday.txt), tags ("[mlops-gate]"), config
+        # keys (ML_SCORE_WEIGHT). Observed 2026-07-28: preflight's "launch at RISK"
+        # page died this way, so a real FAIL never reached anyone.
+        # Losing formatting beats losing the alert — resend once as plain text.
+        if resp.status_code == 400 and "parse entities" in resp.text:
+            payload.pop("parse_mode", None)
+            resp = requests.post(url, json=payload, timeout=10)
+            _record_send()
+            if resp.status_code == 200:
+                print("Telegram: Markdown parse failed — resent as plain text")
+                return True
         print(f"Telegram API error {resp.status_code}: {resp.text[:200]}")
         return False
     except requests.RequestException as exc:

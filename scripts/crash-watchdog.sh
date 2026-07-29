@@ -35,7 +35,9 @@ HEARTBEAT_MAX_AGE_SEC=2700
 # launch_cmd = how to restart if crashed
 TODAY=$(date +%Y-%m-%d)
 declare -a ENGINES=(
-  # Active engines (5) — must match launch-market.sh ENGINES array.
+  # Active engines (9) — must match launch-market.sh ENGINES array.
+  # Count corrected 2026-07-30: the array had 9 uncommented entries while this
+  # comment still said 5, which sent a live outage diagnosis down the wrong path.
   # TP-RCA 2026-06-26 lightweight roster: v5 (live) + v5_classic (frozen benchmark)
   # + v5_long (RC-1 long-only fix) + v5_cut (profit experiment). Retired v5_noml/v5_apr/v7_regime.
   # "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
@@ -59,7 +61,10 @@ declare -a ENGINES=(
   # SHADOW (Gate-2, spec 2026-07-20_risk_gate_three_state_verdict.md): v5_gate = RiskGate DRIVES execution + invalidation monitor, no CHOP_FILTER.
   "v5_gate|scripts/v5_gate-paper-trade.py|docs/paper-trades/v5_gate/${TODAY}.json|python3 scripts/v5_gate-paper-trade.py"
   # V8 (TP-V8 2026-07-06): April-recipe replica (control twin).
-  "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
+  # RETIRED 2026-07-30, superseded by v10 (see launch-market.sh ENGINES for why).
+  # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
+  # V10 (2026-07-30): frozen April engine, vendored from git 9d7db34.
+  "v10|scripts/v10-paper-trade.py|docs/paper-trades/v10/${TODAY}.json|python3 scripts/v10-paper-trade.py"
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
   # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
   # "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"
@@ -146,7 +151,7 @@ FIRST_SCAN_DONE=false
 GRACE_UNTIL_MIN=$((9 * 60 + 20))  # no restart alerts before 09:20
 
 echo "[$(date '+%H:%M:%S')] crash-watchdog v3 started (heartbeat-based, market hours 09:00–15:30 IST)"
-send_alert "🐕 Watchdog v3 online. Heartbeat-based. Will monitor 7 engines 09:00–15:30 IST."
+send_alert "🐕 Watchdog v3 online. Heartbeat-based. Will monitor 9 engines 09:00–15:30 IST."
 
 while true; do
   if ! in_market_hours; then

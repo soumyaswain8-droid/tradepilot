@@ -172,9 +172,20 @@ ENGINES=(
   # Re-comment to end.
   "v5_gate|scripts/v5_gate-paper-trade.py"
 
-  # V8 (TP-V8, 2026-07-06): April-recipe replica — NIFTY-50, top-5, long-only, +1.5/-0.75
-  # fixed bracket, early entry. Control twin (no ML). Target: recover April +1%/65%-WR profile.
-  "v8|scripts/v8-paper-trade.py"
+  # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
+  # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
+  # today's code wearing April's settings, never April's code. Its params were not even a
+  # faithful April match (it set RESCORE=999/top-5/long-only; the real April engine ran
+  # RESCORE=30, 4 pools, and its signal_engine emitted SHORT signals). Result over 17
+  # sessions: -2,827 at 28% WR against a +1%/day, 65%-WR target. State files preserved.
+  # "v8|scripts/v8-paper-trade.py"
+
+  # V10 (2026-07-30): the ACTUAL April engine, vendored verbatim from git 9d7db34.
+  # Frozen decision path (engine + signal_engine + risk_manager + composite_scorer +
+  # config + April-21 ML model @ ml_score=0.25). Data layer stays CURRENT — April's
+  # data_nse writes the shared cache the whole fleet reads and predates the 2026-05-08
+  # cache-poisoning guards. Spec: docs/superpowers/specs/2026-07-30-v10-april-replica-design.md
+  "v10|scripts/v10-paper-trade.py"
 
   # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
   # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).

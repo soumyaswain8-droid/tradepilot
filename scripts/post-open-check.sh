@@ -45,6 +45,16 @@ while IFS= read -r e; do [ -n "$e" ] && ENGINES+=("$e"); done < <(
 
 now=$(date +%s); alive=0; dead=()
 for e in "${ENGINES[@]}"; do
+  # PRIMARY: is the process actually running? (mirrors crash-watchdog's is_alive)
+  # Added 2026-07-30: this check did not exist, so liveness was judged purely on
+  # state-file mtime — which cannot distinguish "dead" from "has not written yet".
+  # v10's first session tripped it: launched 08:50, first wrote its state file at
+  # 09:49, so at 09:25 it looked dead and this script relaunched the WHOLE fleet
+  # mid-session. Any newly-added engine hits this on day one, by construction.
+  if pgrep -f "scripts/${e}-paper-trade.py" > /dev/null 2>&1; then
+    alive=$((alive+1)); continue
+  fi
+  # FALLBACK: process gone — is its heartbeat file still fresh? (wedged//between scans)
   f="docs/paper-trades/$e/${TODAY}.json"
   if [ -f "$f" ]; then
     age=$(( now - $(stat -f %m "$f") ))

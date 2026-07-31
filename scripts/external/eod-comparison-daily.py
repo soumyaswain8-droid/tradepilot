@@ -10,7 +10,6 @@
 # BOTH. Verify they match:  diff scripts/external/eod-comparison-daily.py \
 #   "$HOME/Library/Application Support/tradepilot/eod-comparison-daily.py"
 # Mirrored 2026-07-30.
-
 #!/usr/bin/env python3
 """
 Date-agnostic EOD comparison runner.
@@ -104,8 +103,19 @@ def trade_pnl(t: dict) -> float:
 
 
 def trade_side(t: dict) -> str:
-    s = t.get("side") or t.get("position") or t.get("direction") or ""
-    return "SHORT" if "SHORT" in str(s).upper() or str(s).upper() == "SELL" else "LONG"
+    # `position_type` added 2026-07-30. The April-vintage engine (v10) writes ONLY
+    # position_type, while later engines write both it and `direction`. Without it
+    # every lookup missed, and the `else "LONG"` default silently reported v10 as
+    # 76 LONG / 0 SHORT when it actually traded 52/24. Verified that position_type
+    # and direction agree on 109/109 v5 + v5_classic trades, so ordering is safe.
+    s = (t.get("side") or t.get("position") or t.get("position_type")
+         or t.get("direction") or "")
+    su = str(s).upper()
+    if not su:
+        # Unknown schema — do NOT silently default to LONG, which is what hid the
+        # v10 bug. Surface it so a new engine's mis-parse is visible immediately.
+        print(f"[warn] trade_side: no side field on trade {t.get('symbol','?')}", file=sys.stderr)
+    return "SHORT" if "SHORT" in su or su == "SELL" else "LONG"
 
 
 def is_corp_action_today(symbol: str, today: str) -> bool:

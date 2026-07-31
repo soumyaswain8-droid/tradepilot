@@ -1,0 +1,129 @@
+{
+  "date": "2026-07-31",
+  "generated_at": "2026-07-31T15:35:05.763126",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 2267.35,
+      "trades": 43,
+      "wins": 26,
+      "losses": 17,
+      "longs": 15,
+      "shorts": 28,
+      "win_rate": 60.5,
+      "open_positions": 10,
+      "best_trade": 538.45,
+      "worst_trade": -226.8,
+      "avg_win": 136.39,
+      "avg_loss": -75.23,
+      "exit_reasons": {
+        "STOPLOSS": 7,
+        "TARGET": 4,
+        "FLAT_FORCE_EXIT": 12,
+        "TIME_EXIT": 9,
+        "SIGNAL_FLIP": 11
+      },
+      "n_closed": 43,
+      "n_open": 10
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 3053.69,
+      "trades": 51,
+      "wins": 30,
+      "losses": 21,
+      "longs": 20,
+      "shorts": 31,
+      "win_rate": 58.8,
+      "open_positions": 2,
+      "best_trade": 1116.5,
+      "worst_trade": -237.85,
+      "avg_win": 170.39,
+      "avg_loss": -98.01,
+      "exit_reasons": {
+        "STOPLOSS": 16,
+        "TARGET": 6,
+        "TIME_EXIT": 17,
+        "SIGNAL_FLIP": 12
+      },
+      "n_closed": 51,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ABCAPITAL",
+      "ADANIENSOL",
+      "ADANIENT",
+      "ADANIPORTS",
+      "APLAPOLLO",
+      "ASHOKLEY",
+      "BAJAJHLDNG",
+      "BAJFINANCE",
+      "COLPAL",
+      "DABUR",
+      "ETERNAL",
+      "GVT&D",
+      "HDFCBANK",
+      "HINDUNILVR",
+      "HYUNDAI",
+      "INDHOTEL",
+      "JUBLFOOD",
+      "KALYANKJIL",
+      "LODHA",
+      "M&MFIN",
+      "MAXHEALTH",
+      "MOTHERSON",
+      "NESTLEIND",
+      "ONGC",
+      "PIDILITIND",
+      "POWERGRID",
+      "TATACAP",
+      "TMCV",
+      "TVSMOTOR",
+      "VBL",
+      "VEDL"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +3,054 across 51 trades (58.8% win).",
+    "Laggard: <b>v5</b> with Rs +2,267 across 43 trades (60.5% win).",
+    "High-volume engines (50+ trades) averaged Rs 3,054; low-volume averaged Rs 2,267. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (7) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (11). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (16) >= TARGET (6). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: 58.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

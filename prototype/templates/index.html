@@ -2714,6 +2714,7 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
   <button class="nav-tab nav-tab-extra" data-tab="currencies"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-fx" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#g-fx)" opacity="0.12"/><path d="M12 4v16M17 7H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 6H7" stroke="url(#g-fx)" stroke-width="2" stroke-linecap="round"/></svg></span>Forex</button>
   <button class="nav-tab nav-tab-extra" data-tab="intraday"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-intra" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#g-intra)" opacity="0.12" stroke="url(#g-intra)" stroke-width="1.5"/><path d="M12 6v6l4 2" stroke="url(#g-intra)" stroke-width="2.5" stroke-linecap="round"/></svg></span>Intraday</button>
   <button class="nav-tab" data-tab="aipicks"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-ai" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><path d="M12 2L2 7l10 5 10-5-10-5z" fill="url(#g-ai)" opacity="0.3"/><path d="M2 12l10 5 10-5" stroke="url(#g-ai)" stroke-width="1.5"/><path d="M2 17l10 5 10-5" stroke="url(#g-ai)" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="url(#g-ai)"/></svg></span>Smart Picks</button>
+  <button class="nav-tab" data-tab="usmarket"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-us" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><rect x="2" y="4" width="20" height="16" rx="2" fill="url(#g-us)" opacity="0.15" stroke="url(#g-us)" stroke-width="1.5"/><path d="M4 15l4-4 3 3 6-7" stroke="url(#g-us)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>US Market</button>
   <button class="nav-tab" data-tab="tradelab"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-lab" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="3" fill="url(#g-lab)" opacity="0.15" stroke="url(#g-lab)" stroke-width="1.5"/><path d="M7 12h10M7 8h10M7 16h6" stroke="url(#g-lab)" stroke-width="1.5" stroke-linecap="round"/><circle cx="17" cy="16" r="2" fill="url(#g-lab)"/></svg></span>Trade Lab</button>
   <button class="nav-tab" data-tab="papertrade"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-paper" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#6d28d9"/></linearGradient></defs><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="url(#g-paper)" opacity="0.15" stroke="url(#g-paper)" stroke-width="1.5"/><path d="M14 2v6h6" stroke="url(#g-paper)" stroke-width="1.5"/><path d="M9 13h6M9 17h4" stroke="url(#g-paper)" stroke-width="1.5" stroke-linecap="round"/></svg></span>Paper Trade</button>
   <button class="nav-tab nav-tab-extra" data-tab="wizard"><span class="nav-icon-3d"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g-wiz" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#ef4444"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8 2.4-7.2-6-4.8h7.6L12 2z" fill="url(#g-wiz)" opacity="0.7"/></svg></span>Wizard</button>
@@ -3429,7 +3430,36 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
   </section>
 
 <!-- ═══ AI PICKS & ADVISOR ═══ -->
-<section class="view" id="view-aipicks">
+<section class="view" id="view-usmarket">
+    <div class="market-section-header">
+      <div class="market-section-icon" style="background:linear-gradient(135deg,#3b82f6,#ef4444)">US</div>
+      <div>
+        <h2 class="market-section-title">US Stock Market</h2>
+        <p class="market-section-sub" id="usSub">Nasdaq-100 universe &middot; research &amp; data shell</p>
+      </div>
+    </div>
+
+    <div id="usStatusBar" style="margin:0 0 14px;padding:10px 14px;border-radius:10px;
+         background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);font-size:13px;line-height:1.55">
+      Loading module status&hellip;
+    </div>
+
+    <div class="stats-grid" id="usCoverage" style="margin-bottom:16px"></div>
+
+    <div class="controls">
+      <input type="text" class="search-box" id="usSearch" placeholder="Search US tickers...">
+      <div class="sort-btns">
+        <button class="sort-btn active" data-ussort="change">Change</button>
+        <button class="sort-btn" data-ussort="name">Name</button>
+        <button class="sort-btn" data-ussort="price">Price</button>
+      </div>
+    </div>
+
+    <h3 style="margin:6px 0 8px;font-size:14px;opacity:.75">Top movers &mdash; last completed US session</h3>
+    <div class="stock-grid" id="usGrid"></div>
+  </section>
+
+  <section class="view" id="view-aipicks">
   <div style="padding:16px 20px;max-width:1200px;margin:0 auto">
 
     <!-- Header -->
@@ -4203,6 +4233,7 @@ $$('.nav-tab').forEach(function(tab) {
     $$('.view').forEach(function(v) { v.classList.remove('active'); });
     $('view-' + tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'fno') loadFnO();
+    if (tab.dataset.tab === 'usmarket') loadUSMarket();
     if (tab.dataset.tab === 'intraday') loadIntraday();
     if (tab.dataset.tab === 'swipe') loadSwipeCards();
     if (tab.dataset.tab === 'movers') loadMovers();
@@ -6976,6 +7007,96 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-<script src="/static/pageswitch.js"></script>
+<script src="/static/pageswitch.js">
+// ─── US MARKET MODULE ──────────────────────────────────────────
+// Read-only. No US engine runs and no orders are placed anywhere; the status
+// bar states that explicitly so the UI can never imply live US trading.
+var _usQuotes = {}, _usSort = 'change';
+
+function usFmt(n, d) { return (n === undefined || n === null) ? '--' : Number(n).toFixed(d === undefined ? 2 : d); }
+
+function loadUSMarket() {
+  fetch('/api/us/status').then(function(r){return r.json();}).then(function(d){
+    var bar = document.getElementById('usStatusBar');
+    if (!bar) return;
+    bar.innerHTML =
+      '<b>Phase:</b> ' + d.phase +
+      ' &nbsp;·&nbsp; <b>Engine:</b> <span style="color:#ef4444">not running</span>' +
+      ' &nbsp;·&nbsp; <b>Orders:</b> <span style="color:#ef4444">disabled</span>' +
+      ' &nbsp;·&nbsp; <b>Universe:</b> ' + d.universe_size + ' tickers' +
+      '<br><b>Session:</b> ' + d.session_ist +
+      ' &nbsp;·&nbsp; <b>Data:</b> ' + d.data_source +
+      '<br><b>Compliance:</b> ' + d.compliance_note;
+  }).catch(function(){});
+
+  fetch('/api/us/coverage?n=25&years=3').then(function(r){return r.json();}).then(function(d){
+    var el = document.getElementById('usCoverage');
+    if (!el) return;
+    if (!d.ok) { el.innerHTML = '<div class="stat-cell">Coverage unavailable</div>'; return; }
+    var cells = [
+      ['Trading days', d.trading_days],
+      ['History', (d.start || '?') + ' → ' + (d.end || '?')],
+      ['Symbols sampled', d.symbols],
+      ['Missing cells', d.nan_cells],
+      ['Source', d.source]
+    ];
+    el.innerHTML = cells.map(function(c){
+      return '<div class="stat-cell"><div class="stat-value">' + c[1] +
+             '</div><div class="stat-label">' + c[0] + '</div></div>';
+    }).join('');
+  }).catch(function(){});
+
+  fetch('/api/us/quotes').then(function(r){return r.json();}).then(function(d){
+    if (!d.ok) return;
+    _usQuotes = d.quotes || {};
+    renderUSGrid();
+    var sub = document.getElementById('usSub');
+    if (sub) sub.textContent = d.count + ' tickers · US session ' + d.session_ist;
+  }).catch(function(){});
+}
+
+function renderUSGrid() {
+  var grid = document.getElementById('usGrid');
+  if (!grid) return;
+  var q = document.getElementById('usSearch');
+  var term = (q && q.value || '').toUpperCase();
+  var rows = Object.keys(_usQuotes).map(function(k){
+    var v = _usQuotes[k]; return {symbol:k, price:v.price, change:v.change, change_pct:v.change_pct};
+  }).filter(function(r){ return !term || r.symbol.indexOf(term) >= 0; });
+
+  rows.sort(function(a,b){
+    if (_usSort === 'name')  return a.symbol < b.symbol ? -1 : 1;
+    if (_usSort === 'price') return b.price - a.price;
+    return b.change_pct - a.change_pct;
+  });
+
+  if (!rows.length) { grid.innerHTML = '<div class="dt-empty">No US quotes available</div>'; return; }
+  grid.innerHTML = rows.map(function(r){
+    var up = r.change_pct >= 0;
+    var col = up ? '#16a34a' : '#dc2626';
+    return '<div class="stock-card">' +
+      '<div class="card-symbol-big">' + r.symbol + '</div>' +
+      '<div class="card-price-big">$' + usFmt(r.price) + '</div>' +
+      '<div class="card-pnl-row" style="color:' + col + '">' +
+        (up ? '▲ ' : '▼ ') + usFmt(Math.abs(r.change)) +
+        ' (' + (up ? '+' : '') + usFmt(r.change_pct) + '%)' +
+      '</div></div>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var s = document.getElementById('usSearch');
+  if (s) s.addEventListener('input', renderUSGrid);
+  document.querySelectorAll('[data-ussort]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('[data-ussort]').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      _usSort = b.dataset.ussort;
+      renderUSGrid();
+    });
+  });
+});
+
+</script>
 </body>
 </html>

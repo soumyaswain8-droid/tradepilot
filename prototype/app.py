@@ -3035,6 +3035,91 @@ def api_team_audit():
     return jsonify({"audit": all_audit[:100], "total": len(all_audit)})
 
 
+# ═══════════════════════ US MARKET MODULE ═══════════════════════
+# Isolated from the India endpoints: own data layer (prototype/us/data_us.py),
+# own cache namespace, own universe. Read-only for now — no US engine is running
+# and no orders are placed anywhere. See docs/research/us-market/ for the
+# broker, data, regulatory and methodology research behind this.
+
+def _us():
+    """Import the US data layer lazily so a failure here can never break the
+    India endpoints that the live fleet depends on."""
+    import sys
+    from pathlib import Path as _P
+    root = str(_P(__file__).resolve().parent.parent)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from prototype.us import data_us
+    return data_us
+
+
+@app.route("/api/us/universe")
+def api_us_universe():
+    try:
+        u = _us().load_universe("nasdaq100")
+        return jsonify({"ok": True, "count": len(u), "symbols": u})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
+@app.route("/api/us/quotes")
+def api_us_quotes():
+    """Latest price + day change. `syms` query param, else the top of the universe."""
+    try:
+        d = _us()
+        req = request.args.get("syms", "")
+        syms = [x.strip().upper() for x in req.split(",") if x.strip()] or d.load_universe("nasdaq100")[:30]
+        q = d.get_quotes(syms)
+        movers = sorted(q.items(), key=lambda kv: kv[1]["change_pct"], reverse=True)
+        return jsonify({
+            "ok": True, "count": len(q), "quotes": q,
+            "gainers": [{"symbol": k, **v} for k, v in movers[:8]],
+            "losers":  [{"symbol": k, **v} for k, v in movers[-8:]][::-1],
+            "session_ist": d.US_SESSION_IST,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
+@app.route("/api/us/coverage")
+def api_us_coverage():
+    """Prove the 2-3yr data claim rather than asserting it — powers the UI panel."""
+    try:
+        d = _us()
+        yrs = int(request.args.get("years", "3"))
+        syms = d.load_universe("nasdaq100")[:int(request.args.get("n", "25"))]
+        return jsonify({"ok": True, **d.history_stats(syms, years=yrs)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
+@app.route("/api/us/status")
+def api_us_status():
+    """Module status. Deliberately explicit that nothing is live — this panel is
+    how the UI avoids implying a US engine is trading when none exists."""
+    from datetime import datetime as _dt
+    try:
+        d = _us()
+        n = len(d.load_universe("nasdaq100"))
+    except Exception:
+        n = 0
+    return jsonify({
+        "ok": True,
+        "phase": "research + data shell",
+        "engine_running": False,
+        "orders_enabled": False,
+        "broker": None,
+        "paper_broker_candidate": "Alpaca (free paper API, no KYC) — not yet integrated",
+        "data_source": "yfinance (v1, unofficial — see docs/research/us-market/02-data-sources.md)",
+        "universe_size": n,
+        "session_ist": "19:00-01:30 IST (EDT) / 20:00-02:30 IST (EST)",
+        "compliance_note": "Long-only cash only. RBI bars LRS remittance for FX trading and for "
+                           "margin/margin calls. Day-trading frequency under LRS is an unresolved "
+                           "gray zone — see docs/research/us-market/04-regulatory-lrs-tax.md",
+        "as_of": _dt.now().strftime("%H:%M:%S"),
+    })
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("  TradePilot Prototype")

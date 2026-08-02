@@ -269,7 +269,23 @@ def get_fii_dii_daily() -> dict:
 # ---------------------------------------------------------------------------
 # 2. Options Chain
 # ---------------------------------------------------------------------------
+_OPTIONS_CACHE: dict = {}
+OPTIONS_CACHE_TTL_SECONDS = 600  # 10 min — matches the engine scan interval
+
+
 def get_options_chain(symbol: str) -> dict:
+    # PERF (2026-08-02): options chain is the dominant cost in a full scan.
+    # Measured 1.32s/symbol via nsepython (network + its own internal rate-limit
+    # sleeps); across the 201-symbol NIFTY_200 universe that is ~265s of the ~363s
+    # a full score_all_stocks() takes, which is why /api/scores appeared to hang.
+    # An in-process TTL cache is behaviour-preserving: engines rescan every 10 min,
+    # so values within a single scan are identical to before.
+    _oc_key = f"{symbol}"
+    _oc_now = time.time()
+    _oc_hit = _OPTIONS_CACHE.get(_oc_key)
+    if _oc_hit and (_oc_now - _oc_hit[0]) < OPTIONS_CACHE_TTL_SECONDS:
+        return _oc_hit[1]
+
     """
     Fetch options chain data for a stock/index.
 
@@ -291,6 +307,7 @@ def get_options_chain(symbol: str) -> dict:
     cache_file = f"options_chain_{symbol}.json"
     cached = _read_cache(cache_file)
     if cached:
+        _OPTIONS_CACHE[_oc_key] = (_oc_now, cached)
         return cached
 
     result = {
@@ -348,6 +365,7 @@ def get_options_chain(symbol: str) -> dict:
 
             _write_cache(cache_file, result)
             logger.info(f"Options {symbol}: PCR={result['pcr']}, MaxPain={result['max_pain']}")
+            _OPTIONS_CACHE[_oc_key] = (_oc_now, result)
             return result
 
     except Exception as e:
@@ -368,6 +386,7 @@ def get_options_chain(symbol: str) -> dict:
                     result["total_pe_oi"] = int(total_pe)
                     _write_cache(cache_file, result)
                     logger.info(f"Options {symbol} (oi_chain_builder): PCR={result['pcr']}")
+                    _OPTIONS_CACHE[_oc_key] = (_oc_now, result)
                     return result
     except Exception as e:
         logger.debug(f"oi_chain_builder failed for {symbol}: {e}")
@@ -383,12 +402,81 @@ def get_options_chain(symbol: str) -> dict:
             pass
 
     _write_cache(cache_file, result)
+    _OPTIONS_CACHE[_oc_key] = (_oc_now, result)
     return result
 
 
 # ---------------------------------------------------------------------------
 # 3. Intraday Candles (via yfinance)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Intraday BATCH prefetch (perf fix, 2026-08-02)
+# ---------------------------------------------------------------------------
+# composite_scorer.score_all_stocks() called get_intraday_candles() once PER SYMBOL
+# inside its scoring loop. At the original 50-symbol universe that was tolerable; the
+# universe is now 201 (TRADING_UNIVERSE=NIFTY_200), and measured cost was 1.82s/symbol
+# => 363s for a full scan. /api/scores blocked for >5 minutes and appeared to hang.
+#
+# The file's own docstring always said "batch-fetch ... once" — quotes were batched,
+# intraday never was. Measured 2026-08-02: batching all 201 tickers in ONE yfinance
+# call takes 9.5s and returns data for 201/201 => ~38x faster.
+#
+# This cache is populated by prefetch_intraday_batch() and read transparently by
+# get_intraday_candles(), so every existing caller keeps working unchanged and any
+# symbol not in the cache still falls through to its own fetch.
+_INTRADAY_BATCH: dict = {}
+_INTRADAY_BATCH_META: dict = {"interval": None, "fetched_at": None}
+INTRADAY_BATCH_TTL_SECONDS = 300
+
+
+def prefetch_intraday_batch(symbols, interval: str = None, period: str = "1d") -> int:
+    """Fetch intraday candles for many symbols in ONE call and cache them.
+
+    Returns the number of symbols cached. Safe to call repeatedly — it no-ops while
+    the existing batch is younger than INTRADAY_BATCH_TTL_SECONDS for the same
+    interval. Never raises: on any failure it simply leaves the cache empty and
+    callers fall back to per-symbol fetches (slow but correct).
+    """
+    global _INTRADAY_BATCH, _INTRADAY_BATCH_META
+    interval = interval or DEFAULT_INTRADAY_INTERVAL
+    now = time.time()
+    meta = _INTRADAY_BATCH_META
+    if (meta.get("interval") == interval and meta.get("fetched_at")
+            and now - meta["fetched_at"] < INTRADAY_BATCH_TTL_SECONDS and _INTRADAY_BATCH):
+        return len(_INTRADAY_BATCH)
+
+    yf_syms = [(s if s.endswith(".NS") else f"{s}.NS") for s in symbols]
+    if not yf_syms:
+        return 0
+    try:
+        yf = _get_yfinance()
+        df = yf.download(yf_syms, period=period, interval=interval, progress=False,
+                         group_by="ticker", threads=True, timeout=60)
+        if df is None or df.empty:
+            logger.warning("Intraday batch returned empty — per-symbol fallback in effect")
+            return 0
+        cache = {}
+        multi = isinstance(df.columns, pd.MultiIndex)
+        for ys in yf_syms:
+            try:
+                sub = df[ys] if (multi and ys in df.columns.get_level_values(0)) else (None if multi else df)
+                if sub is None or sub.empty:
+                    continue
+                cols = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in sub.columns]
+                sub = sub[cols].dropna(how="all")
+                if not sub.empty:
+                    cache[ys.replace(".NS", "")] = sub
+            except Exception:
+                continue
+        _INTRADAY_BATCH = cache
+        _INTRADAY_BATCH_META = {"interval": interval, "fetched_at": now}
+        logger.info(f"Intraday batch: cached {len(cache)}/{len(yf_syms)} symbols @ {interval}")
+        return len(cache)
+    except Exception as e:
+        logger.error(f"Intraday batch prefetch failed: {e} — per-symbol fallback in effect")
+        return 0
+
+
 def get_intraday_candles(
     symbol: str,
     interval: str = DEFAULT_INTRADAY_INTERVAL,
@@ -406,6 +494,16 @@ def get_intraday_candles(
         Empty DataFrame on error.
     """
     yf_symbol = f"{symbol}.NS" if not symbol.endswith(".NS") else symbol
+
+    # Serve from the batch cache when one is warm for this interval (see
+    # prefetch_intraday_batch). Falls through to a per-symbol fetch otherwise, so
+    # behaviour is unchanged for callers that never prefetch.
+    _meta = _INTRADAY_BATCH_META
+    if (_meta.get("interval") == interval and _meta.get("fetched_at")
+            and time.time() - _meta["fetched_at"] < INTRADAY_BATCH_TTL_SECONDS):
+        _hit = _INTRADAY_BATCH.get(yf_symbol.replace(".NS", ""))
+        if _hit is not None and not _hit.empty:
+            return _hit
 
     try:
         yf = _get_yfinance()

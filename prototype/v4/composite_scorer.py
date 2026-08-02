@@ -485,6 +485,22 @@ def score_all_stocks(symbols: Optional[List[str]] = None,
     }
 
     # ------------------------------------------------------------------
+    # Step 2b: Batch-prefetch intraday candles  (perf fix 2026-08-02)
+    # ------------------------------------------------------------------
+    # The Step-3 loop below calls get_intraday_candles() per symbol. That was fine
+    # at the original 50-symbol universe but the universe is now 201, and measured
+    # cost was 1.82s/symbol => 363s per full scan, which made /api/scores look hung.
+    # One batched call covers all 201 in ~9.5s (~38x faster). get_intraday_candles()
+    # transparently serves from this cache; if the prefetch fails it returns 0 and
+    # every call simply falls back to its own fetch — slower, still correct.
+    try:
+        from .data_nse import prefetch_intraday_batch
+        _n = prefetch_intraday_batch(symbols, interval="15m")
+        logger.info(f"Intraday batch prefetch: {_n}/{len(symbols)} symbols cached")
+    except Exception as _e:
+        logger.warning(f"Intraday batch prefetch unavailable ({_e}) — per-symbol fallback")
+
+    # ------------------------------------------------------------------
     # Step 3: Score each stock
     # ------------------------------------------------------------------
     results = []

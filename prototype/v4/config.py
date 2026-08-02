@@ -24,7 +24,9 @@ except ImportError:
         "HINDUNILVR", "SBIN", "BHARTIARTL", "KOTAKBANK", "LT",
         "ITC", "AXISBANK", "BAJFINANCE", "MARUTI", "HCLTECH",
         "ASIANPAINT", "SUNPHARMA", "TITAN", "WIPRO", "ULTRACEMCO",
-        "ONGC", "NTPC", "POWERGRID", "M&M", "TATAMOTORS",
+        "ONGC", "NTPC", "POWERGRID", "M&M", "TMPV",   # TATAMOTORS -> TMPV: Tata Motors demerged;
+        # TATAMOTORS.NS returns 0 bars on Yahoo (verified 2026-08-02). TMPV.NS is the live
+        # passenger-vehicle entity. TMLCV.NS (commercial) returned no data either.
         "JSWSTEEL", "TATASTEEL", "ADANIENT", "ADANIPORTS", "TECHM",
         "INDUSINDBK", "BAJAJFINSV", "HDFCLIFE", "SBILIFE", "NESTLEIND",
         "DRREDDY", "DIVISLAB", "CIPLA", "COALINDIA", "GRASIM",
@@ -82,7 +84,7 @@ NIFTY_200_SYMBOLS = [
     "TATAPOWER", "TIINDIA", "TMCV", "TMPV", "TORNTPHARM",
     "TRENT", "TVSMOTOR", "UNIONBANK", "UNITDSPR", "VBL",
     "VEDL", "VMM", "VOLTAS", "WAAREEENER", "YESBANK",
-    "ZYDUSLIFE", "TATAMOTORS",
+    "ZYDUSLIFE", "TMPV",  # see NIFTY_50 note above
 ]
 
 # De-duplicate (Nifty 50 core appears in both sections)

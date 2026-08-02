@@ -3455,6 +3455,9 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
       </div>
     </div>
 
+    <h3 style="margin:6px 0 8px;font-size:14px;opacity:.75">Paper engine &mdash; long-only cash</h3>
+    <div id="usEngine" style="margin-bottom:18px"></div>
+
     <h3 style="margin:6px 0 8px;font-size:14px;opacity:.75">Top movers &mdash; last completed US session</h3>
     <div class="stock-grid" id="usGrid"></div>
   </section>
@@ -7016,6 +7019,7 @@ var _usQuotes = {}, _usSort = 'change';
 function usFmt(n, d) { return (n === undefined || n === null) ? '--' : Number(n).toFixed(d === undefined ? 2 : d); }
 
 function loadUSMarket() {
+  loadUSEngine();
   fetch('/api/us/status').then(function(r){return r.json();}).then(function(d){
     var bar = document.getElementById('usStatusBar');
     if (!bar) return;
@@ -7052,6 +7056,37 @@ function loadUSMarket() {
     renderUSGrid();
     var sub = document.getElementById('usSub');
     if (sub) sub.textContent = d.count + ' tickers · US session ' + d.session_ist;
+  }).catch(function(){});
+}
+
+function loadUSEngine() {
+  fetch('/api/us/engine').then(function(r){return r.json();}).then(function(d){
+    var el = document.getElementById('usEngine');
+    if (!el) return;
+    if (!d.ok) { el.innerHTML = '<div class="dt-empty">Engine state unavailable</div>'; return; }
+    if (!d.has_run) {
+      el.innerHTML = '<div class="dt-empty">Engine has never run &mdash; ' +
+                     'start it with <code>python3 scripts/us-paper-trade.py --once</code></div>';
+      return;
+    }
+    var s = d.summary || {};
+    var cells = [['Equity','$'+(s.equity||0).toLocaleString()],
+                 ['Cash','$'+(s.cash||0).toLocaleString()],
+                 ['Unrealised','$'+(s.unrealised||0).toLocaleString()],
+                 ['Realised','$'+(s.realised||0).toLocaleString()],
+                 ['Open',(s.open_positions||0)],
+                 ['Win rate',(s.win_rate||0)+'%']];
+    var stats = '<div class="stats-grid">' + cells.map(function(c){
+      return '<div class="stat-cell"><div class="stat-value">'+c[1]+
+             '</div><div class="stat-label">'+c[0]+'</div></div>';}).join('') + '</div>';
+    var rows = (d.positions||[]).map(function(p){
+      return '<div class="stock-card"><div class="card-symbol-big">'+p.symbol+'</div>'+
+             '<div class="card-price-big">'+p.qty+' @ $'+Number(p.entry_price).toFixed(2)+'</div>'+
+             '<div class="card-pnl-row" style="opacity:.7">score '+p.score+' &middot; '+p.vol_regime+'</div></div>';
+    }).join('');
+    el.innerHTML = stats + '<div style="margin:6px 0 4px;font-size:12px;opacity:.6">'+
+                   d.lane + ' &middot; updated ' + (d.updated||'').slice(11,19) + '</div>' +
+                   '<div class="stock-grid">' + (rows || '<div class="dt-empty">No open positions</div>') + '</div>';
   }).catch(function(){});
 }
 

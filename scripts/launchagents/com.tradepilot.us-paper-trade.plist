@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  US paper-trade engine — OVERNIGHT cadence. NOT INSTALLED BY DEFAULT.
+
+  US regular session 09:30-16:00 ET = 19:00-01:30 IST (EDT). This CANNOT share the
+  India 08:50 launch: the India fleet trades 09:15-15:30 IST and auto-stops 15:35.
+
+  PATH is anaconda-first and set EXPLICITLY. On 2026-07-28 post-open-check inherited
+  launchd's bare /usr/bin:/bin, python3 resolved to a numpy-less interpreter, and its
+  rescue relaunch spawned a fleet of crippled engines. Never rely on `bash -l`.
+  Verify with:
+    env -i PATH=<the PATH below> HOME=$HOME /bin/bash -c 'which python3'
+
+  To install (only after you have decided to run unattended overnight):
+    cp scripts/launchagents/com.tradepilot.us-paper-trade.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tradepilot.us-paper-trade.plist
+  To remove:
+    launchctl bootout gui/$(id -u)/com.tradepilot.us-paper-trade
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.tradepilot.us-paper-trade</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; python3 scripts/us-paper-trade.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/Users/soumyaswain/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
+      <key>US_ENGINE_NAME</key>
+      <string>us_v1</string>
+      <key>US_BROKER</key>
+      <string>sim</string>
+    </dict>
+
+    <!-- 19:00 IST Mon-Fri = US open during EDT. Engine self-exits on the session loop. -->
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+      <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+      <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+      <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+      <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/us-paper-trade.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/us-paper-trade.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>AbandonProcessGroup</key>
+    <true/>
+  </dict>
+</plist>

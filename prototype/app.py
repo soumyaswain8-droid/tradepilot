@@ -3093,6 +3093,33 @@ def api_us_coverage():
         return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
 
 
+@app.route("/api/us/engine")
+def api_us_engine():
+    """US paper engine state — positions, P&L, closed trades. Reads the engine's
+    own state file; returns running=False when it has never run rather than
+    inventing an empty portfolio."""
+    import json as _j
+    from pathlib import Path as _P
+    eng = os.environ.get("US_ENGINE_NAME", "us_v1")
+    f = _P(__file__).resolve().parent.parent / "docs" / "paper-trades" / eng / "positions_active.json"
+    if not f.exists():
+        return jsonify({"ok": True, "has_run": False, "engine": eng,
+                        "note": "engine has never run"})
+    try:
+        st = _j.loads(f.read_text())
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    pos = st.get("positions", {}) or {}
+    return jsonify({
+        "ok": True, "has_run": True, "engine": eng,
+        "summary": st.get("summary", {}),
+        "updated": st.get("updated"),
+        "positions": [{"symbol": k, **v} for k, v in pos.items()],
+        "closed": (st.get("closed") or [])[-20:],
+        "lane": "long-only cash (RBI: no margin, no FX)",
+    })
+
+
 @app.route("/api/us/status")
 def api_us_status():
     """Module status. Deliberately explicit that nothing is live — this panel is

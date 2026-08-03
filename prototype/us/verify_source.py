@@ -69,7 +69,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 BUDGET_FILE = ROOT / "prototype" / "data" / "us_cache" / "fmp_calls.json"
-DAILY_CAP = 120                 # of FMP's 250 — leaves room for ad-hoc use
+DAILY_CAP = 200                 # of FMP's 250 — leaves 50 for ad-hoc/manual use
 TOLERANCE_PCT = 0.50            # closes differing by more than this are flagged
 MIN_EXTENT_RATIO = 0.80         # our history vs the reference's
 REQUEST_SPACING_S = 0.30        # be a polite client on a free tier

@@ -88,13 +88,16 @@
   "started": "2026-08-03T00:41:30.102463",
   "summary": {
     "cash": 933.95,
-    "market_value": 99046.24,
-    "equity": 99980.19,
-    "unrealised": -19.81,
+    "market_value": 98508.08,
+    "equity": 99442.03,
+    "unrealised": -557.97,
     "realised": 0,
     "open_positions": 10,
     "closed_trades": 0,
     "win_rate": 0.0
   },
-  "updated": "2026-08-03T08:03:17.105704"
+  "updated": "2026-08-03T20:31:02.860789",
+  "VOID": true,
+  "void_reason": "All 10 positions were opened at 2026-08-03T00:41:37 IST = Sunday 2026-08-02 15:11 America/New_York, with the US market CLOSED, at Friday's stale closing prices. Cause: the engine's session gate lived only inside the while-loop, so a build-time --once run bypassed it (fixed in 36aa18d). These fills could not have happened, and 99% of capital was deployed in that single scan. This session measures how Friday's closes drifted, NOT strategy performance. Excluded from all A/B comparison. Book reset to 100,000 cash for the next open.",
+  "voided_at": "2026-08-03T20:32:42"
 }

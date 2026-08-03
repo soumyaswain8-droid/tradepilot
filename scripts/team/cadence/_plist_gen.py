@@ -106,6 +106,16 @@ JOBS = [
      ["python3", "scripts/team/cadence/nightly_backup.py"],
      23, 0, DAILY, "backup.log"),
 
+    # Fleet card to Telegram, 16:15 — just after eod-comparison writes at ~16:11,
+    # so the image reflects the finished day rather than a mid-write snapshot.
+    # Renders /fleet with headless Chrome and sends the PNG. Falls back to a text
+    # summary if the render fails, so a broken Chrome never means silent nothing.
+    # Uses :5050/fleet when the optional :5051 mobile server is not running —
+    # verified with :5051 deliberately down.
+    ("fleet-telegram",
+     ["python3", "scripts/fleet-telegram.py"],
+     16, 15, WEEKDAYS, "fleet-telegram.log"),
+
     # --- Kite token reminders (2026-08-03) ----------------------------------
     # Zerodha invalidates the access_token at 06:00 daily ("regulatory
     # requirement" — their words). Re-auth needs interactive 2FA, so it cannot be

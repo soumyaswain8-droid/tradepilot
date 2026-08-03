@@ -2570,6 +2570,7 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/clay.css">
 </head>
 <body>
 
@@ -2969,7 +2970,10 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
         <button class="sort-btn" data-sort="change">Change</button>
       </div>
     </div>
-    <div class="stock-grid" id="stockGrid"></div>
+    <!-- Claymorphic explorer (2026-08-03). The legacy card grid below is kept and
+         hidden rather than deleted, so a rollback is one style attribute. -->
+    <div id="clayMarket"></div>
+    <div class="stock-grid" id="stockGrid" style="display:none"></div>
   </section>
 
   <!-- GAINERS / LOSERS VIEW -->
@@ -7150,5 +7154,14 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
+<script src="/static/clay-market.js"></script>
+<script>
+  // Own tag, deliberately with no src attribute: a src-bearing script element
+  // discards its inline content entirely, which is how the US tab shipped blank.
+  (function(){
+    function boot(){ if (window.clayMarket) window.clayMarket("clayMarket"); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+  })();
+</script>
 </body>
 </html>

@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   clay.css — claymorphic market explorer for TradePilot
+   2026-08-03
+
+   LAYOUT is modelled on INDmoney's US-stocks Explore page: an index strip across
+   the top, breadcrumb, section heading, filter pills, then a scannable table
+   rather than a card grid. IDENTITY stays TradePilot's — it reuses the existing
+   tokens (indigo #6366F1, green #10B981, rose #F43F5E, DM Sans / DM Mono) and
+   keeps the columns a brokerage cannot show: Score, signal, and which engine
+   holds the name. Copying their columns faithfully would have designed away the
+   only reason to look at this page instead of theirs.
+
+   CLAY: every raised element is one surface lit from the top-left — an outer drop
+   shadow for lift, an inset light on the top edge, an inset dark on the bottom.
+   Both insets are required; with only the outer shadow it reads as flat material
+   with a shadow under it, which is the usual failure of this style. The light and
+   dark themes need genuinely different inset colours, not the same rgba inverted,
+   because a white inner highlight on a dark surface reads as haze rather than form.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --clay-r: 22px;
+  --clay-r-sm: 14px;
+  --clay-r-xs: 11px;
+
+  --clay-face: linear-gradient(145deg, rgba(255,255,255,.045), rgba(0,0,0,.10));
+  --clay-lift:
+    0 10px 26px rgba(0,0,0,.42),
+    inset -3px -4px 10px rgba(0,0,0,.38),
+    inset 3px 4px 11px rgba(255,255,255,.055);
+  --clay-lift-hi:
+    0 16px 34px rgba(0,0,0,.50),
+    inset -3px -4px 10px rgba(0,0,0,.34),
+    inset 3px 5px 13px rgba(255,255,255,.085);
+  --clay-press:
+    inset 5px 6px 12px rgba(0,0,0,.45),
+    inset -3px -3px 9px rgba(255,255,255,.05);
+  --clay-hair: rgba(255,255,255,.07);
+}
+
+[data-theme="light"] {
+  --clay-face: linear-gradient(145deg, rgba(255,255,255,.95), rgba(15,23,42,.045));
+  --clay-lift:
+    0 10px 22px rgba(15,23,42,.10),
+    inset -3px -4px 9px rgba(15,23,42,.055),
+    inset 3px 4px 11px rgba(255,255,255,.95);
+  --clay-lift-hi:
+    0 16px 30px rgba(15,23,42,.14),
+    inset -3px -4px 9px rgba(15,23,42,.05),
+    inset 3px 5px 13px rgba(255,255,255,1);
+  --clay-press:
+    inset 5px 6px 12px rgba(15,23,42,.10),
+    inset -3px -3px 9px rgba(255,255,255,.9);
+  --clay-hair: rgba(15,23,42,.06);
+}
+
+.clay-wrap { display: flex; flex-direction: column; gap: 22px; }
+
+/* ── index strip ─────────────────────────────────────────────────────────── */
+.clay-indices {
+  display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 8px;
+  scrollbar-width: none;
+}
+.clay-indices::-webkit-scrollbar { display: none; }
+.clay-idx {
+  flex: 0 0 auto; min-width: 156px;
+  background: var(--surface); background-image: var(--clay-face);
+  border-radius: var(--clay-r-sm); box-shadow: var(--clay-lift);
+  padding: 11px 14px; display: flex; flex-direction: column; gap: 3px;
+}
+.clay-idx-name {
+  font-family: var(--font-ui); font-size: .7rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-ghost);
+}
+.clay-idx-val {
+  font-family: var(--font-data); font-size: 1.02rem; font-weight: 600;
+  color: var(--text); font-variant-numeric: tabular-nums;
+}
+.clay-idx-chg { font-family: var(--font-data); font-size: .76rem; font-variant-numeric: tabular-nums; }
+
+/* ── breadcrumb + heading ────────────────────────────────────────────────── */
+.clay-crumb {
+  font-family: var(--font-ui); font-size: 1.32rem; font-weight: 700;
+  color: var(--text); letter-spacing: -.02em; text-wrap: balance;
+}
+.clay-crumb span { color: var(--text-ghost); font-weight: 500; }
+.clay-sec {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+}
+.clay-sec h3 {
+  margin: 0; font-family: var(--font-ui); font-size: 1.06rem;
+  font-weight: 650; color: var(--text); letter-spacing: -.01em;
+}
+.clay-sec-note { font-size: .76rem; color: var(--text-ghost); }
+
+/* ── filter pills ────────────────────────────────────────────────────────── */
+.clay-pills { display: flex; gap: 9px; flex-wrap: wrap; }
+.clay-pill {
+  font-family: var(--font-ui); font-size: .82rem; font-weight: 600;
+  color: var(--text-dim); background: var(--surface);
+  background-image: var(--clay-face);
+  border: none; border-radius: 999px; padding: 8px 17px; cursor: pointer;
+  box-shadow: var(--clay-lift);
+  transition: transform .16s cubic-bezier(.23,1,.32,1), box-shadow .16s, color .16s;
+}
+.clay-pill:hover { transform: translateY(-1px); box-shadow: var(--clay-lift-hi); color: var(--text); }
+.clay-pill:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.clay-pill.on {
+  color: #fff; box-shadow: var(--clay-press), 0 4px 14px rgba(99,102,241,.35);
+  background-image: linear-gradient(145deg, #7C7FF3, #4F46E5);
+}
+
+/* ── table ───────────────────────────────────────────────────────────────── */
+.clay-table {
+  background: var(--surface); background-image: var(--clay-face);
+  border-radius: var(--clay-r); box-shadow: var(--clay-lift);
+  overflow: hidden;
+}
+.clay-scroll { overflow-x: auto; }
+.clay-head, .clay-row {
+  display: grid;
+  grid-template-columns: minmax(190px,2.1fr) 92px minmax(128px,1fr) 94px 110px minmax(112px,1fr);
+  align-items: center; gap: 14px; padding: 13px 20px; min-width: 860px;
+}
+.clay-head {
+  font-family: var(--font-ui); font-size: .69rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--text-ghost);
+  border-bottom: 1px solid var(--clay-hair);
+}
+.clay-row { border-bottom: 1px solid var(--clay-hair); transition: background .14s; }
+.clay-row:last-child { border-bottom: none; }
+.clay-row:hover { background: rgba(99,102,241,.05); }
+
+.clay-name { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.clay-mono {
+  flex: none; width: 40px; height: 40px; border-radius: var(--clay-r-xs);
+  display: grid; place-items: center;
+  font-family: var(--font-ui); font-size: .82rem; font-weight: 700; color: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,.22),
+              inset -2px -2px 6px rgba(0,0,0,.20),
+              inset 2px 3px 8px rgba(255,255,255,.40);
+}
+.clay-nm { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.clay-nm b {
+  font-family: var(--font-ui); font-size: .9rem; font-weight: 620; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.clay-tick {
+  font-family: var(--font-data); font-size: .72rem; color: var(--text-ghost);
+  letter-spacing: .03em;
+}
+.clay-spark { width: 88px; height: 30px; display: block; }
+
+.clay-px { display: flex; flex-direction: column; gap: 1px; align-items: flex-end; text-align: right; }
+.clay-px b {
+  font-family: var(--font-data); font-size: .92rem; font-weight: 600; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.clay-px span { font-family: var(--font-data); font-size: .75rem; font-variant-numeric: tabular-nums; }
+
+/* Score is the column a brokerage screen cannot show — give it real weight. */
+.clay-score {
+  font-family: var(--font-data); font-size: 1.0rem; font-weight: 700;
+  text-align: center; font-variant-numeric: tabular-nums;
+}
+.clay-sig {
+  justify-self: center;
+  font-family: var(--font-ui); font-size: .68rem; font-weight: 700;
+  letter-spacing: .07em; padding: 5px 11px; border-radius: 999px; color: #fff;
+  box-shadow: inset -2px -2px 5px rgba(0,0,0,.18), inset 2px 2px 6px rgba(255,255,255,.30);
+}
+.clay-sig.buy  { background-image: linear-gradient(145deg,#34D399,#059669); }
+.clay-sig.hold { background-image: linear-gradient(145deg,#FBBF24,#D97706); }
+.clay-sig.sell { background-image: linear-gradient(145deg,#FB7185,#E11D48); }
+
+.clay-eng {
+  font-family: var(--font-data); font-size: .71rem; color: var(--text-dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.clay-eng i {
+  width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: linear-gradient(145deg,#818CF8,#4F46E5);
+  box-shadow: 0 0 8px rgba(99,102,241,.6);
+}
+.clay-eng.none { color: var(--text-ghost); }
+.clay-eng.none i { background: var(--text-ghost); box-shadow: none; opacity: .45; }
+
+.pos { color: var(--green); } .neg { color: var(--red); } .flat { color: var(--text-ghost); }
+
+.clay-empty { padding: 34px 20px; text-align: center; color: var(--text-ghost); font-size: .86rem; }
+
+@media (max-width: 720px) {
+  .clay-crumb { font-size: 1.12rem; }
+  .clay-head, .clay-row { padding: 12px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clay-pill, .clay-row { transition: none; }
+  .clay-pill:hover { transform: none; }
+}

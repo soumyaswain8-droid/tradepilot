@@ -251,6 +251,9 @@ def scan(st: dict, broker) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true", help="single scan then exit")
+    ap.add_argument("--force-closed", action="store_true",
+                    help="allow a scan while the US market is closed (testing only — "
+                         "fills use stale prices and are not realistic)")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--broker", default=BROKER_NAME, choices=["sim", "alpaca"])
     a = ap.parse_args()
@@ -268,6 +271,21 @@ def main() -> int:
     log("=" * 62)
 
     if a.once:
+        # THE SESSION GATE MUST APPLY HERE TOO. It used to live only inside the
+        # while-loop below, so `--once` traded regardless of whether the US market
+        # was open. On 2026-08-03 a build-time `--once` run at 00:41 IST — Sunday
+        # 15:11 ET, market shut — filled 10 positions at Friday's stale closes and
+        # deployed 99% of capital in that one scan, seeding the first live session's
+        # book with fills that could never have happened.
+        # A guard placed on one code path is not a guard; it is a coincidence.
+        state = us_session_state()
+        if state != "OPEN" and not a.force_closed:
+            log(f"[{_now()}] --once refused: US market is {state}. "
+                f"Fills would use stale prices. Use --force-closed to override.")
+            return 0
+        if state != "OPEN":
+            log(f"[{_now()}] WARNING --force-closed: scanning while market is {state}. "
+                f"Any fills are at stale prices and are NOT realistic.")
         scan(st, broker)
         return 0
 

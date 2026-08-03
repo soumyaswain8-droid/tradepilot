@@ -2777,6 +2777,13 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
 
   <!-- STOCKS VIEW -->
   <section class="view active" id="view-stocks">
+  <!-- Claymorphic explorer leads the tab. It previously sat 39% down the page,
+       below Top Picks / NSE / BSE / Penny, so the page still READ as the old UI
+       on load no matter what was underneath. INDmoney puts the index strip and
+       table first; that ordering is the point, not a detail. The legacy sections
+       follow below, hidden but intact. -->
+  <div id="clayMarket"></div>
+
     <div class="picks-title">Our Top Picks</div>
     <div class="picks-row" id="picksRow"></div>
 
@@ -2970,9 +2977,6 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
         <button class="sort-btn" data-sort="change">Change</button>
       </div>
     </div>
-    <!-- Claymorphic explorer (2026-08-03). The legacy card grid below is kept and
-         hidden rather than deleted, so a rollback is one style attribute. -->
-    <div id="clayMarket"></div>
     <div class="stock-grid" id="stockGrid" style="display:none"></div>
   </section>
 

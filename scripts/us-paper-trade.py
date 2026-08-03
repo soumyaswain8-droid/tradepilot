@@ -70,6 +70,70 @@ logging.basicConfig(level=logging.INFO, format="%(message)s",
 log = logging.getLogger(ENGINE).info
 
 
+
+# ── US session awareness ────────────────────────────────────────────────────
+# The engine runs UNATTENDED overnight IST, so it must stop by itself. Without
+# this it is a `while True` that scans every 15 min forever, including weekends,
+# burning data calls and writing meaningless out-of-hours state.
+# Uses the America/New_York zone so EDT/EST transitions are handled by the tzdb
+# rather than a hardcoded IST offset that silently breaks twice a year.
+def us_session_state() -> str:
+    """Return 'PRE' | 'OPEN' | 'CLOSED' | 'WEEKEND' for the US regular session."""
+    try:
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo("America/New_York"))
+    except Exception:
+        return "OPEN"          # fail open rather than refuse to trade on a tz error
+    if now.weekday() >= 5:
+        return "WEEKEND"
+    mins = now.hour * 60 + now.minute
+    if mins < 9 * 60 + 30:
+        return "PRE"
+    if mins >= 16 * 60:
+        return "CLOSED"
+    return "OPEN"
+
+
+
+def _telegram(msg: str) -> None:
+    """Overnight runs are unattended — Soumya is asleep through the whole US
+    session. Without a push at session end a silent failure looks identical to a
+    quiet market. Reuses the same .env credentials as the India stack.
+    Sends PLAIN TEXT: on 2026-07-28 a Markdown page died with 'can't parse
+    entities' and never reached anyone."""
+    env = ROOT / ".env"
+    if not env.exists():
+        return
+    tok = chat = None
+    for ln in env.read_text().splitlines():
+        if ln.startswith("TELEGRAM_BOT_TOKEN="):
+            tok = ln.split("=", 1)[1].strip().strip('"')
+        elif ln.startswith("TELEGRAM_CHAT_ID="):
+            chat = ln.split("=", 1)[1].strip().strip('"')
+    if not (tok and chat):
+        return
+    try:
+        import urllib.request, urllib.parse
+        data = urllib.parse.urlencode({"chat_id": chat, "text": msg}).encode()
+        urllib.request.urlopen(
+            f"https://api.telegram.org/bot{tok}/sendMessage", data=data, timeout=10)
+    except Exception as e:
+        log(f"[{_now()}] telegram failed: {e}")
+
+
+def _session_report(st: dict, why: str) -> str:
+    sm = st.get("summary") or {}
+    pos = st.get("positions") or {}
+    lines = [f"TradePilot US ({ENGINE}) — session end: {why}",
+             f"Equity ${sm.get('equity', 0):,.2f} | Cash ${sm.get('cash', 0):,.2f}",
+             f"Realised ${sm.get('realised', 0):+,.2f} | Unrealised ${sm.get('unrealised', 0):+,.2f}",
+             f"Open {len(pos)} | Closed {sm.get('closed_trades', 0)} | WR {sm.get('win_rate', 0)}%"]
+    if pos:
+        lines.append("Holding: " + ", ".join(sorted(pos)[:12]))
+    lines.append("Long-only cash lane (RBI: no margin, no FX). Paper only.")
+    return "\n".join(lines)
+
+
 def _now() -> str:
     return datetime.now().strftime("%H:%M:%S")
 
@@ -207,7 +271,24 @@ def main() -> int:
         scan(st, broker)
         return 0
 
+    # NOTE: positions are NOT force-flattened at the close. This is a multi-day
+    # factor strategy (momentum/trend/quality), so carrying overnight is the
+    # intended behaviour — unlike the India intraday engines which flatten at 15:15.
     while True:
+        state = us_session_state()
+        if state == "WEEKEND":
+            log(f"[{_now()}] weekend — nothing to do, exiting cleanly")
+            save_state(st)
+            return 0
+        if state == "CLOSED":
+            log(f"[{_now()}] US session closed — final state saved, exiting cleanly")
+            save_state(st)
+            _telegram(_session_report(st, "US market close"))
+            return 0
+        if state == "PRE":
+            log(f"[{_now()}] pre-market — waiting {SCAN_INTERVAL_MIN}m")
+            time.sleep(SCAN_INTERVAL_MIN * 60)
+            continue
         try:
             st = scan(st, broker)
         except KeyboardInterrupt:

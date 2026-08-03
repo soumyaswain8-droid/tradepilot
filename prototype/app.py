@@ -3093,6 +3093,76 @@ def api_us_coverage():
         return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
 
 
+# ═══════════════════════ KITE CONNECT LOGIN CALLBACK ═══════════════════════
+# Zerodha's login flow redirects here with ?request_token=... after you authenticate.
+# The request_token is short-lived and must be exchanged for an access_token, which
+# is then valid ONLY for the rest of that trading day. Catching the redirect here
+# means you never copy-paste a token out of a URL bar.
+#
+# SECURITY: this endpoint writes a credential to .env. It is bound to 127.0.0.1 only
+# (see the app.run host), so it is not reachable from the network.
+
+@app.route("/kite/callback")
+def kite_callback():
+    """Exchange Kite's request_token for a daily access_token and persist it."""
+    from pathlib import Path as _P
+    req_tok = request.args.get("request_token")
+    status = request.args.get("status")
+    if not req_tok:
+        return (f"<h3>Kite callback: no request_token</h3>"
+                f"<p>status={status}. Start the login at "
+                f"<a href='/kite/login'>/kite/login</a>.</p>"), 400
+
+    root = _P(__file__).resolve().parent.parent
+    import sys as _sys
+    if str(root) not in _sys.path:
+        _sys.path.insert(0, str(root))
+    from prototype.v5 import kite_broker as kb
+
+    c = kb.credentials()
+    if not (c["api_key"] and c["api_secret"]):
+        return ("<h3>Missing KITE_API_KEY / KITE_API_SECRET in .env</h3>"
+                "<p>Add them, restart Flask, and retry.</p>"), 400
+    if not kb.sdk_available():
+        return "<h3>kiteconnect not installed</h3><p>pip install kiteconnect</p>", 400
+
+    try:
+        from kiteconnect import KiteConnect
+        k = KiteConnect(api_key=c["api_key"])
+        data = k.generate_session(req_tok, api_secret=c["api_secret"])
+        access = data["access_token"]
+    except Exception as e:
+        return f"<h3>Token exchange failed</h3><pre>{type(e).__name__}: {e}</pre>", 400
+
+    # persist to .env, replacing any previous token (it changes daily)
+    envf = root / ".env"
+    lines = envf.read_text().splitlines() if envf.exists() else []
+    lines = [l for l in lines if not l.startswith("KITE_ACCESS_TOKEN=")]
+    lines.append(f"KITE_ACCESS_TOKEN={access}")
+    envf.write_text("\n".join(lines) + "\n")
+
+    return (f"<h3>Kite connected</h3>"
+            f"<p>Access token saved to .env. It expires at end of today's trading "
+            f"session — re-run <a href='/kite/login'>/kite/login</a> tomorrow.</p>"
+            f"<p>Verify with: <code>python3 scripts/kite-check.py</code></p>")
+
+
+@app.route("/kite/login")
+def kite_login():
+    """Redirect into Kite's login. Bookmark this — it is the daily ritual."""
+    import sys as _sys
+    from pathlib import Path as _P
+    root = _P(__file__).resolve().parent.parent
+    if str(root) not in _sys.path:
+        _sys.path.insert(0, str(root))
+    from prototype.v5 import kite_broker as kb
+    c = kb.credentials()
+    if not c["api_key"]:
+        return "<h3>KITE_API_KEY missing from .env</h3>", 400
+    url = f"https://kite.zerodha.com/connect/login?v=3&api_key={c['api_key']}"
+    return f'<h3>Kite login</h3><p><a href="{url}">Click to authenticate with Zerodha</a></p>'
+
+
 @app.route("/api/us/engine")
 def api_us_engine():
     """US paper engine state — positions, P&L, closed trades. Reads the engine's

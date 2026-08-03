@@ -35,7 +35,7 @@ HEARTBEAT_MAX_AGE_SEC=2700
 # launch_cmd = how to restart if crashed
 TODAY=$(date +%Y-%m-%d)
 declare -a ENGINES=(
-  # Active engines (9) — must match launch-market.sh ENGINES array.
+  # Active engines (12) — must match launch-market.sh ENGINES array.
   # Count corrected 2026-07-30: the array had 9 uncommented entries while this
   # comment still said 5, which sent a live outage diagnosis down the wrong path.
   # TP-RCA 2026-06-26 lightweight roster: v5 (live) + v5_classic (frozen benchmark)
@@ -65,6 +65,10 @@ declare -a ENGINES=(
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
   # V10 (2026-07-30): frozen April engine, vendored from git 9d7db34.
   "v10|scripts/v10-paper-trade.py|docs/paper-trades/v10/${TODAY}.json|python3 scripts/v10-paper-trade.py"
+  "v5_1L|scripts/v5_1L-paper-trade.py|docs/paper-trades/v5_1L/${TODAY}.json|python3 scripts/v5_1L-paper-trade.py"
+  "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py|docs/paper-trades/v5_cut_1L/${TODAY}.json|python3 scripts/v5_cut_1L-paper-trade.py"
+  "v5_long_1L|scripts/v5_long_1L-paper-trade.py|docs/paper-trades/v5_long_1L/${TODAY}.json|python3 scripts/v5_long_1L-paper-trade.py"
+  # Small-capital shadows (2026-08-03) — Rs 10,000 variants.
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
   # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"
   # "v5_7|scripts/v5_7-paper-trade.py|docs/paper-trades/v5_7/${TODAY}.json|python3 scripts/v5_7-paper-trade.py"
@@ -151,7 +155,7 @@ FIRST_SCAN_DONE=false
 GRACE_UNTIL_MIN=$((9 * 60 + 20))  # no restart alerts before 09:20
 
 echo "[$(date '+%H:%M:%S')] crash-watchdog v3 started (heartbeat-based, market hours 09:00–15:30 IST)"
-send_alert "🐕 Watchdog v3 online. Heartbeat-based. Will monitor 9 engines 09:00–15:30 IST."
+send_alert "🐕 Watchdog v3 online. Heartbeat-based. Will monitor 12 engines 09:00–15:30 IST."
 
 while true; do
   if ! in_market_hours; then

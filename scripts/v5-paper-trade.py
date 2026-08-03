@@ -49,7 +49,10 @@ LOG_FILE = LOG_DIR / f"{ENGINE}-paper-trade.log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRADE_DIR.mkdir(parents=True, exist_ok=True)
 
-TOTAL_CAPITAL = 1_000_000  # Same Rs 10L as v4 for fair comparison
+# Env-overridable so a small-capital shadow can run alongside the fleet without
+# touching it (added 2026-08-03). Default is UNCHANGED at Rs 10L, so every
+# existing engine and the whole A/B series is unaffected.
+TOTAL_CAPITAL = float(os.environ.get("TOTAL_CAPITAL", 1_000_000))  # Rs 10L default
 TRAILING_TRIGGER_PCT, TRAILING_STEP_PCT = 1.0, 0.5
 SCAN_INTERVAL_MIN = int(os.environ.get("SCAN_INTERVAL_MIN", "10"))
 RESCORE_INTERVAL_MIN = int(os.environ.get("RESCORE_INTERVAL_MIN", "30"))

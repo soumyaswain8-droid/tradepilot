@@ -186,6 +186,18 @@ ENGINES=(
   # data_nse writes the shared cache the whole fleet reads and predates the 2026-05-08
   # cache-poisoning guards. Spec: docs/superpowers/specs/2026-07-30-v10-april-replica-design.md
   "v10|scripts/v10-paper-trade.py"
+  "v5_1L|scripts/v5_1L-paper-trade.py"
+  "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py"
+  "v5_long_1L|scripts/v5_long_1L-paper-trade.py"
+
+  # SMALL-CAPITAL SHADOWS (2026-08-03): same strategies at Rs 1,00,000 instead of
+  # Rs 10,00,000. At Rs 10L the position sizer is never the binding constraint; at
+  # Rs 10,000, with NIFTY-200 names at Rs 500-5,000/share, sizing becomes the whole
+  # story and each engine can hold only a handful of names. That is the experiment.
+  # Shadows, so the 9 live engines and the existing A/B series are untouched.
+  # NOTE both _10k variants below INLINE their parent's params rather than chaining:
+  # v5_cut/v5_long set ENGINE_NAME themselves and would clobber the shadow, writing
+  # small-capital state into the LIVE directory. Caught pre-launch 2026-08-03.
 
   # Retired 2026-05-15 (Sprint 1) — state files preserved, scripts unchanged.
   # Uncomment to re-introduce after primary rebuild completes (~2026-07-15).

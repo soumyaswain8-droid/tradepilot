@@ -7038,16 +7038,31 @@ function loadUSMarket() {
   fetch('/api/us/coverage?n=25&years=3').then(function(r){return r.json();}).then(function(d){
     var el = document.getElementById('usCoverage');
     if (!el) return;
-    if (!d.ok) { el.innerHTML = '<div class="stat-cell">Coverage unavailable</div>'; return; }
+    if (!d.ok) {
+      el.innerHTML = '<div class="stat-cell"><div class="stat-value" style="color:#D9614C">' +
+                     'REFUSED</div><div class="stat-label">' +
+                     (d.error || 'coverage unavailable') + '</div></div>';
+      return;
+    }
+    // "Missing cells" conflated two different things: a stock that listed mid-window
+    // (fine) and holes in data that should exist (not fine). Only the second is a
+    // defect, so only the second gets called a gap. Dropped symbols are shown
+    // because a guard that silently removes tickers is its own blind spot.
+    var gaps = d.interior_gaps || 0, drop = d.dropped || 0;
     var cells = [
-      ['Trading days', d.trading_days],
-      ['History', (d.start || '?') + ' → ' + (d.end || '?')],
-      ['Symbols sampled', d.symbols],
-      ['Missing cells', d.nan_cells],
-      ['Source', d.source]
+      ['Trading days', d.trading_days, ''],
+      ['History', (d.start || '?') + ' → ' + (d.end || '?'), ''],
+      ['Symbols kept', d.symbols + (d.requested ? ' / ' + d.requested : ''), ''],
+      ['Data gaps', gaps, gaps > 0 ? '#D9614C' : '#4CB782'],
+      ['Dropped on quality', drop, drop > 0 ? '#D9A441' : ''],
+      ['Source', d.source, '']
     ];
+    if (d.short_history) {
+      cells.splice(4, 0, ['Short history', d.short_history, '']);
+    }
     el.innerHTML = cells.map(function(c){
-      return '<div class="stat-cell"><div class="stat-value">' + c[1] +
+      return '<div class="stat-cell"><div class="stat-value"' +
+             (c[2] ? ' style="color:' + c[2] + '"' : '') + '>' + c[1] +
              '</div><div class="stat-label">' + c[0] + '</div></div>';
     }).join('');
   }).catch(function(){});

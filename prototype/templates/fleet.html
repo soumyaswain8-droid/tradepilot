@@ -131,6 +131,13 @@ footer{color:var(--mute);font-size:11px;text-align:center;padding-top:6px;border
 
   <footer>Live from the engines · {{ stamp }}</footer>
 </div>
-<button class="refresh" onclick="location.reload()">Refresh</button>
+<button class="refresh" id="rf" onclick="location.reload()">Refresh</button>
+<script>
+// The screenshot sender loads this page with ?static=1. A fixed "Refresh" button
+// baked into a shared image is meaningless — hide it for the render only.
+if (new URLSearchParams(location.search).has('static')) {
+  var b = document.getElementById('rf'); if (b) b.remove();
+}
+</script>
 </body>
 </html>

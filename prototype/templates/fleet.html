@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1A24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TradePilot · Fleet</title>
+<style>
+:root{
+  --bg:#0E1A24; --surface:#16242F; --line:#233544; --ink:#E6EEF4;
+  --mute:#7E93A3; --brass:#D9A441; --pos:#4CB782; --neg:#D9614C;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#F6F7F5; --surface:#FFF; --line:#DFE4E7; --ink:#12212B;
+         --mute:#5E717F; --brass:#A9741A; --pos:#1F7F55; --neg:#B33F2C; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.45}
+.wrap{max-width:620px;margin:0 auto;
+  padding:calc(18px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:20px}
+
+.kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:600}
+h1{margin:2px 0 0;font-size:24px;letter-spacing:-.02em;font-weight:650;text-wrap:balance}
+.sub{color:var(--mute);font-size:13px;margin-top:3px}
+.paper{display:inline-flex;gap:6px;align-self:flex-start;margin-top:9px;border:1px solid var(--line);
+  background:var(--surface);color:var(--mute);padding:4px 9px;border-radius:5px;font-size:11px}
+.paper b{color:var(--brass)}
+
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:9px;overflow:hidden}
+@media(min-width:500px){.summary{grid-template-columns:repeat(4,1fr)}}
+.cell{background:var(--surface);padding:12px 13px;display:flex;flex-direction:column;gap:2px}
+.cval{font-size:20px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.cval.pos{color:var(--pos)} .cval.neg{color:var(--neg)}
+.clab{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+
+section{display:flex;flex-direction:column;gap:8px}
+.shead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding-bottom:6px;border-bottom:1px solid var(--line)}
+.stitle{font-size:13px;font-weight:600}
+.snote{font-size:11px;color:var(--mute)}
+
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.row{background:var(--surface);padding:10px 12px;display:grid;
+  grid-template-columns:1fr auto;grid-template-areas:"main pnl" "meta pnl" "bar bar";
+  gap:4px 12px;align-items:center}
+.rmain{grid-area:main;display:flex;align-items:baseline;gap:8px;min-width:0}
+.nm{font-weight:600;font-size:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap{font-size:10px;color:var(--brass);border:1px solid var(--line);padding:1px 6px;
+  border-radius:4px;flex:none;font-variant-numeric:tabular-nums}
+.rmeta{grid-area:meta;display:flex;gap:10px;flex-wrap:wrap}
+.mt{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+.pnl{grid-area:pnl;font-size:16px;font-weight:650;text-align:right;
+  font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.pnl.pos{color:var(--pos)} .pnl.neg{color:var(--neg)} .pnl.flat{color:var(--mute)}
+.bar{grid-area:bar;height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:2px}
+.bar i{display:block;height:100%}
+.bar i.pos{background:var(--pos)} .bar i.neg{background:var(--neg)} .bar i.flat{background:var(--mute)}
+
+.note{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:13px;
+  font-size:12.5px;color:var(--mute);display:flex;flex-direction:column;gap:7px}
+.note b{color:var(--ink)}
+footer{color:var(--mute);font-size:11px;text-align:center;padding-top:6px;border-top:1px solid var(--line)}
+.refresh{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+  background:var(--brass);color:#0E1A24;border:none;border-radius:999px;padding:11px 17px;
+  font-size:13px;font-weight:650;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
+.refresh:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">TradePilot · NSE</div>
+    <h1>Engine fleet</h1>
+    <div class="sub">{{ fleet.n }} strategies trading the same market, side by side.</div>
+    <div class="paper"><b>PAPER</b>&nbsp;simulated fills · no real money · no broker orders</div>
+  </header>
+
+  <div class="summary">
+    <div class="cell">
+      <span class="cval {{ 'pos' if fleet.net > 0 else ('neg' if fleet.net < 0 else '') }}">{{ '+' if fleet.net > 0 else '' }}{{ '{:,}'.format(fleet.net) }}</span>
+      <span class="clab">Net ₹</span>
+    </div>
+    <div class="cell"><span class="cval">{{ fleet.pos }}</span><span class="clab">Open</span></div>
+    <div class="cell"><span class="cval">{{ fleet.trades }}</span><span class="clab">Trades</span></div>
+    <div class="cell"><span class="cval pos">{{ fleet.green }}<span style="color:var(--mute);font-size:14px">/{{ fleet.n }}</span></span><span class="clab">In profit</span></div>
+  </div>
+
+  {% for tier, label, note in [('10L','Full size','₹10 lakh each'), ('1L','Small account','₹1 lakh · same strategies')] %}
+  {% set group = engines | selectattr('tier','equalto',tier) | list %}
+  {% if group %}
+  <section>
+    <div class="shead"><span class="stitle">{{ label }}</span><span class="snote">{{ note }}</span></div>
+    <ul>
+      {% for e in group %}
+      {% set cls = 'pos' if e.net > 0 else ('neg' if e.net < 0 else 'flat') %}
+      <li class="row">
+        <div class="rmain">
+          <span class="nm">{{ e.name }}</span>
+          <span class="cap">₹{{ '%.1f'|format(e.cap / 100000) }}L</span>
+        </div>
+        <div class="rmeta">
+          <span class="mt">{{ e.pos }} open</span>
+          <span class="mt">{{ e.trades }} trades</span>
+          <span class="mt">{{ e.wr }}% win</span>
+        </div>
+        <div class="bar"><i class="{{ cls }}" style="width:{{ (e.net|abs / mx * 100)|round(1) }}%"></i></div>
+        <div class="pnl {{ cls }}">{{ '+' if e.net > 0 else '' }}{{ '{:,}'.format(e.net) }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% endfor %}
+
+  <div class="note">
+    <span><b>Why two sizes.</b> The ₹1 lakh engines run identical logic on a tenth of the
+    capital. They hold nearly as many positions — so the difference shows up in size per
+    position, not in breadth.</span>
+    <span><b>Nothing here is real money.</b> Fills are simulated against live NSE prices.
+    The linked Zerodha account holds zero positions and zero orders.</span>
+  </div>
+
+  <footer>Live from the engines · {{ stamp }}</footer>
+</div>
+<button class="refresh" onclick="location.reload()">Refresh</button>
+</body>
+</html>

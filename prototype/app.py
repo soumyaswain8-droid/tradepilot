@@ -3093,6 +3093,57 @@ def api_us_coverage():
         return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
 
 
+# ═══════════════════════ MOBILE FLEET VIEW ═══════════════════════
+# A phone-sized, self-contained view of the whole engine fleet. Deliberately its own
+# route rather than a tab inside index.html: that page is ~7,000 lines built for a
+# desktop grid, and this needs to render on a phone and be showable to someone in
+# ten seconds. Serves live data on every request — no build step, no snapshot.
+
+@app.route("/fleet")
+def fleet_view():
+    import json as _j, glob as _g, os as _os
+    from datetime import datetime as _dt
+    from pathlib import Path as _P
+
+    root = _P(__file__).resolve().parent.parent
+    today = _dt.now().strftime("%Y-%m-%d")
+    CPT = 14.30   # v5's measured cost per trade — used to correct engines that book none
+
+    engines = []
+    for f in sorted(_g.glob(str(root / "docs" / "paper-trades" / "*" / f"{today}.json"))):
+        name = _os.path.basename(_os.path.dirname(f))
+        try:
+            d = _j.load(open(f))
+        except Exception:
+            continue
+        sm = d.get("summary") or {}
+        pools = d.get("pools") or {}
+        npos = sum(len(p.get("positions") or []) for p in pools.values())
+        gross = sm.get("total_pnl") or 0
+        net = sm.get("total_pnl_net")
+        cost = sm.get("total_cost") or 0
+        trades = sm.get("trades") or 0
+        wins = sm.get("wins") or 0
+        books = cost > 0
+        true = net if (books and net is not None) else (gross - trades * CPT if not books else gross)
+        cap = d.get("total_capital") or 0
+        if cap <= 0:
+            continue                      # US module and empty state files
+        tier = "1L" if 90000 <= cap <= 110000 else "10L"
+        engines.append({"name": name, "cap": cap, "tier": tier, "pos": npos,
+                        "trades": trades, "wr": round(wins / trades * 100) if trades else 0,
+                        "net": round(true), "books": books})
+    engines.sort(key=lambda e: -e["net"])
+    fleet = {"n": len(engines),
+             "pos": sum(e["pos"] for e in engines),
+             "trades": sum(e["trades"] for e in engines),
+             "net": round(sum(e["net"] for e in engines)),
+             "green": sum(1 for e in engines if e["net"] > 0)}
+    return render_template("fleet.html", engines=engines, fleet=fleet,
+                           stamp=_dt.now().strftime("%d %b %Y, %H:%M IST"),
+                           mx=max([abs(e["net"]) for e in engines] or [1]))
+
+
 # ═══════════════════════ KITE CONNECT LOGIN CALLBACK ═══════════════════════
 # Zerodha's login flow redirects here with ?request_token=... after you authenticate.
 # The request_token is short-lived and must be exchanged for an access_token, which

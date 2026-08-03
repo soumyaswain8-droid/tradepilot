@@ -1,0 +1,126 @@
+{
+  "date": "2026-08-03",
+  "generated_at": "2026-08-03T15:36:01.963619",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 3501.96,
+      "trades": 51,
+      "wins": 26,
+      "losses": 25,
+      "longs": 51,
+      "shorts": 0,
+      "win_rate": 51.0,
+      "open_positions": 1,
+      "best_trade": 1317.5,
+      "worst_trade": -262.65,
+      "avg_win": 203.76,
+      "avg_loss": -71.83,
+      "exit_reasons": {
+        "SIGNAL_FLIP": 8,
+        "TARGET": 4,
+        "STOPLOSS": 11,
+        "FLAT_FORCE_EXIT": 12,
+        "TIME_EXIT": 16
+      },
+      "n_closed": 51,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 4134.2,
+      "trades": 45,
+      "wins": 26,
+      "losses": 19,
+      "longs": 45,
+      "shorts": 0,
+      "win_rate": 57.8,
+      "open_positions": 0,
+      "best_trade": 1249.62,
+      "worst_trade": -415.8,
+      "avg_win": 220.53,
+      "avg_loss": -94.09,
+      "exit_reasons": {
+        "STOPLOSS": 9,
+        "TARGET": 5,
+        "SIGNAL_FLIP": 14,
+        "TIME_EXIT": 17
+      },
+      "n_closed": 45,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ABB",
+      "ABCAPITAL",
+      "AMBUJACEM",
+      "APLAPOLLO",
+      "ASHOKLEY",
+      "DIVISLAB",
+      "FORTIS",
+      "GODFRYPHLP",
+      "GODREJCP",
+      "ICICIGI",
+      "INFY",
+      "IRCTC",
+      "ITC",
+      "JIOFIN",
+      "JSWENERGY",
+      "JUBLFOOD",
+      "KPITTECH",
+      "LGEINDIA",
+      "LTM",
+      "MOTILALOFS",
+      "MPHASIS",
+      "NATIONALUM",
+      "OFSS",
+      "PAYTM",
+      "RVNL",
+      "TCS",
+      "UPL",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +4,134 across 45 trades (57.8% win).",
+    "Laggard: <b>v5</b> with Rs +3,502 across 51 trades (51.0% win).",
+    "<b>v5</b>: STOPLOSS (11) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (9) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (14). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 51.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 57.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

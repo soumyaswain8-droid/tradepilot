@@ -106,6 +106,26 @@ JOBS = [
      ["python3", "scripts/team/cadence/nightly_backup.py"],
      23, 0, DAILY, "backup.log"),
 
+    # --- Kite token reminders (2026-08-03) ----------------------------------
+    # Zerodha invalidates the access_token at 06:00 daily ("regulatory
+    # requirement" — their words). Re-auth needs interactive 2FA, so it cannot be
+    # automated without storing a password + TOTP seed on disk, which collapses 2FA
+    # into 1FA and exposes the ACCOUNT rather than a scoped, revocable API key.
+    # We chose notification over automation. Three escalating nudges, and each is
+    # SILENT when the token is valid — a reminder that fires daily regardless is one
+    # people learn to ignore (preflight's stale ML failures are the live example).
+    ("kite-token-morning",
+     ["python3", "scripts/kite-token-reminder.py", "--stage", "morning"],
+     6, 5, WEEKDAYS, "kite-token-morning.log"),
+
+    ("kite-token-preflight",
+     ["python3", "scripts/kite-token-reminder.py", "--stage", "preflight"],
+     8, 50, WEEKDAYS, "kite-token-preflight.log"),
+
+    ("kite-token-lastcall",
+     ["python3", "scripts/kite-token-reminder.py", "--stage", "lastcall"],
+     9, 10, WEEKDAYS, "kite-token-lastcall.log"),
+
     # --- cadence-guard (2026-07-28) — makes silent failures loud -------------
     # 08:40: heal TCC-tainted logs BEFORE the 08:50 preflight / 09:10 engines-on
     # fire, so a tainted file can never silently kill the trading chain.

@@ -172,6 +172,17 @@ ENGINES=(
   # Re-comment to end.
   "v5_gate|scripts/v5_gate-paper-trade.py"
 
+  # MIGRATION CANARY (2026-08-04): v5_kite = v5 with NSE_DATA_SOURCE=kite. Exactly
+  # ONE variable differs from live v5 — the data feed — so any divergence is
+  # attributable to the feed and nothing else. yfinance silently dropped Monday
+  # 2026-08-03 from ^NSEI/^BSESN (index-only; equities were fine), which made the
+  # index read +0.00% on a -0.64% day. Measured before switching: 200/200 NIFTY
+  # symbols at 0.000% price divergence, 0.40s vs 9.00s per batch. Promote to the
+  # whole fleet only after trade count and P&L track v5 across a full week AND
+  # kite_data.health() reports zero fallbacks — a session with fallbacks silently
+  # ran on the control's feed and is not a clean comparison.
+  "v5_kite|scripts/v5_kite-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

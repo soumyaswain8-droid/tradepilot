@@ -105,6 +105,21 @@ def _cache_dir_today() -> Path:
 
 
 CACHE_TTL_SECONDS = 300  # 5 minutes
+
+
+def _kite_on() -> bool:
+    """Is the Kite feed switched on for this process?
+
+    OFF BY DEFAULT. The switch is NSE_DATA_SOURCE=kite, set per engine, so the fleet
+    migrates one engine at a time with the rest running as a control. A migration
+    that flips eleven live engines at once has no control group, and a bad next
+    session would have eleven candidate causes.
+    """
+    try:
+        from prototype.v4 import kite_data as _kd
+        return _kd.enabled()
+    except Exception:
+        return False
 MARKET_OPEN_HOUR = 9     # 09:15 IST
 MARKET_OPEN_MIN = 15
 MARKET_CLOSE_HOUR = 15   # 15:30 IST
@@ -679,6 +694,31 @@ def get_all_nifty50_quotes() -> dict:
             ...
         }
     """
+    # ── KITE DELEGATION (opt-in, added 2026-08-04) ──
+    # kite_data.get_quotes returns data_nse's exact schema (last_price, open, high,
+    # low, prev_close, change_pct, volume, symbol), mapped field-for-field with
+    # nothing invented. Kite's ohlc.close is the PREVIOUS close and its net_change
+    # was observed to be 0.0 on a stock that had clearly moved, so change_pct is
+    # derived here rather than taken from the feed.
+    #
+    # A PARTIAL result is treated as failure. Kite omits symbols it cannot serve,
+    # and quietly returning 30 of 50 quotes would let an engine score a truncated
+    # universe while believing it saw the whole thing — the same shape as the US
+    # module's 2-day frame that passed every density check.
+    if _kite_on():
+        try:
+            from prototype.v4 import kite_data as _kd
+            syms = [s.replace(".NS", "") for s in ACTIVE_SYMBOLS_YF]
+            q = _kd.get_quotes(syms)
+            got, want = len(q), len(syms)
+            if got >= want * 0.9:
+                return q
+            _kd.note_fallback("get_all_nifty50_quotes",
+                              f"partial result {got}/{want} symbols")
+        except Exception as e:
+            from prototype.v4 import kite_data as _kd
+            _kd.note_fallback("get_all_nifty50_quotes", f"{type(e).__name__}: {e}")
+
     cache_file = "nifty50_quotes_batch.json"
     cached = _read_cache(cache_file)
     if cached:
@@ -807,6 +847,33 @@ def get_nifty_index_level() -> dict:
             "low": float,
         }
     """
+    # ── KITE DELEGATION (opt-in via NSE_DATA_SOURCE=kite, added 2026-08-04) ──
+    # This function is the reason the migration exists. yfinance's ^NSEI daily series
+    # silently dropped Monday 2026-08-03 — verified, and the gap is INDEX-ONLY
+    # (equities have the day). Anything computing a previous close off that series
+    # got the wrong baseline: a -1.04% session read as +0.54%.
+    #
+    # Failure here is LOUD and falls through to the existing yfinance path rather
+    # than raising. An index level is not worth halting a session over — but a
+    # silent source switch would make the fleet's data provenance unknowable after
+    # the fact, so every fallback is counted and logged at ERROR.
+    if _kite_on():
+        try:
+            from prototype.v4 import kite_data as _kd
+            k = _kd.get_index("NIFTY 50", exchange="NSE")
+            return {
+                "level": k["last_price"],
+                "change_pct": k["change_pct"],
+                "prev_close": k["prev_close"],
+                "open": k["open"],
+                "high": k["high"],
+                "low": k["low"],
+                "source": "kite",
+            }
+        except Exception as e:
+            from prototype.v4 import kite_data as _kd
+            _kd.note_fallback("get_nifty_index_level", f"{type(e).__name__}: {e}")
+
     cache_file = "nifty_index_level.json"
     cached = _read_cache(cache_file)
     if cached:

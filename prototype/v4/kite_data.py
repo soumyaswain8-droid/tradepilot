@@ -44,7 +44,13 @@ ROOT = Path(__file__).resolve().parents[2]
 # Kite allows up to 500 instruments per quote() call; stay well under it.
 QUOTE_BATCH = 200
 
-_lock = threading.Lock()
+# RLock, NOT Lock. token_for() holds this while calling client(), which takes it
+# again — and threading.Lock is not reentrant, so the thread blocks forever waiting
+# for itself. That deadlock hung the first test for 5 minutes and I misdiagnosed it
+# as "instruments('NSE') is slow"; measured, that call takes 0.17s.
+# RLock alone is not the whole fix: network I/O must not happen while holding it
+# either, or 11 engines serialise behind one HTTP request. See token_for().
+_lock = threading.RLock()
 _kite = None
 _kite_day = None            # the date the client was built for
 _token_map: dict = {}       # "RELIANCE" -> instrument_token
@@ -153,20 +159,63 @@ def token_alive() -> tuple:
 
 # ── instrument tokens ───────────────────────────────────────────────────────
 
+def _token_cache_file() -> Path:
+    return (ROOT / "prototype" / "data" / "kite_cache" /
+            f"instruments_nse_{datetime.now():%Y-%m-%d}.json")
+
+
 def token_for(symbol: str) -> Optional[int]:
-    """NSE symbol -> instrument_token, loaded once per day (~10k rows)."""
+    """NSE symbol -> instrument_token.
+
+    Three layers, cheapest first: process memory, then a per-day disk cache, then
+    the API. The disk cache is what makes this viable across 11 engine processes —
+    each is a separate interpreter with its own empty memory, so without it every
+    engine refetches ~10k rows at startup.
+
+    THE NETWORK CALL DELIBERATELY HAPPENS OUTSIDE THE LOCK. Holding a mutex across
+    HTTP means every other thread waits out the request; worse, the first version
+    also called client() while holding a non-reentrant Lock, which deadlocked
+    against itself. Read state under the lock, do I/O unlocked, publish under the
+    lock again.
+    """
     global _token_map, _token_map_day
+    sym = symbol.upper()
     today = datetime.now().date()
+
     with _lock:
-        if _token_map_day != today or not _token_map:
-            rows = _call(lambda: client().instruments("NSE"), "instruments")
+        if _token_map_day == today and _token_map:
+            return _token_map.get(sym)
+
+    # -- unlocked from here: disk read, then network if needed --
+    m = {}
+    cache = _token_cache_file()
+    if cache.exists():
+        try:
+            import json
+            m = {k: int(v) for k, v in json.loads(cache.read_text()).items()}
+            logger.info(f"kite: instrument map from disk cache ({len(m)} symbols)")
+        except Exception as e:
+            logger.warning(f"kite: instrument cache unreadable ({e}); refetching")
             m = {}
-            for r in rows:
-                if r.get("segment") == "NSE" and r.get("instrument_type") == "EQ":
-                    m[str(r.get("tradingsymbol"))] = int(r.get("instrument_token"))
-            _token_map, _token_map_day = m, today
-            logger.info(f"kite: loaded {len(m)} NSE equity instruments")
-    return _token_map.get(symbol.upper())
+
+    if not m:
+        rows = _call(lambda: client().instruments("NSE"), "instruments")
+        for r in rows:
+            if r.get("segment") == "NSE" and r.get("instrument_type") == "EQ":
+                m[str(r.get("tradingsymbol"))] = int(r.get("instrument_token"))
+        logger.info(f"kite: fetched {len(m)} NSE equity instruments")
+        try:
+            import json
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            tmp = cache.with_suffix(".tmp")
+            tmp.write_text(json.dumps(m))
+            tmp.replace(cache)          # atomic: 11 engines may write concurrently
+        except Exception as e:
+            logger.warning(f"kite: could not write instrument cache: {e}")
+
+    with _lock:
+        _token_map, _token_map_day = m, today
+    return m.get(sym)
 
 
 # ── quotes ──────────────────────────────────────────────────────────────────

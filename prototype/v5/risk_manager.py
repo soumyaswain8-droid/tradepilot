@@ -65,7 +65,29 @@ CORRELATION_THRESHOLD = 0.7
 # Baseline kill-switch + position-size cap (promoted from v5_2 on 2026-05-01 after VEDL incident).
 # Set to None to disable a guard. All RiskManager instances inherit these.
 BASELINE_DAILY_LOSS_KILL_RS = -5000      # session realised+unrealised P&L floor; below = no new entries
-BASELINE_MAX_POSITION_PCT   = 0.10        # max 10% of pool capital per single trade
+
+# MAX POSITION CAP — env-overridable as of 2026-08-04.
+#
+# WHY IT BECAME CONFIGURABLE
+# This constant silently contradicted the position sizer. The sizer asks for
+# 15% of pool budget (`base = budget * 0.15` in v5-paper-trade.py); this cap allowed
+# 10%. 15% > 10% for every positive pool, so the gate could never approve anything.
+# v5_gate — the only engine with RISK_GATE_DRIVE=1, i.e. the only one that OBEYS the
+# gate rather than merely logging it — took ZERO trades from 2026-07-21 to 08-04.
+# 4,270 evaluations, 0 approved, 0 watchlisted, every rejection identical:
+#   "check_position_size: FAIL — Position size Rs 45,000 > 10% of INTRADAY capital
+#    (Rs 30,000)"
+# 45,000 is exactly 15% of a 300,000 pool and 30,000 is exactly 10%. Arithmetic, not
+# market conditions.
+#
+# The contradiction is only reachable in one regime: the effective size multiplier
+# makes the ask 15% x 0.60 = 9% in BEAR, which would pass. We were in BULL/SIDEWAYS
+# throughout, so it never did.
+#
+# The DEFAULT IS UNCHANGED at 0.10, so the other ten engines behave exactly as before
+# — they only log the gate, and their logged verdicts stay comparable with history.
+# Only v5_gate sets the override, so only v5_gate's behaviour changes.
+BASELINE_MAX_POSITION_PCT = float(_os.environ.get("MAX_POSITION_PCT", "0.10"))
 
 # Default location for the symbol blacklist (auto-loaded on init).
 BLACKLIST_PATH = Path(__file__).resolve().parents[1] / "data" / "blacklist.json"

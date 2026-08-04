@@ -45,6 +45,24 @@ os.environ["ML_SCORE_WEIGHT"]      = "0"
 os.environ["TELEGRAM_DISABLE"]     = "1"   # shadow: only live v5 alerts
 # Deliberately NOT set: CHOP_FILTER — v5_gate tests the gate's effect alone.
 
+# MAX_POSITION_PCT 0.16 (2026-08-04) — makes the gate SATISFIABLE.
+#
+# v5_gate took zero trades in every session from 2026-07-21 to 08-04: 4,270 gate
+# evaluations, 0 approved, 0 watchlisted. Not market conditions — a contradiction
+# between two constants. The sizer asks for 15% of pool budget; the cap allowed 10%.
+# 15% > 10% always, so every candidate was rejected on check_position_size.
+#
+# 0.16 sits just above the sizer's maximum ask (15% x an effective multiplier of at
+# most 1.0) and well below KELLY_CAP's 25%. So normal sizing passes while a genuinely
+# oversized position — the VEDL incident this cap was promoted for on 2026-05-01 —
+# is still blocked. Setting it at or below 0.15 would keep the engine mute; setting
+# it at 0.25 would make the check a no-op. This is the narrow band that leaves the
+# guard meaningful AND lets the engine trade.
+#
+# Scoped to THIS engine only. risk_manager still defaults to 0.10, so the other ten
+# engines are untouched and their logged gate verdicts stay comparable with history.
+os.environ["MAX_POSITION_PCT"]     = "0.16"
+
 target = str(Path(__file__).parent / "v5-paper-trade.py")
 sys.argv = [target] + sys.argv[1:]
 runpy.run_path(target, run_name="__main__")

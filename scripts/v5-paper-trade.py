@@ -705,6 +705,29 @@ def deploy_signals(state, pm, rm, signals):
     # (named so RISK_GATE_LOG below can replay the exact same candidate set post-loop)
     candidates = sorted([s for s in signals if s["direction"] in allowed_dirs],
                         key=lambda s: -float(s.get("score", 0)))
+
+    # MIN_ENTRY_SCORE — entry-quality floor. DEFAULT 0 = disabled, so every existing
+    # engine is byte-for-byte unchanged and its history stays comparable.
+    #
+    # WHY (measured 2026-08-04 over v5's last 25 sessions, 414 closed trades):
+    # score barely predicts WIN RATE — winners averaged 56.3, losers 54.9, Cohen's
+    # d = 0.06, i.e. noise. But it strongly predicts NET P&L, because payoff size
+    # differs even when hit rate does not:
+    #     floor  trades  gross   costs    NET
+    #        0      414  6,177   5,920    256    <- costs eat 96% of gross
+    #       70      193  7,121   2,760  4,361
+    # Gross profit is HIGHER with 53% fewer trades, so sub-70 entries lose money
+    # before costs are counted; costs then convert a thin edge into nearly nothing.
+    #
+    # This is a selectivity change, NOT a shorting change — it filters candidates by
+    # score only, and both directions are treated identically.
+    _min_score = float(os.environ.get("MIN_ENTRY_SCORE", "0") or 0)
+    if _min_score > 0:
+        _before = len(candidates)
+        candidates = [s for s in candidates if float(s.get("score", 0) or 0) >= _min_score]
+        if _before != len(candidates):
+            log(f"  [score-floor] {_before} -> {len(candidates)} candidates "
+                f"(dropped {_before - len(candidates)} below {_min_score:g})")
     all_candidates = candidates  # RISK_GATE_LOG below replays this full pre-gate set, drive or not
     _drive_on = os.environ.get("RISK_GATE_DRIVE") == "1"
     _gate_promoted, _gate_invalidation_map = set(), {}

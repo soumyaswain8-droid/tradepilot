@@ -62,6 +62,9 @@ declare -a ENGINES=(
   "v5_gate|scripts/v5_gate-paper-trade.py|docs/paper-trades/v5_gate/${TODAY}.json|python3 scripts/v5_gate-paper-trade.py"
   # MIGRATION CANARY (2026-08-04): v5_kite = v5 + NSE_DATA_SOURCE=kite, one variable vs live v5.
   "v5_kite|scripts/v5_kite-paper-trade.py|docs/paper-trades/v5_kite/${TODAY}.json|python3 scripts/v5_kite-paper-trade.py"
+
+  # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70.
+  "v5_pick|scripts/v5_pick-paper-trade.py|docs/paper-trades/v5_pick/${TODAY}.json|python3 scripts/v5_pick-paper-trade.py"
   # V8 (TP-V8 2026-07-06): April-recipe replica (control twin).
   # RETIRED 2026-07-30, superseded by v10 (see launch-market.sh ENGINES for why).
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"

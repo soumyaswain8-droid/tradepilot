@@ -183,6 +183,13 @@ ENGINES=(
   # ran on the control's feed and is not a clean comparison.
   "v5_kite|scripts/v5_kite-paper-trade.py"
 
+  # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70. Backtest over
+  # v5's last 25 sessions: floor 70 -> 193 trades, net Rs 4,361 vs 414 trades, net Rs 256.
+  # Gross is HIGHER with 53% fewer trades, so sub-70 entries lose before costs; costs
+  # (Rs 14.30/trade) then eat 96% of gross. Direction-neutral — NOT a shorting change.
+  # Expect turnover ~23%, below the 45-55% band: that tension is the point of the test.
+  "v5_pick|scripts/v5_pick-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

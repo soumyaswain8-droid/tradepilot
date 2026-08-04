@@ -9,6 +9,7 @@
     { key: "lab",    label: "A/B",    sub: "Beta / testing",  href: "/lab",       icon: "◇", match: ["/lab"] },
     { key: "agents", label: "Agents", sub: "Sarathi team",   href: "/team",      icon: "⬡", match: ["/team", "/team_sarathi"] },
     { key: "decide", label: "Decisions", sub: "Root-cause & RC roadmap", href: "/decisions", icon: "⚑", match: ["/decisions"] },
+      { key: "folio",  label: "Portfolio", sub: "Every stock traded", href: "/portfolio", icon: "◫", match: ["/portfolio"] },
   ];
   var path = location.pathname.replace(/\/$/, "") || "/";
 

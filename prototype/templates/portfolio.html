@@ -73,6 +73,26 @@ tr:last-child td{border-bottom:none}
   padding:13px 15px;font-size:12.5px;color:var(--mute);display:flex;flex-direction:column;gap:7px}
 .note b{color:var(--ink)}
 footer{color:var(--mute);font-size:11px;text-align:center;padding-top:8px;border-top:1px solid var(--line)}
+
+/* ledger */
+.search{width:100%;padding:12px 15px;border-radius:13px;border:none;
+  background:var(--surface);background-image:var(--face);box-shadow:var(--clay);
+  color:var(--ink);font-size:14px;font-family:inherit}
+.search::placeholder{color:var(--mute)}
+.search:focus{outline:2px solid var(--brass);outline-offset:2px}
+tr.sym{cursor:pointer}
+tr.sym:hover{background:rgba(217,164,65,.07)}
+tr.sym td:first-child::before{content:"▸";color:var(--mute);margin-right:8px;
+  display:inline-block;transition:transform .15s}
+tr.sym.open td:first-child::before{transform:rotate(90deg);color:var(--brass)}
+tr.detail>td{padding:0;background:rgba(0,0,0,.10)}
+[data-theme="light"] tr.detail>td, @media (prefers-color-scheme: light){tr.detail>td{background:rgba(15,23,42,.03)}}
+.hist{width:100%;border-collapse:collapse;min-width:0}
+.hist th{font-size:9.5px;padding:8px 14px;letter-spacing:.08em}
+.hist td{padding:8px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+.hist tr:last-child td{border-bottom:none}
+.pill{font-size:9.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+@media (prefers-reduced-motion: reduce){tr.sym td:first-child::before{transition:none}}
 </style>
 </head>
 <body>
@@ -180,6 +200,28 @@ footer{color:var(--mute);font-size:11px;text-align:center;padding-top:8px;border
   </div>
   {% endif %}
 
+  <section id="ledger">
+    <div class="shead">
+      <span class="stitle">Every stock traded</span>
+      <span class="snote">tap a row for its full buy / sell history</span>
+    </div>
+    <input id="q" class="search" type="search" spellcheck="false" autocomplete="off"
+           placeholder="Search a stock — RELIANCE, IDEA, TCS…">
+    <div class="panel"><div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Stock</th><th class="num">Trades</th><th class="num">Win%</th>
+          <th class="num">Net ₹</th><th class="num">Avg ₹</th>
+          <th class="num">Best ₹</th><th class="num">Worst ₹</th><th>Last</th>
+        </tr></thead>
+        <tbody id="ledgerBody">
+          <tr><td colspan="8" class="snote" style="padding:22px">Loading trade history…</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <div class="snote" id="ledgerCount"></div>
+  </section>
+
   <div class="note">
     <span><b>Why active and retired are separate.</b> A retired engine's P&amp;L is
     history, not holdings. Adding it to a live total would overstate the portfolio.</span>
@@ -190,5 +232,125 @@ footer{color:var(--mute);font-size:11px;text-align:center;padding-top:8px;border
 
   <footer>Generated {{ p.generated_at }} · {{ p.owner.email }}</footer>
 </div>
+
+<script>
+/* Ledger. Its own tag with no src — a src-bearing script element discards inline
+   content entirely, which is how the US Market tab shipped blank on 2026-08-03. */
+(function () {
+  "use strict";
+  var body = document.getElementById("ledgerBody"),
+      count = document.getElementById("ledgerCount"),
+      q = document.getElementById("q"),
+      rows = [], open = null;
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function n(v, d) {
+    if (v == null || isNaN(v)) return "--";
+    return Number(v).toLocaleString("en-IN", {minimumFractionDigits: d || 0,
+                                              maximumFractionDigits: d || 0});
+  }
+  function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : "flat"; }
+
+  function rowHTML(r) {
+    return '<tr class="sym" data-sym="' + esc(r.symbol) + '">'
+      + '<td class="nm">' + esc(r.symbol) + "</td>"
+      + '<td class="num">' + r.trades + "</td>"
+      + '<td class="num">' + r.win_rate + "%</td>"
+      + '<td class="num ' + cls(r.net) + '">' + (r.net > 0 ? "+" : "") + n(r.net) + "</td>"
+      + '<td class="num ' + cls(r.avg) + '">' + (r.avg > 0 ? "+" : "") + n(r.avg) + "</td>"
+      + '<td class="num pos">+' + n(r.best) + "</td>"
+      + '<td class="num neg">' + n(r.worst) + "</td>"
+      + '<td class="snote">' + esc(r.last_traded) + "</td></tr>";
+  }
+
+  function histHTML(d) {
+    var h = '<table class="hist"><thead><tr>'
+      + "<th>Bought</th><th>Buy ₹</th><th>Sold</th><th>Sell ₹</th>"
+      + '<th class="num">Qty</th><th class="num">P&amp;L ₹</th><th class="num">%</th>'
+      + "<th>Held</th><th>Exit</th><th>Engine</th></tr></thead><tbody>";
+    d.history.forEach(function (t) {
+      h += "<tr>"
+        + "<td>" + esc(t.bought_on) + ' <span class="snote">' + esc(t.bought_at) + "</span></td>"
+        + '<td class="num">' + n(t.buy_price, 2) + "</td>"
+        + "<td>" + esc(t.sold_on) + ' <span class="snote">' + esc(t.sold_at) + "</span></td>"
+        + '<td class="num">' + n(t.sell_price, 2) + "</td>"
+        + '<td class="num">' + t.qty + "</td>"
+        + '<td class="num ' + cls(t.pnl) + '">' + (t.pnl > 0 ? "+" : "") + n(t.pnl, 2) + "</td>"
+        + '<td class="num ' + cls(t.pnl) + '">' + (t.pnl_pct > 0 ? "+" : "") + t.pnl_pct + "%</td>"
+        + "<td>" + (t.held_days > 0 ? t.held_days + "d" : "same day") + "</td>"
+        + '<td><span class="pill">' + esc(t.reason) + "</span></td>"
+        + '<td class="snote">' + esc(t.engine) + "</td></tr>";
+    });
+    return h + "</tbody></table>";
+  }
+
+  function render(list) {
+    body.innerHTML = list.length
+      ? list.map(rowHTML).join("")
+      : '<tr><td colspan="8" class="snote" style="padding:22px">No stock matches that search.</td></tr>';
+    open = null;
+  }
+
+  body.addEventListener("click", function (e) {
+    var tr = e.target.closest("tr.sym");
+    if (!tr) return;
+    var next = tr.nextElementSibling;
+    if (next && next.classList.contains("detail")) {   // collapse
+      next.remove(); tr.classList.remove("open"); open = null; return;
+    }
+    if (open) {                                        // only one open at a time
+      var od = open.nextElementSibling;
+      if (od && od.classList.contains("detail")) od.remove();
+      open.classList.remove("open");
+    }
+    tr.classList.add("open"); open = tr;
+    var det = document.createElement("tr");
+    det.className = "detail";
+    det.innerHTML = '<td colspan="8"><div class="snote" style="padding:12px 14px">Loading…</div></td>';
+    tr.after(det);
+    fetch("/api/portfolio/trades?symbol=" + encodeURIComponent(tr.dataset.sym))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        det.innerHTML = "<td colspan=\"8\">" +
+          (d.ok ? histHTML(d)
+                : '<div class="snote" style="padding:14px">' + esc(d.error) + "</div>") + "</td>";
+      })
+      .catch(function (err) {
+        det.innerHTML = '<td colspan="8"><div class="snote" style="padding:14px">'
+          + "Could not load history (" + esc(err.message) + ")</div></td>";
+      });
+  });
+
+  var timer = null;
+  q.addEventListener("input", function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var v = q.value.trim().toUpperCase();
+      render(v ? rows.filter(function (r) { return r.symbol.indexOf(v) >= 0; }) : rows);
+    }, 120);
+  });
+
+  fetch("/api/portfolio/trades?limit=600")
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.ok) throw new Error(d.error || "load failed");
+      rows = d.rows || [];
+      render(rows);
+      count.textContent = d.symbols + " stocks · " + d.total_trades.toLocaleString("en-IN")
+        + " closed trades · net ₹" + Math.round(d.total_net).toLocaleString("en-IN")
+        + (d.shown < d.symbols ? "  (showing top " + d.shown + " by net)" : "");
+    })
+    .catch(function (err) {
+      // Say WHY it is empty. A blank table reads as "no trades", which would be a lie.
+      body.innerHTML = '<tr><td colspan="8" class="snote" style="padding:22px">'
+        + "Could not load the trade ledger (" + esc(err.message)
+        + "). This is a load failure, not an empty portfolio.</td></tr>";
+    });
+})();
+</script>
 </body>
 </html>

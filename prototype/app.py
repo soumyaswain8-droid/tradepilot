@@ -3140,6 +3140,132 @@ def api_us_coverage():
 # desktop grid, and this needs to render on a phone and be showable to someone in
 # ten seconds. Serves live data on every request — no build step, no snapshot.
 
+# ── PORTFOLIO TRADE LEDGER ───────────────────────────────────────────────────
+# Every closed trade, grouped by stock: bought when and at what, sold when and at
+# what, and the profit. 17,837 trades across 427 symbols, so it is cached in-process
+# and invalidated on the newest artifact's mtime — a full scan takes ~1s, which is
+# fine once and wasteful on every keystroke.
+_LEDGER_CACHE = {"stamp": None, "data": None}
+
+
+def _ledger_stamp():
+    """Newest mtime across engine artifacts. Cheaper than re-reading them, and it
+    changes the moment any engine writes, so the cache cannot serve stale trades
+    during a live session."""
+    import glob as _g, os as _os
+    newest = 0.0
+    for f in _g.glob(str(Path(__file__).resolve().parent.parent /
+                         "docs" / "paper-trades" / "*" / "*.json")):
+        try:
+            m = _os.path.getmtime(f)
+        except OSError:
+            continue
+        if m > newest:
+            newest = m
+    return newest
+
+
+def _build_ledger():
+    import glob as _g, os as _os, json as _j
+    from datetime import datetime as _dt
+    root = Path(__file__).resolve().parent.parent
+    by_symbol = {}
+    for f in _g.glob(str(root / "docs" / "paper-trades" / "*" / "*.json")):
+        base = _os.path.basename(f)[:-5]
+        if len(base) != 10 or "_" in base:
+            continue                      # skip _verdicts / _adjusted / carry files
+        engine = _os.path.basename(_os.path.dirname(f))
+        try:
+            d = _j.loads(Path(f).read_text())
+        except Exception:
+            continue
+        if d.get("VOID"):
+            continue                      # voided sessions never enter the ledger
+        for pool, pl in (d.get("pools") or {}).items():
+            for c in (pl.get("closed") or []):
+                sym = c.get("symbol")
+                if not sym:
+                    continue
+                try:
+                    qty = float(c.get("qty") or 0)
+                    ep = float(c.get("entry_price") or 0)
+                    xp = float(c.get("exit_price") or 0)
+                    pnl = float(c.get("pnl") or 0)
+                except (TypeError, ValueError):
+                    continue
+                ed = str(c.get("entry_date") or base)[:10]
+                rec = {
+                    "engine": engine, "pool": pool, "session": base,
+                    "side": c.get("position_type") or c.get("direction") or "LONG",
+                    "qty": int(qty),
+                    "bought_on": ed, "bought_at": str(c.get("entry_time") or "")[:8],
+                    "buy_price": round(ep, 2),
+                    "sold_on": base, "sold_at": str(c.get("exit_time") or "")[:8],
+                    "sell_price": round(xp, 2),
+                    "pnl": round(pnl, 2),
+                    "pnl_pct": round(float(c.get("pnl_pct") or 0), 2),
+                    "reason": c.get("reason") or "?",
+                    "score": c.get("score"),
+                    "held_days": max(0, (_dt.strptime(base, "%Y-%m-%d") -
+                                         _dt.strptime(ed, "%Y-%m-%d")).days)
+                                 if ed and len(ed) == 10 else 0,
+                }
+                by_symbol.setdefault(sym, []).append(rec)
+
+    rows = []
+    for sym, trades in by_symbol.items():
+        trades.sort(key=lambda r: (r["sold_on"], r["sold_at"]), reverse=True)
+        wins = [t for t in trades if t["pnl"] > 0]
+        net = sum(t["pnl"] for t in trades)
+        rows.append({
+            "symbol": sym, "trades": len(trades),
+            "wins": len(wins), "win_rate": round(len(wins) / len(trades) * 100),
+            "net": round(net, 2), "avg": round(net / len(trades), 2),
+            "best": round(max(t["pnl"] for t in trades), 2),
+            "worst": round(min(t["pnl"] for t in trades), 2),
+            "last_traded": trades[0]["sold_on"],
+            "history": trades,
+        })
+    rows.sort(key=lambda r: -r["net"])
+    return rows
+
+
+def _ledger():
+    stamp = _ledger_stamp()
+    if _LEDGER_CACHE["stamp"] != stamp or _LEDGER_CACHE["data"] is None:
+        _LEDGER_CACHE["data"] = _build_ledger()
+        _LEDGER_CACHE["stamp"] = stamp
+    return _LEDGER_CACHE["data"]
+
+
+@app.route("/api/portfolio/trades")
+def api_portfolio_trades():
+    """Per-stock trade ledger. ?symbol= for one stock's full history, ?q= to search,
+    ?limit= to cap the summary list."""
+    try:
+        rows = _ledger()
+        sym = (request.args.get("symbol") or "").strip().upper()
+        if sym:
+            for r in rows:
+                if r["symbol"] == sym:
+                    return jsonify({"ok": True, "symbol": sym, **r})
+            return jsonify({"ok": False, "error": f"no trades for {sym}"}), 404
+        q = (request.args.get("q") or "").strip().upper()
+        limit = int(request.args.get("limit") or 500)
+        out = [r for r in rows if not q or q in r["symbol"]]
+        # history is heavy; the summary list omits it and the client fetches
+        # per-symbol detail on demand
+        summary = [{k: v for k, v in r.items() if k != "history"} for r in out[:limit]]
+        return jsonify({
+            "ok": True, "symbols": len(out), "shown": len(summary),
+            "total_trades": sum(r["trades"] for r in out),
+            "total_net": round(sum(r["net"] for r in out), 2),
+            "rows": summary,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
 @app.route("/portfolio")
 def portfolio_view():
     """Soumya's whole book in one place — settled trades, swing, carried holds.

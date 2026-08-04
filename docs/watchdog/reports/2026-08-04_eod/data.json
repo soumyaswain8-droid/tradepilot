@@ -1,0 +1,109 @@
+{
+  "date": "2026-08-04",
+  "generated_at": "2026-08-04T15:35:21.995850",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -260.86,
+      "trades": 53,
+      "wins": 19,
+      "losses": 34,
+      "longs": 53,
+      "shorts": 0,
+      "win_rate": 35.8,
+      "open_positions": 0,
+      "best_trade": 503.1,
+      "worst_trade": -392.0,
+      "avg_win": 70.12,
+      "avg_loss": -46.86,
+      "exit_reasons": {
+        "STOPLOSS": 10,
+        "SIGNAL_FLIP": 12,
+        "FLAT_FORCE_EXIT": 13,
+        "TIME_EXIT": 18
+      },
+      "n_closed": 53,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -5267.25,
+      "trades": 35,
+      "wins": 4,
+      "losses": 31,
+      "longs": 35,
+      "shorts": 0,
+      "win_rate": 11.4,
+      "open_positions": 0,
+      "best_trade": 1121.4,
+      "worst_trade": -1210.0,
+      "avg_win": 287.79,
+      "avg_loss": -207.05,
+      "exit_reasons": {
+        "STOPLOSS": 19,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 14,
+        "TIME_EXIT": 1
+      },
+      "n_closed": 35,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "360ONE",
+      "BANKBARODA",
+      "BSE",
+      "GAIL",
+      "LT",
+      "NATIONALUM",
+      "PHOENIXLTD",
+      "RECLTD",
+      "SIEMENS",
+      "SWIGGY",
+      "TVSMOTOR"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs -261 across 53 trades (35.8% win).",
+    "Laggard: <b>v5_classic</b> with Rs -5,267 across 35 trades (11.4% win).",
+    "High-volume engines (50+ trades) averaged Rs -261; low-volume averaged Rs -5,267. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (10) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (12). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (19) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 35.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 11.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

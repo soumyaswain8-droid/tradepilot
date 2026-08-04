@@ -1,9 +1,12 @@
 """
 Scrape NIFTY 50 stock data from yfinance, compute technical indicators.
 """
+import logging
 import yfinance as yf
 import pandas as pd
 import numpy as np
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 import math
 import json
@@ -277,26 +280,103 @@ def get_live_quotes(symbols=None):
     return quotes
 
 
-def get_market_indices():
-    """Get NIFTY 50 and SENSEX indices."""
-    indices = []
-    for idx_symbol, idx_name in [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX")]:
+def _indices_from_kite():
+    """NIFTY/SENSEX from Kite — the licensed feed, with a correct previous close.
+
+    Kite's ohlc.close is the PREVIOUS day's close (verified live 2026-08-04:
+    NIFTY ohlc.close 24774.30 == Monday's actual close). That is exactly the field
+    the yfinance path was getting wrong, because yfinance's daily series had silently
+    dropped Monday 2026-08-03 altogether and so compared today against Friday.
+    """
+    import sys as _sys, pathlib as _pl
+    _root = _pl.Path(__file__).resolve().parent.parent
+    if str(_root) not in _sys.path:
+        _sys.path.insert(0, str(_root))
+    from prototype.v4 import kite_data as kd
+
+    out = []
+    # NIFTY is NSE, SENSEX is BSE. Not interchangeable — see kite_data.get_index.
+    for kite_sym, exch, name in [("NIFTY 50", "NSE", "NIFTY 50"),
+                                 ("SENSEX", "BSE", "SENSEX")]:
         try:
-            ticker = yf.Ticker(idx_symbol)
-            hist = ticker.history(period="2d")
-            if len(hist) >= 2:
-                current = hist.iloc[-1]
-                prev = hist.iloc[-2]
-                change = current["Close"] - prev["Close"]
-                change_pct = (change / prev["Close"]) * 100
-                indices.append({
-                    "name": idx_name,
-                    "value": round(current["Close"], 2),
-                    "change": round(change, 2),
-                    "change_pct": round(change_pct, 2),
-                })
-        except:
-            pass
+            d = kd.get_index(kite_sym, exchange=exch)
+        except Exception as e:
+            logger.warning(f"kite index {name} unavailable: {type(e).__name__}: {e}")
+            continue
+        out.append({
+            "name": name,
+            "value": d["last_price"],
+            "change": round(d["last_price"] - d["prev_close"], 2),
+            "change_pct": d["change_pct"],
+            "source": "kite",
+            "stale": False,
+        })
+    return out
+
+
+def get_market_indices():
+    """NIFTY 50 and SENSEX, Kite first, yfinance second, and NEVER a silent stale number.
+
+    THE BUG THIS REPLACES (found 2026-08-04 from Soumya's screenshot)
+    The old body wrapped a yfinance call in a bare `except: pass` and returned []
+    when it failed. The caller then fell through to a local CSV whose last row was
+    2026-07-17 — so the dashboard displayed NIFTY 24,334.30 +1.09%, a level and a
+    move from EIGHTEEN DAYS EARLIER, rendered identically to live data. It looked
+    entirely plausible, which is why it survived. The market was actually DOWN 1.04%
+    that morning while the header showed up 1.09%.
+
+    Three separate faults produced it, and all three are fixed here:
+      1. `except: pass` swallowed the real error         -> log it, keep the reason
+      2. no freshness check on the fallback              -> reject data older than a session
+      3. stale data was indistinguishable from live      -> every row carries source+stale
+    """
+    indices = []
+
+    # 1. Kite — correct prev_close, licensed feed.
+    try:
+        indices = _indices_from_kite()
+    except Exception as e:
+        logger.warning(f"kite index path unavailable: {type(e).__name__}: {e}")
+
+    if len(indices) >= 2:
+        return indices
+
+    # 2. yfinance — usable, but its daily series is known to develop holes, so the
+    #    previous close is taken from an explicitly DIFFERENT date rather than
+    #    "whatever row happens to be second from the end".
+    have = {i["name"] for i in indices}
+    for idx_symbol, idx_name in [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX")]:
+        if idx_name in have:
+            continue
+        try:
+            hist = yf.Ticker(idx_symbol).history(period="7d")
+            if hist is None or len(hist) < 2:
+                logger.error(f"yfinance returned <2 rows for {idx_name}")
+                continue
+            last_dt = hist.index[-1]
+            age_days = (pd.Timestamp.now(tz=last_dt.tz) - last_dt).days
+            if age_days > 4:
+                # Older than a long weekend: this is not today's market.
+                logger.error(f"yfinance {idx_name} is STALE — newest row {str(last_dt)[:10]} "
+                             f"({age_days}d old); refusing to present it as live")
+                continue
+            current, prev = hist.iloc[-1], hist.iloc[-2]
+            change = float(current["Close"] - prev["Close"])
+            indices.append({
+                "name": idx_name,
+                "value": round(float(current["Close"]), 2),
+                "change": round(change, 2),
+                "change_pct": round(change / float(prev["Close"]) * 100, 2),
+                "source": "yfinance",
+                "stale": False,
+                "prev_close_date": str(hist.index[-2])[:10],
+            })
+            logger.warning(f"index {idx_name} served from yfinance fallback "
+                           f"(prev close dated {str(hist.index[-2])[:10]})")
+        except Exception as e:
+            # Never bare-except. The reason a feed failed is the whole diagnosis.
+            logger.error(f"yfinance index {idx_name} failed: {type(e).__name__}: {e}")
+
     return indices
 
 

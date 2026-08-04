@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""
+kite_data — Kite Connect backing for the India data layer.
+
+WHY SWITCH OFF YFINANCE
+yfinance scrapes an unofficial endpoint with no SLA. On 2026-08-03 it returned 30
+NSE tickers into the US module's cache, and separately a 2-day frame for a 3-year
+request. Kite is a licensed feed tied to our own broker account. Measured the same
+day across 15 NSE symbols at the close: worst divergence 0.00%, so this is a
+reliability upgrade, not a change of numbers.
+
+WHAT THIS MODULE IS NOT
+It is not a rewrite of data_nse. It provides Kite-backed implementations returning
+the EXACT dict schema data_nse already returns, so callers are untouched. data_nse
+delegates here when NSE_DATA_SOURCE=kite and the token is healthy.
+
+THE FALLBACK IS LOUD, ON PURPOSE
+Kite access tokens die at 06:00 every day. A silent fallback to yfinance on token
+expiry would mean the engines quietly change data source mid-fleet and nobody would
+know which feed produced a given day's trades — the fleet's provenance would be
+unknowable after the fact. Every fallback logs at ERROR and is counted; health()
+exposes the counters so a monitor can page on them.
+
+KITE QUOTE SEMANTICS, verified live 2026-08-04 rather than assumed:
+  ohlc.close   is the PREVIOUS day's close, not today's  (RELIANCE 1319 = Aug-3 close)
+  ohlc.open    is today's open
+  last_price   is the live price
+  net_change   came back 0.0 on a stock that had clearly moved — DO NOT TRUST IT.
+               change_pct is computed here from last_price vs ohlc.close.
+"""
+from __future__ import annotations
+
+import logging
+import os
+import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+ROOT = Path(__file__).resolve().parents[2]
+
+# Kite allows up to 500 instruments per quote() call; stay well under it.
+QUOTE_BATCH = 200
+
+_lock = threading.Lock()
+_kite = None
+_kite_day = None            # the date the client was built for
+_token_map: dict = {}       # "RELIANCE" -> instrument_token
+_token_map_day = None
+
+_stats = {"kite_calls": 0, "kite_ok": 0, "fallbacks": 0, "token_failures": 0,
+          "last_error": None, "last_fallback_at": None}
+
+
+class KiteUnavailable(Exception):
+    """Kite cannot serve this request. Raised so callers fall back EXPLICITLY."""
+
+
+def enabled() -> bool:
+    """Kite is opt-in. Default off, so nothing changes until the switch is thrown."""
+    return os.environ.get("NSE_DATA_SOURCE", "").strip().lower() == "kite"
+
+
+def _creds() -> dict:
+    out = {}
+    env = ROOT / ".env"
+    if env.exists():
+        for ln in env.read_text().splitlines():
+            if ln.startswith("KITE_") and "=" in ln:
+                k, v = ln.split("=", 1)
+                out[k.strip()] = v.strip().strip('"').strip("'")
+    for k in ("KITE_API_KEY", "KITE_ACCESS_TOKEN"):
+        if os.environ.get(k):
+            out[k] = os.environ[k]
+    return out
+
+
+def client():
+    """Cached KiteConnect, rebuilt each calendar day.
+
+    The daily rebuild matters: tokens expire at 06:00, so a client cached across
+    midnight holds a credential that is already dead. Rebuilding on date change
+    means an expired token surfaces as a clean error rather than a stale object.
+    """
+    global _kite, _kite_day
+    today = datetime.now().date()
+    with _lock:
+        if _kite is not None and _kite_day == today:
+            return _kite
+        c = _creds()
+        if not c.get("KITE_API_KEY") or not c.get("KITE_ACCESS_TOKEN"):
+            raise KiteUnavailable("KITE_API_KEY / KITE_ACCESS_TOKEN missing from .env")
+        try:
+            from kiteconnect import KiteConnect
+        except ImportError:
+            raise KiteUnavailable("kiteconnect not installed")
+        k = KiteConnect(api_key=c["KITE_API_KEY"])
+        k.set_access_token(c["KITE_ACCESS_TOKEN"])
+        _kite, _kite_day = k, today
+        return k
+
+
+def _call(fn, what: str):
+    """Run a Kite call, classifying failures. A dead token is not the same event as
+    a bad symbol, and conflating them is how 'TOKEN DEAD' got printed for a margins
+    error on 2026-08-03."""
+    _stats["kite_calls"] += 1
+    try:
+        r = fn()
+        _stats["kite_ok"] += 1
+        return r
+    except Exception as e:
+        name = type(e).__name__
+        msg = f"{name}: {e}"
+        _stats["last_error"] = f"{what}: {msg}"
+        if "Token" in name or "token" in str(e).lower() or "api_key" in str(e):
+            _stats["token_failures"] += 1
+            raise KiteUnavailable(f"kite token rejected on {what} — {msg}")
+        raise KiteUnavailable(f"kite {what} failed — {msg}")
+
+
+def note_fallback(what: str, reason: str) -> None:
+    """Record and SHOUT. Silent degradation is the failure mode this whole module
+    is meant to remove; a fallback nobody sees is worse than an outage."""
+    _stats["fallbacks"] += 1
+    _stats["last_fallback_at"] = datetime.now().isoformat(timespec="seconds")
+    logger.error(f"DATA FALLBACK to yfinance for {what} — {reason}")
+
+
+def health() -> dict:
+    return {
+        "enabled": enabled(),
+        "kite_calls": _stats["kite_calls"],
+        "kite_ok": _stats["kite_ok"],
+        "fallbacks": _stats["fallbacks"],
+        "token_failures": _stats["token_failures"],
+        "last_error": _stats["last_error"],
+        "last_fallback_at": _stats["last_fallback_at"],
+    }
+
+
+def token_alive() -> tuple:
+    """(ok, detail). Makes a REAL call — presence of a token string proves nothing,
+    which this project has now learned from launchd, from Alpaca, and from Kite."""
+    try:
+        p = _call(lambda: client().profile(), "profile")
+        return True, f"{p.get('user_name')} ({p.get('user_id')})"
+    except KiteUnavailable as e:
+        return False, str(e)
+
+
+# ── instrument tokens ───────────────────────────────────────────────────────
+
+def token_for(symbol: str) -> Optional[int]:
+    """NSE symbol -> instrument_token, loaded once per day (~10k rows)."""
+    global _token_map, _token_map_day
+    today = datetime.now().date()
+    with _lock:
+        if _token_map_day != today or not _token_map:
+            rows = _call(lambda: client().instruments("NSE"), "instruments")
+            m = {}
+            for r in rows:
+                if r.get("segment") == "NSE" and r.get("instrument_type") == "EQ":
+                    m[str(r.get("tradingsymbol"))] = int(r.get("instrument_token"))
+            _token_map, _token_map_day = m, today
+            logger.info(f"kite: loaded {len(m)} NSE equity instruments")
+    return _token_map.get(symbol.upper())
+
+
+# ── quotes ──────────────────────────────────────────────────────────────────
+
+def _map_quote(symbol: str, q: dict) -> dict:
+    """Kite quote -> data_nse's schema. Field-for-field, no invention."""
+    ohlc = q.get("ohlc") or {}
+    last = float(q.get("last_price") or 0)
+    prev = float(ohlc.get("close") or 0)          # Kite: close == PREVIOUS close
+    # net_change is unreliable (observed 0.0 on a stock that had moved), so derive it.
+    chg = ((last - prev) / prev * 100) if prev else 0.0
+    return {
+        "last_price": round(last, 2),
+        "open": round(float(ohlc.get("open") or 0), 2),
+        "high": round(float(ohlc.get("high") or 0), 2),
+        "low": round(float(ohlc.get("low") or 0), 2),
+        "prev_close": round(prev, 2),
+        "change_pct": round(chg, 2),
+        "volume": int(q.get("volume") or 0),
+        "symbol": symbol,
+        "source": "kite",
+    }
+
+
+def get_quotes(symbols) -> dict:
+    """Batch quotes. Symbols that Kite does not return are OMITTED, never zero-filled
+    — a silent 0.0 price is how bad fills happen."""
+    syms = [str(s).upper().replace(".NS", "") for s in symbols]
+    out = {}
+    for i in range(0, len(syms), QUOTE_BATCH):
+        chunk = syms[i:i + QUOTE_BATCH]
+        keys = [f"NSE:{s}" for s in chunk]
+        res = _call(lambda: client().quote(keys), "quote")
+        for s in chunk:
+            q = res.get(f"NSE:{s}")
+            if not q:
+                continue
+            m = _map_quote(s, q)
+            if m["last_price"] <= 0:      # a zero price is absence, not a price
+                continue
+            out[s] = m
+    return out
+
+
+def get_index(name: str = "NIFTY 50", exchange: str = "NSE") -> dict:
+    """Index level. The EXCHANGE matters and is not cosmetic: SENSEX is a BSE index,
+    so "NSE:SENSEX" raises KeyError. Getting this wrong on 2026-08-04 pushed SENSEX
+    onto the yfinance fallback, which reported +0.47% against a 2026-07-31 baseline
+    when the real move was -0.29%. A wrong exchange prefix does not fail loudly — it
+    fails over to a worse source.
+    """
+    key = f"{exchange}:{name}"
+    q = _call(lambda: client().quote([key]), "index quote")
+    d = q.get(key)
+    if not d:
+        raise KiteUnavailable(f"kite returned no data for index {key}")
+    ohlc = d.get("ohlc") or {}
+    last = float(d.get("last_price") or 0)
+    prev = float(ohlc.get("close") or 0)
+    if last <= 0:
+        raise KiteUnavailable(f"kite returned a non-positive level for {name}")
+    return {
+        "last_price": round(last, 2),
+        "prev_close": round(prev, 2),
+        "change_pct": round(((last - prev) / prev * 100) if prev else 0.0, 2),
+        "open": round(float(ohlc.get("open") or 0), 2),
+        "high": round(float(ohlc.get("high") or 0), 2),
+        "low": round(float(ohlc.get("low") or 0), 2),
+        "symbol": name,
+        "source": "kite",
+    }
+
+
+def get_candles(symbol: str, interval: str = "5minute", days: int = 1):
+    """Intraday OHLCV as a DataFrame with data_nse's column names.
+
+    Kite's historical API needs an instrument_token and dates, not a period string.
+    Returns None (never an empty frame) when there is nothing, so callers can tell
+    'no data' from 'a frame of zeros'.
+    """
+    from datetime import timedelta
+    import pandas as pd
+
+    tok = token_for(symbol)
+    if not tok:
+        raise KiteUnavailable(f"no NSE instrument token for {symbol}")
+    to_d = datetime.now()
+    from_d = to_d - timedelta(days=max(1, days))
+    rows = _call(lambda: client().historical_data(tok, from_d, to_d, interval),
+                 f"historical {symbol}")
+    if not rows:
+        return None
+    df = pd.DataFrame(rows)
+    df = df.rename(columns={"date": "Datetime", "open": "Open", "high": "High",
+                            "low": "Low", "close": "Close", "volume": "Volume"})
+    if "Datetime" in df.columns:
+        df = df.set_index("Datetime")
+    return df

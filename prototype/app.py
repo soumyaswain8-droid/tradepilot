@@ -1400,43 +1400,84 @@ def api_indices():
         result = {}
         for idx in raw:
             name = idx.get("name", "")
+            # Provenance travels WITH the number. Tracking source/stale and then
+            # dropping them here would leave the UI unable to distinguish a live
+            # Kite quote from an 18-day-old CSV row — which is exactly how the
+            # 2026-08-04 wrong-index bug stayed invisible.
             entry = {
                 "price": idx.get("value", 0),
                 "change": idx.get("change", 0),
                 "changePct": idx.get("change_pct", 0),
+                "source": idx.get("source", "unknown"),
+                "stale": bool(idx.get("stale", False)),
             }
+            if idx.get("prev_close_date"):
+                entry["prevCloseDate"] = idx["prev_close_date"]
             if "NIFTY" in name.upper():
                 result["nifty"] = entry
             elif "SENSEX" in name.upper():
                 result["sensex"] = entry
 
-        # Fallback: read from local CSV if yfinance failed
-        if "nifty" not in result or result.get("nifty", {}).get("price", 0) == 0:
+        # CSV FALLBACK — now age-checked.
+        #
+        # This block is what actually put a wrong number on the dashboard. On
+        # 2026-08-04 the live path returned [], this fired, and ^NSEI.csv's last row
+        # was 2026-07-17 — so the header read "NIFTY 24,334.30 +1.09%", a level and
+        # a move from eighteen days earlier, styled exactly like live data. The real
+        # market was DOWN 1.04% at that moment. Nothing in the payload said "stale",
+        # so nothing downstream could have known.
+        #
+        # A cached price is only a price while it is current. Past a trading day plus
+        # a weekend it is a historical record, and presenting it as the market is
+        # simply false. Old data is now REFUSED and labelled rather than shown.
+        MAX_CSV_AGE_DAYS = 4        # Friday close read on Tuesday is the limit
+
+        def _from_csv(sym):
+            # pandas is imported HERE: app.py has no module-level `pd`, and the first
+            # draft of this guard used pd.Timestamp — which would have raised
+            # NameError on precisely the path that exists to catch stale data,
+            # restoring the silent failure it was written to remove.
+            import pandas as pd
+
+            df = load_stock_data(sym)
+            if df is None or len(df) < 2:
+                return None, "no local history"
             try:
-                nifty_df = load_stock_data("^NSEI")
-                if nifty_df is not None and len(nifty_df) >= 2:
-                    last = nifty_df.iloc[-1]
-                    prev = nifty_df.iloc[-2]
-                    chg = float(last["Close"] - prev["Close"])
-                    chg_pct = round(chg / prev["Close"] * 100, 2)
-                    result["nifty"] = {"price": round(float(last["Close"]), 2), "change": round(chg, 2), "changePct": chg_pct}
+                if isinstance(df.index, pd.RangeIndex) or df.index.dtype == "int64":
+                    last_date = pd.to_datetime(df.iloc[-1].get("Date"))
+                else:
+                    last_date = pd.to_datetime(df.index[-1])
             except Exception:
-                pass
-        if "sensex" not in result or result.get("sensex", {}).get("price", 0) == 0:
+                last_date = None
+            if last_date is not None:
+                age = (pd.Timestamp.now().normalize() - pd.Timestamp(last_date).normalize()).days
+                if age > MAX_CSV_AGE_DAYS:
+                    return None, f"local CSV is {age}d old (newest {str(last_date)[:10]})"
+            last, prev = df.iloc[-1], df.iloc[-2]
+            chg = float(last["Close"] - prev["Close"])
+            return {"price": round(float(last["Close"]), 2), "change": round(chg, 2),
+                    "changePct": round(chg / float(prev["Close"]) * 100, 2),
+                    "source": "local-csv", "stale": True}, None
+
+        for key, sym in (("nifty", "^NSEI"), ("sensex", "^BSESN")):
+            if key in result and result.get(key, {}).get("price", 0) != 0:
+                continue
             try:
-                sensex_df = load_stock_data("^BSESN")
-                if sensex_df is not None and len(sensex_df) >= 2:
-                    last = sensex_df.iloc[-1]
-                    prev = sensex_df.iloc[-2]
-                    chg = float(last["Close"] - prev["Close"])
-                    chg_pct = round(chg / prev["Close"] * 100, 2)
-                    result["sensex"] = {"price": round(float(last["Close"]), 2), "change": round(chg, 2), "changePct": chg_pct}
-            except Exception:
-                pass
-        if "nifty" not in result:
-            result["nifty"] = {"price": 0, "change": 0, "changePct": 0}
-        if "sensex" not in result:
-            result["sensex"] = {"price": 0, "change": 0, "changePct": 0}
+                val, why = _from_csv(sym)
+                if val:
+                    result[key] = val
+                    app.logger.warning(f"/api/indices: {key} served from local CSV")
+                else:
+                    app.logger.error(f"/api/indices: {key} unavailable — {why}")
+            except Exception as e:
+                app.logger.error(f"/api/indices: {key} CSV read failed: {type(e).__name__}: {e}")
+
+        # Unavailable is reported as unavailable. A zero was previously rendered as a
+        # real quote; `available:false` lets the UI say "no data" instead of "0.00".
+        for key in ("nifty", "sensex"):
+            if key not in result:
+                result[key] = {"price": 0, "change": 0, "changePct": 0,
+                               "available": False, "source": "none"}
 
         return jsonify(result)
     except Exception as e:

@@ -9,6 +9,9 @@ from datetime import datetime, date, timedelta
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+import os as _os
+import json as _json
+
 POOL_NAMES = ["INTRADAY", "SWING", "POSITIONAL", "INVESTMENT", "RESERVE"]
 DEFAULT_ALLOC = {"INTRADAY": 0.30, "SWING": 0.25, "POSITIONAL": 0.25,
                  "INVESTMENT": 0.15, "RESERVE": 0.05}
@@ -17,6 +20,39 @@ REGIME_ALLOC = {
     "SIDEWAYS": {"INTRADAY": 0.35, "SWING": 0.20, "POSITIONAL": 0.20, "INVESTMENT": 0.15, "RESERVE": 0.10},
     "BEAR":     {"INTRADAY": 0.25, "SWING": 0.15, "POSITIONAL": 0.10, "INVESTMENT": 0.20, "RESERVE": 0.30},
 }
+
+# POOL_ALLOC — env override, e.g. POOL_ALLOC='{"INTRADAY":0.60,"SWING":0.40}'
+# DEFAULT: unset, so every existing engine keeps the allocations above and its
+# history stays comparable.
+#
+# WHY THIS EXISTS (measured 2026-08-04)
+# POSITIONAL, INVESTMENT and RESERVE hold 45% of every engine's capital and have
+# NEVER received a single trade in any session — every signal defaults to INTRADAY
+# (`sig.get("pool", "INTRADAY")`). So the real deployment ceiling was INTRADAY 30% +
+# SWING 25% = 55%, and that is why the fleet looked "under-deployed": nearly half the
+# money was allocated to pools nothing could ever put a trade into.
+# Simulated: INTRADAY 60 / SWING 40 reaches 96.1% deployment at the UNCHANGED sizer
+# of 0.15 — the fix is to stop parking capital in unused pools, not to size up.
+#
+# An override also PINS the allocation against regime shifts. REGIME_ALLOC would
+# otherwise reintroduce POSITIONAL/INVESTMENT on the next set_regime() call and
+# silently undo the experiment mid-session.
+def _alloc_override():
+    raw = _os.environ.get("POOL_ALLOC", "").strip()
+    if not raw:
+        return None
+    try:
+        d = {k.upper(): float(v) for k, v in _json.loads(raw).items()}
+    except Exception as e:
+        raise ValueError(f"POOL_ALLOC is not valid JSON: {e}")
+    for name in POOL_NAMES:
+        d.setdefault(name, 0.0)
+    total = sum(d.values())
+    if abs(total - 1.0) > 0.001:
+        # Refuse rather than normalise. A silently-rescaled allocation would mean the
+        # engine trades a different book than the one written down.
+        raise ValueError(f"POOL_ALLOC must sum to 1.0, got {total:.3f}: {d}")
+    return d
 WATERFALL = {  # source -> [(dest, fraction)]
     "INTRADAY":   [("INTRADAY", 0.50), ("SWING", 0.30), ("POSITIONAL", 0.20)],
     "SWING":      [("SWING", 0.60), ("INVESTMENT", 0.40)],
@@ -48,7 +84,8 @@ class PoolManager:
     def __init__(self, total_capital: float = 5_000_000):
         self.total_capital = total_capital
         self.regime = "SIDEWAYS"
-        self.alloc = dict(DEFAULT_ALLOC)
+        self._alloc_pinned = _alloc_override()
+        self.alloc = dict(self._alloc_pinned or DEFAULT_ALLOC)
         self.pools: Dict[str, Pool] = {}
         self._init_pools()
         self.trade_log: List[dict] = []
@@ -65,6 +102,11 @@ class PoolManager:
         if regime not in REGIME_ALLOC:
             raise ValueError(f"Unknown regime: {regime}. Use BULL/SIDEWAYS/BEAR")
         self.regime = regime
+        # A POOL_ALLOC override PINS the split. Without this, the first regime change
+        # of the session would silently restore POSITIONAL/INVESTMENT and undo the
+        # experiment — the engine would report one allocation and trade another.
+        if self._alloc_pinned:
+            return
         self.alloc = dict(REGIME_ALLOC[regime])
         for name, pool in self.pools.items():
             pool.target_pct = self.alloc[name]

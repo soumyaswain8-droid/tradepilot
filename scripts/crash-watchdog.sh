@@ -65,6 +65,9 @@ declare -a ENGINES=(
 
   # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70.
   "v5_pick|scripts/v5_pick-paper-trade.py|docs/paper-trades/v5_pick/${TODAY}.json|python3 scripts/v5_pick-paper-trade.py"
+
+  # DEPLOYMENT SHADOW (2026-08-04): v5_deploy = v5 + POOL_ALLOC INTRADAY 60 / SWING 40.
+  "v5_deploy|scripts/v5_deploy-paper-trade.py|docs/paper-trades/v5_deploy/${TODAY}.json|python3 scripts/v5_deploy-paper-trade.py"
   # V8 (TP-V8 2026-07-06): April-recipe replica (control twin).
   # RETIRED 2026-07-30, superseded by v10 (see launch-market.sh ENGINES for why).
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"

@@ -190,6 +190,13 @@ ENGINES=(
   # Expect turnover ~23%, below the 45-55% band: that tension is the point of the test.
   "v5_pick|scripts/v5_pick-paper-trade.py"
 
+  # DEPLOYMENT SHADOW (2026-08-04): v5_deploy = v5 + POOL_ALLOC INTRADAY 60 / SWING 40.
+  # POSITIONAL/INVESTMENT/RESERVE have received ZERO trades in all history (every signal
+  # defaults to INTRADAY), so 45% of capital sat where no trade could reach it. Simulated:
+  # 52.9% -> 96.1% deployed at the UNCHANGED sizer 0.15. Meets Soumya's 90% target without
+  # touching position sizing. RISK: ~2x exposure on a red day — watch drawdown vs v5.
+  "v5_deploy|scripts/v5_deploy-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

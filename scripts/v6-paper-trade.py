@@ -17,6 +17,7 @@ Differences from v5:
 
 Usage: python3 scripts/v6-paper-trade.py
 """
+from dp_creds import devpilot_db_password
 import json, os, sys, time, warnings, importlib
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -855,7 +856,7 @@ def push_to_devpilot(state):
     try:
         import psycopg2
         conn = psycopg2.connect(host="localhost", port=5499, user="devpilot",
-                                password="TsUxQvfc7go5TDH8lsIKRTCv", dbname="devpilot")
+                                password=devpilot_db_password(), dbname="devpilot")
         s = state.get("summary", {}); today = datetime.now().strftime("%Y-%m-%d")
         pp = s.get("total_pnl", 0) / TOTAL_CAPITAL * 100
         wr = s.get("wins", 0) / max(s.get("trades", 1), 1) * 100

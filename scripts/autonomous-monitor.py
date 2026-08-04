@@ -12,6 +12,7 @@ Capture schedule (IST):
 Usage:
     python3 scripts/autonomous-monitor.py
 """
+from dp_creds import devpilot_db_password
 import json
 import csv
 import os
@@ -418,7 +419,7 @@ def push_eod_to_devpilot(latest, comparisons):
         import psycopg2
         conn = psycopg2.connect(
             host="localhost", port=5499, user="devpilot",
-            password="TsUxQvfc7go5TDH8lsIKRTCv", dbname="devpilot",
+            password=devpilot_db_password(), dbname="devpilot",
         )
         cur = conn.cursor()
         today = datetime.now().strftime("%Y-%m-%d")

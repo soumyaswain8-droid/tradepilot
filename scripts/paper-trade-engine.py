@@ -19,6 +19,7 @@ Schedule (IST):
     15:15  Force-close all open positions
     15:30  Generate daily P&L report
 """
+from dp_creds import devpilot_db_password
 import json
 import os
 import sys
@@ -416,7 +417,7 @@ def push_to_devpilot(portfolios):
         import psycopg2
         conn = psycopg2.connect(
             host="localhost", port=5499, user="devpilot",
-            password="TsUxQvfc7go5TDH8lsIKRTCv", dbname="devpilot",
+            password=devpilot_db_password(), dbname="devpilot",
         )
         cur = conn.cursor()
         today = datetime.now().strftime("%Y-%m-%d")

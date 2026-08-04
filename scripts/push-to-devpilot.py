@@ -6,12 +6,13 @@ Registers project, sprint, tasks, research, learnings, and documentation.
 Usage:
     python3 scripts/push-to-devpilot.py
 """
+from dp_creds import devpilot_db_password
 import psycopg2
 import json
 
 DB_CONFIG = {
     "host": "localhost", "port": 5499,
-    "user": "devpilot", "password": "TsUxQvfc7go5TDH8lsIKRTCv",
+    "user": "devpilot", "password": devpilot_db_password(),
     "dbname": "devpilot",
 }
 

@@ -28,6 +28,7 @@ Usage:
     python3 scripts/v5_3-paper-trade.py --summary     # Cumulative P&L
 """
 
+from dp_creds import devpilot_db_password
 import json
 import sys
 import time
@@ -1036,7 +1037,7 @@ def push_to_devpilot(state):
     try:
         import psycopg2
         conn = psycopg2.connect(host="localhost", port=5499, user="devpilot",
-                                password="TsUxQvfc7go5TDH8lsIKRTCv", dbname="devpilot")
+                                password=devpilot_db_password(), dbname="devpilot")
         s = state.get("summary", {})
         today = datetime.now().strftime("%Y-%m-%d")
         pnl = s.get("total_pnl", 0)

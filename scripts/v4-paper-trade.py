@@ -11,6 +11,7 @@ Usage:
     python3 scripts/v4-paper-trade.py --status      # Check positions
     python3 scripts/v4-paper-trade.py --summary     # P&L summary
 """
+from dp_creds import devpilot_db_password
 import json
 import os
 import sys
@@ -874,7 +875,7 @@ def push_to_devpilot(state):
     try:
         import psycopg2
         conn = psycopg2.connect(host="localhost", port=5499, user="devpilot",
-                                password="TsUxQvfc7go5TDH8lsIKRTCv", dbname="devpilot")
+                                password=devpilot_db_password(), dbname="devpilot")
         cur = conn.cursor()
         today = datetime.now().strftime("%Y-%m-%d")
         cl = state.get("closed_trades", [])

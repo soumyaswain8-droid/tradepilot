@@ -206,6 +206,13 @@ ENGINES=(
   # which raises trade count is rejected outright.
   "v5_time|scripts/v5_time-paper-trade.py"
 
+  # EXIT-STRUCTURE SHADOW (2026-08-04): v5_hold = MAX_HOLD_DAYS=3 + REVERSAL_EXIT_PCT=0.5.
+  # v5 reaches TARGET on only 4.6% of trades; target wins (+9,484) and stop losses (-9,503)
+  # cancel, so nearly all profit comes from TIME_EXIT — the give-up exit. PDH/PDL backtest:
+  # 1-day hold net -12,409 (70% unresolved) vs 3-day +33,913 (9% unresolved). RISK: a 1%
+  # stop is jumped by 24% of overnight gaps, so the backtest ceiling is optimistic.
+  "v5_hold|scripts/v5_hold-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

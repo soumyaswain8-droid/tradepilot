@@ -327,9 +327,19 @@ def _load_active_positions():
     return {}
 
 def _save_active_positions(state):
-    """Save all non-INTRADAY open positions to persistent file."""
+    """Save open positions that must survive to the next session.
+
+    INTRADAY is included ONLY when MAX_HOLD_DAYS > 0. Without this the carry feature
+    would silently lose every position it decided to hold: force_close_intraday()
+    would keep them in memory, the process would exit, and the next session would
+    start with an empty INTRADAY book and no record that anything was carried. The
+    hold and the persistence have to agree, or the feature quietly does nothing.
+    """
+    pools = set(MULTI_DAY_POOLS)
+    if int(os.environ.get("MAX_HOLD_DAYS", "0") or 0) > 0:
+        pools.add("INTRADAY")
     positions = {}
-    for pool_name in MULTI_DAY_POOLS:
+    for pool_name in pools:
         pd = state["pools"].get(pool_name, {})
         pos_list = pd.get("positions", [])
         if pos_list:
@@ -374,7 +384,14 @@ def load_state():
     # Restore multi-day positions from persistent file
     active = _load_active_positions()
     restored = 0
-    for pool_name in MULTI_DAY_POOLS:
+    # Mirror of _save_active_positions: INTRADAY is restored only when carrying is
+    # enabled. Save and restore MUST agree on the pool set — if they disagree the
+    # positions are written to disk and then never read back, which looks exactly
+    # like the carry working while the book silently empties every morning.
+    _restore_pools = set(MULTI_DAY_POOLS)
+    if int(os.environ.get("MAX_HOLD_DAYS", "0") or 0) > 0:
+        _restore_pools.add("INTRADAY")
+    for pool_name in _restore_pools:
         positions = active.get(pool_name, [])
         if positions:
             s["pools"][pool_name]["positions"] = positions
@@ -998,6 +1015,31 @@ def scan_positions(state, pm, rm):
         # Task 1.3 — TIME_EXIT_TIGHTENING (added 2026-04-28)
         # In the post-lunch window, force-exit any flat position (|pnl_pct| < 0.3%)
         # to free the slot for fresher signals.
+        # REVERSAL_EXIT_PCT — take profit on a fade instead of waiting for target.
+        # DEFAULT 0 = disabled.
+        #
+        # WHY: only 4.6% of v5's trades ever reach TARGET while 30% hit STOPLOSS, and
+        # the two almost exactly cancel (+9,484 vs -9,503). A position that has moved
+        # in your favour and then stalls is currently held until the clock or the stop
+        # decides — this books the move instead. Soumya's framing: "look for the
+        # candle signal; if it says it is time to sell, sell."
+        #
+        # The signal is deliberately crude and mechanical: the position is in profit
+        # by at least REVERSAL_EXIT_PCT, and price has since retraced more than half
+        # of its best excursion. peak_price/trough_price are already tracked above, so
+        # this needs no new data and cannot disagree with the price the engine used.
+        _rev = float(os.environ.get("REVERSAL_EXIT_PCT", "0") or 0)
+        if _rev > 0 and pnl_pct >= _rev:
+            best = pos.get("trough_price" if is_short else "peak_price", entry)
+            excursion = (entry - best) if is_short else (best - entry)
+            giveback = (px - best) if is_short else (best - px)
+            if excursion > 0 and giveback > excursion * 0.5:
+                reason = "REVERSAL_EXIT"
+                log(f"  {sym}: REVERSAL_EXIT @ {px:.2f} (peak {best:.2f}, "
+                    f"gave back {giveback/excursion*100:.0f}% of the move, "
+                    f"booking {pnl_pct:+.2f}%)")
+                to_close.append((pool_name, pos, px, reason)); continue
+
         if flat_window_active and abs(pnl_pct) < FLAT_EXIT_THRESHOLD_PCT:
             reason = "FLAT_FORCE_EXIT"
             log(f"  {sym}: FLAT_FORCE_EXIT @ {px:.2f} (pnl_pct={pnl_pct:+.2f}%)")
@@ -1264,14 +1306,69 @@ def rescore_and_redeploy(state, pm, rm):
 
 # ═══════════════════════════ FORCE CLOSE ═══════════════════════════
 
+def _sessions_held(pos) -> int:
+    """Trading sessions this position has been open. Weekend-aware: counts distinct
+    weekdays, so a Friday entry seen on Monday is 1 session old, not 3."""
+    from datetime import date as _date, timedelta as _td
+    ed = str(pos.get("entry_date") or pos.get("entry_time") or "")[:10]
+    try:
+        y, m, d = (int(x) for x in ed.split("-"))
+        start = _date(y, m, d)
+    except Exception:
+        return 0
+    n, cur = 0, start
+    today = _date.today()
+    while cur < today:
+        cur += _td(days=1)
+        if cur.weekday() < 5:        # NSE holidays not modelled — errs toward closing
+            n += 1
+    return n
+
+
 def force_close_intraday(state, pm, rm):
     positions = state["pools"].get("INTRADAY", {}).get("positions", [])
     if not positions: log("  No intraday positions to close"); return
+
+    # MAX_HOLD_DAYS — let an INTRADAY position live past the session. DEFAULT 0 =
+    # close everything at EOD, exactly as before, so all existing engines are
+    # unchanged.
+    #
+    # WHY (PDH/PDL backtest, 892 setups, 20 symbols, 180 days, Kite hourly bars):
+    #     hold     win%  target%  unresolved      NET
+    #     1 day     44%      11%         70%  -12,409
+    #     2 days    44%      31%         18%  +28,186
+    #     3 days    42%      35%          9%  +33,913
+    #     5 days    41%      37%          3%   -5,504
+    # Win rate FALLS while net rises sharply — the problem was never picking
+    # winners, it was closing positions mid-thesis on the clock. 70% of one-day
+    # trades never resolved at all. v5's live book has the same shape: only 4.6% of
+    # trades reach TARGET, and nearly all its profit comes from TIME_EXIT, i.e. from
+    # giving up rather than from the stop/target geometry working.
+    #
+    # KNOWN RISK, measured not assumed: this backtest fills stops AT the stop price.
+    # Overnight that is often false — across 960 gaps on 8 large caps (180d) the
+    # median gap was 0.46%, the 90th percentile 1.58%, worst 8.66%, and a 1% stop is
+    # JUMPED by 24% of overnight gaps. So +Rs 33,913 is an optimistic ceiling. This
+    # ships as a shadow precisely because the backtest cannot see fill quality.
+    _max_hold = int(os.environ.get("MAX_HOLD_DAYS", "0") or 0)
+    if _max_hold > 0:
+        keep = [p for p in positions if _sessions_held(p) < _max_hold]
+        expire = [p for p in positions if _sessions_held(p) >= _max_hold]
+        if keep:
+            log(f"\n  HOLDING {len(keep)} INTRADAY positions overnight "
+                f"(MAX_HOLD_DAYS={_max_hold}); {len(expire)} aged out")
+            positions = expire
+            if not positions:
+                _save_active_positions(state)
+                log(f"  Saved {len(keep)} carried positions to positions_active.json")
+                return
+
     log(f"\n  FORCE CLOSING {len(positions)} INTRADAY positions")
     prices = get_prices_batch([p["symbol"] for p in positions])
     for pos in list(positions):
         close_position(state, pm, rm, "INTRADAY", pos,
-                       prices.get(pos["symbol"], pos["entry_price"]), "TIME_EXIT")
+                       prices.get(pos["symbol"], pos["entry_price"]),
+                       "MAX_HOLD_EXIT" if _max_hold > 0 else "TIME_EXIT")
     # Persist multi-day positions that survive overnight
     multi_day_count = sum(len(state["pools"].get(p, {}).get("positions", [])) for p in MULTI_DAY_POOLS)
     if multi_day_count:

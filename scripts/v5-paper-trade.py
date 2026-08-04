@@ -722,6 +722,33 @@ def deploy_signals(state, pm, rm, signals):
     #
     # This is a selectivity change, NOT a shorting change — it filters candidates by
     # score only, and both directions are treated identically.
+    # NO_ENTRY_HOURS — time-of-day entry gate. DEFAULT empty = disabled.
+    #
+    # WHY (v5's last 30 sessions, 504 closed trades with entry times):
+    #   hour   trades  win%   net       net/trade
+    #   09:00     121   40%   -2,550      -21.1   <- worst hour by a wide margin
+    #   13:00      92   45%   +1,503      +16.3   <- the only profitable hour
+    # Skipping 09h alone: 504 -> 383 trades, net -3,425 -> -875 (+2,550).
+    #
+    # EVIDENCE STRENGTH, stated honestly: only 9 of 30 sessions traded the 09:00
+    # hour. 6 of those 9 were net negative (median -Rs 363), so the direction is
+    # consistent, but one session at -Rs 2,253 carries much of the magnitude. This
+    # is suggestive, not established — which is exactly why it ships as a shadow
+    # rather than a change to v5.
+    #
+    # It is a pure GATE: subtractive, mechanical, no discretion, and it can only
+    # reduce trade count. That matters because this stack's documented failure mode
+    # is win rate falling 82% -> 48% as trade count rose 17 -> 45.
+    _no_hours = {int(h) for h in os.environ.get("NO_ENTRY_HOURS", "").replace(" ", "").split(",") if h}
+    if _no_hours:
+        from datetime import datetime as _dt
+        _hh = _dt.now().hour
+        if _hh in _no_hours:
+            if candidates:
+                log(f"  [time-gate] {_hh:02d}:00 is a no-entry hour — "
+                    f"{len(candidates)} candidates skipped")
+            candidates = []
+
     _min_score = float(os.environ.get("MIN_ENTRY_SCORE", "0") or 0)
     if _min_score > 0:
         _before = len(candidates)

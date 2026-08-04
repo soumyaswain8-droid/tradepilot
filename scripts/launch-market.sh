@@ -197,6 +197,15 @@ ENGINES=(
   # touching position sizing. RISK: ~2x exposure on a red day — watch drawdown vs v5.
   "v5_deploy|scripts/v5_deploy-paper-trade.py"
 
+  # TIME-GATE SHADOW (2026-08-04): v5_time = v5 + NO_ENTRY_HOURS=9. Over v5's last 30
+  # sessions the 09:00 hour was the worst by a wide margin (121 trades, net -Rs 2,550,
+  # -21/trade) while 13:00 was the only profitable one (+Rs 16/trade). Skipping 09h:
+  # net -3,425 -> -875. EVIDENCE IS THIN: only 9 of 30 sessions traded that hour, 6 of 9
+  # negative, and one -Rs 2,253 day carries much of it. Direction consistent, magnitude not
+  # established. Pure subtractive gate — matches the SYNTHESIS rule that any candidate
+  # which raises trade count is rejected outright.
+  "v5_time|scripts/v5_time-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

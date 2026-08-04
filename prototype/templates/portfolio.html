@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1A24">
+<title>{{ p.owner.name }} · Portfolio</title>
+<style>
+/* Clay surfaces, same language as the market explorer: outer lift, inner light on
+   the top edge, inner dark below. Both insets are required — with only the drop
+   shadow it reads as flat card-with-shadow rather than a moulded surface. */
+:root{
+  --bg:#0E1A24; --surface:#16242F; --line:#233544; --ink:#E6EEF4;
+  --mute:#7E93A3; --brass:#D9A441; --pos:#4CB782; --neg:#D9614C;
+  --clay:0 10px 26px rgba(0,0,0,.42),
+         inset -3px -4px 10px rgba(0,0,0,.38),
+         inset 3px 4px 11px rgba(255,255,255,.055);
+  --face:linear-gradient(145deg, rgba(255,255,255,.045), rgba(0,0,0,.10));
+  --r:20px;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#F6F7F5; --surface:#FFF; --line:#DFE4E7; --ink:#12212B;
+         --mute:#5E717F; --brass:#A9741A; --pos:#1F7F55; --neg:#B33F2C;
+         --clay:0 10px 22px rgba(15,23,42,.10),
+                inset -3px -4px 9px rgba(15,23,42,.055),
+                inset 3px 4px 11px rgba(255,255,255,.95);
+         --face:linear-gradient(145deg, rgba(255,255,255,.95), rgba(15,23,42,.045)); }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.45;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(48px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:22px}
+.kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:600}
+h1{margin:3px 0 0;font-size:27px;letter-spacing:-.02em;font-weight:650;text-wrap:balance}
+.sub{color:var(--mute);font-size:13px;margin-top:4px}
+.paper{display:inline-flex;gap:6px;align-self:flex-start;margin-top:10px;
+  border:1px solid var(--line);background:var(--surface);color:var(--mute);
+  padding:6px 11px;border-radius:7px;font-size:11.5px;line-height:1.4;max-width:640px}
+.paper b{color:var(--brass)}
+
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:640px){.cards{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--surface);background-image:var(--face);border-radius:var(--r);
+  box-shadow:var(--clay);padding:15px 16px;display:flex;flex-direction:column;gap:3px}
+.cval{font-size:22px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.cval.pos{color:var(--pos)} .cval.neg{color:var(--neg)}
+.clab{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+
+section{display:flex;flex-direction:column;gap:10px}
+.shead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stitle{font-size:15px;font-weight:650}
+.snote{font-size:11.5px;color:var(--mute)}
+
+.panel{background:var(--surface);background-image:var(--face);border-radius:var(--r);
+  box-shadow:var(--clay);overflow:hidden}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);
+  text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.nm{font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.tag{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.tag.on{color:var(--pos);border-color:var(--pos)}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .flat{color:var(--mute)}
+.note{border:1px solid var(--line);background:var(--surface);border-radius:12px;
+  padding:13px 15px;font-size:12.5px;color:var(--mute);display:flex;flex-direction:column;gap:7px}
+.note b{color:var(--ink)}
+footer{color:var(--mute);font-size:11px;text-align:center;padding-top:8px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">TradePilot · Portfolio</div>
+    <h1>{{ p.owner.name }}</h1>
+    <div class="sub">{{ p.period.sessions }} sessions · {{ p.period.first }} → {{ p.period.last }}</div>
+    <div class="paper"><b>PAPER</b>&nbsp;{{ p.disclaimer }}</div>
+  </header>
+
+  <div class="cards">
+    <div class="card">
+      <span class="cval {{ 'pos' if p.active.realised_net > 0 else ('neg' if p.active.realised_net < 0 else '') }}">{{ '{:+,.0f}'.format(p.active.realised_net) }}</span>
+      <span class="clab">Net ₹ · active</span>
+    </div>
+    <div class="card"><span class="cval">{{ '{:,}'.format(p.active.trades) }}</span><span class="clab">Trades</span></div>
+    <div class="card"><span class="cval">{{ p.active.open_positions }}</span><span class="clab">Open now</span></div>
+    <div class="card"><span class="cval neg">{{ '{:,.0f}'.format(p.active.costs) }}</span><span class="clab">Costs paid ₹</span></div>
+  </div>
+
+  <section>
+    <div class="shead">
+      <span class="stitle">Active engines</span>
+      <span class="snote">costs corrected to ₹14.30/trade where an engine books none</span>
+    </div>
+    <div class="panel"><div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Engine</th><th class="num">Sessions</th><th class="num">Trades</th>
+          <th class="num">Net ₹</th><th class="num">Costs ₹</th><th class="num">Open</th>
+        </tr></thead>
+        <tbody>
+        {% for e in p.engines | selectattr('status','equalto','active') | sort(attribute='realised_net', reverse=true) %}
+          <tr>
+            <td class="nm">{{ e.engine }}</td>
+            <td class="num">{{ e.sessions }}</td>
+            <td class="num">{{ '{:,}'.format(e.trades) }}</td>
+            <td class="num {{ 'pos' if e.realised_net > 0 else ('neg' if e.realised_net < 0 else 'flat') }}">{{ '{:+,.0f}'.format(e.realised_net) }}</td>
+            <td class="num flat">{{ '{:,.0f}'.format(e.costs) }}</td>
+            <td class="num">{{ e.open_positions | length }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </section>
+
+  {% if holdings %}
+  <section>
+    <div class="shead">
+      <span class="stitle">Open holdings</span>
+      <span class="snote">carried positions — P&amp;L measured from the original buy price</span>
+    </div>
+    <div class="panel"><div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Symbol</th><th>Engine</th><th>Pool</th><th class="num">Qty</th>
+          <th class="num">Buy ₹</th><th class="num">Value ₹</th><th>Since</th>
+        </tr></thead>
+        <tbody>
+        {% for h in holdings %}
+          <tr>
+            <td class="nm">{{ h.symbol }}</td>
+            <td>{{ h.engine }}</td>
+            <td><span class="tag">{{ h.pool }}</span></td>
+            <td class="num">{{ h.qty }}</td>
+            <td class="num">{{ '{:,.2f}'.format(h.entry_price) }}</td>
+            <td class="num">{{ '{:,.0f}'.format(h.value) }}</td>
+            <td class="snote">{{ h.since }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </section>
+  {% endif %}
+
+  <section>
+    <div class="shead"><span class="stitle">Retired engines</span>
+      <span class="snote">frozen history — not part of live holdings</span></div>
+    <div class="panel"><div class="scroll">
+      <table>
+        <thead><tr><th>Engine</th><th class="num">Sessions</th><th class="num">Trades</th><th class="num">Net ₹</th></tr></thead>
+        <tbody>
+        {% for e in p.engines | selectattr('status','equalto','retired') | sort(attribute='realised_net', reverse=true) %}
+          <tr>
+            <td class="nm">{{ e.engine }}</td>
+            <td class="num">{{ e.sessions }}</td>
+            <td class="num">{{ '{:,}'.format(e.trades) }}</td>
+            <td class="num {{ 'pos' if e.realised_net > 0 else ('neg' if e.realised_net < 0 else 'flat') }}">{{ '{:+,.0f}'.format(e.realised_net) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </section>
+
+  {% if p.voided_sessions %}
+  <div class="note">
+    <span><b>Excluded from all totals — {{ p.voided_sessions | length }} voided session(s).</b></span>
+    {% for v in p.voided_sessions %}
+    <span>{{ v.engine }} {{ v.date }} — {{ v.reason }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="note">
+    <span><b>Why active and retired are separate.</b> A retired engine's P&amp;L is
+    history, not holdings. Adding it to a live total would overstate the portfolio.</span>
+    <span><b>Costs are corrected.</b> Some engines never booked trading costs — most
+    notably v5_classic, which has booked none in its entire history. Where an engine
+    reports no cost, ₹14.30/trade is subtracted so the comparison is like-for-like.</span>
+  </div>
+
+  <footer>Generated {{ p.generated_at }} · {{ p.owner.email }}</footer>
+</div>
+</body>
+</html>

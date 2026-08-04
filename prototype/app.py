@@ -3140,6 +3140,48 @@ def api_us_coverage():
 # desktop grid, and this needs to render on a phone and be showable to someone in
 # ten seconds. Serves live data on every request — no build step, no snapshot.
 
+@app.route("/portfolio")
+def portfolio_view():
+    """Soumya's whole book in one place — settled trades, swing, carried holds.
+
+    Rebuilt on each request from the engine artifacts rather than cached: a stale
+    portfolio is the one kind that is actively misleading, and the build takes well
+    under a second. Costs are corrected for engines that never booked any, and
+    VOID sessions are excluded — see scripts/portfolio.py for both.
+    """
+    import sys as _s
+    from pathlib import Path as _P
+    _r = _P(__file__).resolve().parent.parent
+    if str(_r / "scripts") not in _s.path:
+        _s.path.insert(0, str(_r / "scripts"))
+    try:
+        import portfolio as _pf
+        import importlib
+        importlib.reload(_pf)
+        p = _pf.build()
+    except Exception as e:
+        return f"<h3>Portfolio unavailable</h3><p>{type(e).__name__}: {e}</p>", 500
+
+    holdings = []
+    for e in p["engines"]:
+        if e["status"] != "active":
+            continue
+        for h in e["open_positions"]:
+            try:
+                qty = float(h.get("qty") or 0)
+                px = float(h.get("entry_price") or 0)
+            except (TypeError, ValueError):
+                continue
+            holdings.append({
+                "symbol": h.get("symbol", "?"), "engine": e["engine"],
+                "pool": h.get("pool", "?"), "qty": int(qty),
+                "entry_price": px, "value": abs(qty * px),
+                "since": str(h.get("entry_date") or h.get("entry_time") or "")[:10] or "-",
+            })
+    holdings.sort(key=lambda x: -x["value"])
+    return render_template("portfolio.html", p=p, holdings=holdings)
+
+
 @app.route("/fleet")
 def fleet_view():
     import json as _j, glob as _g, os as _os

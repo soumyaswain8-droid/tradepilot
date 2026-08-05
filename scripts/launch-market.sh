@@ -188,14 +188,22 @@ ENGINES=(
   # Gross is HIGHER with 53% fewer trades, so sub-70 entries lose before costs; costs
   # (Rs 14.30/trade) then eat 96% of gross. Direction-neutral — NOT a shorting change.
   # Expect turnover ~23%, below the 45-55% band: that tension is the point of the test.
-  "v5_pick|scripts/v5_pick-paper-trade.py"
+  # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
+  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
+  # signal worth tuning.
+  # "v5_pick|scripts/v5_pick-paper-trade.py"
 
   # DEPLOYMENT SHADOW (2026-08-04): v5_deploy = v5 + POOL_ALLOC INTRADAY 60 / SWING 40.
   # POSITIONAL/INVESTMENT/RESERVE have received ZERO trades in all history (every signal
   # defaults to INTRADAY), so 45% of capital sat where no trade could reach it. Simulated:
   # 52.9% -> 96.1% deployed at the UNCHANGED sizer 0.15. Meets Soumya's 90% target without
   # touching position sizing. RISK: ~2x exposure on a red day — watch drawdown vs v5.
-  "v5_deploy|scripts/v5_deploy-paper-trade.py"
+  # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
+  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
+  # signal worth tuning.
+  # "v5_deploy|scripts/v5_deploy-paper-trade.py"
 
   # TIME-GATE SHADOW (2026-08-04): v5_time = v5 + NO_ENTRY_HOURS=9. Over v5's last 30
   # sessions the 09:00 hour was the worst by a wide margin (121 trades, net -Rs 2,550,
@@ -204,7 +212,11 @@ ENGINES=(
   # negative, and one -Rs 2,253 day carries much of it. Direction consistent, magnitude not
   # established. Pure subtractive gate — matches the SYNTHESIS rule that any candidate
   # which raises trade count is rejected outright.
-  "v5_time|scripts/v5_time-paper-trade.py"
+  # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
+  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
+  # signal worth tuning.
+  # "v5_time|scripts/v5_time-paper-trade.py"
 
   # EXIT-STRUCTURE SHADOW (2026-08-04): v5_hold = MAX_HOLD_DAYS=3 + REVERSAL_EXIT_PCT=0.5.
   # v5 reaches TARGET on only 4.6% of trades; target wins (+9,484) and stop losses (-9,503)

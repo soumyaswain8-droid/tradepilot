@@ -1495,7 +1495,50 @@ def _valid_symbol(symbol):
 
 @app.route("/api/stock/<symbol>")
 def api_stock(symbol):
-    """Get detailed data for a single stock."""
+    """Get detailed data for a single stock — or an index, if that is what was asked.
+
+    INDEX FALL-THROUGH (added 2026-08-04). The dashboard requests NIFTY and BANK
+    NIFTY through this endpoint as /api/stock/NSEI and /api/stock/NSEBANK. Those are
+    INDICES, so appending ".NS" produced "NSEI.NS", which scores nothing and 404'd on
+    every load of the Intraday view. An index is a perfectly reasonable thing to ask
+    this endpoint for; it just cannot be scored like an equity. Serve its level
+    instead of failing.
+    """
+    try:
+        from data_engine import INDEX_SYMBOLS as _IDX
+        _key = symbol.replace(".NS", "").upper()
+        if _key in _IDX:
+            # app.py runs with cwd=prototype/, so the package root is NOT on
+            # sys.path and "import prototype.v4" raises ModuleNotFoundError. The
+            # outer except then swallowed it and fell through to the stock path,
+            # which 404'd — the fix looked applied while changing nothing.
+            import sys as _sys
+            _root = str(Path(__file__).resolve().parent.parent)
+            if _root not in _sys.path:
+                _sys.path.insert(0, _root)
+            from prototype.v4 import kite_data as _kd   # licensed feed first
+            _name = {"^NSEI": "NIFTY 50", "^NSEBANK": "NIFTY BANK", "^BSESN": "SENSEX"}[_IDX[_key]]
+            _exch = "BSE" if _IDX[_key] == "^BSESN" else "NSE"
+            try:
+                d = _kd.get_index(_name, exchange=_exch)
+                return jsonify({"symbol": _key, "name": _name, "is_index": True,
+                                "price": d["last_price"], "change_pct": d["change_pct"],
+                                "prev_close": d["prev_close"], "open": d["open"],
+                                "high": d["high"], "low": d["low"], "source": "kite"})
+            except Exception:
+                pass                                   # fall through to yfinance
+            import yfinance as _yf
+            h = _yf.Ticker(_IDX[_key]).history(period="5d")
+            if h is not None and len(h) >= 2:
+                last, prev = float(h["Close"].iloc[-1]), float(h["Close"].iloc[-2])
+                return jsonify({"symbol": _key, "name": _name, "is_index": True,
+                                "price": round(last, 2),
+                                "change_pct": round((last - prev) / prev * 100, 2),
+                                "prev_close": round(prev, 2), "source": "yfinance"})
+            return jsonify({"error": f"no data for index {_key}"}), 404
+    except Exception as e:
+        app.logger.warning(f"/api/stock index path failed for {symbol}: {e}")
+
     if not _valid_symbol(symbol.replace(".NS", "").upper()):
         return jsonify({"error": "Invalid symbol"}), 400
     full_symbol = f"{symbol}.NS" if not symbol.endswith(".NS") else symbol

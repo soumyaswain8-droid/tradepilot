@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ind.css — INDmoney-style shell for TradePilot
+   2026-08-04
+
+   WHAT CHANGED AND WHY
+   The 13 asset tabs sat in one horizontal strip that overflowed the viewport, so
+   "Wizard" was permanently half-cut and "More" existed only to hide the overflow.
+   INDmoney solves the same problem with a two-level structure: a narrow LEFT RAIL
+   for sections, and a light TOP BAR for the pages inside the current section. That
+   is the arrangement copied here — six rail sections instead of thirteen peers, so
+   nothing overflows and the current location is always visible.
+
+   ACCENT: TradePilot indigo, not INDmoney green. Their green sits next to their
+   P&L numbers without confusion because their accent is used sparingly, but this
+   app puts green/red profit figures on nearly every row — a green chrome accent
+   beside a green gain reads as the same signal twice. Indigo keeps "selected" and
+   "profitable" visually distinct. Everything else follows their language: white
+   surfaces, generous whitespace, 14-16px radii, muted grey type, one accent.
+
+   ADDITIVE BY DESIGN. Every original .nav-tab button still exists and still
+   carries its data-tab attribute; this only relocates them. The existing click
+   handler is untouched, so tab switching keeps working exactly as before.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --ind-rail-w: 92px;
+  --ind-accent:#4F46E5;
+  --ind-accent-soft:#EEF0FE;
+  --ind-ink:#111827;
+  --ind-mute:#6B7280;
+  --ind-ghost:#9CA3AF;
+  --ind-line:#EDEFF2;
+  --ind-surface:#FFFFFF;
+  --ind-canvas:#FAFAFB;
+}
+[data-theme="dark"]{
+  --ind-accent:#818CF8;
+  --ind-accent-soft:rgba(129,140,248,.16);
+  --ind-ink:#E6EEF4;
+  --ind-mute:#94A3B8;
+  --ind-ghost:#64748B;
+  --ind-line:rgba(255,255,255,.08);
+  --ind-surface:#111827;
+  --ind-canvas:#0B1220;
+}
+
+/* ── left rail ─────────────────────────────────────────────────────────────
+   Fixed so it survives content scroll, which is what makes it read as chrome
+   rather than as part of the page. */
+#indRail{
+  position:fixed; left:0; top:0; bottom:0; width:var(--ind-rail-w); z-index:900;
+  background:var(--ind-surface); border-right:1px solid var(--ind-line);
+  display:flex; flex-direction:column; align-items:center;
+  padding:14px 0 18px; gap:2px; overflow-y:auto; overscroll-behavior:contain;
+  scrollbar-width:none;
+}
+#indRail::-webkit-scrollbar{display:none}
+
+.ind-brand{
+  width:40px;height:40px;border-radius:12px;margin-bottom:14px;flex:none;
+  display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;
+  background:linear-gradient(145deg,#6366F1,#4338CA);
+  box-shadow:0 4px 12px rgba(79,70,229,.28)
+}
+
+.ind-item{
+  width:100%;border:none;background:none;cursor:pointer;padding:9px 4px 7px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-family:inherit;color:var(--ind-ghost);
+  transition:color .15s ease
+}
+.ind-item .ic{
+  width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+  background:transparent;transition:background .18s ease, transform .18s ease
+}
+.ind-item .ic svg{width:23px;height:23px;display:block}
+.ind-item .lb{font-size:10.5px;font-weight:600;letter-spacing:.005em;line-height:1.15;text-align:center}
+.ind-item:hover{color:var(--ind-mute)}
+.ind-item:hover .ic{background:var(--ind-line)}
+.ind-item:focus-visible{outline:2px solid var(--ind-accent);outline-offset:-3px;border-radius:12px}
+.ind-item.on{color:var(--ind-accent)}
+.ind-item.on .ic{background:var(--ind-accent-soft)}
+.ind-item.on .lb{font-weight:700}
+.ind-sep{width:44px;height:1px;background:var(--ind-line);margin:10px 0}
+.ind-spacer{flex:1 1 auto;min-height:12px}
+
+/* ── top sub-tabs — the pages inside the selected section ─────────────────── */
+#indSub{
+  display:flex;gap:2px;align-items:center;overflow-x:auto;scrollbar-width:none;
+  padding:0 4px;border-bottom:1px solid var(--ind-line);background:var(--ind-surface)
+}
+#indSub::-webkit-scrollbar{display:none}
+#indSub .st{
+  border:none;background:none;cursor:pointer;font-family:inherit;
+  padding:15px 16px 13px;font-size:13.5px;font-weight:600;color:var(--ind-mute);
+  white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .15s ease,border-color .15s ease
+}
+#indSub .st:hover{color:var(--ind-ink)}
+#indSub .st:focus-visible{outline:2px solid var(--ind-accent);outline-offset:-4px}
+#indSub .st.on{color:var(--ind-accent);border-bottom-color:var(--ind-accent)}
+#indSub:empty{display:none}
+
+/* ── shell offset ──────────────────────────────────────────────────────────
+   Push the whole page right by the rail width rather than restyling internals,
+   so nothing already on the page needs to know the rail exists. */
+body.ind-on{background:var(--ind-canvas)}
+body.ind-on > header,
+body.ind-on > main,
+body.ind-on > nav,
+body.ind-on > footer,
+body.ind-on > .container,
+body.ind-on > #indSub{ margin-left:var(--ind-rail-w) }
+
+/* The original horizontal strip is emptied into the rail + sub-tabs, so hide the
+   husk. Kept in the DOM, not deleted — the click handler still queries it. */
+body.ind-on nav.nav{display:none !important}
+/* pageswitch's floating card would collide with the rail's fixed corner */
+body.ind-on #tp-switch{right:14px}
+
+@media (max-width:720px){
+  :root{--ind-rail-w:68px}
+  .ind-item .ic{width:40px;height:40px;border-radius:12px}
+  .ind-item .lb{font-size:9.5px}
+  .ind-brand{width:34px;height:34px;font-size:13px}
+}
+@media (prefers-reduced-motion: reduce){
+  .ind-item,.ind-item .ic,#indSub .st{transition:none}
+}

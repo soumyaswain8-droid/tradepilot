@@ -13,9 +13,29 @@ import json
 import os
 
 # Index symbols for NIFTY and BANKNIFTY
+# Index name -> yfinance ticker.
+#
+# ALIASES MATTER (added 2026-08-04). The dashboard was firing three 404s on every
+# load of the Intraday view: /api/index/SENSEX/intraday, /api/stock/NSEI and
+# /api/stock/NSEBANK. The routes existed; the KEYS did not. SENSEX was simply
+# absent from this map, and the frontend asks for indices by their bare yfinance
+# ticker (NSEI, NSEBANK) as well as by friendly name. Every spelling the UI
+# actually uses is now present, so a caller cannot 404 on a naming convention.
 INDEX_SYMBOLS = {
     "NIFTY50": "^NSEI",
     "BANKNIFTY": "^NSEBANK",
+    "SENSEX": "^BSESN",
+    # bare-ticker spellings the frontend uses
+    "NSEI": "^NSEI",
+    "NSEBANK": "^NSEBANK",
+    "BSESN": "^BSESN",
+    # caret-prefixed, in case a caller passes the raw ticker through
+    "^NSEI": "^NSEI",
+    "^NSEBANK": "^NSEBANK",
+    "^BSESN": "^BSESN",
+    # other friendly spellings
+    "NIFTY": "^NSEI",
+    "NIFTY BANK": "^NSEBANK",
 }
 
 # ═══ STOCK UNIVERSE — imported from stock_universe.py ═══

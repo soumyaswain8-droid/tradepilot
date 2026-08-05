@@ -208,7 +208,23 @@ printf "${DIM}─── Section 2: Runtime — engine scripts importable ──�
 
 # Smoke test: each engine entry script must be importable without runtime error
 # This is the test that would have caught Monday morning's preflight import bug.
-for engine_script in scripts/v4-paper-trade.py scripts/v5-paper-trade.py scripts/v5_classic-paper-trade.py scripts/v5_6-paper-trade.py scripts/v5_7-paper-trade.py scripts/v5_8-paper-trade.py scripts/v6-paper-trade.py; do
+# ROSTER IS DERIVED FROM launch-market.sh, not hardcoded (fixed 2026-08-05).
+  #
+  # This list had drifted to engines that are RETIRED — v5_6, v5_7, v5_8, v6 are all
+  # commented out of the launcher and have not run in months. They fail to import on
+  # `ModuleNotFoundError: No module named 'dp_creds'`, a dependency that went away
+  # with them. On 2026-08-05 that failed the smoke gate at 08:50 and the launcher
+  # REFUSED TO START ANY ENGINES (exit 2, EX_SMOKE_FAILED) — the whole fleet missed
+  # the open because of three engines nobody runs.
+  #
+  # The gate itself behaved correctly; its input was stale. Reading the roster from
+  # the launcher means a retired engine can never again block a live one, and a newly
+  # added engine is covered automatically without editing this file.
+  ACTIVE_ENGINES=$(grep -oE '^[[:space:]]*"[a-z0-9_]+\|scripts/[a-z0-9_]+-paper-trade\.py"' \
+                   "$(dirname "$0")/launch-market.sh" 2>/dev/null \
+                   | grep -oE 'scripts/[a-z0-9_]+-paper-trade\.py' | sort -u)
+  [ -z "$ACTIVE_ENGINES" ] && ACTIVE_ENGINES="scripts/v5-paper-trade.py scripts/v5_classic-paper-trade.py"
+  for engine_script in $ACTIVE_ENGINES; do
   name=$(basename "$engine_script" .py)
 
   # We can't `import` the script (it's not a module), but we can syntax-compile
@@ -217,6 +233,16 @@ for engine_script in scripts/v4-paper-trade.py scripts/v5-paper-trade.py scripts
   err=$(python3 -c "
 import sys, os, ast
 sys.path.insert(0, 'prototype')
+# 'scripts' MUST be on the path (added 2026-08-05). Python puts a script's OWN
+# directory on sys.path when you run 'python3 scripts/v5-paper-trade.py', so the
+# engines' 'from dp_creds import ...' at line 15 resolves in real use. This checker
+# imports them differently and did not replicate that, so it reported
+# ModuleNotFoundError for dp_creds on v5, v5_classic and v10 — engines that run
+# perfectly (verified: 'python3 scripts/v5-paper-trade.py --summary' exits 0 and
+# loads its carry-forward). A test that does not reproduce the real launch
+# conditions fails on healthy code, and on 2026-08-05 that kept the entire fleet
+# out of the open.
+sys.path.insert(0, 'scripts')
 
 # Step 1: compile-check the whole file (catches syntax errors)
 try:

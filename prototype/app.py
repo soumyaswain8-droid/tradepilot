@@ -3309,6 +3309,64 @@ def api_portfolio_trades():
         return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
 
 
+# ── FULL NSE CATALOGUE — browse universe, deliberately NOT the trade universe ──
+# Soumya: "our motto is to make profit, if we have to have all the listed stocks in
+# our platform to offer to the users." Both, and kept apart on purpose:
+#   BROWSE  every listed stock, so a user's search always finds what they typed.
+#   TRADE   only what the engines can fill without slippage eating the edge.
+# Measured 2026-08-05 over all 4,353 main-board NSE equities: median turnover
+# Rs 0.13 Cr and 871 stocks (27%) did not trade even ONCE. 3MINDIA, a NIFTY 500
+# constituent, moved 275 shares all day. Offering everything is right; trading
+# everything is not. Each row carries tier/tradeable/in_engines so the UI can say
+# which is which instead of implying every stock is actionable.
+def _catalogue():
+    import sys as _s
+    _r = str(Path(__file__).resolve().parent.parent)
+    if _r not in _s.path:
+        _s.path.insert(0, _r)
+    from prototype.v4 import catalogue as _c
+    return _c
+
+
+@app.route("/api/catalogue/search")
+def api_catalogue_search():
+    """Search every NSE-listed stock. ?q= term, ?limit= cap."""
+    try:
+        c = _catalogue()
+        q = request.args.get("q", "")
+        limit = min(int(request.args.get("limit") or 50), 200)
+        rows = c.search(q, limit)
+        return jsonify({"ok": True, "query": q, "count": len(rows), "rows": rows})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
+@app.route("/api/catalogue/stats")
+def api_catalogue_stats():
+    """How many stocks we list, how many are liquid, how many the engines scan."""
+    try:
+        return jsonify({"ok": True, **_catalogue().stats()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
+@app.route("/api/catalogue/all")
+def api_catalogue_all():
+    """The whole list. ?tier=liquid|moderate|thin|illiquid, ?tradeable=1."""
+    try:
+        c = _catalogue()
+        rows = c.all_stocks()
+        tier = (request.args.get("tier") or "").strip().lower()
+        if tier:
+            rows = [r for r in rows if r["tier"] == tier]
+        if request.args.get("tradeable") == "1":
+            rows = [r for r in rows if r["tradeable"]]
+        limit = min(int(request.args.get("limit") or 500), 5000)
+        return jsonify({"ok": True, "total": len(rows), "rows": rows[:limit]})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+
+
 @app.route("/portfolio")
 def portfolio_view():
     """Soumya's whole book in one place — settled trades, swing, carried holds.

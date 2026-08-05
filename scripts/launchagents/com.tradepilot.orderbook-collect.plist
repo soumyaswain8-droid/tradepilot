@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Order-book depth collector — 09:14 IST Mon-Fri, one minute before the open.
+
+  WHY IT EXISTS
+  v5's entry signal is measurably worse than random (5/5 seeds, t 2.76-4.24). The
+  cause is that all six scoring features are backward-looking; leading weight is 0.0%.
+  Order-book depth is the one genuinely leading input available to us, and Kite's
+  historical API returns OHLCV only — no depth at any interval. So it cannot be
+  backtested and must be collected forward. Every day not collecting adds a day to
+  the wait, which is why this is scheduled rather than run by hand.
+
+  IT TRADES NOTHING. The script imports no engine code and has no order path.
+
+  Starts 09:14 so it is warm for the 09:15 open. The script's own session gate exits
+  cleanly outside 09:15-15:30, so an early or late start costs nothing — depth
+  outside the session is an artifact (measured at 16:20: RELIANCE showed 0 bid
+  against 14,970 ask, a -100% "imbalance" that means nothing).
+
+  PATH is anaconda-first and set EXPLICITLY. On 2026-07-28 post-open-check inherited
+  launchd's bare /usr/bin:/bin, python3 resolved to a numpy-less interpreter, and its
+  rescue relaunch spawned a fleet of crippled engines. Never rely on `bash -l`.
+  Verify with:
+    env -i PATH=<the PATH below> HOME=$HOME /bin/bash -c 'python3 -c "import pandas"'
+
+  Install:
+    cp scripts/launchagents/com.tradepilot.orderbook-collect.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tradepilot.orderbook-collect.plist
+  Remove:
+    launchctl bootout gui/$(id -u)/com.tradepilot.orderbook-collect
+  Run now:
+    launchctl kickstart -k gui/$(id -u)/com.tradepilot.orderbook-collect
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.tradepilot.orderbook-collect</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; python3 scripts/collect-orderbook.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/Users/soumyaswain/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- 09:14 IST Mon-Fri. StartCalendarInterval REPLAYS a run missed while the Mac
+         was asleep but SILENTLY DROPS one missed while it was powered off — which is
+         how nine weeks of cadence jobs went unnoticed. The schedule is not
+         self-verifying; guard-cadence is what catches a drop. -->
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>14</integer></dict>
+      <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>14</integer></dict>
+      <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>14</integer></dict>
+      <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>14</integer></dict>
+      <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>14</integer></dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/orderbook-collect.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/orderbook-collect.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>AbandonProcessGroup</key>
+    <true/>
+  </dict>
+</plist>

@@ -28,12 +28,14 @@ FOUR TESTS, and a stock must pass all of them
   4. PRICE SANITY — a floor, because sub-Rs-10 stocks move in ticks that are large
      percentages, which wrecks percentage-based stops and targets.
 
-  5. SIZING GRANULARITY — the position must buy at least MIN_SHARES. A Rs 45,000
+  5. SIZING GRANULARITY — ADVISORY ONLY since 2026-08-05. The position buying few
+     shares is A Rs 45,000
      position in 3MINDIA at Rs 35,830 buys ONE share, so int() rounding sets the real
      allocation to whatever that share costs and the sizer's 15% becomes fiction.
-     Every extra share is an 80% jump in position size. (MARUTI, already in our
-     universe at Rs 14,150, buys 3 — that is a pre-existing problem worth its own
-     look, not something this screen introduces.)
+     a real problem, but validation against 18,053 trades showed that REJECTING on
+     it costs money: the excluded stocks earned Rs 18/trade MORE (t=2.40). It was
+     throwing out ABB, OFSS, EICHERMOT and KEI — Rs 4,800-9,900 shares doing
+     Rs 166-400 Cr a day. Expensive is not illiquid. Now annotates, does not reject.
 
   6. EPISODIC LIQUIDITY — mean/median turnover above MAX_SPIKE_RATIO means a handful
      of enormous days are carrying the average while typical days are far thinner.
@@ -75,7 +77,26 @@ LOOKBACK_DAYS = 60           # ~12 trading weeks: long enough to average out spi
 MIN_MEDIAN_TURNOVER = 5e7    # Rs 5 Cr/day median
 MIN_TRADED_RATIO = 0.95      # must trade on 95% of sessions
 MAX_IMPACT_PCT = 0.5         # our position <= 0.5% of median daily turnover
-MIN_PRICE = 10.0             # below this, tick size distorts percentage stops
+# VALIDATED AGAINST 18,053 REAL TRADES on 2026-08-05 (validate-liquidity-rule.py),
+# each screened using only bars that closed BEFORE its entry. Result:
+#
+#   bucket                      trades   net/trade   vs PASS      t
+#   PASS (all six tests)        16,382       38.73         -      -
+#   FAIL on liquidity              176       26.38    -12.35  -0.70   tests work
+#   FAIL on price/shares ONLY    1,501       56.74    +18.02  +2.40   tests HARMFUL
+#
+# The four liquidity tests point the right way — stocks failing them earned Rs 12
+# less per trade — though 176 trades is too few to call significant.
+#
+# The two SIZING tests were backwards and significantly so. They rejected ABB, OFSS,
+# EICHERMOT and KEI: stocks at Rs 4,800-9,900 a share doing Rs 166-400 Cr of daily
+# turnover. Among the most liquid names on the exchange, thrown out for being
+# EXPENSIVE. Share count is a real problem, but it is a SIZING problem — the answer
+# is to let the sizer buy a larger rupee position, not to refuse the stock.
+#
+# Both are now advisory: they annotate a result, they do not reject it.
+MIN_PRICE = 10.0             # advisory only — see the validation note above
+_ADVISORY = {"price-floor", "share-count"}
 MIN_SHARES = 10              # a position must buy at least this many shares
 MAX_SPIKE_RATIO = 3.0        # mean/median turnover — above this, liquidity is episodic
 
@@ -121,11 +142,13 @@ def screen(symbol: str, days: int) -> dict | None:
         fails.append(f"trades on only {traded*100:.0f}% of sessions")
     if impact > MAX_IMPACT_PCT:
         fails.append(f"our Rs {POSITION_SIZE:,.0f} position = {impact:.2f}% of daily turnover")
-    if price < MIN_PRICE:
-        fails.append(f"price Rs {price:.2f} below Rs {MIN_PRICE:.0f}")
     shares = int(POSITION_SIZE / price) if price > 0 else 0
+    # ADVISORY, not disqualifying — measured harmful, see the note at MIN_PRICE.
+    notes = []
+    if price < MIN_PRICE:
+        notes.append(f"price Rs {price:.2f} below Rs {MIN_PRICE:.0f}")
     if shares < MIN_SHARES:
-        fails.append(f"Rs {POSITION_SIZE:,.0f} buys only {shares} share(s) — sizing is rounding, not allocation")
+        notes.append(f"Rs {POSITION_SIZE:,.0f} buys only {shares} share(s) — size up, do not exclude")
     if spike > MAX_SPIKE_RATIO:
         fails.append(f"episodic: mean/median = {spike:.1f}x, typical day far thinner than the average")
 
@@ -140,7 +163,8 @@ def screen(symbol: str, days: int) -> dict | None:
         "price": round(price, 2),
         "shares_per_position": shares,
         "verdict": "PASS" if not fails else "FAIL",
-        "reason": "; ".join(fails) if fails else "clears all four tests",
+        "reason": "; ".join(fails) if fails else "clears all four liquidity tests",
+        "notes": "; ".join(notes),
     }
 
 
@@ -175,8 +199,7 @@ def main() -> int:
     print(f"    median turnover  >= Rs {MIN_MEDIAN_TURNOVER/1e7:.0f} Cr/day   (median, so a spike day cannot carry it)")
     print(f"    traded sessions  >= {MIN_TRADED_RATIO*100:.0f}%")
     print(f"    our impact       <= {MAX_IMPACT_PCT}% of daily turnover  (Rs {POSITION_SIZE:,.0f} position)")
-    print(f"    price            >= Rs {MIN_PRICE:.0f}")
-    print(f"    shares bought    >= {MIN_SHARES}                      (else sizing is rounding)")
+    print(f"  advisory only (measured harmful as filters): price floor, share count")
     print(f"    mean/median      <= {MAX_SPIKE_RATIO}x                    (else liquidity is episodic)\n")
 
     t0 = time.time()

@@ -213,6 +213,13 @@ ENGINES=(
   # stop is jumped by 24% of overnight gaps, so the backtest ceiling is optimistic.
   "v5_hold|scripts/v5_hold-paper-trade.py"
 
+  # UNIVERSE SHADOW (2026-08-05): v5_wide = v5 on 837 liquidity-SCREENED stocks vs 200.
+  # Not a "trade more" change: v5_cut proves 2.23x universe gives only 1.14x trades because
+  # MAX_POSITIONS_TOTAL=20 binds first — so this tests SELECTION quality, not frequency.
+  # Every symbol passed a 60-day screen (median turnover, consistency, our market impact,
+  # share granularity, and mean/median <=3x so spike-day names like NIACL are excluded).
+  "v5_wide|scripts/v5_wide-paper-trade.py"
+
   # RETIRED 2026-07-30, superseded by v10. v8 claimed to be the "April-recipe replica"
   # but runpy'd into TODAY's 1421-line v5 engine with April params as env vars — it tested
   # today's code wearing April's settings, never April's code. Its params were not even a

@@ -74,6 +74,9 @@ declare -a ENGINES=(
 
   # EXIT-STRUCTURE SHADOW (2026-08-04): v5_hold = 3-session holds + reversal exit.
   "v5_hold|scripts/v5_hold-paper-trade.py|docs/paper-trades/v5_hold/${TODAY}.json|python3 scripts/v5_hold-paper-trade.py"
+
+  # UNIVERSE SHADOW (2026-08-05): v5_wide = v5 on 837 liquidity-screened stocks.
+  "v5_wide|scripts/v5_wide-paper-trade.py|docs/paper-trades/v5_wide/${TODAY}.json|python3 scripts/v5_wide-paper-trade.py"
   # V8 (TP-V8 2026-07-06): April-recipe replica (control twin).
   # RETIRED 2026-07-30, superseded by v10 (see launch-market.sh ENGINES for why).
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"

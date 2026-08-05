@@ -1,4 +1,11 @@
-# top-450 NSE EQ by turnover (from bhavcopy cm31Oct2025bhav.csv) — v5_cut expanded scan
+# v5_cut expanded scan universe.
+# Origin: top-450 NSE EQ by turnover, bhavcopy cm31Oct2025bhav.csv.
+# 2026-08-05: audited against NSE's published index lists + Kite's live
+#   instrument dump. Removed 4 symbols that no longer trade as spelled —
+#   LTIM (delisted) and INOXGREEN / MTARTECH / QPOWER (moved to the BE
+#   Trade-to-Trade series, where delivery is mandatory so an intraday engine
+#   cannot use them). 450 -> 446. All 446 verified to return a live quote.
+# Re-check with: python3 scripts/audit-universe.py
 CHENNPETRO
 NAVINFLUOR
 HDFCBANK
@@ -92,7 +99,6 @@ BPCL
 APOLLOHOSP
 HCLTECH
 SUNPHARMA
-MTARTECH
 APARINDS
 DLF
 GRAVITA
@@ -183,7 +189,6 @@ AMBER
 CROMPTON
 NIFTYBEES
 TORNTPHARM
-LTIM
 COFORGE
 BAJAJFINSV
 TATACAP
@@ -225,7 +230,6 @@ COCHINSHIP
 IFCI
 OFSS
 ITCHOTELS
-QPOWER
 GARUDA
 INOXWIND
 ABDL
@@ -240,7 +244,6 @@ PFOCUS
 JKTYRE
 TATACONSUM
 HINDZINC
-INOXGREEN
 HBLENGINE
 MARICO
 SHARDACROP

@@ -1,0 +1,136 @@
+{
+  "date": "2026-08-05",
+  "generated_at": "2026-08-05T15:35:08.547828",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -1021.91,
+      "trades": 66,
+      "wins": 31,
+      "losses": 35,
+      "longs": 66,
+      "shorts": 0,
+      "win_rate": 47.0,
+      "open_positions": 1,
+      "best_trade": 351.9,
+      "worst_trade": -653.1,
+      "avg_win": 51.26,
+      "avg_loss": -76.79,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "FLAT_FORCE_EXIT": 20,
+        "SIGNAL_FLIP": 14,
+        "TIME_EXIT": 17,
+        "TARGET": 3
+      },
+      "n_closed": 66,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -1676.39,
+      "trades": 50,
+      "wins": 21,
+      "losses": 29,
+      "longs": 50,
+      "shorts": 0,
+      "win_rate": 42.0,
+      "open_positions": 0,
+      "best_trade": 252.0,
+      "worst_trade": -653.1,
+      "avg_win": 62.36,
+      "avg_loss": -102.96,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "TARGET": 3,
+        "SIGNAL_FLIP": 17,
+        "TIME_EXIT": 18
+      },
+      "n_closed": 50,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "APLAPOLLO",
+      "ASHOKLEY",
+      "AUROPHARMA",
+      "COFORGE",
+      "CONCOR",
+      "DIXON",
+      "DLF",
+      "EXIDEIND",
+      "GLENMARK",
+      "GODREJPROP",
+      "GRASIM",
+      "HDFCLIFE",
+      "HEROMOTOCO",
+      "HINDALCO",
+      "HINDPETRO",
+      "HINDZINC",
+      "ICICIGI",
+      "INDIGO",
+      "IOC",
+      "JSWSTEEL",
+      "JUBLFOOD",
+      "LGEINDIA",
+      "LODHA",
+      "LT",
+      "LTF",
+      "MOTHERSON",
+      "NHPC",
+      "OBEROIRLTY",
+      "POLICYBZR",
+      "PRESTIGE",
+      "RADICO",
+      "SAIL",
+      "SBIN",
+      "SHRIRAMFIN",
+      "TATACAP",
+      "TIINDIA",
+      "TMCV",
+      "VEDL"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs -1,022 across 66 trades (47.0% win).",
+    "Laggard: <b>v5_classic</b> with Rs -1,676 across 50 trades (42.0% win).",
+    "<b>v5</b>: STOPLOSS (12) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (12) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (17). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 47.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 42.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

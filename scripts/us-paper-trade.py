@@ -128,7 +128,12 @@ def _session_report(st: dict, why: str) -> str:
              f"Equity ${sm.get('equity', 0):,.2f} | Cash ${sm.get('cash', 0):,.2f}",
              f"Realised ${sm.get('realised', 0):+,.2f} | Unrealised ${sm.get('unrealised', 0):+,.2f}",
              f"Open {len(pos)} | Closed {sm.get('closed_trades', 0)} | WR {sm.get('win_rate', 0)}%"]
-    if pos:
+    # Per-stock names deliberately omitted (2026-08-06, Soumya's request: no
+    # per-stock trade status in Telegram). The count is the useful signal for an
+    # unattended overnight session; the ticker list is noise on a phone and the
+    # full detail is always in the dashboard and the day's artifact file.
+    # Set US_TELEGRAM_SYMBOLS=1 to restore the list.
+    if pos and os.environ.get("US_TELEGRAM_SYMBOLS") == "1":
         lines.append("Holding: " + ", ".join(sorted(pos)[:12]))
     lines.append("Long-only cash lane (RBI: no margin, no FX). Paper only.")
     return "\n".join(lines)

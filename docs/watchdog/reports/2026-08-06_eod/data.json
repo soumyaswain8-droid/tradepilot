@@ -1,0 +1,130 @@
+{
+  "date": "2026-08-06",
+  "generated_at": "2026-08-06T15:35:11.298605",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 1375.43,
+      "trades": 59,
+      "wins": 31,
+      "losses": 28,
+      "longs": 59,
+      "shorts": 0,
+      "win_rate": 52.5,
+      "open_positions": 4,
+      "best_trade": 804.6,
+      "worst_trade": -474.0,
+      "avg_win": 135.02,
+      "avg_loss": -100.36,
+      "exit_reasons": {
+        "SIGNAL_FLIP": 15,
+        "STOPLOSS": 17,
+        "TARGET": 5,
+        "FLAT_FORCE_EXIT": 10,
+        "TIME_EXIT": 12
+      },
+      "n_closed": 59,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -656.91,
+      "trades": 58,
+      "wins": 21,
+      "losses": 37,
+      "longs": 58,
+      "shorts": 0,
+      "win_rate": 36.2,
+      "open_positions": 2,
+      "best_trade": 756.0,
+      "worst_trade": -490.1,
+      "avg_win": 113.26,
+      "avg_loss": -82.04,
+      "exit_reasons": {
+        "STOPLOSS": 21,
+        "SIGNAL_FLIP": 21,
+        "TARGET": 2,
+        "TIME_EXIT": 14
+      },
+      "n_closed": 58,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "APLAPOLLO",
+      "BANKBARODA",
+      "BDL",
+      "BEL",
+      "BIOCON",
+      "CHOLAFIN",
+      "COCHINSHIP",
+      "ETERNAL",
+      "EXIDEIND",
+      "GODREJCP",
+      "HAL",
+      "INDIANB",
+      "INDUSINDBK",
+      "IRCTC",
+      "KALYANKJIL",
+      "LUPIN",
+      "MAZDOCK",
+      "MCX",
+      "PAYTM",
+      "PIDILITIND",
+      "PNB",
+      "RELIANCE",
+      "RVNL",
+      "SAIL",
+      "SBIN",
+      "SHRIRAMFIN",
+      "SOLARINDS",
+      "SUPREMEIND",
+      "SWIGGY",
+      "TATACAP",
+      "TRENT",
+      "UNIONBANK",
+      "VBL"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +1,375 across 59 trades (52.5% win).",
+    "Laggard: <b>v5_classic</b> with Rs -657 across 58 trades (36.2% win).",
+    "<b>v5</b>: STOPLOSS (17) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (21) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 52.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 36.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "date": "2026-08-07",
+  "generated_at": "2026-08-07T15:35:18.747793",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -197.86,
+      "trades": 73,
+      "wins": 29,
+      "losses": 44,
+      "longs": 73,
+      "shorts": 0,
+      "win_rate": 39.7,
+      "open_positions": 12,
+      "best_trade": 429.6,
+      "worst_trade": -588.8,
+      "avg_win": 87.57,
+      "avg_loss": -62.21,
+      "exit_reasons": {
+        "STOPLOSS": 9,
+        "SIGNAL_FLIP": 27,
+        "FLAT_FORCE_EXIT": 30,
+        "TIME_EXIT": 5,
+        "TARGET": 2
+      },
+      "n_closed": 73,
+      "n_open": 12
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 1316.21,
+      "trades": 75,
+      "wins": 25,
+      "losses": 50,
+      "longs": 75,
+      "shorts": 0,
+      "win_rate": 33.3,
+      "open_positions": 0,
+      "best_trade": 1811.25,
+      "worst_trade": -627.2,
+      "avg_win": 186.36,
+      "avg_loss": -66.85,
+      "exit_reasons": {
+        "TARGET": 4,
+        "STOPLOSS": 10,
+        "SIGNAL_FLIP": 44,
+        "TIME_EXIT": 17
+      },
+      "n_closed": 75,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIPOWER",
+      "AUROPHARMA",
+      "BHARATFORG",
+      "BHEL",
+      "CANBK",
+      "COCHINSHIP",
+      "CUMMINSIND",
+      "ENRIN",
+      "FORTIS",
+      "GLENMARK",
+      "HCLTECH",
+      "HEROMOTOCO",
+      "HINDALCO",
+      "HINDUNILVR",
+      "HINDZINC",
+      "INDIANB",
+      "INDIGO",
+      "INFY",
+      "KALYANKJIL",
+      "LGEINDIA",
+      "LTM",
+      "M&M",
+      "MOTHERSON",
+      "MPHASIS",
+      "ONGC",
+      "PAYTM",
+      "PERSISTENT",
+      "PREMIERENE",
+      "RECLTD",
+      "RELIANCE",
+      "SBIN",
+      "SUZLON",
+      "TATAELXSI",
+      "TATAINVEST",
+      "TCS",
+      "TVSMOTOR",
+      "WAAREEENER"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +1,316 across 75 trades (33.3% win).",
+    "Laggard: <b>v5</b> with Rs -198 across 73 trades (39.7% win).",
+    "<b>v5</b>: STOPLOSS (9) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (27). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (10) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (44). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 39.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 33.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -177,9 +177,30 @@ def main() -> int:
                         f"ask {r['ask_qty']:,} imbalance {r['imbalance']}")
         return 0
 
+    # WAIT for the open rather than refusing it (fixed 2026-08-07).
+    #
+    # THE BUG THIS REPLACES: the launchd job fires at 09:14 so it is warm for the
+    # 09:15 open, but this gate rejected anything outside 09:15-15:30 and exited
+    # IMMEDIATELY — with code 0. Two full sessions produced zero bytes while launchd
+    # recorded "last exit code = 0" and the log said "exiting cleanly". A success
+    # code for a job that collected nothing is the worst possible failure mode,
+    # because every check for whether it ran said yes.
+    #
+    # Now: if the session opens soon, sleep until it does. If it is hours away or
+    # already over, exit as before. Refusing to run one minute early was never the
+    # safe behaviour — it was the silent one.
     if not in_session() and not a.force:
-        logger.info("outside 09:15-15:30 — depth is meaningless here, exiting cleanly")
-        return 0
+        now = datetime.now()
+        if now.weekday() < 5:
+            mins_now = now.hour * 60 + now.minute
+            open_min = MARKET_OPEN[0] * 60 + MARKET_OPEN[1]
+            wait = open_min - mins_now
+            if 0 < wait <= 30:
+                logger.info(f"{wait} min before the open — waiting rather than exiting")
+                time.sleep(wait * 60 + 5)
+        if not in_session():
+            logger.info("outside 09:15-15:30 — depth is meaningless here, exiting cleanly")
+            return 0
 
     path = OUT_DIR / f"{datetime.now():%Y-%m-%d}.ndjson"
     logger.info(f"collecting {len(syms)} symbols every {a.seconds}s -> {path.name}")

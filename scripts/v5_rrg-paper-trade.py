@@ -8,7 +8,7 @@ Gate-1 at profit-capture 70% / loss-capture 54%), the mode ladder is driven
 by prototype/v5/rrg_regime.py's daily defensive-vs-cyclical rotation COUNT
 signal (form=count, set=extended, N=1, threshold=-0.2143) -- the sensor
 that just PASSED Gate-1 at profit-capture 85% / loss-capture 73% (data-repair
-re-run, report docs/research/2026-07-20_gate1-rrg-sensor-backtest.md, commit
+re-run, report 1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-backtest.md, commit
 d23726e). The score is daily-bar-driven and computed ONCE per session
 (premarket tilt held constant intraday, not recomputed per scan) -- per the
 design doc's "tilt, not trigger" framing (docs/superpowers/specs/2026-07-20-

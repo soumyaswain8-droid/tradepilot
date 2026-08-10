@@ -24,7 +24,7 @@ NOT mean missing credentials**. If you send valid-looking keys and get 403, the
 request was refused for some other reason, and a region/IP restriction is the main
 suspect — Alpaca's own docs contradict themselves on India RESIDENCY (their worked
 example is an Indian *citizen* residing in the UK). That is a live-eligibility
-question, not a key problem. See docs/research/us-market/01-brokers-and-apis.md
+question, not a key problem. See 1cr-roadmap/us-market/01-brokers-and-apis.md
 
 NOTE: uses the PAPER host only. It never touches api.alpaca.markets (live).
 """
@@ -107,7 +107,7 @@ def main() -> int:
         print("      Alpaca's own docs contradict themselves on India RESIDENCY")
         print("      (their worked example is an Indian citizen residing in the UK),")
         print("      so treat a 403 from an Indian IP as a live-eligibility question,")
-        print("      not a key problem. See docs/research/us-market/01-brokers-and-apis.md")
+        print("      not a key problem. See 1cr-roadmap/us-market/01-brokers-and-apis.md")
         return 1
     if status != 200:
         print(f"  [2] auth           unexpected status {status}: {body}")

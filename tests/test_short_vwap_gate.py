@@ -1,6 +1,6 @@
 """Short-confirmation AND-gate (Variant C) -- unit tests.
 
-Backtest: docs/research/2026-07-24_short-confirm-backtest.md (base commit
+Backtest: 1cr-roadmap/research/2026-07-24_short-confirm-backtest.md (base commit
 4f129bd) recommends the red-day (existing Fix #1 change_pct leg) AND
 below-VWAP AND-gate at prototype/v5/signal_engine.py's `actually_weak` gate
 (~lines 196-199). VWAP-only (Variant B) backtested net-negative; the

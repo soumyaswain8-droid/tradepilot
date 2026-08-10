@@ -498,7 +498,7 @@ def _tg_exit(trade):
 
 
 # ═══════════════════════════ RISK GATE (log-only, Phase 0) ═══════════════════════════
-# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S5 "Phase 0" --
+# spec: 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S5 "Phase 0" --
 # schema + gate module, wired in LOG-ONLY mode: the gate runs and records
 # verdicts, but execution still follows today's inline path unchanged. Runs
 # AFTER deploy_signals' own decisions are already locked in for this scan
@@ -609,7 +609,7 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
     atomic_write_json(path, existing)
 
 
-# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S5 Phase 1 --
+# spec: 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S5 Phase 1 --
 # RISK_GATE_DRIVE=1 (default OFF) makes the gate DRIVE execution instead of
 # only logging it. REJECTED -> skip. WATCHLIST -> defer THIS scan (recorded
 # in state["gate_watchlist"]; spec S7 Q1/Q2 -- re-evaluated fresh every scan,
@@ -952,7 +952,7 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
               "qty": pos["qty"]})
 
 
-# spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S4.3/S5
+# spec: 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S4.3/S5
 # Phase 2 -- INVALIDATION_MONITOR=1 (default OFF). Evaluate ONLY the forms
 # cleanly computable from data already sitting in scan_positions' loop --
 # per spec S7 Q3 lean, we do NOT fetch new data or invent indicator plumbing

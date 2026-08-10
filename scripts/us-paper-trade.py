@@ -19,7 +19,7 @@ WHY LONG-ONLY — a regulatory boundary, not a strategy choice
     long-only cash. The India fleet's short book is NOT portable here. The block is
     enforced in broker.py, which raises ShortSellingBlocked rather than trusting
     strategy code to behave.
-    See docs/research/us-market/04-regulatory-lrs-tax.md
+    See 1cr-roadmap/us-market/04-regulatory-lrs-tax.md
 
 ISOLATION FROM THE INDIA FLEET — deliberate, and load-bearing
     Separate state dir, separate cache namespace, separate logs, separate schedule.

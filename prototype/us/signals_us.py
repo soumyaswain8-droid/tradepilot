@@ -28,14 +28,14 @@ Momentum is regime-conditional, and the effect has been strengthening:
 Momentum also has the worst tail risk of any factor (documented crashes to -88%).
 A momentum sleeve that ignores volatility regime has NEGATIVE expectancy after a
 vol spike. So momentum weight here is *cut* when realised vol is elevated, rather
-than applied blindly. See docs/research/us-market/03-anvitra-and-what-actually-works.md
+than applied blindly. See 1cr-roadmap/us-market/03-anvitra-and-what-actually-works.md
 
 REGULATORY CONSTRAINT — enforced in code, not documentation
 -----------------------------------------------------------
 RBI bars LRS remittance for forex trading and for margin/margin calls (VERIFIED,
 rbi.org.in). The only clearly-safe lane for an Indian resident is LONG-ONLY, CASH,
 UNLEVERAGED. This module therefore emits BUY and EXIT only. It has no code path
-that can produce a short. See docs/research/us-market/04-regulatory-lrs-tax.md
+that can produce a short. See 1cr-roadmap/us-market/04-regulatory-lrs-tax.md
 
 LIMITATIONS (state them, do not hide them)
 ------------------------------------------

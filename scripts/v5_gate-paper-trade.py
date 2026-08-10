@@ -17,7 +17,7 @@ already in hand); close_below:<ind> and rrg_quadrant_exit:<sector> have no
 data source in that loop and are recorded not_enforced per position, not
 invented. ML-free (ML_SCORE_WEIGHT=0).
 
-Spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md S4.2
+Spec: 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S4.2
 (decision rule), S5 Phases 1-2.
 
 Phase-1 pass criteria (spec S5, verbatim):

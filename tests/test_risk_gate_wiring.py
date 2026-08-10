@@ -1,5 +1,5 @@
 """RISK_GATE_LOG wiring in scripts/v5-paper-trade.py -- integration tests
-(Phase 0, spec docs/research/2026-07-20_risk_gate_three_state_verdict.md S5).
+(Phase 0, spec 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S5).
 
 Uses the importlib pattern from tests/test_chop_ladder.py / test_data_guard.py
 (the engine script has a hyphen in its filename). Network-touching helpers are

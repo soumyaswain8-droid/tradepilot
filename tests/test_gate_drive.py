@@ -1,5 +1,5 @@
 """RISK_GATE_DRIVE + INVALIDATION_MONITOR integration tests (Phase 1+2,
-spec docs/research/2026-07-20_risk_gate_three_state_verdict.md S5).
+spec 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md S5).
 
 Mirrors the importlib pattern + StubPool/FakeRM doubles from
 tests/test_risk_gate_wiring.py and tests/test_chop_ladder.py. No network:

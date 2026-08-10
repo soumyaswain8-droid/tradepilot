@@ -68,7 +68,7 @@ class BrokerBase:
             raise ShortSellingBlocked(
                 f"sell {qty} of {holding_qty} held would open a short. Blocked: RBI bars "
                 f"LRS remittance for margin/margin calls, so the permitted lane is "
-                f"long-only cash. See docs/research/us-market/04-regulatory-lrs-tax.md"
+                f"long-only cash. See 1cr-roadmap/us-market/04-regulatory-lrs-tax.md"
             )
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate-1 backtest: approach (b) RRG regime sensor -- defensive-vs-cyclical
 relative-return spread (no JdK EMA machinery), per
-docs/superpowers/specs/2026-07-20-rrg-regime-sensor-design.md §3b/§4/§6/§7.
+1cr-roadmap/design/2026-07-20-rrg-regime-sensor-design.md §3b/§4/§6/§7.
 
 PASS bar (same as trend-sensor Gate-1, spec §6.5): the best (form, set-
 variant, lookback, threshold) combo must reach >=70% profit-capture (gross
@@ -271,7 +271,7 @@ def main():
             report.append(f"| {c['ticker']} | {c['n']} | {c['first'] or '-'} | {c['last'] or '-'} |")
         report.append(f"\n^NSEI trading-day calendar span in fetch window: {bench_span} "
                        f"({len(expected_days)} trading days)\n")
-        out = ROOT / "docs/research/2026-07-20_gate1-rrg-sensor-backtest.md"
+        out = ROOT / "1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-backtest.md"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text("\n".join(report))
         print("\n".join(report[:3]))
@@ -397,7 +397,7 @@ def main():
     report.append(f"\n^NSEI trading-day calendar span in fetch window: {bench_span} "
                    f"({len(expected_days)} trading days).\n")
 
-    out = ROOT / "docs/research/2026-07-20_gate1-rrg-sensor-backtest.md"
+    out = ROOT / "1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-backtest.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     # Append-not-overwrite: this script now runs with the repaired ticker map by
     # default, so a plain re-run must not clobber the original (pre-repair) run's

@@ -52,7 +52,7 @@ _SIDEWAYS_SELL_PCT = 0.10  # SIDEWAYS: shrink SELL to bottom 10%
 SHORT_REQUIRE_NEGATIVE_CHANGE_PCT = float(os.environ.get("SHORT_REQ_CHG_PCT", "-0.5"))  # must be down ≥ this
 SHORT_REQUIRE_MAX_SCORE = float(os.environ.get("SHORT_REQ_MAX_SCORE", "35"))            # composite must be below this
 
-# Variant C AND-gate (2026-07-24 backtest, docs/research/2026-07-24_short-confirm-backtest.md
+# Variant C AND-gate (2026-07-24 backtest, 1cr-roadmap/research/2026-07-24_short-confirm-backtest.md
 # §6, base commit 4f129bd): a SHORT candidate that clears Fix #1 (red + weak-scored) must
 # ALSO be below VWAP at entry before it's allowed to fire. VWAP-only backtested net-negative
 # (Variant B: -Rs742/12d, blocks more good shorts than bad); the red-day+below-VWAP AND-gate

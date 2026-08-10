@@ -1,6 +1,6 @@
 """TradePilot v5 -- Risk Gate + Three-State Verdict (Phase 0)
 ================================================================
-Spec: docs/research/2026-07-20_risk_gate_three_state_verdict.md (S4).
+Spec: 1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md (S4).
 
 Phase 0 scope ONLY: schema (`TradePlan`, `Verdict`, `GateResult`) + the
 `RiskGate` orchestrator. This module wraps an EXISTING `prototype.v5.

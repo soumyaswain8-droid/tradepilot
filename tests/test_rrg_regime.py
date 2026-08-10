@@ -2,7 +2,7 @@
 
 Mirrors tests/test_trend_mode.py's structure. Verifies prototype/v5/rrg_regime.py
 encodes the Gate-1 WINNING config exactly (form=count, set=extended, N=1,
-threshold=-0.2143 — docs/research/2026-07-20_gate1-rrg-sensor-backtest.md,
+threshold=-0.2143 — 1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-backtest.md,
 "Data-repair re-run" section, commit d23726e, PASS pc85/lc73), and that
 fail-closed behavior matches scripts/backtest-rrg-sensor.py's
 _day_signal_inputs() verbatim (source of truth).

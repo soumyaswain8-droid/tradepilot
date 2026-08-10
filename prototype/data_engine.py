@@ -334,8 +334,27 @@ def _indices_from_kite():
     return out
 
 
+# The header strip. INDIA VIX is a volatility index, not a price index — it is
+# carried here because the UI shows it beside the others, but a "change" on VIX
+# means something different from a change on NIFTY and should never be summed with
+# them.
+_INDEX_TARGETS = [
+    ("^NSEI", "NIFTY 50"),
+    ("^BSESN", "SENSEX"),
+    ("^NSEBANK", "BANK NIFTY"),
+    ("^CNXIT", "NIFTY IT"),
+    ("^INDIAVIX", "INDIA VIX"),
+]
+
+
 def get_market_indices():
-    """NIFTY 50 and SENSEX, Kite first, yfinance second, and NEVER a silent stale number.
+    """The five header indices, Kite first, yfinance second, NEVER a silent stale number.
+
+    EXTENDED 2026-08-10 from two indices to five. The markets strip renders NIFTY 50,
+    SENSEX, BANK NIFTY, NIFTY IT and INDIA VIX, and three of them had no data source
+    at all — clay-market.js drew them with hardcoded "--" placeholders that nothing
+    ever filled. Adding them here rather than reading the local CSVs on purpose: the
+    CSVs are exactly what produced the 2026-08-04 stale-number bug described below.
 
     THE BUG THIS REPLACES (found 2026-08-04 from Soumya's screenshot)
     The old body wrapped a yfinance call in a bare `except: pass` and returned []
@@ -358,14 +377,18 @@ def get_market_indices():
     except Exception as e:
         logger.warning(f"kite index path unavailable: {type(e).__name__}: {e}")
 
-    if len(indices) >= 2:
+    # Short-circuit only when Kite supplied EVERY index we need. The old test was
+    # `>= 2`, which returned as soon as NIFTY and SENSEX arrived and silently
+    # skipped the yfinance pass for the other three — they would have stayed blank
+    # forever no matter how healthy the feed was.
+    if len({i["name"] for i in indices}) >= len(_INDEX_TARGETS):
         return indices
 
     # 2. yfinance — usable, but its daily series is known to develop holes, so the
     #    previous close is taken from an explicitly DIFFERENT date rather than
     #    "whatever row happens to be second from the end".
     have = {i["name"] for i in indices}
-    for idx_symbol, idx_name in [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX")]:
+    for idx_symbol, idx_name in _INDEX_TARGETS:
         if idx_name in have:
             continue
         try:

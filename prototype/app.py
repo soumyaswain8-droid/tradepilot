@@ -1413,10 +1413,19 @@ def api_indices():
             }
             if idx.get("prev_close_date"):
                 entry["prevCloseDate"] = idx["prev_close_date"]
-            if "NIFTY" in name.upper():
-                result["nifty"] = entry
-            elif "SENSEX" in name.upper():
-                result["sensex"] = entry
+            # EXACT names, not substring tests. "NIFTY" in name.upper() also
+            # matches "BANK NIFTY" and "NIFTY IT", so the substring form this
+            # replaces would have let those overwrite the NIFTY 50 card with
+            # whichever one happened to arrive last.
+            key = {
+                "NIFTY 50":   "nifty",
+                "SENSEX":     "sensex",
+                "BANK NIFTY": "banknifty",
+                "NIFTY IT":   "niftyit",
+                "INDIA VIX":  "vix",
+            }.get(name.strip().upper())
+            if key:
+                result[key] = entry
 
         # CSV FALLBACK — now age-checked.
         #
@@ -3122,7 +3131,7 @@ def api_team_audit():
 # ═══════════════════════ US MARKET MODULE ═══════════════════════
 # Isolated from the India endpoints: own data layer (prototype/us/data_us.py),
 # own cache namespace, own universe. Read-only for now — no US engine is running
-# and no orders are placed anywhere. See docs/research/us-market/ for the
+# and no orders are placed anywhere. See 1cr-roadmap/us-market/ for the
 # broker, data, regulatory and methodology research behind this.
 
 def _us():
@@ -3568,12 +3577,12 @@ def api_us_status():
         "orders_enabled": False,
         "broker": None,
         "paper_broker_candidate": "Alpaca (free paper API, no KYC) — not yet integrated",
-        "data_source": "yfinance (v1, unofficial — see docs/research/us-market/02-data-sources.md)",
+        "data_source": "yfinance (v1, unofficial — see 1cr-roadmap/us-market/02-data-sources.md)",
         "universe_size": n,
         "session_ist": "19:00-01:30 IST (EDT) / 20:00-02:30 IST (EST)",
         "compliance_note": "Long-only cash only. RBI bars LRS remittance for FX trading and for "
                            "margin/margin calls. Day-trading frequency under LRS is an unresolved "
-                           "gray zone — see docs/research/us-market/04-regulatory-lrs-tax.md",
+                           "gray zone — see 1cr-roadmap/us-market/04-regulatory-lrs-tax.md",
         "as_of": _dt.now().strftime("%H:%M:%S"),
     })
 

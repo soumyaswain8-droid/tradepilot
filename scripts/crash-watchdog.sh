@@ -65,21 +65,21 @@ declare -a ENGINES=(
 
   # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_pick|scripts/v5_pick-paper-trade.py|docs/paper-trades/v5_pick/${TODAY}.json|python3 scripts/v5_pick-paper-trade.py"
 
   # DEPLOYMENT SHADOW (2026-08-04): v5_deploy = v5 + POOL_ALLOC INTRADAY 60 / SWING 40.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_deploy|scripts/v5_deploy-paper-trade.py|docs/paper-trades/v5_deploy/${TODAY}.json|python3 scripts/v5_deploy-paper-trade.py"
 
   # TIME-GATE SHADOW (2026-08-04): v5_time = v5 + NO_ENTRY_HOURS=9 (opening hour closed).
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_time|scripts/v5_time-paper-trade.py|docs/paper-trades/v5_time/${TODAY}.json|python3 scripts/v5_time-paper-trade.py"

@@ -62,97 +62,124 @@
 
   <header>
     <div style="margin-bottom:10px"><a href="/dashboard" style="font-size:12.5px;color:var(--teal)">&larr; Back to trading dashboard</a></div>
-    <h1>TradePilot — Decision Dashboard</h1>
-    <div class="sub">Root-cause closed · lean 4-engine roster live · RC-1 long-only racing v5 &nbsp;|&nbsp; Updated 2026-06-26 &nbsp;·&nbsp; 11-agent investigation + watchdog validation</div>
+    <h1>TradePilot &mdash; Decision Dashboard</h1>
+    <div class="sub">Cost is the binding constraint &middot; position size is the live experiment &middot;
+      four signal theses measured and closed &nbsp;|&nbsp; Updated 2026-08-10</div>
   </header>
 
-  <!-- VERDICT -->
-  <h2>The Verdict</h2>
+  <h2>The verdict</h2>
   <div class="verdict">
-    <div class="big">The <s>short book</s> is the entire net bleed. Your <b>longs make money</b>; your shorts lose more than the whole loss. The April engine that worked was <b>long-only</b> — that is the whole explanation.</div>
-  </div>
-
-  <!-- KPIs -->
-  <div class="grid c4" style="margin-top:16px">
-    <div class="card kpi"><div class="n pos">+₹1,149</div><div class="l">LONG book net P&L · 213 trades · 41.8% WR</div></div>
-    <div class="card kpi"><div class="n neg">−₹3,611</div><div class="l">SHORT book net P&L · 241 trades · 34.4% WR</div></div>
-    <div class="card kpi"><div class="n neu">6.2%</div><div class="l">of all exits hit TARGET (shorts just 4.1%)</div></div>
-    <div class="card kpi"><div class="n">32–38%</div><div class="l">of ₹10L actually deployed — 60%+ idle</div></div>
-  </div>
-  <div class="lead" style="margin-top:14px">Window 2026-06-16 → 06-25 · 454 trades · verified to the rupee against the EOD / profit / missed-opps watchdogs. If shorts were merely flat, v5 would be net positive.</div>
-
-  <!-- ROADMAP -->
-  <h2>Roadmap — the fix sequence</h2>
-  <div class="card">
-    <div class="rmap">
-
-      <div class="step done">
-        <div class="h">RC-1 · Long-only shadow (<span class="mono">v5_long</span>) <span class="tag t-done">Built · live tomorrow</span></div>
-        <div class="d">v5 with shorts disabled, NIFTY-200 universe. Zero code change (env flag). Wired into the launch + watchdog. Races live v5 from the next 08:50 auto-launch. <b>This is the primary fix experiment.</b></div>
-      </div>
-
-      <div class="step now">
-        <div class="h">Engine cleanup · 6 → 4 lean roster <span class="tag t-done">Done</span></div>
-        <div class="d">Retired v5_noml (ran v5 twice), v5_apr (no info value), v7_regime (flat + WFO-negative). Stack is now fast + focused: ~half the CPU/yfinance load, zero loss of decision quality.</div>
-      </div>
-
-      <div class="step next">
-        <div class="h">RC-2 · Short-gate v5 itself <span class="tag t-next">After v5_long proves out (~2 wks)</span></div>
-        <div class="d">If v5_long beats v5, fold the fix into live v5: gate shorts to confirmed-weak names/regimes only (shorts <i>can</i> win — Metals NATIONALUM +₹1,380, HINDZINC +₹855 — so filter, don't blanket-ban).</div>
-      </div>
-
-      <div class="step next">
-        <div class="h">RC-3 · Fix entry timing <span class="tag t-next">Queued</span></div>
-        <div class="d">Collapse the SHORT_BLOCK 60-min window + add an immediate 2nd deploy pass at the open. Prize: ~₹1,850 + 6.8pp win-rate. Bounded but real (~19% of trades arrive late).</div>
-      </div>
-
-      <div class="step next">
-        <div class="h">RC-4 · Concentrate capital <span class="tag t-next">Queued</span></div>
-        <div class="d">Fewer, larger positions; deploy more of the idle ₹10L. Killing shorts already frees short-slots + capital toward the profitable long book — this finishes the job.</div>
-      </div>
-
-      <div class="step">
-        <div class="h">RC-5 · Tighten / remove the 2.25% gap-day stop <span class="tag t-hold">Low priority</span></div>
-        <div class="d">Minor real cost (~₹764, one day). Park until the big levers land.</div>
-      </div>
-
+    <div class="big">
+      We are not failing to find signal. We keep finding it, and it keeps being
+      <s>the same size as the fee</s>. Four independent families all land at
+      <b>0.05&ndash;0.09% gross</b> against a <s>0.079&ndash;0.106% toll</s>.
+      The one lever that has actually moved the arithmetic is <b>position size</b>.
     </div>
   </div>
 
-  <!-- ROSTER -->
-  <h2>Engine roster — lean &amp; fast</h2>
-  <div class="card">
-    <table>
-      <thead><tr><th>Engine</th><th>Role</th><th>Tests</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td class="mono">v5</td><td>Live baseline (with shorts)</td><td>The current strategy — the thing to beat</td><td><span class="tag t-now">Active</span></td></tr>
-        <tr><td class="mono">v5_classic</td><td>Frozen April benchmark</td><td>"Has the rebuild helped?" — the one true control</td><td><span class="tag t-now">Active</span></td></tr>
-        <tr><td class="mono">v5_long</td><td>RC-1 long-only, NIFTY-200</td><td><b>Do shorts hurt?</b> — the primary fix</td><td><span class="tag t-done">Active · new</span></td></tr>
-        <tr><td class="mono">v5_cut</td><td>Profit-lift experiment</td><td>Faster cut + tighter short + 450 universe</td><td><span class="tag t-now">Active · probation</span></td></tr>
-        <tr><td class="mono">v5_noml</td><td>—</td><td>Redundant: ML already 0 globally (ran v5 twice)</td><td><span class="tag t-kill">Retired</span></td></tr>
-        <tr><td class="mono">v5_apr</td><td>—</td><td>Tracked v5 within +₹78/9d — no info value</td><td><span class="tag t-kill">Retired</span></td></tr>
-        <tr><td class="mono">v7_regime</td><td>—</td><td>Flat vs v5 + WFO-negative (DSR 0.12)</td><td><span class="tag t-kill">Retired</span></td></tr>
-      </tbody>
-    </table>
+  <div class="grid c4" style="margin-top:16px">
+    <div class="card kpi"><div class="n pos">+&#8377;12,102</div>
+      <div class="l">fleet net today &middot; 765 closed trades &middot; modelled fees</div></div>
+    <div class="card kpi"><div class="n pos">0.079%</div>
+      <div class="l">v5_size cost/trade vs v5's 0.106% &middot; structural, proven</div></div>
+    <div class="card kpi"><div class="n neg">0 of 4</div>
+      <div class="l">signal families that clear the toll</div></div>
+    <div class="card kpi"><div class="n neu">10 / 300</div>
+      <div class="l">v5_size trades toward significance &middot; ~6 weeks</div></div>
+  </div>
+  <div class="lead">The cliff: Zerodha brokerage is 0.03% <i>or</i> &#8377;20/order, whichever is lower, so cost
+    <i>falls</i> above &#8377;66,667/position. Every trade for three months sat below it &mdash;
+    median &#8377;7,252, largest ever &#8377;44,992.</div>
+
+  <h2>This week &mdash; what we are testing</h2>
+  <div class="rmap">
+
+    <div class="step now">
+      <div class="h">Guards&rsquo; first live session <span class="tag t-now">TOMORROW 08:50</span>
+        <span class="pill">highest priority</span></div>
+      <div class="d">Three guards shipped 08-10 and <b>none has ever run live</b> &mdash; the engines had old code
+        loaded all day. SESSION-GUARD (no entries before 09:15), disk-headroom gate (blocks launch under 5&nbsp;GB),
+        per-trade Telegram off. v10 bought 19 positions at 08:53 today on Friday&rsquo;s closing prices; that must not repeat.</div>
+    </div>
+
+    <div class="step now">
+      <div class="h">v5_size &mdash; position-size experiment <span class="tag t-now">DAY 2 OF ~30</span></div>
+      <div class="d">Same v5 signal, 5 positions instead of 20, &#8377;10L pool instead of &#8377;3L.
+        Day 1: median &#8377;108,623, all 10 trades above the cliff, top engine at +&#8377;3,430.
+        <b>But t=0.76 &mdash; the profit difference is noise.</b> Only the 0.0258%/trade fee saving is proven.
+        Watch: median stays above &#8377;66,667, fee holds near 0.079%, and no single trade carries the day
+        (BSE was 69% of day 1).</div>
+    </div>
+
+    <div class="step next">
+      <div class="h">Data integrity after today&rsquo;s disk-full <span class="tag t-next">EVERY EOD</span></div>
+      <div class="d">The disk filled mid-session: 11 of 16 engines logged <span class="mono">Errno 28</span>,
+        quotes degraded to 160/200 symbols, and v5_size stopped writing state at 14:36 &mdash; which made open
+        positions look closed. Check 200/200 priced, state written through 15:30, and closed+open reconciling
+        against <span class="mono">summary.trades</span>.</div>
+    </div>
+
+    <div class="step next">
+      <div class="h">v10 &mdash; decide its status <span class="tag t-next">THIS WEEK</span></div>
+      <div class="d">Entered 19 positions pre-open at stale prices, lost &#8377;1,920, and tripped the SWING
+        breaker (5 consecutive losses) which then blocked 57 further signals. Today&rsquo;s v10 numbers are
+        fictional &mdash; report separately or not at all. Does the new guard stop the repeat?</div>
+    </div>
+
+    <div class="step next">
+      <div class="h">Order-book depth &mdash; the last untested input <span class="tag t-next">~2 WEEKS</span></div>
+      <div class="d">Collecting since 08-07, 62&nbsp;MB/day. Every family measured so far mines the same OHLCV;
+        depth is the only genuinely new information left. Its first real payoff was unexpected: it measured
+        <b>slippage at size</b> &mdash; +0.60&nbsp;bps mean going from &#8377;7k to &#8377;108k orders, against a
+        2.72&nbsp;bps fee saving. That is what made the size experiment safe to run.</div>
+    </div>
+
   </div>
 
-  <!-- WHAT'S CLEARED -->
-  <h2>Cleared — stop worrying about these</h2>
-  <div class="grid c2">
-    <div class="card"><table>
-      <tr><td><b>FLAT_FORCE_EXIT</b></td><td>Innocent — it <i>helped</i> (+₹30, +₹299 on the days it was blamed)</td></tr>
-      <tr><td><b>ML removal</b></td><td>No effect — ML never picked winners (IC 0.006)</td></tr>
-    </table></div>
-    <div class="card"><table>
-      <tr><td><b>Crashes</b></td><td>Refuted — zero engine restarts all window</td></tr>
-      <tr><td><b>Dashboard / over-trading</b></td><td>Not in trade path / a symptom, not the cause</td></tr>
-    </table></div>
-  </div>
+  <h2>Closed &mdash; measured and killed</h2>
+  <table>
+    <tr><th>Thesis</th><th>Evidence</th><th>Result</th><th></th></tr>
+    <tr><td><b>SMC / ICT waterfall</b><br><span class="d" style="color:var(--mut);font-size:12.5px">
+      order blocks, FVG, liquidity sweeps, AMD, SMT, MTF</span></td>
+      <td class="mono">145,500 trades<br>201 symbols</td>
+      <td>No predicate clears cost while beating random. Best single was SMT at +0.051% gross.</td>
+      <td><span class="tag t-kill">dead</span></td></tr>
+    <tr><td><b>Mean reversion (L3 daily bias)</b></td>
+      <td class="mono">6,600 setups<br>t = &minus;3.22</td>
+      <td>Fading beats following (+0.051% vs &minus;0.018% gross) but nets &minus;0.028% after cost.
+        L3 deleted from the spec, not inverted.</td>
+      <td><span class="tag t-kill">dead</span></td></tr>
+    <tr><td><b>Longer holds</b></td>
+      <td class="mono">1,924 entries</td>
+      <td>Market-adjusted return zero to four decimal places. The apparent profit was the index rising 4.1%.</td>
+      <td><span class="tag t-kill">dead</span></td></tr>
+    <tr><td><b>50-agent fleet</b></td>
+      <td class="mono">week-1 gate</td>
+      <td>Never built. The gate killed its inputs first &mdash; architecture was never the bottleneck.</td>
+      <td><span class="tag t-hold">shelved</span></td></tr>
+  </table>
+
+  <h2>Standing rules</h2>
+  <table>
+    <tr><td style="width:38%"><b>Do not read 2 days as proof</b></td>
+      <td>v5_size needs ~300 trades. Today t=0.76.</td></tr>
+    <tr><td><b>Do not conclude from a gainers list</b></td>
+      <td>Selecting stocks that went up and then judging exits is hindsight. It produced a wrong
+        &ldquo;SIGNAL_FLIP is the culprit&rdquo; call on 08-10 that the full 332-exit sample overturned
+        &mdash; flips are net <i>positive</i>, +&#8377;5,311.</td></tr>
+    <tr><td><b>Never report a smoke run</b></td>
+      <td>A 30-symbol run showed reversion edge rising with fade depth and was reported as promising.
+        At 201 symbols the curve was flat and insignificant &mdash; noise off samples as small as n=116.</td></tr>
+    <tr><td><b>Do not touch v5</b></td>
+      <td>It is the control. Its entire value is that nothing changes in it.</td></tr>
+  </table>
 
   <div class="foot">
-    Evidence trail: <span class="mono">docs/reports/ROOT_CAUSE_ANALYSIS_2026-06-24.pdf</span> ·
-    <span class="mono">…_II_2026-06-26.pdf</span> · 10 learnings in DevPilot store · project memory <span class="mono">tradepilot-root-cause</span>.<br>
-    Stack: live Yahoo Finance (NIFTY-200) → composite score → long/short → 4 pools → risk vetoes. ₹10L paper capital per engine. Auto-launch 08:50 IST Mon–Fri. Daily four-way compare → Telegram 15:40.
+    Sources: <span class="mono">1cr-roadmap/TOMORROW-EOD-CHECKLIST.md</span> &middot;
+    <span class="mono">1cr-roadmap/research/2026-08-10_week1-falsification-result.md</span> &middot;
+    <span class="mono">1cr-roadmap/research/2026-08-10_cost-cliff-position-sizing.md</span> &middot;
+    <span class="mono">mean-reversion-result.json</span><br>
+    Every figure on this page came from a command, not a recollection. Paper trading only &mdash; no live capital.
   </div>
 
 </div>

@@ -178,29 +178,46 @@
       + "</div></div></div>";
   }
 
+  /* THE BUG THIS FIXES (2026-08-10, from Soumya's screenshot: all five cards "--")
+     The previous body did not fetch anything. It SCRAPED THE TOPBAR DOM — walking
+     .idx-label nodes and copying their text — which failed two ways at once:
+
+       1. it mapped only nifty and sensex, so BANK NIFTY, NIFTY IT and INDIA VIX
+          were never even attempted and could never show a value;
+       2. the two it did map depended on the topbar having already rendered. Mount
+          this panel first and every card stays on its "--" placeholder forever.
+
+     Reading one part of the UI to populate another also means a blank strip is
+     indistinguishable from a dead feed. /api/indices answers in ~0.3s and carries
+     source + stale per row (added after an 18-day-old CSV was rendered as live on
+     2026-08-04), so the data path is both faster and self-describing. */
   function fillIndices(host) {
-    var map = { nifty: "NIFTY", sensex: "SENSEX" };
-    Object.keys(map).forEach(function (k) {
-      var el = host.querySelector('[data-idx="' + k + '"]');
-      if (!el) return;
-      // Read the values the topbar already has rather than adding a second fetch.
-      var nodes = document.querySelectorAll(".idx-label");
-      for (var i = 0; i < nodes.length; i++) {
-        if (nodes[i].textContent.trim().toUpperCase().indexOf(map[k]) === 0) {
-          var p = nodes[i].parentElement;
-          var v = p.querySelector(".idx-value") || p.children[1];
-          var c = p.querySelector(".idx-change") || p.children[2];
-          if (v) el.querySelector(".clay-idx-val").textContent = v.textContent.trim();
+    fetch("/api/indices")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        INDIA_INDICES.forEach(function (i) {
+          var card = host.querySelector('.clay-idx[data-idx="' + i.sel + '"]');
+          var row = d[i.sel];
+          if (!card || !row) return;          // missing stays "--" rather than a guess
+          var v = card.querySelector(".clay-idx-val");
+          var c = card.querySelector(".clay-idx-chg");
+          if (v) v.textContent = num(row.price, 2);
           if (c) {
-            var t = c.textContent.trim();
-            var ch = el.querySelector(".clay-idx-chg");
-            ch.textContent = t;
-            ch.className = "clay-idx-chg " + (t.indexOf("-") === 0 ? "neg" : t.indexOf("+") === 0 ? "pos" : "flat");
+            c.textContent = arrow(row.changePct) + " " + num(row.changePct, 2) + "%";
+            c.className = "clay-idx-chg " + cls(row.changePct);
           }
-          break;
-        }
-      }
-    });
+          if (row.stale) {
+            card.classList.add("clay-idx-stale");
+            card.title = "STALE — " + esc(row.source || "unknown")
+              + (row.prevCloseDate ? ", prev close " + esc(row.prevCloseDate) : "");
+          }
+        });
+      })
+      .catch(function (err) {
+        // Never fail silently: a blank strip must be explainable from the console.
+        if (window.console) console.warn("clay-market: index strip failed", err);
+      });
   }
 
   window.clayMarket = function (hostId) {

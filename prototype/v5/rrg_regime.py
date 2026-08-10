@@ -8,7 +8,7 @@ semantics below — copied verbatim, not re-derived or "improved"):
     form=count, set=extended, N=1, threshold=-0.2143
     -> profit-capture 85%, loss-capture 73% (PASS vs 70/70 gate)
 
-per the data-repair re-run (docs/research/2026-07-20_gate1-rrg-sensor-
+per the data-repair re-run (1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-
 backtest.md, "Data-repair re-run" section, commit d23726e).
 
 Sensor: daily close-to-close relative return of each sector index vs

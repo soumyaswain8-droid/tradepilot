@@ -1,0 +1,124 @@
+{
+  "date": "2026-08-10",
+  "generated_at": "2026-08-10T15:35:13.284584",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 2810.46,
+      "trades": 54,
+      "wins": 24,
+      "losses": 30,
+      "longs": 54,
+      "shorts": 0,
+      "win_rate": 44.4,
+      "open_positions": 3,
+      "best_trade": 799.2,
+      "worst_trade": -234.0,
+      "avg_win": 158.98,
+      "avg_loss": -33.5,
+      "exit_reasons": {
+        "STOPLOSS": 7,
+        "SIGNAL_FLIP": 8,
+        "FLAT_FORCE_EXIT": 21,
+        "TARGET": 4,
+        "TIME_EXIT": 14
+      },
+      "n_closed": 54,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 183.51,
+      "trades": 62,
+      "wins": 34,
+      "losses": 28,
+      "longs": 62,
+      "shorts": 0,
+      "win_rate": 54.8,
+      "open_positions": 1,
+      "best_trade": 595.0,
+      "worst_trade": -1083.45,
+      "avg_win": 97.0,
+      "avg_loss": -111.24,
+      "exit_reasons": {
+        "STOPLOSS": 9,
+        "SIGNAL_FLIP": 36,
+        "TIME_EXIT": 16,
+        "TARGET": 1
+      },
+      "n_closed": 62,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "BAJFINANCE",
+      "BSE",
+      "DLF",
+      "GODREJPROP",
+      "GVT&D",
+      "HEROMOTOCO",
+      "JINDALSTEL",
+      "JSWENERGY",
+      "LODHA",
+      "LTF",
+      "LTM",
+      "M&MFIN",
+      "MANKIND",
+      "MCX",
+      "NAUKRI",
+      "OBEROIRLTY",
+      "PAYTM",
+      "POLICYBZR",
+      "POWERINDIA",
+      "TATACOMM",
+      "TATACONSUM",
+      "TCS",
+      "TITAN",
+      "TVSMOTOR",
+      "VEDL",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +2,810 across 54 trades (44.4% win).",
+    "Laggard: <b>v5_classic</b> with Rs +184 across 62 trades (54.8% win).",
+    "<b>v5</b>: STOPLOSS (7) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (9) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (36). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 44.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 54.8% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

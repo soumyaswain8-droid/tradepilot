@@ -270,7 +270,7 @@ Reuse `scripts/backtest-trend-sensor.py`'s pattern directly:
    can't clear 70% loss-capture either, that is real information (sector
    rotation isn't sufficient at the daily granularity available), not a
    reason to lower the bar.
-6. New report artifact: `docs/research/2026-07-2x_gate1-rrg-sensor-
+6. New report artifact: `1cr-roadmap/research/2026-07-2x_gate1-rrg-sensor-
    backtest.md`, mirroring the existing report structure (best-combo
    verdict line first, per-threshold table, joint-sweep top-10 table, CHOP
    vs non-CHOP P&L sum table) so the two Gate-1 reports are directly

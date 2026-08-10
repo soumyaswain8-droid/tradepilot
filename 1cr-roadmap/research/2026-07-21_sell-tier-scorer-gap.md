@@ -232,7 +232,7 @@ data available at scan time only — `ai_scorer` score + `change_pct` +
 already does for its live gate (§2). Outcome (did the trade end profitable,
 did SHORTED_RISER fire) is read from the *same trading day's* close/EOD
 data, never a later day. This mirrors the RRG design doc's explicit
-constraint (`docs/superpowers/specs/2026-07-20-rrg-regime-sensor-design.md`:
+constraint (`1cr-roadmap/design/2026-07-20-rrg-regime-sensor-design.md`:
 "the score for day t uses daily closes up to t-1 only") adapted to
 intraday: score/gate inputs must all be ≤ the scan timestamp.
 
@@ -263,7 +263,7 @@ enforced.
 ## 5. Phased rollout
 
 Standard house convention (Phase 0 log-only → shadow → promote), as already
-used for `RiskGate` (`docs/research/2026-07-20_risk_gate_three_state_verdict.md`,
+used for `RiskGate` (`1cr-roadmap/research/2026-07-20_risk_gate_three_state_verdict.md`,
 wired log-only in `scripts/v5-paper-trade.py:479-576`):
 
 - **Phase 0 — log-only candidate artifact.** Compute the (c)-style

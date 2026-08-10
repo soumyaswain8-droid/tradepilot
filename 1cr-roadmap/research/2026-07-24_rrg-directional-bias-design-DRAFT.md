@@ -17,7 +17,7 @@ lookback. Sign convention (verified from source, `rrg_regime.py` line
 risk-on / cyclical leadership; positive signal = defensives outperforming
 = risk-off / defensive leadership.**
 
-This signal passed Gate-1 on 2026-07-20 (`docs/research/2026-07-20_gate1-
+This signal passed Gate-1 on 2026-07-20 (`1cr-roadmap/research/2026-07-20_gate1-
 rrg-sensor-backtest.md`, data-repair re-run: form=count, set=extended, N=1,
 threshold=-0.2143 → profit-capture 85%, loss-capture 73%, PASS vs 70/70
 gate) and is live in the `v5_rrg` shadow variant. But **only its binarized
@@ -103,7 +103,7 @@ directional read is validated (see §3).**
 
 ## 3. The evidence gap — what Gate-1 did and did not validate
 
-`docs/research/2026-07-20_gate1-rrg-sensor-backtest.md` validated a
+`1cr-roadmap/research/2026-07-20_gate1-rrg-sensor-backtest.md` validated a
 **binary CHOP/TREND classifier against loss-capture**: does flagging a day
 CHOP correlate with days v5's *existing* long/short mix actually lost
 money on (the "CHOP vs non-CHOP P&L split" table, e.g. CHOP-flagged days

@@ -1,0 +1,42 @@
+flowchart TD
+  SRC[/"DATA<br/>Kite OHLCV D · 1H · 15m · 5m<br/>order-book collector · yfinance · news"/]
+  HM(["L0 HARBOURMASTER<br/><i>dispatches · never trades</i>"])
+
+  L1{{"L1 REGIME<br/>RISK_ON / NEUTRAL / RISK_OFF"}}
+  L2{{"L2 SECTOR · RRG quadrant"}}
+  L4{{"L4 STRUCTURE INTEGRITY<br/>protected highs / lows"}}
+
+  CONF["L5–L8 SCORED CONFLUENCE<br/>─────────────<br/>A: liquidity map · FVG · order block<br/>AMD phase · SMT · MTF alignment<br/>B: OB imbalance · reversal<br/>futures lead · overnight gap"]
+
+  L9["L9 DOSSIER<br/>intrinsic value · analyst target · news"]
+  L10[/"L10 AGENT BRAIN — LLM<br/>thesis + rule contract"/]
+  L11{{"L11 VALIDATION<br/>schema · bounds · dry replay"}}
+  L12["L12 EXECUTOR<br/>deterministic · paper only"]
+
+  KILLED(["killed / below threshold / rejected"])
+  PURSER[("PURSER<br/>records every verdict<br/>attributes every outcome")]
+  SHADOW["SHADOW MATRIX<br/>every layer scores every symbol"]
+  ABL["ABLATION<br/>delete what does not pay"]
+  GATE{{"WEEK-1 FALSIFICATION GATE<br/>~1,900 historical setups"}}
+  DEAD(["THESIS DEAD — change it"])
+  PROM(["PROMOTION LADDER<br/>report → paper → capped → live"])
+
+  SRC --> HM --> L1
+  L1 -->|pass| L2 -->|pass| L4 -->|pass| CONF
+  CONF -->|"score ≥ threshold"| L9 --> L10 --> L11 -->|valid| L12
+
+  L1 & L2 & L4 & CONF & L11 -.-> KILLED
+  KILLED -.-> PURSER
+  L12 ==> PURSER
+  SRC -.->|"measurement path"| SHADOW -.-> PURSER
+
+  PURSER --> ABL --> GATE
+  GATE -->|"no family clears cost"| DEAD
+  GATE -->|survivors| PROM
+
+  classDef veto fill:#fde8e8,stroke:#c0392b,stroke-width:2px
+  classDef rec  fill:#e8f0fe,stroke:#3b5bdb,stroke-width:2px
+  classDef kill fill:#f8f9fa,stroke:#868e96,stroke-dasharray:4 3
+  class L1,L2,L4,L11,GATE veto
+  class PURSER,SHADOW,ABL rec
+  class KILLED,DEAD kill

@@ -1,6 +1,6 @@
 # Review — RRG Directional Bias Design Draft
 
-**Reviews:** `docs/research/2026-07-24_rrg-directional-bias-design-DRAFT.md`
+**Reviews:** `1cr-roadmap/research/2026-07-24_rrg-directional-bias-design-DRAFT.md`
 **Date:** 2026-07-28
 **Verdict:** Direction of travel is right. **Do not implement option (b) as currently
 specified** — it contains a threshold-reuse flaw that would make it a near-permanent

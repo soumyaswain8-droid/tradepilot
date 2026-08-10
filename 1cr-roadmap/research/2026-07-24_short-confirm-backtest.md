@@ -2,7 +2,7 @@
 
 > Author: Soumya Swain <soumya@suryaai.co.in>. Read-only analysis; no engine
 > or scorer code was modified. Backtests approach (a) from
-> `docs/research/2026-07-21_sell-tier-scorer-gap.md` §3 against the actual
+> `1cr-roadmap/research/2026-07-21_sell-tier-scorer-gap.md` §3 against the actual
 > `docs/audit/*_trade-audit.jsonl` + `docs/paper-trades/{v5,v5_classic}/*.json`
 > trade history, base commit `7e121e6`.
 

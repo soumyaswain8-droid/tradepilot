@@ -189,7 +189,7 @@ ENGINES=(
   # (Rs 14.30/trade) then eat 96% of gross. Direction-neutral — NOT a shorting change.
   # Expect turnover ~23%, below the 45-55% band: that tension is the point of the test.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_pick|scripts/v5_pick-paper-trade.py"
@@ -200,7 +200,7 @@ ENGINES=(
   # 52.9% -> 96.1% deployed at the UNCHANGED sizer 0.15. Meets Soumya's 90% target without
   # touching position sizing. RISK: ~2x exposure on a red day — watch drawdown vs v5.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_deploy|scripts/v5_deploy-paper-trade.py"
@@ -213,7 +213,7 @@ ENGINES=(
   # established. Pure subtractive gate — matches the SYNTHESIS rule that any candidate
   # which raises trade count is rejected outright.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
-  # random entry (5/5 seeds, t 2.76-4.24). See docs/research/2026-08-05_signal-
+  # random entry (5/5 seeds, t 2.76-4.24). See 1cr-roadmap/plan/2026-08-05_signal-
   # rebuild-plan.md. State preserved; re-enable by uncommenting when there is a
   # signal worth tuning.
   # "v5_time|scripts/v5_time-paper-trade.py"
@@ -244,7 +244,7 @@ ENGINES=(
   # Frozen decision path (engine + signal_engine + risk_manager + composite_scorer +
   # config + April-21 ML model @ ml_score=0.25). Data layer stays CURRENT — April's
   # data_nse writes the shared cache the whole fleet reads and predates the 2026-05-08
-  # cache-poisoning guards. Spec: docs/superpowers/specs/2026-07-30-v10-april-replica-design.md
+  # cache-poisoning guards. Spec: 1cr-roadmap/design/2026-07-30-v10-april-replica-design.md
   "v10|scripts/v10-paper-trade.py"
   "v5_1L|scripts/v5_1L-paper-trade.py"
   "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py"
@@ -274,6 +274,21 @@ ENGINES=(
   # Still retired from earlier rounds:
   # "v5_2|scripts/v5_2-paper-trade.py"
   # "v5_3|scripts/v5_3-paper-trade.py"
+
+  # SHADOW (spec 1cr-roadmap/research/2026-08-10_cost-cliff-position-sizing.md):
+  # v5_size = same v5 code, FEWER AND LARGER positions. Zerodha brokerage is
+  # "0.03% or Rs20/order, whichever is LOWER", so above Rs66,667 per position the
+  # flat Rs20 binds and cost FALLS with size. Measured across 3,526 live trades:
+  # median position Rs7,252, max ever Rs44,992 -- not one trade in 3 months
+  # crossed that cliff, because base = 15% of REMAINING pool cash across 20 slots
+  # decays Rs45k -> Rs7.5k by the 12th. Every measured gross edge (+0.051% to
+  # +0.091%) clears cost at Rs1-2L/position and none clears at Rs7,252.
+  # POOL_ALLOC={"INTRADAY":1.0} + MAX_POSITIONS_TOTAL=5 -> median Rs108,375 at
+  # 0.0788% vs 0.1060%, a saving of 0.0272%/trade. Position size is the ONLY
+  # variable; v5 continues unchanged as the control. WATCH: median position must
+  # exceed Rs66,667 or the experiment did not happen; and slippage, since the whole
+  # gain is ~3bps and a Rs1.5L order that moves the book >2bps erases it.
+  "v5_size|scripts/v5_size-paper-trade.py"
 )
 
 # Expected number of active engines — derived from the ENGINES array length so the

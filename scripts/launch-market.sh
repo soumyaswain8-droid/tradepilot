@@ -99,6 +99,18 @@ stop_caffeinate() {
 }
 
 ENGINES=(
+  # ── STANDBY, 2026-08-10 (Soumya) ─────────────────────────────────────────────
+  # v4, v5_2..v5_8, v6, v7_regime are OFF and stay off. Verified inert: none of
+  # them appears in this array or in crash-watchdog.sh's active list, so nothing
+  # can start them on its own.
+  #
+  # BEFORE RE-ACTIVATING ANY OF THEM, add the session guard. They predate it and
+  # would repeat v10's 2026-08-10 failure — 19 positions opened at 08:53, twenty
+  # minutes before the open, at the previous session's closing prices, two of them
+  # stopped out 75 seconds after the bell because their stops were set against
+  # prices that no longer existed. Copy _session_open() from v10-paper-trade.py
+  # and call it at the top of deploy_signals().
+  # ─────────────────────────────────────────────────────────────────────────────
   # Active engines: 3 (post-foundation-review consolidation, 2026-06-11).
   # Rationale: run only validated, profit-making engines.
   #   v5         — VALIDATED: market-neutral alpha t=3.0 (NIFTY regression),

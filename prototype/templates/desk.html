@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePilot Terminal</title>
+<link rel="stylesheet" href="/static/desk.css">
+<!-- JS is a separate file BY RULE: on 2026-08-03 a tab shipped blank because its
+     logic was appended inside a <script src> tag, whose inline content the
+     browser silently discards. -->
+<script src="/static/desk.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 72 72" aria-label="TradePilot">
+      <defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#4338CA"/><stop offset="100%" stop-color="#7C7FF3"/>
+      </linearGradient></defs>
+      <g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg)"/>
+      <line x1="34" y1="29" x2="34" y2="56" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg)"/>
+      <line x1="53" y1="18" x2="53" y2="45" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg)"/>
+      <path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+    </svg>
+    <b>TRADEPILOT</b><span>TERMINAL</span>
+  </div>
+
+  <div class="idxstrip" id="idxstrip">
+    <div class="idx" id="idx-nifty"><span class="n">NIFTY 50</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+    <div class="idx" id="idx-sensex"><span class="n">SENSEX</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+    <div class="idx" id="idx-banknifty"><span class="n">BANK NIFTY</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+    <div class="idx" id="idx-niftyit"><span class="n">NIFTY IT</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+    <div class="idx" id="idx-vix"><span class="n">INDIA VIX</span><span class="v num skel">00.00</span><span class="c num">--</span></div>
+  </div>
+
+  <div class="sess">
+    <span class="pill closed" id="sessPill">…</span>
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+</header>
+
+<nav class="nav">
+  <a data-tab="desk" class="on">Desk</a>
+  <a data-tab="market">Market</a>
+  <a href="/decisions">Decisions <span class="ext">↗</span></a>
+  <a href="/classic">Classic <span class="ext">↗</span></a>
+</nav>
+
+<main class="main">
+
+  <!-- ═══ DESK ═══ -->
+  <section class="view on" id="view-desk">
+    <div class="kpis">
+      <div class="card kpi">
+        <h3>Fleet Net <span class="chip dim" id="deskStale">…</span></h3>
+        <div class="big" id="kpiNet"><span class="skel">+₹00,000</span></div>
+        <div class="sub" id="kpiNetSub">&nbsp;</div>
+      </div>
+      <div class="card kpi">
+        <h3>Closed Trades</h3>
+        <div class="big" id="kpiTrades"><span class="skel">000</span></div>
+        <div class="sub" id="kpiTradesSub">&nbsp;</div>
+      </div>
+      <div class="card kpi">
+        <h3>Size Experiment</h3>
+        <div class="big" id="kpiExp"><span class="skel">00 / 300</span></div>
+        <div class="sub" id="kpiExpSub">&nbsp;</div>
+        <div class="bar-wrap"><div class="bar-fill" id="expBar" style="width:0%"></div></div>
+      </div>
+      <div class="card kpi">
+        <h3>Guards</h3>
+        <div class="big" id="kpiGuards"><span class="skel">chips</span></div>
+        <div class="sub" id="kpiGuardsSub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Engine Leaderboard <span class="chip dim" id="deskAsOf">…</span></h3>
+        <div id="lbBody"><div class="empty skel" style="height:180px"></div></div>
+      </div>
+      <div class="card">
+        <h3>Open Positions <span class="chip dim" id="openCount">…</span></h3>
+        <div id="openBody"><div class="empty skel" style="height:180px"></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <h3>Exit Feed</h3>
+      <div id="exitBody"><div class="empty skel" style="height:80px"></div></div>
+    </div>
+
+    <div class="foot">
+      <span>Paper trading only — no live capital.</span>
+      <span>Fees modelled per-trade: Zerodha intraday, brokerage min(0.03%, ₹20)/order.</span>
+      <span>Every figure computed from trade records on disk, never recalled.</span>
+    </div>
+  </section>
+
+  <!-- ═══ MARKET ═══ -->
+  <section class="view" id="view-market">
+    <div class="mktbar">
+      <input class="search" id="mktSearch" placeholder="Search symbol…" autocomplete="off" spellcheck="false">
+      <button class="fpill on" data-f="all">All</button>
+      <button class="fpill" data-f="gain">Gainers</button>
+      <button class="fpill" data-f="lose">Losers</button>
+      <button class="fpill" data-f="buy">BUY signal</button>
+      <button class="fpill" data-f="held">Held</button>
+      <span class="chip dim" id="mktCount">…</span>
+      <span class="asof" id="mktAsOf">…</span>
+    </div>
+    <div class="card" style="padding:0 6px">
+      <div id="mktBody"><div class="empty skel" style="height:300px;margin:10px"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══ STOCK DRAWER ═══ -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <button class="x" id="dClose" aria-label="Close">✕</button>
+  <h2 id="dTitle">—</h2>
+  <div class="price num" id="dPrice">—</div>
+  <div class="meta" id="dMeta"></div>
+  <canvas id="dChart"></canvas>
+  <div class="meta" id="dSrc"></div>
+</aside>
+
+</body>
+</html>

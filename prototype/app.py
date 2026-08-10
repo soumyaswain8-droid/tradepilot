@@ -84,6 +84,13 @@ def get_backtest_results():
 
 @app.route("/")
 def index():
+    # Terminal shell (2026-08-11). The old 7,173-line single-template dashboard
+    # stays reachable at /classic until the terminal has absorbed every view.
+    return render_template("desk.html")
+
+
+@app.route("/classic")
+def classic():
     return render_template("index.html")
 
 @app.route("/landing")
@@ -734,6 +741,21 @@ def api_scores():
     now = time.time()
     if _score_cache["data"] and (now - _score_cache["time"]) < 300 and _score_cache.get("key") == cache_key:
         return jsonify(_score_cache["data"])
+
+    # NEVER-BLOCK (2026-08-11). A cold cache used to run the full 200-stock scorer
+    # INLINE in the request — measured at 30s+ (request timed out), and the UI card
+    # waiting on it read as a dead app. Only the background warmer (X-Warmer: 1)
+    # may compute; everyone else gets the last-known-good regardless of age, marked
+    # with how old it is, or an empty list while the very first warm is in flight.
+    if request.headers.get("X-Warmer") != "1":
+        if _score_cache["data"]:
+            resp = jsonify(_score_cache["data"])
+            resp.headers["X-As-Of"] = str(int(_score_cache["time"]))
+            resp.headers["X-Stale"] = "1"
+            return resp
+        resp = jsonify([])
+        resp.headers["X-Warming"] = "1"
+        return resp
 
     try:
         from data_engine import STOCK_CATEGORIES, NIFTY_50
@@ -2163,6 +2185,17 @@ def api_gainers_losers():
     if _movers_cache["data"] and (now - _movers_cache["time"]) < 600:
         return jsonify(_movers_cache["data"])
 
+    # NEVER-BLOCK (2026-08-11) — measured 15.3s inline on a cold cache. Same rule
+    # as /api/scores: only the warmer computes.
+    if request.headers.get("X-Warmer") != "1":
+        if _movers_cache["data"]:
+            resp = jsonify(_movers_cache["data"])
+            resp.headers["X-Stale"] = "1"
+            return resp
+        resp = jsonify({"gainers": [], "losers": [], "warming": True})
+        resp.headers["X-Warming"] = "1"
+        return resp
+
     try:
         from data_engine import STOCK_CATEGORIES
         all_stocks = STOCK_CATEGORIES.get('all', {}).get('stocks', [])
@@ -3587,6 +3620,245 @@ def api_us_status():
     })
 
 
+
+# ═══════════════════════ TERMINAL DESK (2026-08-11) ═══════════════════════
+# One purpose-built endpoint so the main view is a single fast call against
+# local files — no yfinance, no scorer, nothing that can block. The old desk
+# assembled itself from six endpoints, two of which could take 15-30s cold.
+
+def _tp_cost_pct(v):
+    """Zerodha intraday round trip. Brokerage 0.03% or Rs20/order (LOWER wins),
+    STT 0.025% sell-side, txn 0.00297%x2, SEBI, 18% GST, stamp 0.003% buy-side.
+    The Rs20 cap is why cost FALLS above Rs66,667/position — the cliff."""
+    if not v or v <= 0:
+        return 0.0
+    br = min(0.0003 * v, 20) * 2
+    stt, txn, sebi = 0.00025 * v, 0.0000297 * v * 2, 0.000001 * v * 2
+    gst, stamp = 0.18 * (br + txn + sebi), 0.00003 * v
+    return (br + stt + txn + sebi + gst + stamp) / v * 100
+
+
+_desk_cache = {"data": None, "time": 0.0}
+_TRADES_ROOT = Path(__file__).resolve().parent.parent / "docs" / "paper-trades"
+
+
+@app.route("/api/desk")
+def api_desk():
+    import glob as _glob
+    import re as _re
+    import statistics as _st
+    import time as _time
+    now = _time.time()
+    if _desk_cache["data"] and now - _desk_cache["time"] < 30:
+        return jsonify(_desk_cache["data"])
+
+    day_re = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    # Latest session with real content — at 00:xx "today" has no files yet, and the
+    # old engine-status returned no_data for everything until 09:15. A desk that is
+    # blank every morning is a desk nobody trusts; show the last session, labelled.
+    dates = set()
+    for f in _glob.glob(str(_TRADES_ROOT / "*" / "*.json")):
+        b = Path(f).stem
+        if day_re.match(b):
+            dates.add(b)
+    if not dates:
+        return jsonify({"error": "no sessions on disk"}), 503
+
+    # Pick the latest session WITH CONTENT, not the latest filename. Found the hard
+    # way at 00:30 on 2026-08-11: overnight jobs had already created empty
+    # 2026-08-11.json files, max(dates) chose them, and the desk rendered a blank
+    # session while yesterday's 765 trades sat one file over.
+    def _session_has_trades(day):
+        for f in _glob.glob(str(_TRADES_ROOT / "*" / f"{day}.json")):
+            try:
+                j = json.loads(Path(f).read_text())
+            except Exception:
+                continue
+            if j.get("VOID"):
+                continue
+            for pl in (j.get("pools") or {}).values():
+                if pl.get("closed") or pl.get("positions"):
+                    return True
+        return False
+
+    session = None
+    for day in sorted(dates, reverse=True)[:5]:
+        if _session_has_trades(day):
+            session = day
+            break
+    if session is None:
+        session = max(dates)
+
+    engines, fleet = [], {"gross": 0.0, "fees": 0.0, "net": 0.0, "trades": 0,
+                          "wins": 0, "turnover": 0.0}
+    open_positions, recent_exits = [], []
+    for d in sorted(_TRADES_ROOT.iterdir()):
+        if not d.is_dir():
+            continue
+        f = d / f"{session}.json"
+        row = {"name": d.name, "trades": 0, "win_pct": 0, "gross": 0.0, "fees": 0.0,
+               "net": 0.0, "median_pos": 0, "open": 0}
+        closed_vals = []
+        if f.exists():
+            try:
+                j = json.loads(f.read_text())
+            except Exception:
+                j = {}
+            if not j.get("VOID"):
+                for pool, pl in (j.get("pools") or {}).items():
+                    for c in (pl.get("closed") or []):
+                        pnl = float(c.get("pnl") or 0)
+                        ep, q = c.get("entry_price"), c.get("qty")
+                        v = float(ep) * int(q) if ep and q else 0.0
+                        fee = v * _tp_cost_pct(v) / 100
+                        row["trades"] += 1
+                        row["gross"] += pnl
+                        row["fees"] += fee
+                        if pnl > 0:
+                            row["win_pct"] += 1
+                        closed_vals.append(v)
+                        recent_exits.append({
+                            "engine": d.name, "symbol": c.get("symbol"),
+                            "pnl": round(pnl, 0), "pnl_pct": c.get("pnl_pct"),
+                            "reason": c.get("reason"), "exit_time": c.get("exit_time"),
+                            "side": (c.get("position_type") or "LONG").upper()})
+        pa = d / "positions_active.json"
+        if pa.exists() and f.exists():   # only engines active in this session —
+                                          # retired engines keep stale state files
+            try:
+                pj = json.loads(pa.read_text())
+                for pool, lst in (pj.get("positions") or {}).items():
+                    for pos in lst if isinstance(lst, list) else []:
+                        row["open"] += 1
+                        ep, q = pos.get("entry_price"), pos.get("qty")
+                        open_positions.append({
+                            "engine": d.name, "symbol": pos.get("symbol"),
+                            "side": (pos.get("position_type") or "LONG").upper(),
+                            "qty": q, "entry": ep, "pool": pool,
+                            "value": round(float(ep) * int(q), 0) if ep and q else 0,
+                            "entry_date": pos.get("entry_date"),
+                            "entry_time": pos.get("entry_time")})
+            except Exception:
+                pass
+        if row["trades"] or row["open"]:
+            n = row["trades"]
+            row["win_pct"] = round(row["win_pct"] / n * 100) if n else 0
+            row["net"] = round(row["gross"] - row["fees"], 0)
+            row["gross"] = round(row["gross"], 0)
+            row["fees"] = round(row["fees"], 0)
+            row["median_pos"] = round(_st.median(closed_vals), 0) if closed_vals else 0
+            row["turnover"] = round(sum(closed_vals), 0)
+            engines.append(row)
+            fleet["gross"] += row["gross"]; fleet["fees"] += row["fees"]
+            fleet["net"] += row["net"]; fleet["trades"] += n
+            fleet["turnover"] += row.get("turnover", 0)
+    engines.sort(key=lambda r: -r["net"])
+    recent_exits.sort(key=lambda r: r.get("exit_time") or "", reverse=True)
+
+    # v5_size experiment tracker — 10/300 toward significance, ~6 weeks
+    exp = {"name": "v5_size", "cum_trades": 0, "target": 300,
+           "median_pos": 0, "fee_pct": None, "control_fee_pct": None}
+    vals_all = []
+    for f in sorted(_glob.glob(str(_TRADES_ROOT / "v5_size" / "20??-??-??.json"))):
+        try:
+            j = json.loads(Path(f).read_text())
+        except Exception:
+            continue
+        for pool, pl in (j.get("pools") or {}).items():
+            for c in (pl.get("closed") or []):
+                ep, q = c.get("entry_price"), c.get("qty")
+                if ep and q:
+                    vals_all.append(float(ep) * int(q))
+                exp["cum_trades"] += 1
+    if vals_all:
+        med = _st.median(vals_all)
+        exp["median_pos"] = round(med, 0)
+        exp["fee_pct"] = round(_tp_cost_pct(med), 4)
+    v5rows = [r for r in engines if r["name"] == "v5"]
+    if v5rows and v5rows[0]["median_pos"]:
+        exp["control_fee_pct"] = round(_tp_cost_pct(v5rows[0]["median_pos"]), 4)
+
+    guards = {"telegram_entries_muted": None, "session_guard": ["v10", "v5_classic"],
+              "disk_gate": "preflight blocks launch under 5 GB"}
+    try:
+        tg = json.loads((Path(__file__).resolve().parent / "v5" /
+                         "telegram_config.json").read_text())
+        guards["telegram_entries_muted"] = not tg.get("alert_entries", True)
+    except Exception:
+        pass
+
+    data = {"session": session,
+            "is_live_session": session == datetime.now().strftime("%Y-%m-%d"),
+            "generated_at": datetime.now().strftime("%H:%M:%S"),
+            "fleet": {k: round(v, 0) if isinstance(v, float) else v
+                      for k, v in fleet.items()},
+            "engines": engines,
+            "open_positions": open_positions[:80],
+            "recent_exits": recent_exits[:40],
+            "experiment": exp, "guards": guards}
+    _desk_cache["data"], _desk_cache["time"] = data, now
+    return jsonify(data)
+
+
+_spark_cache = {}
+
+
+@app.route("/api/stock/<symbol>/spark")
+def api_stock_spark(symbol):
+    """Intraday 5m bars for the click-through drawer. Kite first (licensed, fast),
+    yfinance fallback. Cached 5 min per symbol. Exists because 'unable to open any
+    stocks to see the moment' — the market table had no detail view at all."""
+    import time as _time
+    sym = symbol.upper().strip()
+    if not sym.replace("&", "").replace("-", "").isalnum() or len(sym) > 20:
+        return jsonify({"error": "bad symbol"}), 400
+    now = _time.time()
+    hit = _spark_cache.get(sym)
+    if hit and now - hit[0] < 300:
+        return jsonify(hit[1])
+    bars, source = [], None
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from prototype.v4 import kite_data as kd
+        tok = kd.token_for(sym)
+        if tok:
+            from datetime import timedelta as _td
+            raw = kd.client().historical_data(
+                tok, datetime.now() - _td(days=4), datetime.now(), "5minute")
+            bars = [[str(b["date"])[11:16], float(b["close"])] for b in raw][-150:]
+            source = "kite"
+    except Exception:
+        bars = []
+    if not bars:
+        try:
+            import yfinance as yf
+            h = yf.Ticker(f"{sym}.NS").history(period="2d", interval="5m")
+            bars = [[str(ix)[11:16], float(r["Close"])] for ix, r in h.iterrows()][-150:]
+            source = "yfinance"
+        except Exception:
+            return jsonify({"error": "no data", "symbol": sym}), 502
+    payload = {"symbol": sym, "source": source, "bars": bars}
+    _spark_cache[sym] = (now, payload)
+    return jsonify(payload)
+
+
+def _cache_warmer():
+    """Keeps /api/scores and /api/gainers-losers hot so no user request ever runs
+    the scorer inline. Measured cold costs: 30s+ and 15.3s. The X-Warmer header is
+    the only path allowed to compute."""
+    import time as _time
+    _time.sleep(3)
+    while True:
+        try:
+            with app.test_client() as c:
+                c.get("/api/scores", headers={"X-Warmer": "1"})
+                c.get("/api/gainers-losers", headers={"X-Warmer": "1"})
+        except Exception as e:
+            print(f"[warmer] {type(e).__name__}: {e}")
+        _time.sleep(240)
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("  TradePilot Prototype")
@@ -3607,4 +3879,6 @@ if __name__ == "__main__":
     print("\nStarting server at http://localhost:5050")
     print("Open your browser to http://localhost:5050\n")
 
+    import threading as _th
+    _th.Thread(target=_cache_warmer, daemon=True, name="cache-warmer").start()
     app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)

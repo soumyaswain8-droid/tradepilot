@@ -62,6 +62,26 @@ check "pmset wake schedule for weekdays" \
       "pmset -g sched | grep -q 'wakepoweron at 8:45AM weekdays'"
 
 echo ""
+# ── 1b. Disk headroom ──────────────────────────────────────────────────────
+# ADDED 2026-08-10. The disk filled DURING the session: 11 of 16 engines logged
+# "[Errno 28] No space left on device", the batch quote fetch degraded to 160/200
+# symbols, v5_size stopped writing positions_active.json at 14:36, and v5_wide
+# failed an atomic write to its own trade file. Nothing alerted — the engines kept
+# running and kept reporting, on partial data.
+#
+# A disk that fills at 14:46 corrupts state files. A disk that fills at 09:15
+# corrupts TRADE files. This check exists so that failure happens here, loudly,
+# before the fleet launches — not silently, mid-session, inside a P&L number.
+#
+# 5 GB is roughly a full session of quotes, logs, order-book depth and state
+# writes with margin. Below that we do not launch.
+echo ""
+echo -e "${cyan}— 1b. Disk headroom —${reset}"
+check "free disk >= 5 GB (session needs ~2 GB, engines write continuously)" \
+      "[ \$(df -k /System/Volumes/Data | awk 'NR==2{print \$4}') -ge 5242880 ]"
+warn  "free disk >= 15 GB (comfortable margin)" \
+      "[ \$(df -k /System/Volumes/Data | awk 'NR==2{print \$4}') -ge 15728640 ]"
+
 echo -e "${cyan}— 2. launchd jobs (10 expected) —${reset}"
 for label in preflight dqo-premarket engines-on dqo-mid exec-eod standup \
              due-alpha-hunter due-competitive-intel due-architect bk-daily; do

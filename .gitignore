@@ -69,3 +69,7 @@ prototype/data/us_cache/
 
 # Order-book depth snapshots — ~58 MB/day raw. Local research data, never committed.
 docs/research/orderbook/
+
+# Backtest bar cache — regenerable from yfinance in minutes, 33MB+ of parquet.
+# Same reasoning as docs/research/orderbook: derived data, not source.
+prototype/data/waterfall/

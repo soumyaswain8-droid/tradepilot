@@ -339,8 +339,32 @@ def _tg_exit(trade):
 
 # ═══════════════════════════ DEPLOY ═══════════════════════════
 
+def _session_open(now=None) -> bool:
+    """True only inside the NSE cash session, 09:15-15:30 on a weekday.
+
+    Added 2026-08-10 after v10 — which also had no gate — deployed 11 SWING
+    positions at 08:53, twenty minutes before the open, at Friday's closing prices.
+    v5_classic had the same exposure and simply happened not to fire that morning.
+    Before 09:15 no price is tradeable however fresh it looks, so the clock is a
+    stronger test than a staleness heuristic. Exits are NOT gated — a position must
+    always be able to close.
+    """
+    now = now or datetime.now()
+    if now.weekday() >= 5:
+        return False
+    mins = now.hour * 60 + now.minute
+    return (9 * 60 + 15) <= mins < (15 * 60 + 30)
+
+
 def deploy_signals(state, pm, rm, signals):
     if not pm or not signals: return 0
+    # SESSION-GUARD (2026-08-10) — see _session_open().
+    if not _session_open():
+        _n = len([s for s in signals if s.get("direction") in ("BUY", "SELL")])
+        log(f"  [SESSION-GUARD] {datetime.now():%H:%M:%S} is outside 09:15-15:30 — "
+            f"blocked {_n} new entries. Any price now is the previous close, "
+            f"not a tradeable fill.")
+        return 0
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
     # #3 FIX: rank by score desc so the max-20 cap fills with highest-conviction picks, not FCFS.

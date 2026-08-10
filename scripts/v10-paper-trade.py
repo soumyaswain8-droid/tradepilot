@@ -19,7 +19,7 @@ Nothing else is touched. Costs are deliberately NOT booked (April did not book
 them); net P&L is computed post-hoc in the analysis layer at v5's measured rate.
 
 DO NOT "FIX" THIS FILE. It is a frozen experimental control. Spec:
-docs/superpowers/specs/2026-07-30-v10-april-replica-design.md
+1cr-roadmap/design/2026-07-30-v10-april-replica-design.md
 """
 """
 TradePilot v5 Paper Trading Engine
@@ -350,8 +350,41 @@ def _tg_exit(trade):
 
 # ═══════════════════════════ DEPLOY ═══════════════════════════
 
+def _session_open(now=None) -> bool:
+    """True only inside the NSE cash session, 09:15-15:30 on a weekday.
+
+    WHY A CLOCK GATE AND NOT JUST A STALENESS CHECK
+    v5's DATA-GUARD asks "does the tape look fresh?" — a heuristic. v10 had no gate at
+    all, and on 2026-08-10 it deployed 11 SWING positions between 08:53:26 and
+    08:53:54 — twenty minutes before the open — at Friday's closing prices. Those
+    fills never existed. The prices were real once; they were not tradeable at 08:53.
+
+    Before 09:15 NO price is tradeable however fresh it looks, so the clock is the
+    stronger test and it cannot be fooled by a warm cache. A swing entry gains
+    nothing from jumping the open: it pays a fictional price and silently absorbs the
+    overnight gap it never actually captured.
+
+    EXITS ARE DELIBERATELY NOT GATED. A position must always be able to close.
+    """
+    now = now or datetime.now()
+    if now.weekday() >= 5:
+        return False
+    mins = now.hour * 60 + now.minute
+    return (9 * 60 + 15) <= mins < (15 * 60 + 30)
+
+
 def deploy_signals(state, pm, rm, signals):
     if not pm or not signals: return 0
+    # SESSION-GUARD (2026-08-10) — see _session_open(). Blocks NEW entries outside
+    # the cash session. Nothing after the entry loop needs to run when we take
+    # nothing, so returning here is safe (verified: the function tail is only a
+    # count log).
+    if not _session_open():
+        _n = len([s for s in signals if s.get("direction") in ("BUY", "SELL")])
+        log(f"  [SESSION-GUARD] {datetime.now():%H:%M:%S} is outside 09:15-15:30 — "
+            f"blocked {_n} new entries. Any price now is the previous close, "
+            f"not a tradeable fill.")
+        return 0
     held = {pos["symbol"] for pd in state["pools"].values() for pos in pd["positions"]}
     count = 0
     rust_validated = 0

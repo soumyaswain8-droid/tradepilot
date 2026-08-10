@@ -281,68 +281,155 @@
     });
   }
 
-  /* ── drawer (stock detail) ─────────────────────────────────────────── */
+  /* ── drawer (stock detail: candles + line, 1D..5Y) ─────────────────── */
+  var RANGES = ["1d", "1w", "1m", "3m", "1y", "3y", "5y"];
+  var curSym = null, curRange = "1d", curMode = "candle", curCandles = [];
+
   function openDrawer(sym) {
+    curSym = sym;
     var row = null;
     for (var i = 0; i < mktRows.length; i++)
       if (mktRows[i].symbol === sym) { row = mktRows[i]; break; }
     $("dTitle").textContent = sym;
     $("dPrice").textContent = row ? "₹" + inr(row.price, 2) : "…";
-    $("dPrice").className = "price num";
     $("dMeta").textContent = row
-      ? sgn(row.change, 2) + "% today · score " + inr(row.score, 1) + " · " + esc(row.signal || "")
+      ? sgn(row.change, 2) + "% today · score " + inr(row.score, 1) +
+        (row.signal ? " · " + esc(row.signal) : "")
       : "";
-    $("dSrc").textContent = "loading intraday…";
-    var cv = $("dChart"), ctx = cv.getContext("2d");
-    ctx.clearRect(0, 0, cv.width, cv.height);
+    renderRangePills();
     $("drawer").classList.add("open");
     $("overlay").classList.add("open");
-    jget("/api/stock/" + encodeURIComponent(sym) + "/spark", 12000).then(function (res) {
-      drawSpark(cv, res.j.bars || []);
-      $("dSrc").textContent = (res.j.bars || []).length + " × 5m bars · source: " + esc(res.j.source);
-    }).catch(function () {
-      $("dSrc").textContent = "intraday unavailable";
-    });
+    loadChart();
   }
   function closeDrawer() {
     $("drawer").classList.remove("open");
     $("overlay").classList.remove("open");
   }
 
-  function drawSpark(cv, bars) {
+  function renderRangePills() {
+    $("dRanges").innerHTML = RANGES.map(function (r) {
+      return '<button data-r="' + r + '"' + (r === curRange ? ' class="on"' : "") +
+        ">" + r.toUpperCase() + "</button>";
+    }).join("");
+    $("dRanges").querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        curRange = b.getAttribute("data-r");
+        renderRangePills();
+        loadChart();
+      });
+    });
+  }
+
+  function loadChart() {
+    if (!curSym) return;
+    $("dSrc").textContent = "loading " + curRange.toUpperCase() + "…";
+    var cv = $("dChart");
+    cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+    jget("/api/stock/" + encodeURIComponent(curSym) + "/chart?range=" + curRange, 20000)
+      .then(function (res) {
+        curCandles = res.j.candles || [];
+        drawChart();
+        if (!curCandles.length) {
+          $("dSrc").textContent = "no data for this range";
+          return;
+        }
+        var first = curCandles[0], last = curCandles[curCandles.length - 1];
+        var ret = (last[4] / first[1] - 1) * 100;
+        // scores still warming? the chart knows the price — use it
+        if ($("dPrice").textContent === "…") {
+          $("dPrice").textContent = "₹" + inr(last[4], 2);
+          $("dMeta").textContent = "price from chart · scores warming";
+        }
+        var hi = -Infinity, lo = Infinity;
+        curCandles.forEach(function (c) {
+          if (c[2] > hi) hi = c[2];
+          if (c[3] < lo) lo = c[3];
+        });
+        var retEl = $("dRet");
+        retEl.textContent = sgn(ret, 2) + "%";
+        retEl.className = "num " + cls(ret);
+        $("dHi").textContent = inr(hi, 2);
+        $("dLo").textContent = inr(lo, 2);
+        $("dSrc").textContent = res.j.n + " candles · " + first[0] + " → " + last[0] +
+          " · source: " + esc(res.j.source);
+      })
+      .catch(function () { $("dSrc").textContent = "chart unavailable · retry a range"; });
+  }
+
+  function drawChart() {
+    var cv = $("dChart");
     var dpr = window.devicePixelRatio || 1;
     var W = cv.clientWidth * dpr, H = cv.clientHeight * dpr;
     cv.width = W; cv.height = H;
     var ctx = cv.getContext("2d");
     ctx.clearRect(0, 0, W, H);
-    if (bars.length < 2) return;
-    var vals = bars.map(function (b) { return b[1]; });
-    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
-    if (mx - mn < 1e-9) { mn -= 1; mx += 1; }
-    var up = vals[vals.length - 1] >= vals[0];
-    var col = up ? "#16c784" : "#ea3943";
-    var pad = 6 * dpr;
-    function X(i) { return pad + (W - 2 * pad) * i / (vals.length - 1); }
-    function Y(v) { return pad + (H - 2 * pad) * (1 - (v - mn) / (mx - mn)); }
-    // faint gridline at the open
-    ctx.strokeStyle = "#242d3d"; ctx.lineWidth = 1; ctx.setLineDash([4 * dpr, 4 * dpr]);
-    ctx.beginPath(); ctx.moveTo(pad, Y(vals[0])); ctx.lineTo(W - pad, Y(vals[0])); ctx.stroke();
-    ctx.setLineDash([]);
-    // area fill
-    var g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, up ? "rgba(22,199,132,.22)" : "rgba(234,57,67,.22)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.beginPath(); ctx.moveTo(X(0), Y(vals[0]));
-    for (var i = 1; i < vals.length; i++) ctx.lineTo(X(i), Y(vals[i]));
-    ctx.lineTo(X(vals.length - 1), H); ctx.lineTo(X(0), H); ctx.closePath();
-    ctx.fillStyle = g; ctx.fill();
-    // line + endpoint
-    ctx.beginPath(); ctx.moveTo(X(0), Y(vals[0]));
-    for (i = 1; i < vals.length; i++) ctx.lineTo(X(i), Y(vals[i]));
-    ctx.strokeStyle = col; ctx.lineWidth = 1.6 * dpr; ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(X(vals.length - 1), Y(vals[vals.length - 1]), 3 * dpr, 0, 7);
-    ctx.fillStyle = col; ctx.fill();
+    var cd = curCandles;
+    if (cd.length < 2) return;
+    var hi = -Infinity, lo = Infinity;
+    cd.forEach(function (c) { if (c[2] > hi) hi = c[2]; if (c[3] < lo) lo = c[3]; });
+    if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
+    var padT = 6 * dpr, padB = 16 * dpr, padL = 4 * dpr, padR = 44 * dpr;
+    var IW = W - padL - padR, IH = H - padT - padB;
+    function Y(v) { return padT + IH * (1 - (v - lo) / (hi - lo)); }
+
+    // gridlines + right-edge price labels
+    ctx.font = (9 * dpr) + "px ui-monospace, Menlo, monospace";
+    ctx.fillStyle = "#57627a";
+    ctx.strokeStyle = "#1c2330"; ctx.lineWidth = 1;
+    for (var g = 0; g <= 3; g++) {
+      var v = lo + (hi - lo) * g / 3;
+      var y = Y(v);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR + 4 * dpr, y); ctx.stroke();
+      ctx.fillText(v >= 1000 ? Math.round(v).toLocaleString("en-IN") : v.toFixed(1),
+                   W - padR + 7 * dpr, y + 3 * dpr);
+    }
+    // x labels: 4 evenly spaced
+    for (var xl = 0; xl < 4; xl++) {
+      var idx = Math.min(cd.length - 1, Math.round(cd.length * xl / 3));
+      var x = padL + IW * idx / (cd.length - 1);
+      ctx.fillText(String(cd[idx][0]), Math.min(x, W - padR - 40 * dpr), H - 4 * dpr);
+    }
+
+    var up = cd[cd.length - 1][4] >= cd[0][1];
+    if (curMode === "line") {
+      var col = up ? "#16c784" : "#ea3943";
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, up ? "rgba(22,199,132,.20)" : "rgba(234,57,67,.20)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      function X(i) { return padL + IW * i / (cd.length - 1); }
+      ctx.beginPath(); ctx.moveTo(X(0), Y(cd[0][4]));
+      for (var i = 1; i < cd.length; i++) ctx.lineTo(X(i), Y(cd[i][4]));
+      ctx.lineTo(X(cd.length - 1), padT + IH); ctx.lineTo(X(0), padT + IH);
+      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(X(0), Y(cd[0][4]));
+      for (i = 1; i < cd.length; i++) ctx.lineTo(X(i), Y(cd[i][4]));
+      ctx.strokeStyle = col; ctx.lineWidth = 1.6 * dpr; ctx.stroke();
+    } else {
+      // candles. Body min width 1px; wick always drawn. With 1,241 daily candles
+      // on 5Y each candle is sub-pixel — cap what we draw so bodies stay visible.
+      var maxBars = Math.floor(IW / (2 * dpr));
+      var view = cd;
+      if (cd.length > maxBars) view = cd.slice(cd.length - maxBars);
+      var n = view.length;
+      var slot = IW / n;
+      var bw = Math.max(1 * dpr, slot * 0.65);
+      for (var k = 0; k < n; k++) {
+        var c = view[k];
+        var o = c[1], h = c[2], l = c[3], cl2 = c[4];
+        var xC = padL + slot * (k + 0.5);
+        var green = cl2 >= o;
+        ctx.strokeStyle = ctx.fillStyle = green ? "#16c784" : "#ea3943";
+        ctx.lineWidth = Math.max(1, 1 * dpr);
+        ctx.beginPath(); ctx.moveTo(xC, Y(h)); ctx.lineTo(xC, Y(l)); ctx.stroke();
+        var yTop = Y(Math.max(o, cl2)), yBot = Y(Math.min(o, cl2));
+        ctx.fillRect(xC - bw / 2, yTop, bw, Math.max(1 * dpr, yBot - yTop));
+      }
+      if (cd.length > maxBars) {
+        ctx.fillStyle = "#57627a";
+        ctx.fillText("showing last " + maxBars + " of " + cd.length +
+                     " — Line shows all", padL, padT + 10 * dpr);
+      }
+    }
   }
 
   /* ── tabs ──────────────────────────────────────────────────────────── */
@@ -365,14 +452,13 @@
     var h = (location.hash || "").replace(/^#/, "").split("/");
     if (h[0] === "market") {
       switchTab("market");
+      // The drawer must NOT wait for /api/scores — the chart comes from its own
+      // endpoint. Coupling them meant a warming score cache silently disabled
+      // every deep link for two minutes after a restart.
       if (h[1]) {
-        var want = h[1].toUpperCase();
-        var tries = 0, iv = setInterval(function () {
-          if (mktRows.length || ++tries > 40) {
-            clearInterval(iv);
-            if (mktRows.length) openDrawer(want);
-          }
-        }, 500);
+        if (h[2] && RANGES.indexOf(h[2].toLowerCase()) !== -1)
+          curRange = h[2].toLowerCase();   // /#market/TITAN/5y
+        openDrawer(h[1].toUpperCase());
       }
     }
 
@@ -383,6 +469,16 @@
     });
     $("overlay").addEventListener("click", closeDrawer);
     $("dClose").addEventListener("click", closeDrawer);
+    $("dModeCandle").addEventListener("click", function () {
+      curMode = "candle";
+      this.classList.add("on"); $("dModeLine").classList.remove("on");
+      drawChart();
+    });
+    $("dModeLine").addEventListener("click", function () {
+      curMode = "line";
+      this.classList.add("on"); $("dModeCandle").classList.remove("on");
+      drawChart();
+    });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") closeDrawer();
     });

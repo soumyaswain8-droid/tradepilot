@@ -114,7 +114,8 @@
     var sig = String(r.direction || "HOLD").toLowerCase();
     var sc = Number(r.score) || 0;
     var scCls = sc >= 70 ? "pos" : sc >= 50 ? "" : "neg";
-    return '<div class="clay-row">'
+    return '<div class="clay-row" data-sym="' + esc(sym) + '" style="cursor:pointer" '
+      + 'title="Open ' + esc(sym) + ' in the terminal">'
       + '<div class="clay-name">'
       + '<div class="clay-mono" style="background-image:linear-gradient(145deg,' + shade(c, 34) + "," + c + ')">'
       + esc(sym.slice(0, 2)) + "</div>"
@@ -147,6 +148,14 @@
     host.querySelector(".clay-body").innerHTML = list.length
       ? list.map(function (r) { return rowHTML(r, held); }).join("")
       : '<div class="clay-empty">No stocks match this filter right now.</div>';
+    // Rows were dead until 2026-08-11 — clicking a stock did nothing anywhere.
+    // The terminal owns the detail view (candles + line, 1D..5Y); route there
+    // rather than maintaining a second drawer in this legacy page.
+    host.querySelectorAll(".clay-row[data-sym]").forEach(function (row) {
+      row.addEventListener("click", function () {
+        window.location.href = "/#market/" + encodeURIComponent(row.getAttribute("data-sym"));
+      });
+    });
     var n = host.querySelector(".clay-count");
     if (n) n.textContent = list.length + " of " + rows.length;
   }

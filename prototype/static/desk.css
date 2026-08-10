@@ -228,3 +228,25 @@ body {
   .skel { animation: none; }
   .drawer { transition: none; }
 }
+
+/* ── drawer chart controls (2026-08-11: candles + line, 1D..5Y) ─────────── */
+.dctl { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.rpills { display: flex; gap: 3px; flex: 1; }
+.rpills button {
+  font: 600 10.5px var(--mono); letter-spacing: .5px; text-transform: uppercase;
+  color: var(--mut); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 4px 8px; cursor: pointer;
+}
+.rpills button:hover { color: var(--ink); }
+.rpills button.on { color: var(--ink); background: var(--acc-bg); border-color: var(--acc); }
+.tgl { display: flex; gap: 2px; }
+.tgl button {
+  font-size: 12px; color: var(--mut); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 4px; width: 28px; height: 24px;
+  cursor: pointer; line-height: 1;
+}
+.tgl button.on { color: var(--acc); border-color: var(--acc); background: var(--acc-bg); }
+.drawer canvas { height: 190px; }
+.rstats { display: flex; gap: 18px; margin-bottom: 8px; }
+.rstats div { font-size: 11px; color: var(--dim); display: flex; flex-direction: column; }
+.rstats b { font-size: 13px; color: var(--ink); margin-top: 1px; }

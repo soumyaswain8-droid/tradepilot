@@ -3843,6 +3843,97 @@ def api_stock_spark(symbol):
     return jsonify(payload)
 
 
+_chart_cache = {}
+
+# range -> (kite_interval, kite_days_back, yf_period, yf_interval, label_fmt)
+# Ranges degrade to whatever history actually exists — a symbol with 2 years of
+# data asked for 5y returns 2y, labelled honestly, rather than an error.
+_CHART_RANGES = {
+    "1d": ("5minute",   4,    "5d",  "5m",  "%H:%M"),
+    "1w": ("30minute",  8,    "7d",  "15m", "%d %H:%M"),
+    "1m": ("60minute",  35,   "1mo", "60m", "%d %b"),
+    "3m": ("day",       95,   "3mo", "1d",  "%d %b"),
+    "1y": ("day",       370,  "1y",  "1d",  "%b %y"),
+    "3y": ("day",       1100, "3y",  "1d",  "%b %y"),
+    "5y": ("day",       1830, "5y",  "1d",  "%b %y"),
+}
+
+
+@app.route("/api/stock/<symbol>/chart")
+def api_stock_chart(symbol):
+    """OHLC candles for the drawer, any range from one session to five years.
+    Kite first (licensed; its 'day' interval reaches years back in one request),
+    yfinance fallback (its 5m data caps at ~60 days). Cached 5 min per
+    (symbol, range)."""
+    import time as _time
+    sym = symbol.upper().strip()
+    rng = request.args.get("range", "1d").lower()
+    if rng not in _CHART_RANGES:
+        return jsonify({"error": "range must be one of " + ",".join(_CHART_RANGES)}), 400
+    if not sym.replace("&", "").replace("-", "").isalnum() or len(sym) > 20:
+        return jsonify({"error": "bad symbol"}), 400
+    key = (sym, rng)
+    now = _time.time()
+    hit = _chart_cache.get(key)
+    if hit and now - hit[0] < 300:
+        return jsonify(hit[1])
+
+    k_iv, k_days, y_per, y_iv, fmt = _CHART_RANGES[rng]
+    candles, source = [], None
+
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from prototype.v4 import kite_data as kd
+        tok = kd.token_for(sym)
+        if tok:
+            from datetime import timedelta as _td
+            raw = kd.client().historical_data(
+                tok, datetime.now() - _td(days=k_days), datetime.now(), k_iv)
+            candles = [[b["date"].strftime(fmt), round(float(b["open"]), 2),
+                        round(float(b["high"]), 2), round(float(b["low"]), 2),
+                        round(float(b["close"]), 2)] for b in raw]
+            source = "kite"
+    except Exception:
+        candles = []
+
+    if not candles:
+        try:
+            import yfinance as yf
+            h = yf.Ticker(f"{sym}.NS").history(period=y_per, interval=y_iv)
+            candles = [[ix.strftime(fmt), round(float(r["Open"]), 2),
+                        round(float(r["High"]), 2), round(float(r["Low"]), 2),
+                        round(float(r["Close"]), 2)]
+                       for ix, r in h.iterrows()
+                       if not (r["Open"] != r["Open"])]   # NaN guard
+            source = "yfinance"
+        except Exception:
+            return jsonify({"error": "no data", "symbol": sym}), 502
+
+    if rng == "1d" and candles:
+        # both sources return several days of intraday bars — keep the LAST
+        # trading session only, so pre-open "1D" shows the last real session
+        # instead of an empty chart.
+        last_day = None
+        try:
+            if source == "kite":
+                from prototype.v4 import kite_data as kd
+                raw_days = [b["date"].date() for b in raw]
+                last_day = max(raw_days)
+                candles = [c for c, d in zip(candles, raw_days) if d == last_day]
+            else:
+                days = [ix.date() for ix, _ in h.iterrows()]
+                last_day = max(days)
+                candles = [c for c, d in zip(candles, days) if d == last_day]
+        except Exception:
+            pass
+
+    payload = {"symbol": sym, "range": rng, "source": source,
+               "n": len(candles), "candles": candles[-1300:]}
+    _chart_cache[key] = (now, payload)
+    return jsonify(payload)
+
+
 def _cache_warmer():
     """Keeps /api/scores and /api/gainers-losers hot so no user request ever runs
     the scorer inline. Measured cold costs: 30s+ and 15.3s. The X-Warmer header is

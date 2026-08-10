@@ -94,6 +94,10 @@ declare -a ENGINES=(
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
   # V10 (2026-07-30): frozen April engine, vendored from git 9d7db34.
   "v10|scripts/v10-paper-trade.py|docs/paper-trades/v10/${TODAY}.json|python3 scripts/v10-paper-trade.py"
+  # v5_size — THE live experiment (cost-cliff sizing, day 2 of ~30). A mid-session
+  # crash without restart voids the day's data point, and at ~10 trades/day every
+  # day matters on the road to n=300. Added 2026-08-11 after finding it missing.
+  "v5_size|scripts/v5_size-paper-trade.py|docs/paper-trades/v5_size/${TODAY}.json|python3 scripts/v5_size-paper-trade.py"
   "v5_1L|scripts/v5_1L-paper-trade.py|docs/paper-trades/v5_1L/${TODAY}.json|python3 scripts/v5_1L-paper-trade.py"
   "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py|docs/paper-trades/v5_cut_1L/${TODAY}.json|python3 scripts/v5_cut_1L-paper-trade.py"
   "v5_long_1L|scripts/v5_long_1L-paper-trade.py|docs/paper-trades/v5_long_1L/${TODAY}.json|python3 scripts/v5_long_1L-paper-trade.py"

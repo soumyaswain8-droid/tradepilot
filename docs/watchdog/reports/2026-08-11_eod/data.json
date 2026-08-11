@@ -1,0 +1,135 @@
+{
+  "date": "2026-08-11",
+  "generated_at": "2026-08-11T15:35:20.969984",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 209.17,
+      "trades": 70,
+      "wins": 34,
+      "losses": 36,
+      "longs": 70,
+      "shorts": 0,
+      "win_rate": 48.6,
+      "open_positions": 5,
+      "best_trade": 596.2,
+      "worst_trade": -574.0,
+      "avg_win": 74.09,
+      "avg_loss": -64.16,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "SIGNAL_FLIP": 24,
+        "TARGET": 4,
+        "FLAT_FORCE_EXIT": 20,
+        "TIME_EXIT": 10
+      },
+      "n_closed": 70,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": 2662.15,
+      "trades": 58,
+      "wins": 34,
+      "losses": 24,
+      "longs": 58,
+      "shorts": 0,
+      "win_rate": 58.6,
+      "open_positions": 4,
+      "best_trade": 697.6,
+      "worst_trade": -574.0,
+      "avg_win": 153.37,
+      "avg_loss": -106.35,
+      "exit_reasons": {
+        "STOPLOSS": 6,
+        "SIGNAL_FLIP": 33,
+        "TARGET": 5,
+        "TIME_EXIT": 14
+      },
+      "n_closed": 58,
+      "n_open": 4
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ASHOKLEY",
+      "BAJAJ-AUTO",
+      "BAJAJFINSV",
+      "BANKINDIA",
+      "CANBK",
+      "COFORGE",
+      "CONCOR",
+      "DIVISLAB",
+      "DRREDDY",
+      "EICHERMOT",
+      "ETERNAL",
+      "EXIDEIND",
+      "GAIL",
+      "GVT&D",
+      "HCLTECH",
+      "HINDZINC",
+      "INDUSTOWER",
+      "LGEINDIA",
+      "LTF",
+      "LTM",
+      "MCX",
+      "NATIONALUM",
+      "NAUKRI",
+      "OIL",
+      "ONGC",
+      "PAYTM",
+      "PERSISTENT",
+      "PNB",
+      "POLICYBZR",
+      "SIEMENS",
+      "TATACOMM",
+      "TITAN",
+      "UNIONBANK",
+      "UNITDSPR",
+      "VOLTAS",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +2,662 across 58 trades (58.6% win).",
+    "Laggard: <b>v5</b> with Rs +209 across 70 trades (48.6% win).",
+    "<b>v5</b>: STOPLOSS (12) >= TARGET (4). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (24). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (6) >= TARGET (5). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (33). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 48.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 58.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "date": "2026-08-12",
+  "generated_at": "2026-08-12T15:35:27.935096",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -3030.58,
+      "trades": 63,
+      "wins": 8,
+      "losses": 55,
+      "longs": 26,
+      "shorts": 37,
+      "win_rate": 12.7,
+      "open_positions": 5,
+      "best_trade": 93.38,
+      "worst_trade": -361.19,
+      "avg_win": 17.74,
+      "avg_loss": -58.42,
+      "exit_reasons": {
+        "STOPLOSS": 23,
+        "FLAT_FORCE_EXIT": 22,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 63,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -1985.81,
+      "trades": 35,
+      "wins": 3,
+      "losses": 32,
+      "longs": 9,
+      "shorts": 26,
+      "win_rate": 8.6,
+      "open_positions": 6,
+      "best_trade": 481.8,
+      "worst_trade": -629.28,
+      "avg_win": 167.2,
+      "avg_loss": -80.24,
+      "exit_reasons": {
+        "STOPLOSS": 18,
+        "TIME_EXIT": 9,
+        "SIGNAL_FLIP": 8
+      },
+      "n_closed": 35,
+      "n_open": 6
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIPOWER",
+      "ATGL",
+      "BHEL",
+      "BSE",
+      "FORTIS",
+      "GMRAIRPORT",
+      "GODREJPROP",
+      "INDUSTOWER",
+      "JIOFIN",
+      "KPITTECH",
+      "MAXHEALTH",
+      "MPHASIS",
+      "PATANJALI",
+      "PREMIERENE",
+      "PRESTIGE",
+      "TATACONSUM",
+      "TATAINVEST",
+      "TATASTEEL",
+      "TITAN",
+      "UNIONBANK",
+      "UNITDSPR",
+      "UPL",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -1,986 across 35 trades (8.6% win).",
+    "Laggard: <b>v5</b> with Rs -3,031 across 63 trades (12.7% win).",
+    "Low-volume engines outperformed \u2014 selectivity beat volume today (low-vol avg Rs -1,986 vs high-vol Rs -3,031).",
+    "<b>v5</b>: STOPLOSS (23) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (18) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 12.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 8.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

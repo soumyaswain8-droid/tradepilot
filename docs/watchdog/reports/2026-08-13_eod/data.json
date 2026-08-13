@@ -1,0 +1,122 @@
+{
+  "date": "2026-08-13",
+  "generated_at": "2026-08-13T15:35:18.047851",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -861.89,
+      "trades": 40,
+      "wins": 14,
+      "losses": 26,
+      "longs": 16,
+      "shorts": 24,
+      "win_rate": 35.0,
+      "open_positions": 8,
+      "best_trade": 240.3,
+      "worst_trade": -377.4,
+      "avg_win": 77.04,
+      "avg_loss": -74.63,
+      "exit_reasons": {
+        "STOPLOSS": 9,
+        "FLAT_FORCE_EXIT": 10,
+        "TIME_EXIT": 9,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 11
+      },
+      "n_closed": 40,
+      "n_open": 8
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -445.39,
+      "trades": 43,
+      "wins": 13,
+      "losses": 30,
+      "longs": 13,
+      "shorts": 30,
+      "win_rate": 30.2,
+      "open_positions": 3,
+      "best_trade": 705.0,
+      "worst_trade": -273.9,
+      "avg_win": 100.3,
+      "avg_loss": -58.31,
+      "exit_reasons": {
+        "STOPLOSS": 20,
+        "TIME_EXIT": 14,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 43,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIPOWER",
+      "ASTRAL",
+      "AUROPHARMA",
+      "CONCOR",
+      "FEDERALBNK",
+      "GAIL",
+      "GODFRYPHLP",
+      "GVT&D",
+      "HYUNDAI",
+      "ICICIBANK",
+      "INDUSINDBK",
+      "INDUSTOWER",
+      "KPITTECH",
+      "LTF",
+      "M&MFIN",
+      "NATIONALUM",
+      "OFSS",
+      "PAYTM",
+      "POWERGRID",
+      "SHRIRAMFIN",
+      "SIEMENS",
+      "TECHM",
+      "TMCV",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -445 across 43 trades (30.2% win).",
+    "Laggard: <b>v5</b> with Rs -862 across 40 trades (35.0% win).",
+    "<b>v5</b>: STOPLOSS (9) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: dominated by SIGNAL_FLIP exits (11). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5_classic</b>: STOPLOSS (20) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 35.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 30.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

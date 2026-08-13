@@ -1,0 +1,6809 @@
+{
+  "date": "2026-08-13",
+  "engine": "v5_long_1L",
+  "started_at": "08:50:22",
+  "total_capital": 99954.46,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-08-13T08:50:29",
+    "gap_prediction": {
+      "direction": "FLAT",
+      "magnitude_pct": -0.15,
+      "confidence": 0.6,
+      "source": "gift_nifty"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "volume_price_proxy"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": 0.26,
+      "asia_change": 0.84,
+      "details": {
+        "sp500": 0.26,
+        "hangseng": 0.06,
+        "nikkei": 1.61
+      }
+    },
+    "overall": {
+      "bias": "NEUTRAL",
+      "score": 0,
+      "size_multiplier": 0.6,
+      "reasons": [
+        "No strong signals \u2014 default neutral"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "BANKBARODA",
+          "entry_price": 249.73,
+          "qty": 2,
+          "cost": 499.46,
+          "entry_time": "14:02:28",
+          "entry_date": "2026-08-12",
+          "sl_price": 247.23,
+          "target_price": 255.97,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 251.0,
+          "trough_price": 249.73,
+          "score": 72.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 250",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.20% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.1x average)",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "UNIONBANK",
+          "entry_price": 185.6,
+          "qty": 2,
+          "cost": 371.2,
+          "entry_time": "14:02:28",
+          "entry_date": "2026-08-12",
+          "sl_price": 181.89,
+          "target_price": 190.43,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 187.28,
+          "trough_price": 185.6,
+          "score": 66.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Relative strength +2.47% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.6x average)",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "GODREJCP",
+          "entry_price": 928.3,
+          "qty": 2,
+          "cost": 1856.6,
+          "entry_time": "11:42:38",
+          "entry_date": "2026-08-13",
+          "sl_price": 919.02,
+          "target_price": 951.51,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 937.4,
+          "trough_price": 928.3,
+          "score": 79.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 916",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.13% above VWAP (917)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.91% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +2.6%",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "BEL",
+          "entry_price": 407.5,
+          "qty": 3,
+          "cost": 1222.5,
+          "entry_time": "11:42:38",
+          "entry_date": "2026-08-13",
+          "sl_price": 404.24,
+          "target_price": 415.65,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 410.95,
+          "trough_price": 407.5,
+          "score": 72.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 406",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.30% above VWAP (406)",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "KALYANKJIL",
+          "entry_price": 616.3,
+          "qty": 1,
+          "cost": 616.3,
+          "entry_time": "14:20:42",
+          "entry_date": "2026-08-13",
+          "sl_price": 608.29,
+          "target_price": 636.02,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 618.9,
+          "trough_price": 616.3,
+          "score": 80.0,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 608",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.46% above VWAP (608)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +3.62% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +3.3%",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "CONCOR",
+          "entry_price": 533.7,
+          "qty": 1,
+          "cost": 533.7,
+          "entry_time": "14:20:42",
+          "entry_date": "2026-08-13",
+          "sl_price": 526.76,
+          "target_price": 550.78,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 534.95,
+          "trough_price": 533.7,
+          "score": 78.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 525",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.09% above VWAP (528)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.57% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.2%",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "TMPV",
+          "entry_price": 347.8,
+          "qty": 1,
+          "cost": 347.8,
+          "entry_time": "14:20:42",
+          "entry_date": "2026-08-13",
+          "sl_price": 344.32,
+          "target_price": 356.5,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 349.5,
+          "trough_price": 347.8,
+          "score": 75.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 345",
+              "type": "positive"
+            },
+            {
+              "text": "Price -0.21% below VWAP (349)",
+              "type": "negative"
+            },
+            {
+              "text": "Relative strength +1.74% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.0x average)",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "KPITTECH",
+          "entry_price": 618.9,
+          "qty": 1,
+          "cost": 618.9,
+          "entry_time": "14:20:42",
+          "entry_date": "2026-08-13",
+          "sl_price": 612.71,
+          "target_price": 634.37,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 619.7,
+          "trough_price": 618.9,
+          "score": 73.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 617",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.47% above VWAP (616)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.93% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.5x average)",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "HUDCO",
+          "entry_price": 194.1,
+          "qty": 3,
+          "cost": 582.3,
+          "entry_time": "14:20:42",
+          "entry_date": "2026-08-13",
+          "sl_price": 192.55,
+          "target_price": 197.98,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 194.1,
+          "trough_price": 194.1,
+          "score": 71.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 194",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.21% above VWAP (194)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.05% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.1x average)",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "TMCV",
+          "entry_price": 475.5,
+          "qty": 1,
+          "cost": 475.5,
+          "entry_time": "14:51:41",
+          "entry_date": "2026-08-13",
+          "sl_price": 465.99,
+          "target_price": 487.86,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 475.5,
+          "trough_price": 475.5,
+          "score": 68.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.03% above VWAP (475)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.36% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.1x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.0%",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "ETERNAL",
+          "entry_price": 318.55,
+          "qty": 1,
+          "cost": 318.55,
+          "entry_time": "14:51:41",
+          "entry_date": "2026-08-13",
+          "sl_price": 313.77,
+          "target_price": 324.92,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 318.55,
+          "trough_price": 318.55,
+          "score": 65.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.28% above VWAP (318)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.75% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.6x average)",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "NTPC",
+          "entry_price": 341.75,
+          "qty": 1,
+          "cost": 341.75,
+          "entry_time": "14:51:41",
+          "entry_date": "2026-08-13",
+          "sl_price": 337.65,
+          "target_price": 347.22,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 342.65,
+          "trough_price": 341.75,
+          "score": 64.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.37% above VWAP (341)",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.0x average)",
+              "type": "positive"
+            }
+          ]
+        },
+        {
+          "symbol": "OIL",
+          "entry_price": 479.4,
+          "qty": 1,
+          "cost": 479.4,
+          "entry_time": "14:51:41",
+          "entry_date": "2026-08-13",
+          "sl_price": 472.21,
+          "target_price": 488.99,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 479.6,
+          "trough_price": 479.4,
+          "score": 63.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.52% above VWAP (477)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.89% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ]
+        }
+      ],
+      "closed": [
+        {
+          "symbol": "IDEA",
+          "entry_price": 13.16,
+          "exit_price": 13.5,
+          "qty": 40,
+          "entry_time": "14:02:28",
+          "exit_time": "09:00:49",
+          "pnl": 13.6,
+          "pnl_pct": 2.58,
+          "reason": "TARGET",
+          "pnl_gross": 13.6,
+          "pnl_net": 12.96,
+          "cost": 0.64,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 65.0,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price -1.23% below VWAP (13)",
+              "type": "negative"
+            },
+            {
+              "text": "Relative strength +2.86% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.1x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +2.1%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 13.16,
+          "target_price": 13.5,
+          "entry_date": "2026-08-12",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "INDUSTOWER",
+          "entry_price": 375.6,
+          "exit_price": 381.65,
+          "qty": 1,
+          "entry_time": "13:00:54",
+          "exit_time": "09:23:44",
+          "pnl": 6.05,
+          "pnl_pct": 1.61,
+          "reason": "STOPLOSS",
+          "pnl_gross": 6.05,
+          "pnl_net": 5.6,
+          "cost": 0.45,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 75.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 374",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.27% above VWAP (375)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.50% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.5x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 381.83,
+          "target_price": 384.99,
+          "entry_date": "2026-08-12",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "NATIONALUM",
+          "entry_price": 416.85,
+          "exit_price": 409.65,
+          "qty": 1,
+          "entry_time": "14:02:28",
+          "exit_time": "09:23:44",
+          "pnl": -7.2,
+          "pnl_pct": -1.73,
+          "reason": "STOPLOSS",
+          "pnl_gross": -7.2,
+          "pnl_net": -7.7,
+          "cost": 0.5,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 71.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.24% above VWAP (416)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +8.21% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.5x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +7.4%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 411.43,
+          "target_price": 430.19,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "IDFCFIRSTB",
+          "entry_price": 84.89,
+          "exit_price": 85.35,
+          "qty": 7,
+          "entry_time": "14:02:28",
+          "exit_time": "09:23:44",
+          "pnl": 3.22,
+          "pnl_pct": 0.54,
+          "reason": "STOPLOSS",
+          "pnl_gross": 3.22,
+          "pnl_net": 2.5,
+          "cost": 0.72,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 71.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 85",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.39% above VWAP (85)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.51% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 85.37,
+          "target_price": 86.59,
+          "entry_date": "2026-08-12",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "ASTRAL",
+          "entry_price": 1579.3,
+          "exit_price": 1556.8,
+          "qty": 1,
+          "entry_time": "09:36:35",
+          "exit_time": "10:29:48",
+          "pnl": -22.5,
+          "pnl_pct": -1.42,
+          "reason": "STOPLOSS",
+          "pnl_gross": -22.5,
+          "pnl_net": -24.38,
+          "cost": 1.88,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 78.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1565",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.89% above VWAP (1551)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +8.35% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +7.9%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1558.77,
+          "target_price": 1629.84,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "KPITTECH",
+          "entry_price": 617.25,
+          "exit_price": 611.8,
+          "qty": 2,
+          "entry_time": "09:36:35",
+          "exit_time": "10:29:48",
+          "pnl": -10.9,
+          "pnl_pct": -0.88,
+          "reason": "STOPLOSS",
+          "pnl_gross": -10.9,
+          "pnl_net": -12.37,
+          "cost": 1.47,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 72.2,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 617",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.46% above VWAP (615)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.79% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 612.31,
+          "target_price": 629.6,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "JIOFIN",
+          "entry_price": 254.25,
+          "exit_price": 257.5,
+          "qty": 2,
+          "entry_time": "15:05:43",
+          "exit_time": "10:50:21",
+          "pnl": 6.5,
+          "pnl_pct": 1.28,
+          "reason": "STOPLOSS",
+          "pnl_gross": 6.5,
+          "pnl_net": 5.89,
+          "cost": 0.61,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 66.3,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.97% above VWAP (252)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.04% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 257.51,
+          "target_price": 259.33,
+          "entry_date": "2026-08-12",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "M&MFIN",
+          "entry_price": 399.6,
+          "exit_price": 402.25,
+          "qty": 5,
+          "entry_time": "09:36:35",
+          "exit_time": "10:50:21",
+          "pnl": 13.25,
+          "pnl_pct": 0.66,
+          "reason": "STOPLOSS",
+          "pnl_gross": 13.25,
+          "pnl_net": 10.84,
+          "cost": 2.41,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 72.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 398",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.50% above VWAP (398)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.42% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 403.72,
+          "target_price": 409.59,
+          "entry_date": "2026-08-13",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "GROWW",
+          "entry_price": 195.79,
+          "exit_price": 197.77,
+          "qty": 3,
+          "entry_time": "14:02:28",
+          "exit_time": "11:21:30",
+          "pnl": 5.94,
+          "pnl_pct": 1.01,
+          "reason": "STOPLOSS",
+          "pnl_gross": 5.94,
+          "pnl_net": 5.23,
+          "cost": 0.71,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 73.2,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 196",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.38% above VWAP (195)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.95% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.8x average)",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 197.98,
+          "target_price": 200.68,
+          "entry_date": "2026-08-12",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "EXIDEIND",
+          "entry_price": 491.5,
+          "exit_price": 486.15,
+          "qty": 1,
+          "entry_time": "15:05:43",
+          "exit_time": "11:21:30",
+          "pnl": -5.35,
+          "pnl_pct": -1.09,
+          "reason": "STOPLOSS",
+          "pnl_gross": -5.35,
+          "pnl_net": -5.94,
+          "cost": 0.59,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 71.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 489",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.28% above VWAP (488)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.14% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 486.58,
+          "target_price": 503.79,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "HINDZINC",
+          "entry_price": 593.4,
+          "exit_price": 587.2,
+          "qty": 3,
+          "entry_time": "10:40:20",
+          "exit_time": "11:31:31",
+          "pnl": -18.6,
+          "pnl_pct": -1.04,
+          "reason": "STOPLOSS",
+          "pnl_gross": -18.6,
+          "pnl_net": -20.73,
+          "cost": 2.13,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 76.3,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 589",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.72% above VWAP (589)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.96% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 587.47,
+          "target_price": 608.23,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "PNB",
+          "entry_price": 118.87,
+          "exit_price": 118.28,
+          "qty": 21,
+          "entry_time": "10:23:27",
+          "exit_time": "11:42:38",
+          "pnl": -12.39,
+          "pnl_pct": -0.5,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -12.39,
+          "pnl_net": -15.38,
+          "cost": 2.99,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 77.9,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 117",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.16% above VWAP (118)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.67% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.2%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 117.32,
+          "target_price": 122.67,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "TECHM",
+          "entry_price": 1646.1,
+          "exit_price": 1640.0,
+          "qty": 1,
+          "entry_time": "09:36:35",
+          "exit_time": "11:42:38",
+          "pnl": -6.1,
+          "pnl_pct": -0.37,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -6.1,
+          "pnl_net": -8.07,
+          "cost": 1.97,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 71.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1646",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.37% above VWAP (1640)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.77% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1632.93,
+          "target_price": 1679.02,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "TMPV",
+          "entry_price": 347.75,
+          "exit_price": 350.0,
+          "qty": 4,
+          "entry_time": "11:11:27",
+          "exit_time": "12:14:01",
+          "pnl": 9.0,
+          "pnl_pct": 0.65,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 9.0,
+          "pnl_net": 7.33,
+          "cost": 1.67,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 75.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 345",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.04% above VWAP (348)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.86% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 344.27,
+          "target_price": 356.44,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "ITC",
+          "entry_price": 278.2,
+          "exit_price": 277.2,
+          "qty": 6,
+          "entry_time": "11:42:38",
+          "exit_time": "12:45:55",
+          "pnl": -6.0,
+          "pnl_pct": -0.36,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -6.0,
+          "pnl_net": -8.0,
+          "cost": 2.0,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 75.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 277",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.49% above VWAP (277)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.08% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 275.97,
+          "target_price": 283.76,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "SHRIRAMFIN",
+          "entry_price": 1137.1,
+          "exit_price": 1126.7,
+          "qty": 1,
+          "entry_time": "11:11:27",
+          "exit_time": "13:17:44",
+          "pnl": -10.4,
+          "pnl_pct": -0.91,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -10.4,
+          "pnl_net": -11.76,
+          "cost": 1.36,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 75.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1130",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.26% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1125.73,
+          "target_price": 1165.53,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "BHEL",
+          "entry_price": 416.2,
+          "exit_price": 415.25,
+          "qty": 1,
+          "entry_time": "14:02:28",
+          "exit_time": "13:37:46",
+          "pnl": -0.95,
+          "pnl_pct": -0.23,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -0.95,
+          "pnl_net": -1.45,
+          "cost": 0.5,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 79.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 410",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.25% above VWAP (411)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.05% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +3.3%",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 410.79,
+          "target_price": 429.52,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "CANBK",
+          "entry_price": 131.67,
+          "exit_price": 131.36,
+          "qty": 4,
+          "entry_time": "14:02:28",
+          "exit_time": "13:37:46",
+          "pnl": -1.24,
+          "pnl_pct": -0.24,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -1.24,
+          "pnl_net": -1.87,
+          "cost": 0.63,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 66.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Relative strength +1.82% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.2x average)",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 129.69,
+          "target_price": 134.3,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "RECLTD",
+          "entry_price": 345.6,
+          "exit_price": 345.0,
+          "qty": 1,
+          "entry_time": "14:35:35",
+          "exit_time": "13:37:46",
+          "pnl": -0.6,
+          "pnl_pct": -0.17,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -0.6,
+          "pnl_net": -1.01,
+          "cost": 0.41,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 73.3,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 343",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.15% above VWAP (342)",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 342.14,
+          "target_price": 354.24,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "VBL",
+          "entry_price": 437.95,
+          "exit_price": 439.15,
+          "qty": 1,
+          "entry_time": "15:05:43",
+          "exit_time": "13:37:46",
+          "pnl": 1.2,
+          "pnl_pct": 0.27,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": 1.2,
+          "pnl_net": 0.67,
+          "cost": 0.53,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 68.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 437",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.38% above VWAP (436)",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.9x average)",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 432.69,
+          "target_price": 444.96,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "NHPC",
+          "entry_price": 77.76,
+          "exit_price": 77.72,
+          "qty": 26,
+          "entry_time": "11:42:38",
+          "exit_time": "13:37:46",
+          "pnl": -1.04,
+          "pnl_pct": -0.05,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -1.04,
+          "pnl_net": -3.47,
+          "cost": 2.43,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 77.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 77",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.04% above VWAP (77)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.52% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 76.98,
+          "target_price": 79.7,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "M&MFIN",
+          "entry_price": 401.1,
+          "exit_price": 400.3,
+          "qty": 3,
+          "entry_time": "11:42:38",
+          "exit_time": "13:37:46",
+          "pnl": -2.4,
+          "pnl_pct": -0.2,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -2.4,
+          "pnl_net": -3.84,
+          "cost": 1.44,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 71.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 398",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.67% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 395.89,
+          "target_price": 413.94,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "TMPV",
+          "entry_price": 348.8,
+          "exit_price": 348.2,
+          "qty": 4,
+          "entry_time": "12:45:55",
+          "exit_time": "13:37:46",
+          "pnl": -2.4,
+          "pnl_pct": -0.17,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -2.4,
+          "pnl_net": -4.07,
+          "cost": 1.67,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 77.1,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 345",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.07% above VWAP (348)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.88% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.6x average)",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 345.31,
+          "target_price": 357.52,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "BANKINDIA",
+          "entry_price": 145.18,
+          "exit_price": 144.8,
+          "qty": 4,
+          "entry_time": "14:02:28",
+          "exit_time": "13:47:47",
+          "pnl": -1.52,
+          "pnl_pct": -0.26,
+          "reason": "FLAT_FORCE_EXIT",
+          "pnl_gross": -1.52,
+          "pnl_net": -2.22,
+          "cost": 0.7,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 74.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 145",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.27% above VWAP (145)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.37% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+259 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+25 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.1x average)",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 143.73,
+          "target_price": 148.81,
+          "entry_date": "2026-08-12",
+          "trailing_activated": false
+        },
+        {
+          "symbol": "TATACONSUM",
+          "entry_price": 1076.1,
+          "exit_price": 1093.5,
+          "qty": 1,
+          "entry_time": "10:40:20",
+          "exit_time": "14:20:41",
+          "pnl": 17.4,
+          "pnl_pct": 1.62,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 17.4,
+          "pnl_net": 16.1,
+          "cost": 1.3,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 76.0,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1066",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.58% above VWAP (1070)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.79% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1087.34,
+          "target_price": 1103.0,
+          "entry_date": "2026-08-13",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "LODHA",
+          "entry_price": 1228.1,
+          "exit_price": 1237.8,
+          "qty": 1,
+          "entry_time": "12:14:01",
+          "exit_time": "14:20:41",
+          "pnl": 9.7,
+          "pnl_pct": 0.79,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": 9.7,
+          "pnl_net": 8.22,
+          "cost": 1.48,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 76.1,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1213",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.58% above VWAP (1221)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.74% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1228.1,
+          "target_price": 1258.8,
+          "entry_date": "2026-08-13",
+          "trailing_activated": true
+        },
+        {
+          "symbol": "NAUKRI",
+          "entry_price": 1359.2,
+          "exit_price": 1359.0,
+          "qty": 1,
+          "entry_time": "13:17:44",
+          "exit_time": "14:20:42",
+          "pnl": -0.2,
+          "pnl_pct": -0.01,
+          "reason": "SIGNAL_FLIP",
+          "pnl_gross": -0.2,
+          "pnl_net": -1.83,
+          "cost": 1.63,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "score": 76.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1350",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.89% above VWAP (1348)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.84% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII selling (-1002 Cr)",
+              "type": "negative"
+            },
+            {
+              "text": "DII buying (+5842 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "sl_price": 1345.61,
+          "target_price": 1393.18,
+          "entry_date": "2026-08-13",
+          "trailing_activated": false
+        }
+      ],
+      "pnl": -23.92985504150387
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": -23.92985504150387,
+    "trades": 27,
+    "wins": 10,
+    "losses": 17,
+    "longs": 27,
+    "shorts": 0,
+    "scan_count": 37,
+    "rescore_count": 12,
+    "total_pnl_net": -58.74301312847898,
+    "total_cost": 34.81315808697511
+  },
+  "last_rescore_time": "14:50:44",
+  "last_signals": [
+    {
+      "symbol": "ASTRAL",
+      "direction": "BUY",
+      "score": 74.7,
+      "pool": "SWING",
+      "entry_price": 1594.9,
+      "sl_price": 1574.17,
+      "target_price": 1645.94,
+      "riskReward": 2.5,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +1.48% above VWAP (1572)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +9.26% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.3x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +8.9%",
+          "type": "positive"
+        }
+      ],
+      "price": 1594.9,
+      "change_pct": 8.94,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 1
+    },
+    {
+      "symbol": "SOLARINDS",
+      "direction": "BUY",
+      "score": 72.4,
+      "pool": "SWING",
+      "entry_price": 19905.0,
+      "sl_price": 19646.24,
+      "target_price": 20541.96,
+      "riskReward": 2.5,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +2.52% above VWAP (19392)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +6.59% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +6.3%",
+          "type": "positive"
+        }
+      ],
+      "price": 19905.0,
+      "change_pct": 6.27,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 2
+    },
+    {
+      "symbol": "OBEROIRLTY",
+      "direction": "BUY",
+      "score": 71.8,
+      "pool": "SWING",
+      "entry_price": 1846.9,
+      "sl_price": 1822.89,
+      "target_price": 1906.0,
+      "riskReward": 2.5,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +1.50% above VWAP (1820)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +2.93% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +2.6%",
+          "type": "positive"
+        }
+      ],
+      "price": 1846.9,
+      "change_pct": 2.61,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 3
+    },
+    {
+      "symbol": "ICICIAMC",
+      "direction": "BUY",
+      "score": 69.0,
+      "pool": "SWING",
+      "entry_price": 3142.5,
+      "sl_price": 3095.36,
+      "target_price": 3205.35,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +1.26% above VWAP (3104)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +2.53% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +2.2%",
+          "type": "positive"
+        }
+      ],
+      "price": 3142.5,
+      "change_pct": 2.21,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 4
+    },
+    {
+      "symbol": "GODREJCP",
+      "direction": "BUY",
+      "score": 68.9,
+      "pool": "SWING",
+      "entry_price": 932.7,
+      "sl_price": 914.05,
+      "target_price": 956.95,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.99% above VWAP (924)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +3.38% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +3.1%",
+          "type": "positive"
+        }
+      ],
+      "price": 932.7,
+      "change_pct": 3.06,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 5
+    },
+    {
+      "symbol": "TMCV",
+      "direction": "BUY",
+      "score": 68.9,
+      "pool": "SWING",
+      "entry_price": 475.5,
+      "sl_price": 465.99,
+      "target_price": 487.86,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.03% above VWAP (475)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +4.36% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +4.0%",
+          "type": "positive"
+        }
+      ],
+      "price": 475.5,
+      "change_pct": 4.04,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 6
+    },
+    {
+      "symbol": "CONCOR",
+      "direction": "BUY",
+      "score": 68.0,
+      "pool": "SWING",
+      "entry_price": 533.5,
+      "sl_price": 522.83,
+      "target_price": 547.37,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.86% above VWAP (529)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +4.51% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +4.2%",
+          "type": "positive"
+        }
+      ],
+      "price": 533.5,
+      "change_pct": 4.19,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 7
+    },
+    {
+      "symbol": "TMPV",
+      "direction": "BUY",
+      "score": 67.5,
+      "pool": "SWING",
+      "entry_price": 348.75,
+      "sl_price": 343.52,
+      "target_price": 355.73,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.10% above VWAP (349)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +2.00% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 348.75,
+      "change_pct": 1.68,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 8
+    },
+    {
+      "symbol": "APLAPOLLO",
+      "direction": "BUY",
+      "score": 67.2,
+      "pool": "SWING",
+      "entry_price": 2050.9,
+      "sl_price": 2009.88,
+      "target_price": 2104.22,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.32% above VWAP (2044)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +3.01% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +2.7%",
+          "type": "positive"
+        }
+      ],
+      "price": 2050.9,
+      "change_pct": 2.69,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 9
+    },
+    {
+      "symbol": "BDL",
+      "direction": "BUY",
+      "score": 67.0,
+      "pool": "SWING",
+      "entry_price": 1371.4,
+      "sl_price": 1343.97,
+      "target_price": 1407.06,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.52% above VWAP (1364)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +2.66% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +2.3%",
+          "type": "positive"
+        }
+      ],
+      "price": 1371.4,
+      "change_pct": 2.34,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 10
+    },
+    {
+      "symbol": "TATAELXSI",
+      "direction": "BUY",
+      "score": 66.6,
+      "pool": "SWING",
+      "entry_price": 3772.6,
+      "sl_price": 3716.01,
+      "target_price": 3848.05,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.43% above VWAP (3756)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.96% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 3772.6,
+      "change_pct": 1.64,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 11
+    },
+    {
+      "symbol": "KPITTECH",
+      "direction": "BUY",
+      "score": 66.5,
+      "pool": "SWING",
+      "entry_price": 619.15,
+      "sl_price": 609.86,
+      "target_price": 631.53,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.44% above VWAP (616)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.95% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 619.15,
+      "change_pct": 1.63,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 12
+    },
+    {
+      "symbol": "LODHA",
+      "direction": "BUY",
+      "score": 66.4,
+      "pool": "SWING",
+      "entry_price": 1239.2,
+      "sl_price": 1214.42,
+      "target_price": 1271.42,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.85% above VWAP (1229)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +2.82% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        },
+        {
+          "text": "Strong rally +2.5%",
+          "type": "positive"
+        }
+      ],
+      "price": 1239.2,
+      "change_pct": 2.5,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 13
+    },
+    {
+      "symbol": "ETERNAL",
+      "direction": "BUY",
+      "score": 65.5,
+      "pool": "SWING",
+      "entry_price": 318.55,
+      "sl_price": 313.77,
+      "target_price": 324.92,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.28% above VWAP (318)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.75% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 318.55,
+      "change_pct": 1.43,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 14
+    },
+    {
+      "symbol": "360ONE",
+      "direction": "BUY",
+      "score": 64.9,
+      "pool": "SWING",
+      "entry_price": 1178.9,
+      "sl_price": 1161.22,
+      "target_price": 1202.48,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.71% above VWAP (1171)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.86% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 1178.9,
+      "change_pct": 1.54,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 15
+    },
+    {
+      "symbol": "NTPC",
+      "direction": "BUY",
+      "score": 64.6,
+      "pool": "SWING",
+      "entry_price": 341.75,
+      "sl_price": 337.65,
+      "target_price": 347.22,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.37% above VWAP (341)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.0x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 341.75,
+      "change_pct": 0.68,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 16
+    },
+    {
+      "symbol": "PRESTIGE",
+      "direction": "BUY",
+      "score": 64.0,
+      "pool": "SWING",
+      "entry_price": 1610.8,
+      "sl_price": 1586.64,
+      "target_price": 1643.02,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.65% above VWAP (1600)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.71% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 1610.8,
+      "change_pct": 1.39,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 17
+    },
+    {
+      "symbol": "BEL",
+      "direction": "BUY",
+      "score": 63.7,
+      "pool": "SWING",
+      "entry_price": 410.15,
+      "sl_price": 404.0,
+      "target_price": 418.35,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.43% above VWAP (408)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.55% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 410.15,
+      "change_pct": 1.23,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 18
+    },
+    {
+      "symbol": "OIL",
+      "direction": "BUY",
+      "score": 63.7,
+      "pool": "SWING",
+      "entry_price": 479.4,
+      "sl_price": 472.21,
+      "target_price": 488.99,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.52% above VWAP (477)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.89% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 479.4,
+      "change_pct": 1.57,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 19
+    },
+    {
+      "symbol": "TECHM",
+      "direction": "BUY",
+      "score": 63.5,
+      "pool": "SWING",
+      "entry_price": 1644.0,
+      "sl_price": 1624.27,
+      "target_price": 1670.3,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative strength +1.49% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.5x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1644.0,
+      "change_pct": 1.17,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 20
+    },
+    {
+      "symbol": "HUDCO",
+      "direction": "BUY",
+      "score": 62.8,
+      "pool": "SWING",
+      "entry_price": 193.9,
+      "sl_price": 191.57,
+      "target_price": 197.0,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.03% above VWAP (194)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.0x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 193.9,
+      "change_pct": 0.61,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 21
+    },
+    {
+      "symbol": "TATACOMM",
+      "direction": "BUY",
+      "score": 62.7,
+      "pool": "SWING",
+      "entry_price": 1752.4,
+      "sl_price": 1726.11,
+      "target_price": 1787.45,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative strength +1.25% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1752.4,
+      "change_pct": 0.93,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 22
+    },
+    {
+      "symbol": "SHRIRAMFIN",
+      "direction": "BUY",
+      "score": 62.5,
+      "pool": "SWING",
+      "entry_price": 1129.8,
+      "sl_price": 1112.85,
+      "target_price": 1152.4,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.42% below VWAP (1135)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative strength +1.45% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1129.8,
+      "change_pct": 1.13,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 23
+    },
+    {
+      "symbol": "SRF",
+      "direction": "BUY",
+      "score": 62.5,
+      "pool": "SWING",
+      "entry_price": 2600.5,
+      "sl_price": 2561.49,
+      "target_price": 2652.51,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.86% above VWAP (2580)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 2600.5,
+      "change_pct": 0.6,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 24
+    },
+    {
+      "symbol": "GLENMARK",
+      "direction": "BUY",
+      "score": 62.3,
+      "pool": "SWING",
+      "entry_price": 2315.0,
+      "sl_price": 2280.28,
+      "target_price": 2361.3,
+      "riskReward": 1.3,
+      "position_type": "LONG",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.37% above VWAP (2307)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.41% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 2315.0,
+      "change_pct": 1.09,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 25
+    },
+    {
+      "symbol": "MARICO",
+      "direction": "HOLD",
+      "score": 62.3,
+      "pool": "NONE",
+      "entry_price": 862.3,
+      "sl_price": 851.95,
+      "target_price": 876.1,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.54% above VWAP (858)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.17% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 862.3,
+      "change_pct": 0.85,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 26
+    },
+    {
+      "symbol": "SUPREMEIND",
+      "direction": "HOLD",
+      "score": 62.2,
+      "pool": "NONE",
+      "entry_price": 3480.5,
+      "sl_price": 3428.29,
+      "target_price": 3550.11,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.17% above VWAP (3475)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 3480.5,
+      "change_pct": 0.6,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 27
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "direction": "HOLD",
+      "score": 62.0,
+      "pool": "NONE",
+      "entry_price": 2085.0,
+      "sl_price": 2053.72,
+      "target_price": 2126.7,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.57% above VWAP (2073)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.39% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 2085.0,
+      "change_pct": 1.07,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 28
+    },
+    {
+      "symbol": "NYKAA",
+      "direction": "HOLD",
+      "score": 62.0,
+      "pool": "NONE",
+      "entry_price": 332.45,
+      "sl_price": 327.46,
+      "target_price": 339.1,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.58% above VWAP (331)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.66% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Low volume (0.4x average)",
+          "type": "negative"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 332.45,
+      "change_pct": 1.34,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 29
+    },
+    {
+      "symbol": "JUBLFOOD",
+      "direction": "HOLD",
+      "score": 61.9,
+      "pool": "NONE",
+      "entry_price": 491.85,
+      "sl_price": 482.01,
+      "target_price": 504.64,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.39% above VWAP (489)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.80% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Low volume (0.3x average)",
+          "type": "negative"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 491.85,
+      "change_pct": 1.48,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 30
+    },
+    {
+      "symbol": "PERSISTENT",
+      "direction": "HOLD",
+      "score": 61.4,
+      "pool": "NONE",
+      "entry_price": 5510.0,
+      "sl_price": 5427.35,
+      "target_price": 5620.2,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.29% above VWAP (5493)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 5510.0,
+      "change_pct": 0.66,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 31
+    },
+    {
+      "symbol": "INDUSINDBK",
+      "direction": "HOLD",
+      "score": 61.1,
+      "pool": "NONE",
+      "entry_price": 1021.9,
+      "sl_price": 1009.64,
+      "target_price": 1038.25,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.48% above VWAP (1017)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1021.9,
+      "change_pct": 0.43,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 32
+    },
+    {
+      "symbol": "GODREJPROP",
+      "direction": "HOLD",
+      "score": 60.9,
+      "pool": "NONE",
+      "entry_price": 2024.5,
+      "sl_price": 1994.13,
+      "target_price": 2064.99,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.47% above VWAP (2015)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 2024.5,
+      "change_pct": 0.47,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 33
+    },
+    {
+      "symbol": "COROMANDEL",
+      "direction": "HOLD",
+      "score": 60.7,
+      "pool": "NONE",
+      "entry_price": 2091.1,
+      "sl_price": 2066.01,
+      "target_price": 2124.56,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.30% above VWAP (2085)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.18% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 2091.1,
+      "change_pct": 0.86,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 34
+    },
+    {
+      "symbol": "PFC",
+      "direction": "HOLD",
+      "score": 60.6,
+      "pool": "NONE",
+      "entry_price": 378.35,
+      "sl_price": 373.81,
+      "target_price": 384.4,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.62% above VWAP (376)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 378.35,
+      "change_pct": 0.49,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 35
+    },
+    {
+      "symbol": "DLF",
+      "direction": "HOLD",
+      "score": 60.5,
+      "pool": "NONE",
+      "entry_price": 665.7,
+      "sl_price": 655.71,
+      "target_price": 679.01,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.42% above VWAP (663)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 665.7,
+      "change_pct": 0.6,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 36
+    },
+    {
+      "symbol": "DRREDDY",
+      "direction": "HOLD",
+      "score": 59.7,
+      "pool": "NONE",
+      "entry_price": 1205.6,
+      "sl_price": 1187.52,
+      "target_price": 1229.71,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.44% above VWAP (1200)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Positive intraday momentum",
+          "type": "positive"
+        }
+      ],
+      "price": 1205.6,
+      "change_pct": 0.47,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 37
+    },
+    {
+      "symbol": "MAXHEALTH",
+      "direction": "HOLD",
+      "score": 59.7,
+      "pool": "NONE",
+      "entry_price": 1018.2,
+      "sl_price": 997.84,
+      "target_price": 1044.67,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.11% above VWAP (1018)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative strength +1.38% vs Nifty",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 1018.2,
+      "change_pct": 1.06,
+      "trend": "Uptrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 38
+    },
+    {
+      "symbol": "IOC",
+      "direction": "HOLD",
+      "score": 59.5,
+      "pool": "NONE",
+      "entry_price": 141.3,
+      "sl_price": 139.6,
+      "target_price": 143.56,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.36% above VWAP (141)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 141.3,
+      "change_pct": 0.5,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 39
+    },
+    {
+      "symbol": "IDEA",
+      "direction": "HOLD",
+      "score": 59.2,
+      "pool": "NONE",
+      "entry_price": 13.55,
+      "sl_price": 13.35,
+      "target_price": 13.82,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.82% below VWAP (14)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 13.55,
+      "change_pct": 0.37,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 40
+    },
+    {
+      "symbol": "POLYCAB",
+      "direction": "HOLD",
+      "score": 59.0,
+      "pool": "NONE",
+      "entry_price": 9316.5,
+      "sl_price": 9204.7,
+      "target_price": 9465.56,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 9316.5,
+      "change_pct": 0.3,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 41
+    },
+    {
+      "symbol": "BHARATFORG",
+      "direction": "HOLD",
+      "score": 58.9,
+      "pool": "NONE",
+      "entry_price": 2092.0,
+      "sl_price": 2066.9,
+      "target_price": 2125.47,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 2092.0,
+      "change_pct": 0.5,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 42
+    },
+    {
+      "symbol": "HAVELLS",
+      "direction": "HOLD",
+      "score": 58.1,
+      "pool": "NONE",
+      "entry_price": 1269.1,
+      "sl_price": 1253.87,
+      "target_price": 1289.41,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.46% above VWAP (1263)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 1269.1,
+      "change_pct": 0.32,
+      "trend": "Uptrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 43
+    },
+    {
+      "symbol": "LT",
+      "direction": "HOLD",
+      "score": 58.0,
+      "pool": "NONE",
+      "entry_price": 4040.0,
+      "sl_price": 3979.4,
+      "target_price": 4120.8,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.19% above VWAP (4031)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 4040.0,
+      "change_pct": 0.5,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 44
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "direction": "HOLD",
+      "score": 57.9,
+      "pool": "NONE",
+      "entry_price": 46615.0,
+      "sl_price": 45915.78,
+      "target_price": 47547.3,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.62% below VWAP (46907)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.4x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 46615.0,
+      "change_pct": 0.29,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 45
+    },
+    {
+      "symbol": "IRFC",
+      "direction": "HOLD",
+      "score": 57.9,
+      "pool": "NONE",
+      "entry_price": 88.45,
+      "sl_price": 87.39,
+      "target_price": 89.87,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.26% above VWAP (88)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 88.45,
+      "change_pct": 0.22,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 46
+    },
+    {
+      "symbol": "MRF",
+      "direction": "HOLD",
+      "score": 57.4,
+      "pool": "NONE",
+      "entry_price": 131000.0,
+      "sl_price": 129428.0,
+      "target_price": 133096.0,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.03% above VWAP (131024)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 131000.0,
+      "change_pct": 0.16,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 47
+    },
+    {
+      "symbol": "MCX",
+      "direction": "HOLD",
+      "score": 57.3,
+      "pool": "NONE",
+      "entry_price": 2971.9,
+      "sl_price": 2912.46,
+      "target_price": 3049.17,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 2971.9,
+      "change_pct": 0.06,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 48
+    },
+    {
+      "symbol": "SWIGGY",
+      "direction": "HOLD",
+      "score": 57.2,
+      "pool": "NONE",
+      "entry_price": 280.05,
+      "sl_price": 275.85,
+      "target_price": 285.65,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 280.05,
+      "change_pct": 0.25,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 49
+    },
+    {
+      "symbol": "KEI",
+      "direction": "HOLD",
+      "score": 57.1,
+      "pool": "NONE",
+      "entry_price": 5770.0,
+      "sl_price": 5683.45,
+      "target_price": 5885.4,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.38% below VWAP (5791)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 5770.0,
+      "change_pct": 0.28,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 50
+    },
+    {
+      "symbol": "HDFCLIFE",
+      "direction": "HOLD",
+      "score": 57.0,
+      "pool": "NONE",
+      "entry_price": 538.35,
+      "sl_price": 531.89,
+      "target_price": 546.96,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.06% above VWAP (538)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 538.35,
+      "change_pct": 0.25,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 51
+    },
+    {
+      "symbol": "TCS",
+      "direction": "HOLD",
+      "score": 56.8,
+      "pool": "NONE",
+      "entry_price": 2357.5,
+      "sl_price": 2322.14,
+      "target_price": 2404.65,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.08% above VWAP (2357)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 2357.5,
+      "change_pct": 0.33,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 52
+    },
+    {
+      "symbol": "CHOLAFIN",
+      "direction": "HOLD",
+      "score": 56.7,
+      "pool": "NONE",
+      "entry_price": 1920.8,
+      "sl_price": 1897.75,
+      "target_price": 1951.53,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.55% above VWAP (1910)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 1920.8,
+      "change_pct": 0.17,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 53
+    },
+    {
+      "symbol": "DMART",
+      "direction": "HOLD",
+      "score": 56.1,
+      "pool": "NONE",
+      "entry_price": 4055.0,
+      "sl_price": 3994.17,
+      "target_price": 4136.1,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.09% above VWAP (4051)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 4055.0,
+      "change_pct": 0.37,
+      "trend": "Uptrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 54
+    },
+    {
+      "symbol": "ASHOKLEY",
+      "direction": "HOLD",
+      "score": 55.5,
+      "pool": "NONE",
+      "entry_price": 177.3,
+      "sl_price": 173.75,
+      "target_price": 181.91,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -1.64% below VWAP (180)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.4x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        }
+      ],
+      "price": 177.3,
+      "change_pct": 0.34,
+      "trend": "Sideways",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 55
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "direction": "HOLD",
+      "score": 54.9,
+      "pool": "NONE",
+      "entry_price": 2875.8,
+      "sl_price": 2841.29,
+      "target_price": 2921.81,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.33% below VWAP (2886)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 2875.8,
+      "change_pct": -0.02,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 56
+    },
+    {
+      "symbol": "M&MFIN",
+      "direction": "HOLD",
+      "score": 54.8,
+      "pool": "NONE",
+      "entry_price": 397.1,
+      "sl_price": 389.16,
+      "target_price": 407.42,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -1.05% below VWAP (401)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.5x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 397.1,
+      "change_pct": 0.32,
+      "trend": "Sideways",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 57
+    },
+    {
+      "symbol": "YESBANK",
+      "direction": "HOLD",
+      "score": 54.7,
+      "pool": "NONE",
+      "entry_price": 22.98,
+      "sl_price": 22.7,
+      "target_price": 23.35,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.21% above VWAP (23)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 22.98,
+      "change_pct": 0.0,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 58
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "direction": "HOLD",
+      "score": 54.6,
+      "pool": "NONE",
+      "entry_price": 391.25,
+      "sl_price": 386.56,
+      "target_price": 397.51,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.11% above VWAP (391)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Short covering rally",
+          "type": "positive"
+        }
+      ],
+      "price": 391.25,
+      "change_pct": 0.19,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 59
+    },
+    {
+      "symbol": "AUBANK",
+      "direction": "HOLD",
+      "score": 53.5,
+      "pool": "NONE",
+      "entry_price": 1091.0,
+      "sl_price": 1074.63,
+      "target_price": 1112.82,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.30% above VWAP (1088)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1091.0,
+      "change_pct": -0.04,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 60
+    },
+    {
+      "symbol": "PIIND",
+      "direction": "HOLD",
+      "score": 53.2,
+      "pool": "NONE",
+      "entry_price": 2482.4,
+      "sl_price": 2452.61,
+      "target_price": 2522.12,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.26% below VWAP (2489)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 2482.4,
+      "change_pct": -0.02,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 61
+    },
+    {
+      "symbol": "RECLTD",
+      "direction": "HOLD",
+      "score": 52.9,
+      "pool": "NONE",
+      "entry_price": 345.85,
+      "sl_price": 341.7,
+      "target_price": 351.38,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.56% above VWAP (344)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 345.85,
+      "change_pct": -0.04,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 62
+    },
+    {
+      "symbol": "HDFCAMC",
+      "direction": "HOLD",
+      "score": 51.9,
+      "pool": "NONE",
+      "entry_price": 2490.1,
+      "sl_price": 2460.22,
+      "target_price": 2529.94,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 2490.1,
+      "change_pct": 0.0,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 63
+    },
+    {
+      "symbol": "MARUTI",
+      "direction": "HOLD",
+      "score": 51.6,
+      "pool": "NONE",
+      "entry_price": 13875.0,
+      "sl_price": 13708.5,
+      "target_price": 14097.0,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 13875.0,
+      "change_pct": 0.0,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 64
+    },
+    {
+      "symbol": "UNIONBANK",
+      "direction": "HOLD",
+      "score": 51.3,
+      "pool": "NONE",
+      "entry_price": 186.66,
+      "sl_price": 183.86,
+      "target_price": 190.39,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.2x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 186.66,
+      "change_pct": -0.18,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 65
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "direction": "HOLD",
+      "score": 51.2,
+      "pool": "NONE",
+      "entry_price": 1845.9,
+      "sl_price": 1818.21,
+      "target_price": 1882.82,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.54% above VWAP (1836)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1845.9,
+      "change_pct": -0.22,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 66
+    },
+    {
+      "symbol": "INDIANB",
+      "direction": "HOLD",
+      "score": 50.7,
+      "pool": "NONE",
+      "entry_price": 895.3,
+      "sl_price": 881.87,
+      "target_price": 913.21,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.0x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 895.3,
+      "change_pct": -0.19,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 67
+    },
+    {
+      "symbol": "IREDA",
+      "direction": "HOLD",
+      "score": 50.0,
+      "pool": "NONE",
+      "entry_price": 117.59,
+      "sl_price": 116.18,
+      "target_price": 119.47,
+      "riskReward": 1.3,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 117.59,
+      "change_pct": -0.18,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 68
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "direction": "HOLD",
+      "score": 49.6,
+      "pool": "NONE",
+      "entry_price": 1943.3,
+      "sl_price": 1904.43,
+      "target_price": 1972.45,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.67% below VWAP (1956)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.0x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1943.3,
+      "change_pct": -0.09,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 69
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "direction": "HOLD",
+      "score": 49.2,
+      "pool": "NONE",
+      "entry_price": 2735.0,
+      "sl_price": 2691.24,
+      "target_price": 2767.82,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 2735.0,
+      "change_pct": -0.18,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 70
+    },
+    {
+      "symbol": "CANBK",
+      "direction": "HOLD",
+      "score": 48.7,
+      "pool": "NONE",
+      "entry_price": 131.55,
+      "sl_price": 128.92,
+      "target_price": 133.52,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 131.55,
+      "change_pct": -0.34,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 71
+    },
+    {
+      "symbol": "AUROPHARMA",
+      "direction": "HOLD",
+      "score": 48.6,
+      "pool": "NONE",
+      "entry_price": 1664.2,
+      "sl_price": 1637.57,
+      "target_price": 1684.17,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.51% below VWAP (1673)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1664.2,
+      "change_pct": -0.17,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 72
+    },
+    {
+      "symbol": "APOLLOHOSP",
+      "direction": "HOLD",
+      "score": 48.4,
+      "pool": "NONE",
+      "entry_price": 8580.0,
+      "sl_price": 8408.4,
+      "target_price": 8708.7,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.85% below VWAP (8654)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.3x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        }
+      ],
+      "price": 8580.0,
+      "change_pct": -0.2,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 73
+    },
+    {
+      "symbol": "PNB",
+      "direction": "HOLD",
+      "score": 48.4,
+      "pool": "NONE",
+      "entry_price": 118.51,
+      "sl_price": 116.61,
+      "target_price": 119.93,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.10% above VWAP (118)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 118.51,
+      "change_pct": -0.4,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 74
+    },
+    {
+      "symbol": "ADANIPOWER",
+      "direction": "HOLD",
+      "score": 47.7,
+      "pool": "NONE",
+      "entry_price": 205.86,
+      "sl_price": 201.74,
+      "target_price": 208.95,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.16% above VWAP (206)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.4x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 205.86,
+      "change_pct": -0.55,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 75
+    },
+    {
+      "symbol": "ATGL",
+      "direction": "HOLD",
+      "score": 47.7,
+      "pool": "NONE",
+      "entry_price": 657.9,
+      "sl_price": 644.74,
+      "target_price": 667.77,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.49% below VWAP (661)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.5x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 657.9,
+      "change_pct": -0.37,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 76
+    },
+    {
+      "symbol": "CIPLA",
+      "direction": "HOLD",
+      "score": 46.6,
+      "pool": "NONE",
+      "entry_price": 1459.8,
+      "sl_price": 1436.44,
+      "target_price": 1477.32,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1459.8,
+      "change_pct": -0.22,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 77
+    },
+    {
+      "symbol": "COALINDIA",
+      "direction": "HOLD",
+      "score": 46.0,
+      "pool": "NONE",
+      "entry_price": 408.15,
+      "sl_price": 401.62,
+      "target_price": 413.05,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.11% above VWAP (408)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 408.15,
+      "change_pct": -0.28,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 78
+    },
+    {
+      "symbol": "HDFCBANK",
+      "direction": "HOLD",
+      "score": 45.8,
+      "pool": "NONE",
+      "entry_price": 726.55,
+      "sl_price": 714.93,
+      "target_price": 735.27,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 726.55,
+      "change_pct": -0.34,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 79
+    },
+    {
+      "symbol": "PIDILITIND",
+      "direction": "HOLD",
+      "score": 45.7,
+      "pool": "NONE",
+      "entry_price": 1694.3,
+      "sl_price": 1667.19,
+      "target_price": 1714.63,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.18% above VWAP (1691)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1694.3,
+      "change_pct": -0.42,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 80
+    },
+    {
+      "symbol": "CGPOWER",
+      "direction": "HOLD",
+      "score": 45.5,
+      "pool": "NONE",
+      "entry_price": 884.1,
+      "sl_price": 866.42,
+      "target_price": 897.36,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.03% above VWAP (884)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 884.1,
+      "change_pct": -0.44,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 81
+    },
+    {
+      "symbol": "SIEMENS",
+      "direction": "HOLD",
+      "score": 45.4,
+      "pool": "NONE",
+      "entry_price": 3992.9,
+      "sl_price": 3913.04,
+      "target_price": 4052.79,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.16% above VWAP (3987)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 3992.9,
+      "change_pct": -0.65,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 82
+    },
+    {
+      "symbol": "VBL",
+      "direction": "HOLD",
+      "score": 45.4,
+      "pool": "NONE",
+      "entry_price": 438.55,
+      "sl_price": 431.53,
+      "target_price": 443.81,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.24% above VWAP (438)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 438.55,
+      "change_pct": -0.44,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 83
+    },
+    {
+      "symbol": "BRITANNIA",
+      "direction": "HOLD",
+      "score": 45.3,
+      "pool": "NONE",
+      "entry_price": 5627.0,
+      "sl_price": 5536.97,
+      "target_price": 5694.52,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.40% below VWAP (5650)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 5627.0,
+      "change_pct": -0.33,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 84
+    },
+    {
+      "symbol": "WIPRO",
+      "direction": "HOLD",
+      "score": 45.3,
+      "pool": "NONE",
+      "entry_price": 183.14,
+      "sl_price": 180.21,
+      "target_price": 185.34,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.16% above VWAP (183)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 183.14,
+      "change_pct": -0.43,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 85
+    },
+    {
+      "symbol": "BAJAJHLDNG",
+      "direction": "HOLD",
+      "score": 45.2,
+      "pool": "NONE",
+      "entry_price": 11495.0,
+      "sl_price": 11311.08,
+      "target_price": 11632.94,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.05% above VWAP (11489)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.1x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 11495.0,
+      "change_pct": -0.73,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 86
+    },
+    {
+      "symbol": "SBIN",
+      "direction": "HOLD",
+      "score": 45.2,
+      "pool": "NONE",
+      "entry_price": 1078.2,
+      "sl_price": 1060.95,
+      "target_price": 1091.14,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.36% below VWAP (1082)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1078.2,
+      "change_pct": -0.35,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 87
+    },
+    {
+      "symbol": "VOLTAS",
+      "direction": "HOLD",
+      "score": 45.1,
+      "pool": "NONE",
+      "entry_price": 1285.4,
+      "sl_price": 1264.83,
+      "target_price": 1300.82,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.14% above VWAP (1284)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1285.4,
+      "change_pct": -0.36,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 88
+    },
+    {
+      "symbol": "TORNTPHARM",
+      "direction": "HOLD",
+      "score": 45.0,
+      "pool": "NONE",
+      "entry_price": 4862.5,
+      "sl_price": 4784.7,
+      "target_price": 4920.85,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 4862.5,
+      "change_pct": -0.62,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 89
+    },
+    {
+      "symbol": "LGEINDIA",
+      "direction": "HOLD",
+      "score": 44.9,
+      "pool": "NONE",
+      "entry_price": 1574.0,
+      "sl_price": 1548.82,
+      "target_price": 1592.89,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.14% above VWAP (1572)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Low volume (0.4x average)",
+          "type": "negative"
+        }
+      ],
+      "price": 1574.0,
+      "change_pct": -0.3,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 90
+    },
+    {
+      "symbol": "LTM",
+      "direction": "HOLD",
+      "score": 44.7,
+      "pool": "NONE",
+      "entry_price": 4743.0,
+      "sl_price": 4648.14,
+      "target_price": 4814.14,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.21% below VWAP (4753)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 4743.0,
+      "change_pct": -0.4,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 91
+    },
+    {
+      "symbol": "ICICIGI",
+      "direction": "HOLD",
+      "score": 44.6,
+      "pool": "NONE",
+      "entry_price": 1622.6,
+      "sl_price": 1596.64,
+      "target_price": 1642.07,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.3x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1622.6,
+      "change_pct": -0.76,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 92
+    },
+    {
+      "symbol": "INDUSTOWER",
+      "direction": "HOLD",
+      "score": 44.1,
+      "pool": "NONE",
+      "entry_price": 381.5,
+      "sl_price": 375.4,
+      "target_price": 386.08,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.42% below VWAP (383)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 381.5,
+      "change_pct": -0.5,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 93
+    },
+    {
+      "symbol": "UNITDSPR",
+      "direction": "HOLD",
+      "score": 43.9,
+      "pool": "NONE",
+      "entry_price": 1525.4,
+      "sl_price": 1500.99,
+      "target_price": 1543.7,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1525.4,
+      "change_pct": -0.63,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 94
+    },
+    {
+      "symbol": "ADANIGREEN",
+      "direction": "HOLD",
+      "score": 43.6,
+      "pool": "NONE",
+      "entry_price": 1319.8,
+      "sl_price": 1293.4,
+      "target_price": 1339.6,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.45% below VWAP (1325)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 1319.8,
+      "change_pct": -0.94,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 95
+    },
+    {
+      "symbol": "RVNL",
+      "direction": "HOLD",
+      "score": 42.9,
+      "pool": "NONE",
+      "entry_price": 228.4,
+      "sl_price": 224.75,
+      "target_price": 231.14,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.24% below VWAP (229)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.7x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 228.4,
+      "change_pct": -0.7,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 96
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "direction": "HOLD",
+      "score": 42.8,
+      "pool": "NONE",
+      "entry_price": 5856.5,
+      "sl_price": 5739.37,
+      "target_price": 5944.35,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.34% below VWAP (5876)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 5856.5,
+      "change_pct": -0.65,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 97
+    },
+    {
+      "symbol": "AMBUJACEM",
+      "direction": "HOLD",
+      "score": 42.4,
+      "pool": "NONE",
+      "entry_price": 418.35,
+      "sl_price": 411.66,
+      "target_price": 423.37,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.24% below VWAP (420)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 418.35,
+      "change_pct": -0.63,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 98
+    },
+    {
+      "symbol": "UPL",
+      "direction": "HOLD",
+      "score": 42.4,
+      "pool": "NONE",
+      "entry_price": 565.65,
+      "sl_price": 556.6,
+      "target_price": 572.44,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.09% above VWAP (565)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 565.65,
+      "change_pct": -0.85,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 99
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "direction": "HOLD",
+      "score": 41.9,
+      "pool": "NONE",
+      "entry_price": 1653.5,
+      "sl_price": 1620.43,
+      "target_price": 1678.3,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.17% above VWAP (1651)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1653.5,
+      "change_pct": -0.69,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 100
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "direction": "HOLD",
+      "score": 41.9,
+      "pool": "NONE",
+      "entry_price": 5340.0,
+      "sl_price": 5254.56,
+      "target_price": 5404.08,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 5340.0,
+      "change_pct": -0.47,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 101
+    },
+    {
+      "symbol": "NESTLEIND",
+      "direction": "HOLD",
+      "score": 41.4,
+      "pool": "NONE",
+      "entry_price": 1498.9,
+      "sl_price": 1468.92,
+      "target_price": 1521.38,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.55% below VWAP (1507)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1498.9,
+      "change_pct": -0.54,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 102
+    },
+    {
+      "symbol": "ABCAPITAL",
+      "direction": "HOLD",
+      "score": 40.5,
+      "pool": "NONE",
+      "entry_price": 405.5,
+      "sl_price": 397.39,
+      "target_price": 411.58,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.33% above VWAP (404)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative weakness -1.01% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 405.5,
+      "change_pct": -1.33,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 103
+    },
+    {
+      "symbol": "POWERGRID",
+      "direction": "HOLD",
+      "score": 40.2,
+      "pool": "NONE",
+      "entry_price": 267.15,
+      "sl_price": 262.88,
+      "target_price": 270.36,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 267.15,
+      "change_pct": -0.85,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 104
+    },
+    {
+      "symbol": "IRCTC",
+      "direction": "HOLD",
+      "score": 40.1,
+      "pool": "NONE",
+      "entry_price": 505.7,
+      "sl_price": 495.59,
+      "target_price": 513.29,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.26% below VWAP (507)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.21% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (2.3x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 505.7,
+      "change_pct": -1.53,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 105
+    },
+    {
+      "symbol": "RELIANCE",
+      "direction": "HOLD",
+      "score": 40.1,
+      "pool": "NONE",
+      "entry_price": 1315.3,
+      "sl_price": 1294.26,
+      "target_price": 1331.08,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.13% above VWAP (1314)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1315.3,
+      "change_pct": -1.03,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 106
+    },
+    {
+      "symbol": "TITAN",
+      "direction": "HOLD",
+      "score": 39.8,
+      "pool": "NONE",
+      "entry_price": 5039.0,
+      "sl_price": 4958.38,
+      "target_price": 5099.47,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.14% above VWAP (5032)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 5039.0,
+      "change_pct": -1.18,
+      "trend": "Sideways",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 107
+    },
+    {
+      "symbol": "NMDC",
+      "direction": "HOLD",
+      "score": 39.7,
+      "pool": "NONE",
+      "entry_price": 84.93,
+      "sl_price": 83.57,
+      "target_price": 85.95,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 84.93,
+      "change_pct": -1.13,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 108
+    },
+    {
+      "symbol": "SBILIFE",
+      "direction": "HOLD",
+      "score": 39.6,
+      "pool": "NONE",
+      "entry_price": 1815.4,
+      "sl_price": 1786.35,
+      "target_price": 1837.18,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1815.4,
+      "change_pct": -0.8,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 109
+    },
+    {
+      "symbol": "ULTRACEMCO",
+      "direction": "HOLD",
+      "score": 39.0,
+      "pool": "NONE",
+      "entry_price": 11670.0,
+      "sl_price": 11436.6,
+      "target_price": 11845.05,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.03% above VWAP (11665)",
+          "type": "positive"
+        },
+        {
+          "text": "Relative weakness -1.54% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.8x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 11670.0,
+      "change_pct": -1.86,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 110
+    },
+    {
+      "symbol": "JINDALSTEL",
+      "direction": "HOLD",
+      "score": 38.7,
+      "pool": "NONE",
+      "entry_price": 1095.7,
+      "sl_price": 1078.17,
+      "target_price": 1108.85,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative weakness -1.15% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 1095.7,
+      "change_pct": -1.47,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 111
+    },
+    {
+      "symbol": "TATASTEEL",
+      "direction": "HOLD",
+      "score": 38.6,
+      "pool": "NONE",
+      "entry_price": 184.24,
+      "sl_price": 180.56,
+      "target_price": 187.0,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 184.24,
+      "change_pct": -1.05,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 112
+    },
+    {
+      "symbol": "POWERINDIA",
+      "direction": "HOLD",
+      "score": 38.4,
+      "pool": "NONE",
+      "entry_price": 35270.0,
+      "sl_price": 34564.6,
+      "target_price": 35799.05,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.59% below VWAP (35494)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.16% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 35270.0,
+      "change_pct": -1.48,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 113
+    },
+    {
+      "symbol": "DIVISLAB",
+      "direction": "HOLD",
+      "score": 38.2,
+      "pool": "NONE",
+      "entry_price": 8447.5,
+      "sl_price": 8312.34,
+      "target_price": 8548.87,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative weakness -1.45% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.5x average)",
+          "type": "positive"
+        }
+      ],
+      "price": 8447.5,
+      "change_pct": -1.77,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 114
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "direction": "HOLD",
+      "score": 38.1,
+      "pool": "NONE",
+      "entry_price": 352.9,
+      "sl_price": 347.25,
+      "target_price": 357.13,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 352.9,
+      "change_pct": -1.11,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 115
+    },
+    {
+      "symbol": "LICHSGFIN",
+      "direction": "HOLD",
+      "score": 38.1,
+      "pool": "NONE",
+      "entry_price": 501.5,
+      "sl_price": 493.48,
+      "target_price": 507.52,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.21% below VWAP (503)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 501.5,
+      "change_pct": -1.28,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 116
+    },
+    {
+      "symbol": "MOTHERSON",
+      "direction": "HOLD",
+      "score": 38.0,
+      "pool": "NONE",
+      "entry_price": 167.82,
+      "sl_price": 164.46,
+      "target_price": 170.34,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.70% below VWAP (169)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        }
+      ],
+      "price": 167.82,
+      "change_pct": -0.99,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 117
+    },
+    {
+      "symbol": "BHEL",
+      "direction": "HOLD",
+      "score": 37.9,
+      "pool": "NONE",
+      "entry_price": 414.65,
+      "sl_price": 406.36,
+      "target_price": 420.87,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price +0.05% above VWAP (414)",
+          "type": "positive"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 414.65,
+      "change_pct": -1.27,
+      "trend": "Sideways",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 118
+    },
+    {
+      "symbol": "GAIL",
+      "direction": "HOLD",
+      "score": 37.8,
+      "pool": "NONE",
+      "entry_price": 175.07,
+      "sl_price": 172.27,
+      "target_price": 177.17,
+      "riskReward": 0.7,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative weakness -1.30% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 175.07,
+      "change_pct": -1.62,
+      "trend": "Downtrend",
+      "volatility": "Low",
+      "engine": "v5",
+      "rank": 119
+    },
+    {
+      "symbol": "TVSMOTOR",
+      "direction": "HOLD",
+      "score": 37.2,
+      "pool": "NONE",
+      "entry_price": 4317.5,
+      "sl_price": 4231.15,
+      "target_price": 4382.26,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.31% below VWAP (4331)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 4317.5,
+      "change_pct": -1.31,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 120
+    },
+    {
+      "symbol": "SHREECEM",
+      "direction": "HOLD",
+      "score": 37.1,
+      "pool": "NONE",
+      "entry_price": 25120.0,
+      "sl_price": 24617.6,
+      "target_price": 25496.8,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Relative weakness -1.44% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 25120.0,
+      "change_pct": -1.76,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 121
+    },
+    {
+      "symbol": "GVT&D",
+      "direction": "HOLD",
+      "score": 36.9,
+      "pool": "NONE",
+      "entry_price": 4298.4,
+      "sl_price": 4186.64,
+      "target_price": 4384.37,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.57% below VWAP (4323)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.13% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.9x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Sharp fall -2.5%",
+          "type": "negative"
+        }
+      ],
+      "price": 4298.4,
+      "change_pct": -2.45,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 122
+    },
+    {
+      "symbol": "HINDZINC",
+      "direction": "HOLD",
+      "score": 36.2,
+      "pool": "NONE",
+      "entry_price": 577.0,
+      "sl_price": 562.0,
+      "target_price": 588.54,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -1.36% below VWAP (585)",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        }
+      ],
+      "price": 577.0,
+      "change_pct": -1.3,
+      "trend": "Downtrend",
+      "volatility": "High",
+      "engine": "v5",
+      "rank": 123
+    },
+    {
+      "symbol": "BIOCON",
+      "direction": "HOLD",
+      "score": 35.7,
+      "pool": "NONE",
+      "entry_price": 418.05,
+      "sl_price": 409.69,
+      "target_price": 424.32,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.47% below VWAP (420)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.87% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Sharp fall -2.2%",
+          "type": "negative"
+        }
+      ],
+      "price": 418.05,
+      "change_pct": -2.19,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 124
+    },
+    {
+      "symbol": "EXIDEIND",
+      "direction": "HOLD",
+      "score": 35.7,
+      "pool": "NONE",
+      "entry_price": 483.85,
+      "sl_price": 474.17,
+      "target_price": 491.11,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.64% below VWAP (487)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.07% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 483.85,
+      "change_pct": -1.39,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 125
+    },
+    {
+      "symbol": "HINDALCO",
+      "direction": "HOLD",
+      "score": 35.6,
+      "pool": "NONE",
+      "entry_price": 1045.5,
+      "sl_price": 1024.59,
+      "target_price": 1061.18,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.63% below VWAP (1052)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -2.74% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Sharp fall -3.1%",
+          "type": "negative"
+        }
+      ],
+      "price": 1045.5,
+      "change_pct": -3.06,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 126
+    },
+    {
+      "symbol": "VMM",
+      "direction": "HOLD",
+      "score": 35.3,
+      "pool": "NONE",
+      "entry_price": 106.4,
+      "sl_price": 104.27,
+      "target_price": 108.0,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.22% below VWAP (107)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -1.16% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        }
+      ],
+      "price": 106.4,
+      "change_pct": -1.48,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 127
+    },
+    {
+      "symbol": "NATIONALUM",
+      "direction": "HOLD",
+      "score": 34.3,
+      "pool": "NONE",
+      "entry_price": 404.0,
+      "sl_price": 395.92,
+      "target_price": 410.06,
+      "riskReward": 0.8,
+      "position_type": "NONE",
+      "regime": "SIDEWAYS",
+      "reasons": [
+        {
+          "text": "Price -0.92% below VWAP (408)",
+          "type": "negative"
+        },
+        {
+          "text": "Relative weakness -3.49% vs Nifty",
+          "type": "negative"
+        },
+        {
+          "text": "FII selling (-1002 Cr)",
+          "type": "negative"
+        },
+        {
+          "text": "DII buying (+5842 Cr)",
+          "type": "positive"
+        },
+        {
+          "text": "Volume surge (1.6x average)",
+          "type": "positive"
+        },
+        {
+          "text": "Negative intraday momentum",
+          "type": "negative"
+        },
+        {
+          "text": "Sharp fall -3.8%",
+          "type": "negative"
+        }
+      ],
+      "price": 404.0,
+      "change_pct": -3.81,
+      "trend": "Downtrend",
+      "volatility": "Medium",
+      "engine": "v5",
+      "rank": 128
+    }
+  ],
+  "rearmable": {
+    "IDEA": {
+      "direction": "BUY",
+      "remaining": 3,
+      "expires_at_minute": 360
+    }
+  },
+  "reentry_blocker": {
+    "max_sl": 2,
+    "sl_count": {
+      "INDUSTOWER|LONG": 1,
+      "NATIONALUM|LONG": 1,
+      "IDFCFIRSTB|LONG": 1,
+      "ASTRAL|LONG": 1,
+      "KPITTECH|LONG": 1,
+      "JIOFIN|LONG": 1,
+      "M&MFIN|LONG": 1,
+      "GROWW|LONG": 1,
+      "EXIDEIND|LONG": 1,
+      "HINDZINC|LONG": 1
+    }
+  },
+  "alpha_hunter_ran": true
+}

@@ -1,16 +1,8 @@
 {
   "engine": "us_v1",
   "capital": 100000.0,
-  "cash": 837.3443000000061,
+  "cash": 189.55670000000646,
   "positions": {
-    "MNST": {
-      "qty": 107,
-      "entry_price": 92.8086,
-      "entry_ts": "2026-08-03T23:06:36",
-      "score": 83.49,
-      "vol_regime": "CALM",
-      "reason": "mom 78 | trend 79 | lowvol 90 | qual 98"
-    },
     "DDOG": {
       "qty": 36,
       "entry_price": 273.9548,
@@ -82,20 +74,38 @@
       "score": 70.41,
       "vol_regime": "CALM",
       "reason": "mom 81 | trend 80 | lowvol 63 | qual 35"
+    },
+    "CRWD": {
+      "qty": 25,
+      "entry_price": 224.6349,
+      "entry_ts": "2026-08-13T19:00:26",
+      "score": 79.59,
+      "vol_regime": "CALM",
+      "reason": "mom 85 | trend 97 | lowvol 47 | qual 81"
     }
   },
-  "closed": [],
+  "closed": [
+    {
+      "symbol": "MNST",
+      "qty": 107,
+      "entry_price": 92.8086,
+      "exit_price": 46.4307,
+      "pnl": -4962.44,
+      "exit_ts": "2026-08-13T19:00:26",
+      "reason": "score 25.66 < exit floor"
+    }
+  ],
   "started": "2026-08-03T20:32:42",
-  "updated": "2026-08-13T01:30:26.539643",
+  "updated": "2026-08-13T23:46:37.721014",
   "reset_note": "Book reset 2026-08-03 after voiding the Sunday out-of-hours fills. First valid session is the next US open.",
   "summary": {
-    "cash": 837.34,
-    "market_value": 95687.73,
-    "equity": 96525.07,
-    "unrealised": -3474.93,
-    "realised": 0,
+    "cash": 189.56,
+    "market_value": 95749.1,
+    "equity": 95938.66,
+    "unrealised": 901.09,
+    "realised": -4962.44,
     "open_positions": 10,
-    "closed_trades": 0,
+    "closed_trades": 1,
     "win_rate": 0.0
   }
 }

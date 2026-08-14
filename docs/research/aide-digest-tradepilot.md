@@ -1,6 +1,6 @@
 # Aide research digest — tradepilot
 
-*Generated 2026-08-13 from Aide captures. 42 item(s); 34 grounded in decoded source content, 8 from the capture note alone.*
+*Generated 2026-08-14 from Aide captures. 40 item(s); 32 grounded in decoded source content, 8 from the capture note alone.*
 
 Each entry links back to the original capture. Full reports and any mindmaps live in `aide/data/items/<id>/`.
 
@@ -33,12 +33,10 @@ Each entry links back to the original capture. Full reports and any mindmaps liv
 | 145 | TradeFinder.in promo reel — competitive intel on Indian retail scanner GTM | `tradepilot` | yes | 2026-08-05 |
 | 146 | P&L-flex reel format as TradePilot distribution playbook | `tradepilot` | yes | 2026-08-05 |
 | 147 | AMD / Power of 3: liquidity sweep + FVG entry | `tradepilot` | yes | 2026-08-05 |
-| 149 | IG carousel: "Agents" (content unverified) | `tradepilot` | yes | 2026-08-05 |
 | 150 | AI trading prompt packs are commoditising | `tradepilot` | yes | 2026-08-05 |
 | 153 | Sector rotation as a low-frequency market-neutral idea | `tradepilot` | yes | 2026-08-08 |
 | 154 | Macro event rulebook (NFP/CPI/FOMC) as a risk filter, not a signal | `tradepilot` | yes | 2026-08-09 |
 | 155 | Backtest red flags and a stat-card layout from a TradingView bot reel | `tradepilot` | yes | 2026-08-09 |
-| 156 | Unenriched Instagram reel (DYcs_DrIDDo) | `tradepilot` | yes | 2026-08-09 |
 | 157 | Time-of-day filter as a trade-count reducer | `tradepilot` | yes | 2026-08-09 |
 | 158 | SEBI retail algo framework + no-code algo demand signal | `tradepilot` | yes | 2026-08-09 |
 | 161 | Sector rotation swing claim — filter idea, not signal | `tradepilot` | yes | 2026-08-10 |
@@ -906,40 +904,6 @@ Audio transcription is noisy Hinglish; specifics beyond the three-phase structur
 
 ---
 
-## 149 — IG carousel: "Agents" (content unverified)
-
-- **Source:** https://www.instagram.com/p/DamJs20FCRW/?img_index=6
-- **Capture note:** Agents
-- **Saved:** 2026-08-05_19-20  ·  **Kind:** research_source  ·  **Tags:** agents, agent-architecture, instagram, unverified  ·  **Confidence:** 0.45
-- **Grounding:** decoded source content
-
-## What was captured
-
-An Instagram carousel post (`img_index=6`, so slide 6 of a multi-slide deck) saved with the single note **"Agents"**. No scraped text or transcript was returned — Instagram serves post content behind a login wall to non-authenticated fetchers, so the actual slide copy is not recoverable from this capture. Everything below is framed on the note alone and should be treated as a working brief, not a summary of the source.
-
-## What the note likely points at
-
-"Agents" carousels circulating on IG in this period almost always cover one of four angles:
-
-| Angle | Typical claim | Actual usefulness |
-|---|---|---|
-| Agent frameworks roundup | LangGraph / CrewAI / AutoGen / Claude Agent SDK comparison | Moderate — quickly stale |
-| Agent design patterns | planner→executor→critic, tool use, memory, reflection | High — durable |
-| "Build an agent in N minutes" | no-code demo | Low — demoware |
-| Agent business ideas | "sell agents to SMBs" | Depends on distribution, not tech |
-
-## Verification gap
-
-This is the recurring failure mode in saved-item capture: a bare note plus a dead URL produces confident-sounding synthesis with zero grounding. Prior captures in this repo have run ~60% wrong against source when re-checked. **Recommended action:** re-open the post manually, screenshot slides, and re-run OCR through the existing aide capture path rather than accepting an inferred report.
-
-## If the topic is agent architecture
-
-The only patterns worth carrying forward are the ones already proven in-house: bounded agent runtime (5–20 min tiers), no sleep-polling, one research dimension per sub-agent, and structured output over free-text handoff. Any carousel advice that contradicts those is entertainment.
-
-**How to use:** Treat this as an architecture-vocabulary and packaging reference, not a build spec. For TradePilot, the one pattern worth adopting is the hard-gated execution pipeline (signal → validation → risk check → execute → log) with the risk manager as a blocking stage — it formalizes the execution-discipline edge v5 already validated, while the '7 signal agents' framing should be explicitly rejected as the complexity trap already falsified. The role taxonomy (analyst/risk/portfolio/execution/orchestrator) maps directly onto the parked g-stack agent-dashboard experiment as a clean set of named agent roles and dashboard panels. For Sarathi, the supervisor-agent diagram is a reusable orchestration shape. Finally, the carousel itself is a strong content template: for EnquiryPilot or Surya marketing, the same format works — 'the N agents every [SMB owner/trader] needs,' one agent per slide with a mock dashboard, ending in a lead-magnet CTA.
-
----
-
 ## 150 — AI trading prompt packs are commoditising
 
 - **Source:** https://www.instagram.com/p/DbXSugyGEac/?img_index=2&igsh=MTlxbThtMHFuN2Q3aw==
@@ -1076,45 +1040,6 @@ Strip the hype and what remains is a **presentation format**: a single screen sh
 Do not use the script. Do note the funnel mechanics and the stat-card layout.
 
 **How to use:** Two uses, both indirect. For TradePilot: ignore the script, borrow the performance card. The reel's single-screen layout (win streak, YTD PnL, max drawdown, win rate, profit factor, day-of-week win-rate table) is a good spec for a TradePilot dashboard tile and for the go-live pitch — TradePilot's v5 numbers are walk-forward and cost-adjusted, so the same card carries real weight where this one doesn't. Simultaneously, treat the 41%-return/₹1,300-drawdown signature as a named anti-pattern in the validation harness: any strategy variant whose backtest shows a return/max-DD ratio above ~5:1 should auto-flag for look-ahead or fill-assumption bugs before it reaches the ship gate. For positioning: this reel is the noise floor TradePilot competes against in retail attention — signal-sellers with backtest screenshots and comment-gated waitlists. The differentiator to state plainly in marketing is auditability (walk-forward, cost-modelled, published drawdown), not bigger numbers. Note the regulatory line too — the "comment access" funnel is exactly the unregistered-advice pattern SEBI has been acting on, which reinforces the earlier finding that paper trading carries zero obligations while any signal distribution does not.
-
----
-
-## 156 — Unenriched Instagram reel (DYcs_DrIDDo)
-
-- **Source:** https://www.instagram.com/reel/DYcs_DrIDDo/
-- **Capture note:** (none)
-- **Saved:** 2026-08-09_12-48  ·  **Kind:** research_source  ·  **Tags:** instagram, reel, unenriched, bookmark, tradepilot  ·  **Confidence:** 0.30
-- **Grounding:** decoded source content
-
-## Status
-
-**No analysable content.** The capture pipeline returned an empty scrape and empty transcript for `https://www.instagram.com/reel/DYcs_DrIDDo/`, and a direct fetch attempt returned only Instagram's authentication wall — no caption, no account handle, no description. No note was attached to the save either.
-
-## What this means
-
-Instagram serves reel pages as an authenticated SPA. Unauthenticated fetches receive a login shell containing logos and base64 image blobs but none of the post's actual metadata. This is expected behaviour for `instagram.com/reel/*` URLs, not a transient failure — re-running the same scrape will produce the same empty result.
-
-## What can and cannot be said
-
-| Field | Status |
-|---|---|
-| Topic / subject | Unknown |
-| Creator account | Unknown |
-| Claims made in the reel | Unknown |
-| Save date | 2026-08-09 |
-| Shortcode | `DYcs_DrIDDo` |
-
-Any report on the substance of this reel would be invention. This item is recorded as **captured but unenriched** — the URL and timestamp are the only reliable facts.
-
-## Recovery options
-
-1. **Add a one-line note at capture time.** The single highest-leverage fix: a five-word note ("pricing psychology", "onboarding UX", "funding thread") preserves the reason for saving even when the scrape fails.
-2. **Screenshot capture.** Same path already used for the design/font swipe captures — screenshot plus OCR recovers on-screen text without needing Instagram's API.
-3. **Authenticated session.** A cookie-lifted session (the same technique used for the lrc.devpilot.co.in import) would let the scraper reach caption and audio, enabling a real transcript.
-
-Until one of these runs, treat this entry as a bookmark, not as research input.
-
-**How to use:** For TradePilot, the one directly actionable item is the **auditable track record** pattern: Myfxbook's broker-verified equity curve is exactly the artifact TradePilot lacks when the go-live/productize question comes up — a third-party-verifiable performance record beats a self-reported backtest in every investor and SEBI conversation, so consider a public, append-only, timestamped paper-trading ledger (v5 alpha, market-neutral) as the credibility asset before any product push. The insider-filing angle maps to India via NSE/BSE SAST and insider-trading disclosures rather than Form 4 — worth a scoping note as a possible signal source, but it is a US-market tool and does not transfer as-is. The event-latency terminal is the weakest fit: it rewards discretionary reaction speed, whereas the TradePilot root cause was execution discipline over more signal, so treat it as a deliberate non-adoption. Cross-project, the reel itself is a distribution artifact worth studying — the "3 tools no one tells you about" + comment-gated guide format is a proven top-of-funnel pattern the instagram-specialist could adapt for EnquiryPilot or StockPilot, minus the unverifiable performance claims.
 
 ---
 

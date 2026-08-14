@@ -1,0 +1,127 @@
+{
+  "date": "2026-08-14",
+  "generated_at": "2026-08-14T15:35:15.232890",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -557.87,
+      "trades": 47,
+      "wins": 19,
+      "losses": 28,
+      "longs": 20,
+      "shorts": 27,
+      "win_rate": 40.4,
+      "open_positions": 12,
+      "best_trade": 792.2,
+      "worst_trade": -350.0,
+      "avg_win": 103.69,
+      "avg_loss": -120.38,
+      "exit_reasons": {
+        "STOPLOSS": 18,
+        "FLAT_FORCE_EXIT": 16,
+        "TIME_EXIT": 7,
+        "TARGET": 3,
+        "SIGNAL_FLIP": 3
+      },
+      "n_closed": 47,
+      "n_open": 12
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -506.84,
+      "trades": 41,
+      "wins": 7,
+      "losses": 34,
+      "longs": 15,
+      "shorts": 26,
+      "win_rate": 17.1,
+      "open_positions": 2,
+      "best_trade": 926.0,
+      "worst_trade": -350.0,
+      "avg_win": 361.7,
+      "avg_loss": -157.47,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "TIME_EXIT": 17,
+        "TARGET": 3,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 41,
+      "n_open": 2
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIPORTS",
+      "ASIANPAINT",
+      "ASTRAL",
+      "BHARTIARTL",
+      "COALINDIA",
+      "CONCOR",
+      "ETERNAL",
+      "GLENMARK",
+      "GMRAIRPORT",
+      "ICICIAMC",
+      "INDIGO",
+      "JIOFIN",
+      "JUBLFOOD",
+      "KPITTECH",
+      "LENSKART",
+      "LGEINDIA",
+      "LICHSGFIN",
+      "LTM",
+      "MUTHOOTFIN",
+      "NATIONALUM",
+      "NAUKRI",
+      "PAYTM",
+      "PFC",
+      "RADICO",
+      "SBIN",
+      "TECHM",
+      "TMPV",
+      "VOLTAS",
+      "WIPRO",
+      "YESBANK"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -507 across 41 trades (17.1% win).",
+    "Laggard: <b>v5</b> with Rs -558 across 47 trades (40.4% win).",
+    "<b>v5</b>: STOPLOSS (18) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (15) >= TARGET (3). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 40.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 17.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

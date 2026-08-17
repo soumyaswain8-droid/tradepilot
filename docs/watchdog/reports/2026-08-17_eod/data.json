@@ -1,0 +1,130 @@
+{
+  "date": "2026-08-17",
+  "generated_at": "2026-08-17T15:35:13.657907",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -1840.3,
+      "trades": 50,
+      "wins": 20,
+      "losses": 30,
+      "longs": 23,
+      "shorts": 27,
+      "win_rate": 40.0,
+      "open_positions": 11,
+      "best_trade": 434.0,
+      "worst_trade": -472.6,
+      "avg_win": 55.05,
+      "avg_loss": -98.05,
+      "exit_reasons": {
+        "STOPLOSS": 19,
+        "FLAT_FORCE_EXIT": 21,
+        "TIME_EXIT": 8,
+        "SIGNAL_FLIP": 2
+      },
+      "n_closed": 50,
+      "n_open": 11
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 111.21,
+      "trades": 44,
+      "wins": 20,
+      "losses": 24,
+      "longs": 17,
+      "shorts": 27,
+      "win_rate": 45.5,
+      "open_positions": 7,
+      "best_trade": 434.0,
+      "worst_trade": -367.2,
+      "avg_win": 100.87,
+      "avg_loss": -79.42,
+      "exit_reasons": {
+        "STOPLOSS": 21,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 11
+      },
+      "n_closed": 44,
+      "n_open": 7
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIPOWER",
+      "ASTRAL",
+      "BANKBARODA",
+      "BHEL",
+      "BIOCON",
+      "DIVISLAB",
+      "ENRIN",
+      "GAIL",
+      "HAL",
+      "HCLTECH",
+      "HDFCLIFE",
+      "IDEA",
+      "INDIANB",
+      "INDUSINDBK",
+      "INDUSTOWER",
+      "INFY",
+      "JSWENERGY",
+      "LAURUSLABS",
+      "LGEINDIA",
+      "LODHA",
+      "LTF",
+      "MAXHEALTH",
+      "MOTILALOFS",
+      "MUTHOOTFIN",
+      "NATIONALUM",
+      "NTPC",
+      "SUZLON",
+      "TATAELXSI",
+      "TATAINVEST",
+      "TCS",
+      "TECHM",
+      "TMCV",
+      "UNIONBANK",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs +111 across 44 trades (45.5% win).",
+    "Laggard: <b>v5</b> with Rs -1,840 across 50 trades (40.0% win).",
+    "Low-volume engines outperformed \u2014 selectivity beat volume today (low-vol avg Rs 111 vs high-vol Rs -1,840).",
+    "<b>v5</b>: STOPLOSS (19) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (21) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 40.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 45.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

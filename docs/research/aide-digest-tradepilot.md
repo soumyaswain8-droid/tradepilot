@@ -1,6 +1,6 @@
 # Aide research digest — tradepilot
 
-*Generated 2026-08-14 from Aide captures. 40 item(s); 32 grounded in decoded source content, 8 from the capture note alone.*
+*Generated 2026-08-17 from Aide captures. 42 item(s); 34 grounded in decoded source content, 8 from the capture note alone.*
 
 Each entry links back to the original capture. Full reports and any mindmaps live in `aide/data/items/<id>/`.
 
@@ -33,7 +33,7 @@ Each entry links back to the original capture. Full reports and any mindmaps liv
 | 145 | TradeFinder.in promo reel — competitive intel on Indian retail scanner GTM | `tradepilot` | yes | 2026-08-05 |
 | 146 | P&L-flex reel format as TradePilot distribution playbook | `tradepilot` | yes | 2026-08-05 |
 | 147 | AMD / Power of 3: liquidity sweep + FVG entry | `tradepilot` | yes | 2026-08-05 |
-| 150 | AI trading prompt packs are commoditising | `tradepilot` | yes | 2026-08-05 |
+| 150 | LLM trading prompts: keep the scaffolding, discard the backtest claim | `tradepilot` | yes | 2026-08-05 |
 | 153 | Sector rotation as a low-frequency market-neutral idea | `tradepilot` | yes | 2026-08-08 |
 | 154 | Macro event rulebook (NFP/CPI/FOMC) as a risk filter, not a signal | `tradepilot` | yes | 2026-08-09 |
 | 155 | Backtest red flags and a stat-card layout from a TradingView bot reel | `tradepilot` | yes | 2026-08-09 |
@@ -46,6 +46,8 @@ Each entry links back to the original capture. Full reports and any mindmaps liv
 | 171 | Website reference: stock/market display style | `tradepilot` | note-only | 2026-08-12 |
 | 172 | Intraday tips Reel (no transcript, unverified) | `tradepilot` | note-only | 2026-08-12 |
 | 173 | Comment-gated lead magnet: reel mechanic that inverts like/comment ratio | `tradepilot` | note-only | 2026-08-12 |
+| 187 | Free-indicator intraday RR strategy reel (needs OCR) | `tradepilot` | yes | 2026-08-13 |
+| 188 | TradingView strategy → webhook → broker bot (retail automation stack) | `tradepilot` | yes | 2026-08-15 |
 
 ---
 
@@ -904,39 +906,34 @@ Audio transcription is noisy Hinglish; specifics beyond the three-phase structur
 
 ---
 
-## 150 — AI trading prompt packs are commoditising
+## 150 — LLM trading prompts: keep the scaffolding, discard the backtest claim
 
 - **Source:** https://www.instagram.com/p/DbXSugyGEac/?img_index=2&igsh=MTlxbThtMHFuN2Q3aw==
 - **Capture note:** test this
-- **Saved:** 2026-08-05_23-01  ·  **Kind:** learning  ·  **Tags:** ai-trading, prompts, market-signal, positioning, competitive  ·  **Confidence:** 0.78
+- **Saved:** 2026-08-05_23-01  ·  **Kind:** learning  ·  **Tags:** prompts, backtesting, quant-research, llm-limits, report-structure  ·  **Confidence:** 0.78
 - **Grounding:** decoded source content
 
 ## What the item is
 
-An Instagram carousel from **@getintoai** (verified AI-education account) promoting **12 prompts** for using **Claude Cowork** as a trading-research assistant. It is a lead-magnet post: the caption asks viewers to like and comment "Send" to receive the prompt pack, which means the actual prompt content is gated and was not retrievable from the public post.
+An Instagram carousel (engagement-bait format: "comment SEND for the prompts") claiming Claude Cowork can "build & backtest pro-level trading strategies, for free." It ships 12 prompt templates: strategy generation, backtesting, risk-reward analysis, market-regime detection, multi-factor strategy, optimization, portfolio construction, trade-setup generation, Monte Carlo, drawdown analysis, macro-based strategy (slide 12 not captured).
 
-## Claimed use cases
+## Quality assessment
 
-The post frames Cowork as covering the full research loop rather than signal generation:
+The prompts are competently structured — each specifies role, constraints, required outputs, and a comparison or explanation step. That structure is the real asset; it is a decent taxonomy of the quant research loop.
 
-- Testing and stress-checking trade ideas
-- Analysing and comparing strategies
-- Studying risk and performance characteristics
-- Surfacing market patterns and stronger setups
+The claim wrapped around them is not. Prompts 2, 6, 9 and 10 (backtest, optimize, Monte Carlo, drawdown) ask an LLM for CAGR, Sharpe, and max drawdown. Without a connected data feed and an execution engine that models fills, slippage and costs, those numbers are generated, not computed — plausible tables with no grounding. The caption's own hedge ("doesn't guarantee profits") understates it: the failure mode is fabricated metrics that look auditable.
 
-## The framing worth noting
+## What is actually reusable
 
-The caption explicitly disclaims that AI "doesn't eliminate market risk or guarantee profits" and positions it as a **research assistant**, not an autonomous trader. That is the same positioning boundary that matters for any India-facing product: research and analysis carry near-zero regulatory obligation, while advice or execution does not.
+- **Prompt 4 (regime detection)** and **prompt 3 (risk-reward)** are qualitative and safe — an LLM reasoning over stated rules, not inventing statistics.
+- **Prompt 6's before/after framing** is a good discipline for any optimization write-up.
+- The 11-topic list doubles as a **coverage checklist** for a research report: any strategy doc missing regime, drawdown, and robustness sections is incomplete.
 
-## Reliability
+## Verdict
 
-Low-to-moderate. This is influencer marketing, not evidence — no backtests, no performance data, no named methodology. The value here is **prompt-pattern inspiration and competitive/market signal**, not validated technique. Treat the specific prompts, if obtained, as starting points to test rather than as anything proven.
+Keep the prompt scaffolding, discard the backtesting claim. Value is as a report-structure template, not as an analysis engine.
 
-## Signal for the founder
-
-Generic "AI + trading" prompt packs are now mainstream creator content. That confirms the low end of the market is commoditising — a generic chat-prompt wrapper is not a defensible product. It also confirms demand: retail traders are actively seeking structured AI research workflows, which is exactly the gap an agentic, opinionated system fills where a prompt list cannot.
-
-**How to use:** For TradePilot, treat this as a checklist of evaluation dimensions rather than prompts to run: the v5 engine and any future ML twin should be judged against the full set (regime detection, drawdown/recovery, Monte Carlo robustness, cost sensitivity) — several of which TradePilot already does more rigorously than the post suggests is possible via chat. The 'what breaks this strategy' framing aligns directly with the existing falsification discipline (PDH/PDL notes, ship-gates), and could be templated into a standard pre-ship interrogation prompt for any new engine variant. Secondarily, the post is a content-format signal: prompt-pack carousels with role+constraints+required-outputs structure perform well on IG, a shape the instagram-specialist agent could reuse for EnquiryPilot or TradePilot marketing without copying the overclaiming.
+**How to use:** Route this into TradePilot as documentation scaffolding rather than as a research method. The 11 prompt headings map almost exactly onto the sections a v5/v8 strategy write-up should contain — take them as a checklist and audit existing strategy docs for missing regime-detection, drawdown-recovery and Monte Carlo-robustness sections. The qualitative prompts (regime detection, risk-reward critique, before/after optimization framing) can be run against real backtest output as a reviewer pass, where the LLM reasons over numbers your own engine produced instead of inventing them. Do not adopt the backtesting prompts as-is: TradePilot's own history — v5 validated on cost-robust market-neutral testing, v4 retired, ML twin failing the ship-gate — is exactly the evidence that generated metrics and measured metrics diverge, and this carousel's core claim collapses that distinction. Secondary use: the carousel is a clean example of AI-trading content that markets confidence over rigor, which is usable positioning contrast for any TradePilot or Surya AI post arguing that the edge is execution discipline, not prompt cleverness.
 
 ---
 
@@ -1361,5 +1358,82 @@ This is a repeatable pattern, not a one-off. It converts an audience into a capt
 Medium-high on the mechanic (directly evidenced by the like/comment inversion and caption). **Zero on the tool being promoted** — treat any claim about what the reel actually teaches as unverified.
 
 **How to use:** Use this as a distribution template, not a content lead. The founder already has assets that fit the comment-gate shape exactly: the EnquiryPilot pricing ladder, the StockPilot saree-retailer loss-prevention pitch, and the Surya Showcase deck-template build guide are all real, self-contained deliverables that a small-business owner would trade a comment for. The pattern to copy is: curiosity-gap hook naming a specific outcome, caption asking for one keyword, automation DMing the asset, and the DM sequence capturing a contact rather than just a download. Hand this to the instagram-specialist agent as the mechanical spec for the next EnquiryPilot reel, and have distribution-growth decide whether the same gate belongs on Facebook Groups, where the 35-55 SMB audience actually sits. Do not chase the underlying tool this reel promotes — it was not recoverable, and re-scraping login-walled Instagram will not surface it. If the tool matters, the cheaper path is to re-capture the reel with the transcript attached rather than researching around the gap.
+
+---
+
+## 187 — Free-indicator intraday RR strategy reel (needs OCR)
+
+- **Source:** https://www.instagram.com/reel/DZ1fpBDqtEg/
+- **Capture note:** research
+- **Saved:** 2026-08-13_22-56  ·  **Kind:** learning  ·  **Tags:** intraday, unverified, needs-ocr, indicators, risk-reward  ·  **Confidence:** 0.62
+- **Grounding:** decoded source content
+
+## What the item actually is
+
+An Instagram reel from **Akash Kundur / dropoutengineers** promoting an intraday stock-market strategy built entirely from free TradingView indicators, framed around a "proper risk-reward ratio." The caption is a call-to-action ("let me know in the comment box how is it working"), not a specification.
+
+## Evidence quality: low
+
+No transcript, no scraped page content, and no on-screen text was captured. The caption names **no indicators, no timeframe, no entry/exit trigger, no RR value, and no instrument**. Everything of substance lives in the video frames, which were not retrieved.
+
+This matters more than usual: the strategy content is *entirely* visual. Unlike the PDH/PDL captures in the existing TradePilot corpus — where the caption or transcript carried the actual rule — this one carries zero extractable logic. Filing it as a "strategy" would be filing an empty record.
+
+## Pattern-level signal (what is still usable)
+
+Even with no rules, the item confirms the genre profile already visible across the trading-capture set:
+
+| Attribute | Value |
+|:--|:--|
+| Format | Short-form reel, indicator overlay on chart |
+| Claim shape | Free indicators + fixed RR = repeatable intraday edge |
+| Verifiability | None offered — no backtest, sample size, or period |
+| Distribution motive | Comment-bait engagement loop |
+
+## Honest verdict
+
+Treat as **unverified marketing content, not research input**. Free-indicator + fixed-RR intraday systems are the most heavily replicated and most heavily degraded category in Indian retail trading content; absent a stated sample and cost model, there is no reason to assume survivorship past brokerage and slippage. This aligns with the existing root-cause finding that the real edge is execution discipline, not indicator stacking.
+
+## Recommended disposition
+
+Mark **incomplete — needs OCR**. Re-run frame extraction on the reel to recover indicator names and the RR figure; only then promote it to the strategy corpus. If OCR is not run, drop it rather than let a contentless row dilute the capture set.
+
+**How to use:** Route this into TradePilot's capture pipeline as an incomplete record rather than a strategy candidate — the caption alone yields nothing testable, so the single actionable step is an OCR pass over the reel frames to recover the indicator set and the stated risk-reward ratio. If OCR succeeds and the recovered rules are mechanical (specific indicators, specific timeframe, fixed RR), score them against the existing v5 baseline the same way the PDH/PDL cluster was handled, paying particular attention to the trade-count effect — indicator-stacked intraday systems characteristically inflate trade frequency, which is precisely the failure mode already identified as diluting the edge (win rate 82→48% as trades rose 17→45). If OCR fails or the content proves to be pure engagement bait, delete the row; an empty capture is worse than no capture because it inflates the apparent size of the research corpus. Separately, the item has secondary value as a content-marketing reference point: it is a clean example of the low-substance, high-engagement format that dominates Indian retail trading media, which is useful context if TradePilot ever positions itself commercially against that noise.
+
+---
+
+## 188 — TradingView strategy → webhook → broker bot (retail automation stack)
+
+- **Source:** https://www.instagram.com/p/Db_ItWmFlmL/?img_index=10
+- **Capture note:** backtaste
+- **Saved:** 2026-08-15_18-58  ·  **Kind:** research_source  ·  **Tags:** tradingview, webhook-automation, retail-competitors, execution-layer, pine-script  ·  **Confidence:** 0.83
+- **Grounding:** decoded source content
+
+## What the item is
+
+A 12-slide Instagram carousel walking through nine steps to convert any published TradingView strategy into a live, automated trading bot. The flow: open the hidden TradingView menu (top-left icon) → Home → Community → Indicators and Strategies → filter by **Strategies** (indicators cannot fire trades) → open source code → paste into Pine Editor → add to chart → create a webhook alert (requires a paid TradingView plan) → send the signal to a bridge service (AlphaInsider is the one shown) → connect broker/exchange and go live.
+
+## The actual mechanism
+
+The carousel is really documenting a three-layer architecture that most retail "AI trading" content glosses over:
+
+| Layer | Role | Failure mode |
+|---|---|---|
+| Signal (Pine strategy) | Emits entry/exit events | Overfit backtest, repainting |
+| Transport (webhook alert) | JSON POST on bar close | Missed/duplicate fires, no retry |
+| Execution (bridge → broker) | Places the real order | Slippage, partial fills, no reconciliation |
+
+The post treats the last layer as a checkbox. It isn't — that's exactly where a paper-validated edge dies.
+
+## What's credible vs. thin
+
+**Credible:** the strategy-vs-indicator distinction is a genuine gotcha; webhook-on-alert is the standard TradingView automation path; the copy-a-public-script-and-tweak-with-AI loop is honestly how a lot of retail strategies get built.
+
+**Thin:** no mention of position sizing, no slippage or cost modelling, no kill switch, no reconciliation between the bot's assumed state and the broker's actual state. The "I asked ChatGPT to build me this strategy" slide is the tell — it's a distribution asset (comment "automate") monetising curiosity, not a validated system.
+
+## Signal worth keeping
+
+An entire retail category — public script → webhook → bridge → broker — exists and is normalised. That's both a competitor set and a proof that non-technical traders will wire up automation if the path is nine legible steps.
+
+**How to use:** For TradePilot this is competitor intelligence and a UX template rather than a technique to adopt — the v5 engine already owns signal generation and cost-robust validation, which is precisely the layer this stack outsources to a random public Pine script. The useful extraction is the execution-bridge pattern: when v5 moves from paper to live, the TradingView→webhook→broker path is the mental model Indian retail traders will already have, so framing TradePilot's go-live as "we replaced the fragile parts of this" (validated alpha instead of a copied script, reconciliation and kill switches instead of fire-and-forget webhooks) is a sharper positioning than explaining agentic autonomy cold. Two concrete moves: (1) mine the strategy-vs-indicator gotcha and the nine-step legibility for TradePilot's own onboarding — if retail will follow nine steps to automate, a three-step version is a real wedge; (2) file the webhook-alert transport as a candidate integration surface so TradePilot can ingest external signals rather than only its own, which broadens the funnel without diluting the v5 edge. Separately, this is a reusable content shape for EnquiryPilot/Surya marketing — the numbered-step carousel with a comment-gated payoff is a proven distribution format worth copying structurally.
 
 ---

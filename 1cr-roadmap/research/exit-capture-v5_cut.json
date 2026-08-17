@@ -1,0 +1,93 @@
+{
+  "engine": "v5_cut",
+  "window": [
+    "2026-05-18",
+    "2026-08-07"
+  ],
+  "usable": 723,
+  "avg_mfe_pct": 0.5268,
+  "replay_vs_booked_corr": 0.737,
+  "results": {
+    "baseline arm1.0/step0.5": {
+      "n": 723,
+      "gross": 0.0327,
+      "capture_pct": 6.2,
+      "net_small": -0.0733,
+      "net_size": -0.046,
+      "delta": 0.0,
+      "t_paired": 0.0
+    },
+    "arm0.5/step0.25": {
+      "n": 723,
+      "gross": 0.0695,
+      "capture_pct": 13.2,
+      "net_small": -0.0365,
+      "net_size": -0.0092,
+      "delta": 0.0368,
+      "t_paired": 2.85
+    },
+    "arm0.5/step0.5": {
+      "n": 723,
+      "gross": 0.0638,
+      "capture_pct": 12.1,
+      "net_small": -0.0422,
+      "net_size": -0.0149,
+      "delta": 0.0311,
+      "t_paired": 3.35
+    },
+    "arm0.3/step0.25": {
+      "n": 723,
+      "gross": 0.0763,
+      "capture_pct": 14.5,
+      "net_small": -0.0297,
+      "net_size": -0.0024,
+      "delta": 0.0436,
+      "t_paired": 2.71
+    },
+    "arm0.75/step0.25": {
+      "n": 723,
+      "gross": 0.0482,
+      "capture_pct": 9.2,
+      "net_small": -0.0578,
+      "net_size": -0.0305,
+      "delta": 0.0155,
+      "t_paired": 2.1
+    },
+    "be@0.4 + arm1.0": {
+      "n": 723,
+      "gross": 0.0461,
+      "capture_pct": 8.7,
+      "net_small": -0.0599,
+      "net_size": -0.0326,
+      "delta": 0.0134,
+      "t_paired": 1.16
+    },
+    "be@0.6 + arm1.0": {
+      "n": 723,
+      "gross": 0.0389,
+      "capture_pct": 7.4,
+      "net_small": -0.0671,
+      "net_size": -0.0398,
+      "delta": 0.0062,
+      "t_paired": 0.82
+    },
+    "atr: arm1.5A/step0.75A": {
+      "n": 723,
+      "gross": 0.0478,
+      "capture_pct": 9.1,
+      "net_small": -0.0582,
+      "net_size": -0.0309,
+      "delta": 0.0151,
+      "t_paired": 1.26
+    },
+    "no-trail (target/stop)": {
+      "n": 723,
+      "gross": 0.0145,
+      "capture_pct": 2.7,
+      "net_small": -0.0915,
+      "net_size": -0.0642,
+      "delta": -0.0182,
+      "t_paired": -2.7
+    }
+  }
+}

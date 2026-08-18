@@ -1,0 +1,120 @@
+{
+  "date": "2026-08-18",
+  "generated_at": "2026-08-18T15:35:17.106535",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -981.51,
+      "trades": 47,
+      "wins": 16,
+      "losses": 31,
+      "longs": 47,
+      "shorts": 0,
+      "win_rate": 34.0,
+      "open_positions": 1,
+      "best_trade": 238.45,
+      "worst_trade": -448.0,
+      "avg_win": 33.42,
+      "avg_loss": -101.09,
+      "exit_reasons": {
+        "STOPLOSS": 7,
+        "FLAT_FORCE_EXIT": 19,
+        "TIME_EXIT": 16,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 4
+      },
+      "n_closed": 47,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "BULL",
+      "total_pnl": -880.71,
+      "trades": 32,
+      "wins": 5,
+      "losses": 27,
+      "longs": 32,
+      "shorts": 0,
+      "win_rate": 15.6,
+      "open_positions": 6,
+      "best_trade": 223.17,
+      "worst_trade": -464.6,
+      "avg_win": 98.82,
+      "avg_loss": -91.66,
+      "exit_reasons": {
+        "STOPLOSS": 6,
+        "TARGET": 2,
+        "SIGNAL_FLIP": 12,
+        "TIME_EXIT": 12
+      },
+      "n_closed": 32,
+      "n_open": 6
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ADANIENSOL",
+      "ADANIPOWER",
+      "AXISBANK",
+      "BIOCON",
+      "COCHINSHIP",
+      "ENRIN",
+      "FORTIS",
+      "HAL",
+      "HYUNDAI",
+      "IDEA",
+      "LENSKART",
+      "LTF",
+      "M&M",
+      "MCX",
+      "MOTILALOFS",
+      "MUTHOOTFIN",
+      "NATIONALUM",
+      "OIL",
+      "PIIND",
+      "POLICYBZR",
+      "SUZLON",
+      "TIINDIA"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_classic</b> with Rs -881 across 32 trades (15.6% win).",
+    "Laggard: <b>v5</b> with Rs -982 across 47 trades (34.0% win).",
+    "<b>v5</b>: STOPLOSS (7) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (6) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: dominated by SIGNAL_FLIP exits (12). Entries are noisy \u2014 filter signals more aggressively.",
+    "<b>v5</b>: 34.0% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 15.6% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

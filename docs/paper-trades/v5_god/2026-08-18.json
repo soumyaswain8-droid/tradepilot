@@ -1,0 +1,351 @@
+{
+  "engine": "v5_god",
+  "date": "2026-08-18",
+  "mandate": "discretionary (LLM), full NIFTY-200, long+short, SHORT_VWAP_GATE on",
+  "capital": 200000.0,
+  "trades": 4,
+  "wins": 2,
+  "win_rate": 50.0,
+  "gross_pnl": 141.25,
+  "cost_real": 279.98,
+  "net_pnl": -138.73,
+  "net_pnl_fleet_model": -180.73,
+  "return_pct": -0.069,
+  "median_position_value": 69503.3,
+  "above_cost_cliff": true,
+  "cost_pct_of_turnover": 0.0522,
+  "closed": [
+    {
+      "side": "LONG",
+      "qty": 49,
+      "entry": 1424.2,
+      "entered_at": "2026-08-18T09:26:55",
+      "stop": 1442.44,
+      "initial_stop": 1406.0,
+      "thesis": "Refiner complex bid as a group (CHENNPETRO +2.4, MRPL +2.8, OIL +1.7) - sector confirmation. CHENNPETRO is at rng 98.3, i.e. printing the day high right now, and holding +0.96% above VWAP. Chose it over MRPL because MRPL faded from rng 96 to 93 in the same window while CHENNPETRO made a new high. Long the leader, not the laggard.",
+      "invalidation": "loss of VWAP 1407.92 means the refiner bid has gone",
+      "value": 69785.8,
+      "risk_inr": 891.8,
+      "entry_vwap": 1408.51,
+      "entry_chg_pct": 3.02,
+      "high_water": 1424.2,
+      "trail_armed": true,
+      "peak_pnl_pct": 1.5306838927116946,
+      "exit": 1436,
+      "exit_at": "2026-08-18T09:47:43",
+      "exit_reason": "TRAIL",
+      "gross_pnl": 578.2,
+      "real_cost": {
+        "brokerage": 40.0,
+        "stt": 17.59,
+        "exchange": 4.16,
+        "sebi": 0.14,
+        "stamp": 2.09,
+        "gst": 7.97,
+        "total": 71.96,
+        "pct_of_turnover": 0.0513
+      },
+      "net_pnl_real": 506.24,
+      "fleet_cost": 84.09,
+      "net_pnl_fleet": 494.11,
+      "pnl_pct": 0.829,
+      "symbol": "CHENNPETRO"
+    },
+    {
+      "symbol": "GESHIP",
+      "side": "LONG",
+      "qty": 49,
+      "entry": 1322,
+      "entered_at": "2026-08-18T09:50:22",
+      "stop": 1314.68,
+      "initial_stop": 1314.68,
+      "thesis": "Candle CONFIRMED: broke prior bar high, closed at 75% of range, volume 1.31x avg. Best reward-to-risk on the board - structure stop at the signal bar low is only 0.61% away against a 1.3% floor, so R:R 2.14. Price 1322.70 still holding ABOVE the signal bar, unlike MRPL which gave the whole breakout back. Shipping/industrial complex bid alongside TIINDIA, BALUFORGE, TDPOWERSYS.",
+      "invalidation": "loss of signal-bar low 1316.00 means the breakout failed",
+      "value": 64778,
+      "risk_inr": 358.68,
+      "entry_vwap": 1310.36,
+      "entry_chg_pct": 3.69,
+      "high_water": 1322,
+      "trail_armed": false,
+      "peak_pnl_pct": 0.21936459909229128,
+      "exit": 1303.3,
+      "exit_at": "2026-08-18T10:45:01",
+      "exit_reason": "STOP",
+      "gross_pnl": -916.3,
+      "real_cost": {
+        "brokerage": 38.59,
+        "stt": 15.97,
+        "exchange": 3.82,
+        "sebi": 0.13,
+        "stamp": 1.94,
+        "gst": 7.66,
+        "total": 68.11,
+        "pct_of_turnover": 0.0529
+      },
+      "net_pnl_real": -984.41,
+      "fleet_cost": 77.18,
+      "net_pnl_fleet": -993.48,
+      "pnl_pct": -1.415
+    },
+    {
+      "symbol": "TIINDIA",
+      "side": "LONG",
+      "qty": 22,
+      "entry": 2898.1,
+      "entered_at": "2026-08-18T09:50:24",
+      "stop": 2940.75,
+      "initial_stop": 2868.43,
+      "thesis": "Strongest name on the tape (+5.79%) and by far the most liquid in the move at Rs190Cr, which matters because a Rs64k order needs depth. Candle CONFIRMED: closed at 89% of its range on 1.57x volume. Price 2902 is still ABOVE the signal bar high 2893.80 - the move has not paused. Accepting a weaker R:R of 1.12 here deliberately: this is the leader of the industrial bid and leaders are where continuation lives.",
+      "invalidation": "back below signal-bar low 2871.30 kills the continuation thesis",
+      "value": 63758.2,
+      "risk_inr": 652.74,
+      "entry_vwap": 2856.11,
+      "entry_chg_pct": 5.72,
+      "high_water": 2898.1,
+      "trail_armed": true,
+      "peak_pnl_pct": 1.7218177426589865,
+      "exit": 2939.3,
+      "exit_at": "2026-08-18T10:53:51",
+      "exit_reason": "TRAIL",
+      "gross_pnl": 906.4,
+      "real_cost": {
+        "brokerage": 38.53,
+        "stt": 16.17,
+        "exchange": 3.81,
+        "sebi": 0.13,
+        "stamp": 1.91,
+        "gst": 7.64,
+        "total": 68.19,
+        "pct_of_turnover": 0.0531
+      },
+      "net_pnl_real": 838.21,
+      "fleet_cost": 77.05,
+      "net_pnl_fleet": 829.35,
+      "pnl_pct": 1.422
+    },
+    {
+      "symbol": "KFINTECH",
+      "side": "SHORT",
+      "qty": 73,
+      "entry": 952.1,
+      "entered_at": "2026-08-18T09:26:53",
+      "stop": 962.0,
+      "initial_stop": 962.0,
+      "thesis": "Capital-markets complex selling off together (BSE -2.5, ANGELONE -3.6, NAM-INDIA -1.7, CAMS -1.6) = sector flow not single-name noise. KFINTECH is the relative laggard: BSE and ANGELONE have both bounced off their lows in the last 10min while KFINTECH is still pinned at rng 11 and is the furthest below VWAP (-0.99%) of the group. Shorting the name that cannot bounce when its sector tries to.",
+      "invalidation": "reclaim of VWAP 960.94 kills the relative-weakness thesis",
+      "value": 69503.3,
+      "risk_inr": 722.7,
+      "entry_vwap": 960.63,
+      "entry_chg_pct": -2.15,
+      "high_water": 952.1,
+      "trail_armed": false,
+      "peak_pnl_pct": 0.3255960508349987,
+      "exit": 957.95,
+      "exit_at": "2026-08-18T13:10:39",
+      "exit_reason": "INVALIDATION: reclaimed VWAP (957.65 vs 954.29), rng 10.9->35.3, whole capital-markets complex back above VWAP, candle engine now confirms LONG. Pre-registered invalidation fired - cutting at -0.58% rather than defending a dead thesis down to the 962 stop.",
+      "gross_pnl": -427.05,
+      "real_cost": {
+        "brokerage": 40.0,
+        "stt": 17.38,
+        "exchange": 4.14,
+        "sebi": 0.14,
+        "stamp": 2.1,
+        "gst": 7.97,
+        "total": 71.72,
+        "pct_of_turnover": 0.0514
+      },
+      "net_pnl_real": -498.77,
+      "fleet_cost": 83.66,
+      "net_pnl_fleet": -510.71,
+      "pnl_pct": -0.614
+    }
+  ],
+  "data_gaps": [
+    {
+      "from": "2026-08-18T10:51:19",
+      "to": "2026-08-18T10:51:41",
+      "seconds": 22
+    },
+    {
+      "from": "2026-08-18T11:10:55",
+      "to": "2026-08-18T11:11:19",
+      "seconds": 24
+    },
+    {
+      "from": "2026-08-18T12:27:22",
+      "to": "2026-08-18T12:38:02",
+      "seconds": 640
+    },
+    {
+      "from": "2026-08-18T13:06:35",
+      "to": "2026-08-18T13:06:56",
+      "seconds": 21
+    }
+  ],
+  "blind_marks": 24,
+  "blind_seconds_total": 707,
+  "log": [
+    {
+      "t": "2026-08-18T09:26:53",
+      "event": "ENTRY",
+      "symbol": "KFINTECH",
+      "side": "SHORT",
+      "qty": 73,
+      "price": 952.1,
+      "stop": 962.0,
+      "value": 69503.3,
+      "thesis": "Capital-markets complex selling off together (BSE -2.5, ANGELONE -3.6, NAM-INDIA -1.7, CAMS -1.6) = sector flow not single-name noise. KFINTECH is the relative laggard: BSE and ANGELONE have both bounced off their lows in the last 10min while KFINTECH is still pinned at rng 11 and is the furthest below VWAP (-0.99%) of the group. Shorting the name that cannot bounce when its sector tries to."
+    },
+    {
+      "t": "2026-08-18T09:26:55",
+      "event": "ENTRY",
+      "symbol": "CHENNPETRO",
+      "side": "LONG",
+      "qty": 49,
+      "price": 1424.2,
+      "stop": 1406.0,
+      "value": 69785.8,
+      "thesis": "Refiner complex bid as a group (CHENNPETRO +2.4, MRPL +2.8, OIL +1.7) - sector confirmation. CHENNPETRO is at rng 98.3, i.e. printing the day high right now, and holding +0.96% above VWAP. Chose it over MRPL because MRPL faded from rng 96 to 93 in the same window while CHENNPETRO made a new high. Long the leader, not the laggard."
+    },
+    {
+      "t": "2026-08-18T09:27:36",
+      "event": "TRAIL_ARMED",
+      "symbol": "CHENNPETRO",
+      "at_pct": 0.76
+    },
+    {
+      "t": "2026-08-18T09:30:10",
+      "event": "STATE_REPAIR",
+      "reason": "trail armed at 0.30% by pre-patch code; floor is now 1.30%. Reverted trail_armed and restored the entry-time stop.",
+      "positions": [
+        {
+          "symbol": "CHENNPETRO",
+          "stop_before": 1431.44,
+          "stop_after": 1406.0,
+          "peak_pct": 0.7583204606094618
+        }
+      ]
+    },
+    {
+      "t": "2026-08-18T09:42:41",
+      "event": "TRAIL_ARMED",
+      "symbol": "CHENNPETRO",
+      "at_pct": 1.53
+    },
+    {
+      "t": "2026-08-18T09:47:43",
+      "event": "EXIT",
+      "symbol": "CHENNPETRO",
+      "price": 1436,
+      "reason": "TRAIL",
+      "gross": 578.2,
+      "net_real": 506.24
+    },
+    {
+      "t": "2026-08-18T09:50:22",
+      "event": "ENTRY",
+      "symbol": "GESHIP",
+      "side": "LONG",
+      "qty": 49,
+      "price": 1322,
+      "stop": 1314.68,
+      "value": 64778,
+      "thesis": "Candle CONFIRMED: broke prior bar high, closed at 75% of range, volume 1.31x avg. Best reward-to-risk on the board - structure stop at the signal bar low is only 0.61% away against a 1.3% floor, so R:R 2.14. Price 1322.70 still holding ABOVE the signal bar, unlike MRPL which gave the whole breakout back. Shipping/industrial complex bid alongside TIINDIA, BALUFORGE, TDPOWERSYS."
+    },
+    {
+      "t": "2026-08-18T09:50:24",
+      "event": "ENTRY",
+      "symbol": "TIINDIA",
+      "side": "LONG",
+      "qty": 22,
+      "price": 2898.1,
+      "stop": 2868.43,
+      "value": 63758.2,
+      "thesis": "Strongest name on the tape (+5.79%) and by far the most liquid in the move at Rs190Cr, which matters because a Rs64k order needs depth. Candle CONFIRMED: closed at 89% of its range on 1.57x volume. Price 2902 is still ABOVE the signal bar high 2893.80 - the move has not paused. Accepting a weaker R:R of 1.12 here deliberately: this is the leader of the industrial bid and leaders are where continuation lives."
+    },
+    {
+      "t": "2026-08-18T10:04:45",
+      "event": "BACKFILL",
+      "reason": "closed records missing symbol key",
+      "records_fixed": 1
+    },
+    {
+      "t": "2026-08-18T10:45:01",
+      "event": "EXIT",
+      "symbol": "GESHIP",
+      "price": 1303.3,
+      "reason": "STOP",
+      "gross": -916.3,
+      "net_real": -984.41
+    },
+    {
+      "t": "2026-08-18T10:47:16",
+      "event": "TRAIL_ARMED",
+      "symbol": "TIINDIA",
+      "at_pct": 1.37
+    },
+    {
+      "t": "2026-08-18T10:51:19",
+      "event": "DATA_GAP_START",
+      "detail": "quotes unavailable \u2014 stops cannot fire"
+    },
+    {
+      "t": "2026-08-18T10:51:41",
+      "event": "DATA_GAP_END",
+      "started": "2026-08-18T10:51:19",
+      "seconds": 22
+    },
+    {
+      "t": "2026-08-18T10:53:51",
+      "event": "EXIT",
+      "symbol": "TIINDIA",
+      "price": 2939.3,
+      "reason": "TRAIL",
+      "gross": 906.4,
+      "net_real": 838.21
+    },
+    {
+      "t": "2026-08-18T11:10:55",
+      "event": "DATA_GAP_START",
+      "detail": "quotes unavailable \u2014 stops cannot fire"
+    },
+    {
+      "t": "2026-08-18T11:11:19",
+      "event": "DATA_GAP_END",
+      "started": "2026-08-18T11:10:55",
+      "seconds": 24
+    },
+    {
+      "t": "2026-08-18T12:27:22",
+      "event": "DATA_GAP_START",
+      "detail": "quotes unavailable \u2014 stops cannot fire"
+    },
+    {
+      "t": "2026-08-18T12:38:02",
+      "event": "DATA_GAP_END",
+      "started": "2026-08-18T12:27:22",
+      "seconds": 640
+    },
+    {
+      "t": "2026-08-18T13:06:35",
+      "event": "DATA_GAP_START",
+      "detail": "quotes unavailable \u2014 stops cannot fire"
+    },
+    {
+      "t": "2026-08-18T13:06:56",
+      "event": "DATA_GAP_END",
+      "started": "2026-08-18T13:06:35",
+      "seconds": 21
+    },
+    {
+      "t": "2026-08-18T13:10:39",
+      "event": "EXIT",
+      "symbol": "KFINTECH",
+      "price": 957.95,
+      "reason": "INVALIDATION: reclaimed VWAP (957.65 vs 954.29), rng 10.9->35.3, whole capital-markets complex back above VWAP, candle engine now confirms LONG. Pre-registered invalidation fired - cutting at -0.58% rather than defending a dead thesis down to the 962 stop.",
+      "gross": -427.05,
+      "net_real": -498.77
+    }
+  ],
+  "caveat": "Single session, n=4 trades. This stack's measured gross edge is +0.069% against a 0.1060% toll and no searched variant survived holdout at real fees (02565eb). Nothing here is evidence of an edge; it is one sample of a logged decision process."
+}

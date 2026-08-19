@@ -105,7 +105,12 @@ SQUARE_OFF = "15:15"
 # FALSIFICATION: if today loses money with all three rules active, the entry filter
 # is not the binding constraint and the next suspect is selection itself.
 REQUIRE_BREAKOUT = os.environ.get("REQUIRE_BREAKOUT", "1") == "1"
-NO_ENTRY_AFTER = os.environ.get("NO_ENTRY_AFTER", "11:30")
+# 11:30 -> 13:45 on 2026-08-19 by operator decision. The 11:30 cutoff was built from a
+# SINGLE dead afternoon (08-18) and today's MORNING was equally dead, which undercuts
+# the premise that mornings are where the volume is. 13:45 is not arbitrary: square-off
+# is 15:15 and MAX_HOLD_MIN is 90, so it is the last moment a position can live its full
+# intended life instead of being cut short by the clock.
+NO_ENTRY_AFTER = os.environ.get("NO_ENTRY_AFTER", "13:45")
 MAX_HOLD_MIN = int(os.environ.get("MAX_HOLD_MIN", "90"))
 
 TARGET_FLOOR_PCT = 1.30           # trail does not arm until the position has made this

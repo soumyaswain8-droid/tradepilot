@@ -1,0 +1,81 @@
+{
+  "engine": "v5_god",
+  "date": "2026-08-19",
+  "mandate": "discretionary (LLM), full NIFTY-200, long+short, SHORT_VWAP_GATE on",
+  "capital": 200000.0,
+  "trades": 1,
+  "wins": 0,
+  "win_rate": 0.0,
+  "gross_pnl": -929.1,
+  "cost_real": 81.05,
+  "net_pnl": -1010.15,
+  "net_pnl_fleet_model": -1044.71,
+  "return_pct": -0.505,
+  "median_position_value": 95875.9,
+  "above_cost_cliff": true,
+  "cost_pct_of_turnover": 0.0421,
+  "closed": [
+    {
+      "symbol": "NETWEB",
+      "side": "SHORT",
+      "qty": 19,
+      "entry": 5046.1,
+      "entered_at": "2026-08-19T13:32:14",
+      "stop": 5089.88,
+      "initial_stop": 5089.88,
+      "thesis": "FIRST setup in two sessions to pass every gate. MARUBOZU breakdown: signal candle 5054.30-5084.80 closed at 5056 = 6% of range, body >=70%, on 2.52x average volume - sellers in complete control with real participation, not drift. 15-minute trend is DOWN so the 5m break agrees with the higher timeframe (no false-break shape). Live 5042.20 is BELOW the signal candle low 5054.30, so the breakdown is confirmed and not merely inside the bar - the gate that blocked MRPL today at 183.50 (since collapsed to 175.63, -4.29%). Price is 1.97% under VWAP and rng 0.7 = at the day low. Regime aligned: tape DOWN, 0/5 indices green, NIFTY -0.46%. R:R 1.37 at the floor. Sized Rs95,802 for the 0.084% fee bracket rather than 0.106%.",
+      "invalidation": "reclaim of the signal-candle high 5084.80 means the marubozu failed",
+      "value": 95875.9,
+      "risk_inr": 831.82,
+      "entry_vwap": 5143.27,
+      "entry_chg_pct": -5.76,
+      "high_water": 5046.1,
+      "trail_armed": false,
+      "peak_pnl_pct": 0.2952775410713332,
+      "exit": 5095,
+      "exit_at": "2026-08-19T14:51:29",
+      "exit_reason": "STOP",
+      "gross_pnl": -929.1,
+      "real_cost": {
+        "brokerage": 40.0,
+        "stt": 23.97,
+        "exchange": 5.72,
+        "sebi": 0.19,
+        "stamp": 2.9,
+        "gst": 8.26,
+        "total": 81.05,
+        "pct_of_turnover": 0.0421
+      },
+      "net_pnl_real": -1010.15,
+      "fleet_cost": 115.61,
+      "net_pnl_fleet": -1044.71,
+      "pnl_pct": -0.969
+    }
+  ],
+  "data_gaps": [],
+  "blind_marks": 0,
+  "blind_seconds_total": 0,
+  "log": [
+    {
+      "t": "2026-08-19T13:32:14",
+      "event": "ENTRY",
+      "symbol": "NETWEB",
+      "side": "SHORT",
+      "qty": 19,
+      "price": 5046.1,
+      "stop": 5089.88,
+      "value": 95875.9,
+      "thesis": "FIRST setup in two sessions to pass every gate. MARUBOZU breakdown: signal candle 5054.30-5084.80 closed at 5056 = 6% of range, body >=70%, on 2.52x average volume - sellers in complete control with real participation, not drift. 15-minute trend is DOWN so the 5m break agrees with the higher timeframe (no false-break shape). Live 5042.20 is BELOW the signal candle low 5054.30, so the breakdown is confirmed and not merely inside the bar - the gate that blocked MRPL today at 183.50 (since collapsed to 175.63, -4.29%). Price is 1.97% under VWAP and rng 0.7 = at the day low. Regime aligned: tape DOWN, 0/5 indices green, NIFTY -0.46%. R:R 1.37 at the floor. Sized Rs95,802 for the 0.084% fee bracket rather than 0.106%."
+    },
+    {
+      "t": "2026-08-19T14:51:29",
+      "event": "EXIT",
+      "symbol": "NETWEB",
+      "price": 5095,
+      "reason": "STOP",
+      "gross": -929.1,
+      "net_real": -1010.15
+    }
+  ],
+  "caveat": "Single session, n=1 trades. This stack's measured gross edge is +0.069% against a 0.1060% toll and no searched variant survived holdout at real fees (02565eb). Nothing here is evidence of an edge; it is one sample of a logged decision process."
+}

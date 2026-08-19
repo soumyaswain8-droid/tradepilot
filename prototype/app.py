@@ -3793,7 +3793,10 @@ def api_desk():
             "fleet": {k: round(v, 0) if isinstance(v, float) else v
                       for k, v in fleet.items()},
             "engines": engines,
-            "open_positions": open_positions[:80],
+            # 200, not 80: the fleet alone carries ~80 opens, and an 80-cap
+            # silently truncated v5_swing (alphabetically last) out of the book on
+            # its launch day — an invisible position is how books get mistrusted.
+            "open_positions": open_positions[:200],
             "recent_exits": recent_exits[:40],
             "experiment": exp, "guards": guards}
     _desk_cache["data"], _desk_cache["time"] = data, now

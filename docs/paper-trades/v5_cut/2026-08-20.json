@@ -1,0 +1,621 @@
+{
+  "date": "2026-08-20",
+  "engine": "v5_cut",
+  "started_at": "08:50:11",
+  "total_capital": 1035213.04,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-08-20T08:50:36",
+    "gap_prediction": {
+      "direction": "DOWN",
+      "magnitude_pct": -0.32,
+      "confidence": 0.75,
+      "source": "gift_nifty"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "volume_price_proxy"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": 0.21,
+      "asia_change": 0.85,
+      "details": {
+        "sp500": 0.21,
+        "hangseng": 0.7,
+        "nikkei": 1.0
+      }
+    },
+    "overall": {
+      "bias": "BEARISH",
+      "score": -1,
+      "size_multiplier": 0.5,
+      "reasons": [
+        "Gap-down -0.3% (gift_nifty)"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "COFORGE",
+          "entry_price": 1804.5,
+          "qty": 5,
+          "cost": 9022.5,
+          "entry_time": "09:36:16",
+          "entry_date": "2026-08-19",
+          "sl_price": 1790.06,
+          "target_price": 1840.59,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 1816.7,
+          "trough_price": 1804.5,
+          "score": 70.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price -0.28% below VWAP (1803)",
+              "type": "negative"
+            },
+            {
+              "text": "Relative strength +2.08% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Negative intraday momentum",
+              "type": "negative"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "BSE",
+          "entry_price": 3372.3,
+          "qty": 1,
+          "cost": 3372.3,
+          "entry_time": "12:48:35",
+          "entry_date": "2026-08-19",
+          "sl_price": 3328.46,
+          "target_price": 3480.21,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 3372.3,
+          "trough_price": 3372.3,
+          "score": 84.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 3325",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.51% above VWAP (3355)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.37% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "KAYNES",
+          "entry_price": 3789.0,
+          "qty": 1,
+          "cost": 3789.0,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 3739.74,
+          "target_price": 3910.25,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 3821.5,
+          "trough_price": 3789.0,
+          "score": 85.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 3665",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.03% above VWAP (3751)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.46% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.0%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "SHREEJISPG",
+          "entry_price": 648.95,
+          "qty": 9,
+          "cost": 5840.55,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 640.51,
+          "target_price": 669.72,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 649.65,
+          "trough_price": 648.95,
+          "score": 84.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 632",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.19% above VWAP (640)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.17% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +3.7%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "SAIL",
+          "entry_price": 172.9,
+          "qty": 34,
+          "cost": 5878.6,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 171.17,
+          "target_price": 177.22,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 173.23,
+          "trough_price": 172.9,
+          "score": 83.8,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 170",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.65% above VWAP (172)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.07% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "SBICARD",
+          "entry_price": 622.5,
+          "qty": 9,
+          "cost": 5602.5,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 616.27,
+          "target_price": 638.06,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 626.8,
+          "trough_price": 622.5,
+          "score": 83.7,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 616",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.99% above VWAP (617)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.70% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "PGEL",
+          "entry_price": 601.8,
+          "qty": 9,
+          "cost": 5416.2,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 595.78,
+          "target_price": 616.84,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 604.0,
+          "trough_price": 601.8,
+          "score": 83.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 599",
+              "type": "positive"
+            },
+            {
+              "text": "Price +1.33% above VWAP (595)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.28% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.0x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "NAUKRI",
+          "entry_price": 1375.9,
+          "qty": 3,
+          "cost": 4127.7,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 1362.14,
+          "target_price": 1410.3,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 1376.1,
+          "trough_price": 1375.9,
+          "score": 83.3,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1366",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.68% above VWAP (1366)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +2.03% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "PAYTM",
+          "entry_price": 1589.0,
+          "qty": 3,
+          "cost": 4767.0,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 1568.34,
+          "target_price": 1639.85,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 1589.4,
+          "trough_price": 1589.0,
+          "score": 83.2,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 1567",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.03% above VWAP (1589)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +3.24% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (1.5x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +2.8%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "CYIENT",
+          "entry_price": 895.95,
+          "qty": 5,
+          "cost": 4479.75,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 884.3,
+          "target_price": 924.62,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 896.25,
+          "trough_price": 895.95,
+          "score": 83.0,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 871",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.54% above VWAP (890)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +4.84% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +4.4%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "KTKBANK",
+          "entry_price": 318.85,
+          "qty": 15,
+          "cost": 4782.75,
+          "entry_time": "14:03:04",
+          "entry_date": "2026-08-19",
+          "sl_price": 322.88,
+          "target_price": 329.05,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": true,
+          "peak_price": 324.5,
+          "trough_price": 318.85,
+          "score": 82.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 316",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +3.09% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Volume surge (2.5x average)",
+              "type": "positive"
+            },
+            {
+              "text": "Strong rally +2.6%",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        }
+      ],
+      "closed": [],
+      "pnl": 0
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": 0,
+    "trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "longs": 0,
+    "shorts": 0,
+    "scan_count": 0,
+    "rescore_count": 0
+  },
+  "last_rescore_time": null,
+  "last_signals": []
+}

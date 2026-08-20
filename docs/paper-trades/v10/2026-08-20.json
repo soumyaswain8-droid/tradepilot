@@ -1,0 +1,205 @@
+{
+  "date": "2026-08-20",
+  "engine": "v5",
+  "started_at": "08:50:20",
+  "total_capital": 1001905.7,
+  "regime": "SIDEWAYS",
+  "premarket": {
+    "timestamp": "2026-08-20T08:50:39",
+    "gap_prediction": {
+      "direction": "DOWN",
+      "magnitude_pct": -0.32,
+      "confidence": 0.75,
+      "source": "gift_nifty"
+    },
+    "fii_signal": {
+      "direction": "NEUTRAL",
+      "fii_3d_net": 0.0,
+      "fii_5d_net": 0.0,
+      "streak_days": 0,
+      "source": "volume_price_proxy"
+    },
+    "global_sentiment": {
+      "direction": "NEUTRAL",
+      "sp500_change": 0.21,
+      "asia_change": 0.85,
+      "details": {
+        "sp500": 0.21,
+        "hangseng": 0.7,
+        "nikkei": 1.0
+      }
+    },
+    "overall": {
+      "bias": "BEARISH",
+      "score": -1,
+      "size_multiplier": 0.5,
+      "reasons": [
+        "Gap-down -0.3% (gift_nifty)"
+      ]
+    }
+  },
+  "risk_state": {},
+  "pools": {
+    "INTRADAY": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "SWING": {
+      "positions": [
+        {
+          "symbol": "YESBANK",
+          "entry_price": 22.58,
+          "qty": 334,
+          "cost": 7541.72,
+          "entry_time": "09:36:15",
+          "entry_date": "2026-08-19",
+          "sl_price": 22.31,
+          "target_price": 22.94,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 22.75,
+          "trough_price": 22.58,
+          "score": 69.4,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "ORB breakout above 23",
+              "type": "positive"
+            },
+            {
+              "text": "Price +0.22% above VWAP (23)",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Positive intraday momentum",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "ETERNAL",
+          "entry_price": 319.55,
+          "qty": 22,
+          "cost": 7030.1,
+          "entry_time": "09:36:15",
+          "entry_date": "2026-08-19",
+          "sl_price": 315.72,
+          "target_price": 324.66,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 322.2,
+          "trough_price": 319.55,
+          "score": 66.5,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price +0.32% above VWAP (319)",
+              "type": "positive"
+            },
+            {
+              "text": "Relative strength +1.46% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            }
+          ],
+          "days_held": 1
+        },
+        {
+          "symbol": "COFORGE",
+          "entry_price": 1804.5,
+          "qty": 3,
+          "cost": 5413.5,
+          "entry_time": "09:36:15",
+          "entry_date": "2026-08-19",
+          "sl_price": 1782.85,
+          "target_price": 1833.37,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "trailing_activated": false,
+          "peak_price": 1816.7,
+          "trough_price": 1804.5,
+          "score": 65.6,
+          "direction": "BUY",
+          "reasons": [
+            {
+              "text": "Price -0.29% below VWAP (1803)",
+              "type": "negative"
+            },
+            {
+              "text": "Relative strength +2.08% vs Nifty",
+              "type": "positive"
+            },
+            {
+              "text": "FII buying (+1652 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "DII buying (+2579 Cr)",
+              "type": "positive"
+            },
+            {
+              "text": "Short covering rally",
+              "type": "positive"
+            },
+            {
+              "text": "Negative intraday momentum",
+              "type": "negative"
+            }
+          ],
+          "days_held": 1
+        }
+      ],
+      "closed": [],
+      "pnl": 0
+    },
+    "POSITIONAL": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    },
+    "INVESTMENT": {
+      "positions": [],
+      "closed": [],
+      "pnl": 0
+    }
+  },
+  "summary": {
+    "total_pnl": 0,
+    "trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "longs": 0,
+    "shorts": 0,
+    "scan_count": 0,
+    "rescore_count": 0
+  },
+  "last_rescore_time": null,
+  "last_signals": []
+}

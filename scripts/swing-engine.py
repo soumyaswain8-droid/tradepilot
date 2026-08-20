@@ -252,6 +252,21 @@ def scan_and_deploy():
         if r:
             cands.append((r[0], s, r[1]))
     cands.sort(reverse=True)
+    # PRE-OPEN GAP VETO (2026-08-20): if a VALIDATED snapshot of today's auction
+    # exists, skip candidates that gapped UP > 1% — the one-session study (19 Aug)
+    # showed >+1% auction gaps faded -1.17% open->close (20% win), consistent with
+    # the measured intraday mean-reversion. A VETO on chasing, not a signal; logged
+    # so the ablation can judge it later. No snapshot -> no change in behaviour.
+    gp = ROOT / "prototype" / "data" / "preopen" / f"{datetime.now():%Y-%m-%d}.json"
+    if gp.exists():
+        gaps = json.loads(gp.read_text())
+        before = len(cands)
+        vetoed = [(s, gaps.get(s)) for _, s, _ in cands
+                  if gaps.get(s) is not None and gaps[s] > 1.0]
+        cands = [c for c in cands if not (gaps.get(c[1]) is not None and gaps[c[1]] > 1.0)]
+        for s, g in vetoed:
+            print(f"  GAP-VETO {s}: auction gap {g:+.2f}% > +1% — not chasing")
+        print(f"  pre-open overlay: {before} -> {len(cands)} candidates")
     picked = cands[:free_slots]
     print(f"  scan: {len(cands)} candidates pass all 4 criteria; taking {len(picked)}")
     if not picked:

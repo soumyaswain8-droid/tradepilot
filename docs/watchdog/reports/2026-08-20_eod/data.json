@@ -1,0 +1,126 @@
+{
+  "date": "2026-08-20",
+  "generated_at": "2026-08-20T15:35:26.227152",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 290.2,
+      "trades": 35,
+      "wins": 18,
+      "losses": 17,
+      "longs": 20,
+      "shorts": 15,
+      "win_rate": 51.4,
+      "open_positions": 14,
+      "best_trade": 262.5,
+      "worst_trade": -465.3,
+      "avg_win": 110.8,
+      "avg_loss": -100.25,
+      "exit_reasons": {
+        "STOPLOSS": 14,
+        "FLAT_FORCE_EXIT": 13,
+        "TIME_EXIT": 1,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 35,
+      "n_open": 14
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -506.54,
+      "trades": 34,
+      "wins": 15,
+      "losses": 19,
+      "longs": 17,
+      "shorts": 17,
+      "win_rate": 44.1,
+      "open_positions": 5,
+      "best_trade": 571.2,
+      "worst_trade": -462.0,
+      "avg_win": 135.68,
+      "avg_loss": -133.78,
+      "exit_reasons": {
+        "STOPLOSS": 12,
+        "TIME_EXIT": 12,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 34,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ABCAPITAL",
+      "AMBUJACEM",
+      "ASIANPAINT",
+      "BDL",
+      "COFORGE",
+      "DIXON",
+      "DMART",
+      "ETERNAL",
+      "GMRAIRPORT",
+      "HAL",
+      "HINDALCO",
+      "ICICIAMC",
+      "JINDALSTEL",
+      "KEI",
+      "KPITTECH",
+      "LGEINDIA",
+      "M&MFIN",
+      "MCX",
+      "MOTHERSON",
+      "MUTHOOTFIN",
+      "NAUKRI",
+      "OIL",
+      "ONGC",
+      "PFC",
+      "RECLTD",
+      "SAIL",
+      "SBICARD",
+      "TATAELXSI",
+      "VMM"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +290 across 35 trades (51.4% win).",
+    "Laggard: <b>v5_classic</b> with Rs -507 across 34 trades (44.1% win).",
+    "<b>v5</b>: STOPLOSS (14) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (12) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 51.4% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 44.1% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

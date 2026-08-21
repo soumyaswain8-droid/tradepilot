@@ -1,0 +1,129 @@
+{
+  "date": "2026-08-21",
+  "generated_at": "2026-08-21T15:35:22.932289",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 358.17,
+      "trades": 62,
+      "wins": 33,
+      "losses": 29,
+      "longs": 32,
+      "shorts": 30,
+      "win_rate": 53.2,
+      "open_positions": 10,
+      "best_trade": 534.6,
+      "worst_trade": -334.4,
+      "avg_win": 84.85,
+      "avg_loss": -87.21,
+      "exit_reasons": {
+        "STOPLOSS": 19,
+        "FLAT_FORCE_EXIT": 27,
+        "TIME_EXIT": 10,
+        "TARGET": 2,
+        "SIGNAL_FLIP": 4
+      },
+      "n_closed": 62,
+      "n_open": 10
+    },
+    {
+      "engine": "v5_classic",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -244.2,
+      "trades": 43,
+      "wins": 20,
+      "losses": 23,
+      "longs": 17,
+      "shorts": 26,
+      "win_rate": 46.5,
+      "open_positions": 3,
+      "best_trade": 242.4,
+      "worst_trade": -196.5,
+      "avg_win": 76.17,
+      "avg_loss": -76.85,
+      "exit_reasons": {
+        "STOPLOSS": 19,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 9
+      },
+      "n_closed": 43,
+      "n_open": 3
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {
+    "v5|v5_classic": [
+      "ABCAPITAL",
+      "ALKEM",
+      "BDL",
+      "BRITANNIA",
+      "CGPOWER",
+      "CIPLA",
+      "COFORGE",
+      "ETERNAL",
+      "GVT&D",
+      "HAVELLS",
+      "HINDZINC",
+      "INDHOTEL",
+      "MCX",
+      "MOTILALOFS",
+      "MUTHOOTFIN",
+      "NATIONALUM",
+      "OIL",
+      "PAYTM",
+      "PERSISTENT",
+      "POWERGRID",
+      "PREMIERENE",
+      "SBICARD",
+      "SUNPHARMA",
+      "SWIGGY",
+      "TATACONSUM",
+      "TMCV",
+      "TORNTPHARM",
+      "TRENT",
+      "UNIONBANK",
+      "VBL",
+      "VEDL",
+      "ZYDUSLIFE"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5</b> with Rs +358 across 62 trades (53.2% win).",
+    "Laggard: <b>v5_classic</b> with Rs -244 across 43 trades (46.5% win).",
+    "High-volume engines (50+ trades) averaged Rs 358; low-volume averaged Rs -244. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (19) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_classic</b>: STOPLOSS (19) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 53.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_classic</b>: 46.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

@@ -41,10 +41,10 @@ declare -a ENGINES=(
   # TP-RCA 2026-06-26 lightweight roster: v5 (live) + v5_classic (frozen benchmark)
   # + v5_long (RC-1 long-only fix) + v5_cut (profit experiment). Retired v5_noml/v5_apr/v7_regime.
   # "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
-  "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
-  "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
+  # RETIRED 2026-08-23: "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
   # RC-1 (TP-RCA 2026-06-26): v5_long = long-only NIFTY-200 (shorts disabled). Primary fix experiment.
-  "v5_long|scripts/v5_long-paper-trade.py|docs/paper-trades/v5_long/${TODAY}.json|python3 scripts/v5_long-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_long|scripts/v5_long-paper-trade.py|docs/paper-trades/v5_long/${TODAY}.json|python3 scripts/v5_long-paper-trade.py"
   # RETIRED 2026-06-26 (TP-RCA audit): v7_regime flat vs v5 + WFO-negative (DSR 0.12). State preserved.
   # "v7_regime|scripts/v7_regime-paper-trade.py|docs/paper-trades/v7_regime/${TODAY}.json|python3 scripts/v7_regime-paper-trade.py"
   # RETIRED 2026-06-26 (TP-RCA audit): v5_noml redundant (ml=0 already global -> ran v5 twice).
@@ -52,16 +52,16 @@ declare -a ENGINES=(
   # RETIRED 2026-06-26 (TP-RCA audit): v5_apr tracked v5 within +Rs78/9d — no info value.
   # "v5_apr|scripts/v5_apr-paper-trade.py|docs/paper-trades/v5_apr/${TODAY}.json|python3 scripts/v5_apr-paper-trade.py"
   # SHADOW (TP-QUANT): v5_cut = ML-removed + wrong-way-cut + tighter short + wide universe.
-  "v5_cut|scripts/v5_cut-paper-trade.py|docs/paper-trades/v5_cut/${TODAY}.json|python3 scripts/v5_cut-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_cut|scripts/v5_cut-paper-trade.py|docs/paper-trades/v5_cut/${TODAY}.json|python3 scripts/v5_cut-paper-trade.py"
   # SHADOW (TP-RCA 2026-06-30): v5_flip = fast intraday regime-flip (5-min tape, BEAR 8/12 tilt on hard-down).
-  "v5_flip|scripts/v5_flip-paper-trade.py|docs/paper-trades/v5_flip/${TODAY}.json|python3 scripts/v5_flip-paper-trade.py"
-  "v5_chop|scripts/v5_chop-paper-trade.py|docs/paper-trades/v5_chop/${TODAY}.json|python3 scripts/v5_chop-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_flip|scripts/v5_flip-paper-trade.py|docs/paper-trades/v5_flip/${TODAY}.json|python3 scripts/v5_flip-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_chop|scripts/v5_chop-paper-trade.py|docs/paper-trades/v5_chop/${TODAY}.json|python3 scripts/v5_chop-paper-trade.py"
   # SHADOW (RRG Gate-1 PASS 2026-07-20): v5_rrg = v5_chop ladder, RRG rotation-count score producer.
-  "v5_rrg|scripts/v5_rrg-paper-trade.py|docs/paper-trades/v5_rrg/${TODAY}.json|python3 scripts/v5_rrg-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_rrg|scripts/v5_rrg-paper-trade.py|docs/paper-trades/v5_rrg/${TODAY}.json|python3 scripts/v5_rrg-paper-trade.py"
   # SHADOW (Gate-2, spec 2026-07-20_risk_gate_three_state_verdict.md): v5_gate = RiskGate DRIVES execution + invalidation monitor, no CHOP_FILTER.
-  "v5_gate|scripts/v5_gate-paper-trade.py|docs/paper-trades/v5_gate/${TODAY}.json|python3 scripts/v5_gate-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_gate|scripts/v5_gate-paper-trade.py|docs/paper-trades/v5_gate/${TODAY}.json|python3 scripts/v5_gate-paper-trade.py"
   # MIGRATION CANARY (2026-08-04): v5_kite = v5 + NSE_DATA_SOURCE=kite, one variable vs live v5.
-  "v5_kite|scripts/v5_kite-paper-trade.py|docs/paper-trades/v5_kite/${TODAY}.json|python3 scripts/v5_kite-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_kite|scripts/v5_kite-paper-trade.py|docs/paper-trades/v5_kite/${TODAY}.json|python3 scripts/v5_kite-paper-trade.py"
 
   # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70.
   # PAUSED 2026-08-05 — tunes execution around a signal measured WORSE than
@@ -85,7 +85,7 @@ declare -a ENGINES=(
   # "v5_time|scripts/v5_time-paper-trade.py|docs/paper-trades/v5_time/${TODAY}.json|python3 scripts/v5_time-paper-trade.py"
 
   # EXIT-STRUCTURE SHADOW (2026-08-04): v5_hold = 3-session holds + reversal exit.
-  "v5_hold|scripts/v5_hold-paper-trade.py|docs/paper-trades/v5_hold/${TODAY}.json|python3 scripts/v5_hold-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_hold|scripts/v5_hold-paper-trade.py|docs/paper-trades/v5_hold/${TODAY}.json|python3 scripts/v5_hold-paper-trade.py"
 
   # UNIVERSE SHADOW (2026-08-05): v5_wide = v5 on 837 liquidity-screened stocks.
   "v5_wide|scripts/v5_wide-paper-trade.py|docs/paper-trades/v5_wide/${TODAY}.json|python3 scripts/v5_wide-paper-trade.py"
@@ -93,14 +93,14 @@ declare -a ENGINES=(
   # RETIRED 2026-07-30, superseded by v10 (see launch-market.sh ENGINES for why).
   # "v8|scripts/v8-paper-trade.py|docs/paper-trades/v8/${TODAY}.json|python3 scripts/v8-paper-trade.py"
   # V10 (2026-07-30): frozen April engine, vendored from git 9d7db34.
-  "v10|scripts/v10-paper-trade.py|docs/paper-trades/v10/${TODAY}.json|python3 scripts/v10-paper-trade.py"
+  # RETIRED 2026-08-23: "v10|scripts/v10-paper-trade.py|docs/paper-trades/v10/${TODAY}.json|python3 scripts/v10-paper-trade.py"
   # v5_size — THE live experiment (cost-cliff sizing, day 2 of ~30). A mid-session
   # crash without restart voids the day's data point, and at ~10 trades/day every
   # day matters on the road to n=300. Added 2026-08-11 after finding it missing.
-  "v5_size|scripts/v5_size-paper-trade.py|docs/paper-trades/v5_size/${TODAY}.json|python3 scripts/v5_size-paper-trade.py"
-  "v5_1L|scripts/v5_1L-paper-trade.py|docs/paper-trades/v5_1L/${TODAY}.json|python3 scripts/v5_1L-paper-trade.py"
-  "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py|docs/paper-trades/v5_cut_1L/${TODAY}.json|python3 scripts/v5_cut_1L-paper-trade.py"
-  "v5_long_1L|scripts/v5_long_1L-paper-trade.py|docs/paper-trades/v5_long_1L/${TODAY}.json|python3 scripts/v5_long_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_size|scripts/v5_size-paper-trade.py|docs/paper-trades/v5_size/${TODAY}.json|python3 scripts/v5_size-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_1L|scripts/v5_1L-paper-trade.py|docs/paper-trades/v5_1L/${TODAY}.json|python3 scripts/v5_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py|docs/paper-trades/v5_cut_1L/${TODAY}.json|python3 scripts/v5_cut_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_long_1L|scripts/v5_long_1L-paper-trade.py|docs/paper-trades/v5_long_1L/${TODAY}.json|python3 scripts/v5_long_1L-paper-trade.py"
   # Small-capital shadows (2026-08-03) — Rs 10,000 variants.
   # Retired 2026-05-15 (Sprint 1) — re-enable here AND in launch-market.sh together (~2026-07-15):
   # "v5_6|scripts/v5_6-paper-trade.py|docs/paper-trades/v5_6/${TODAY}.json|python3 scripts/v5_6-paper-trade.py"

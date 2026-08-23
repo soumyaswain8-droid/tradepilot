@@ -125,15 +125,22 @@ ENGINES=(
   #   Confirmed live: worst engine on 2 of its last 3 sessions (-13881, -5133, down days).
   #   To revive: uncomment here AND in crash-watchdog.sh together.
   # "v4|scripts/v4-paper-trade.py"
-  "v5|scripts/v5-paper-trade.py"
-  "v5_classic|scripts/v5_classic-paper-trade.py"
+  # ── FLEET CONSOLIDATION, 2026-08-23 (Soumya) ────────────────────────────────
+  # 15 engines retired in one decision: week 08-17..21 cycled Rs3.66 crore of
+  # turnover for +Rs5,261 gross (+0.014% of flow) and Rs39k of modelled fees.
+  # Five independent measurements: intraday OHLCV signal cannot clear the toll.
+  # Survivors: v5_wide (only live net-positive track), v5_swing (own launchd),
+  # real1k (manual pilot). Lessons harvested in 1cr-roadmap/ENGINE-GRAVEYARD.md.
+  # Retired entries are commented, never deleted — data and code stay.
+  # RETIRED 2026-08-23: "v5|scripts/v5-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_classic|scripts/v5_classic-paper-trade.py"
 
   # RC-1 (TP-RCA, 2026-06-26): v5_long = v5 with shorts DISABLED (long-only), NIFTY-200.
   # Root-cause finding (11-agent investigation): the SHORT book is the entire net bleed —
   # longs +Rs1,149 vs shorts -Rs3,611 over 06-16..25; if shorts were flat v5 is net positive.
   # The April engine that made money was long-only. Same v5 code, SHORT_REQ_MAX_SCORE=-1 makes
   # shorts impossible. THE primary fix experiment. Compare net P&L + win-rate vs live v5.
-  "v5_long|scripts/v5_long-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_long|scripts/v5_long-paper-trade.py"
 
   # RETIRED 2026-06-26 (TP-RCA engine audit): v5_noml is REDUNDANT — config.py ships
   # ml_score=0 globally since 06-21, so v5_noml runs identical selection code to v5 (it was
@@ -148,18 +155,18 @@ ENGINES=(
   # SHADOW (TP-QUANT, 2026-06-21): v5_cut = ML-removed + faster wrong-way cut + tighter
   # short-gate + ~450-name universe. Built from this week's watchdog findings to lift
   # the profit margin. Compare risk-adjusted vs v5. Re-comment to end.
-  "v5_cut|scripts/v5_cut-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_cut|scripts/v5_cut-paper-trade.py"
 
   # SHADOW (TP-RCA, 2026-06-30): v5_flip = fast intraday regime-flip. Re-checks the live
   # tape every 5 min and activates the existing BEAR 8/12 slot tilt on a CONFIRMED hard-down
   # (NIFTY < -0.6%), bidirectional (reverts on green), keeps both legs. Data-validated this
   # week (engine doesn't adapt its mix to the tape today). Compare red-day behaviour vs v5.
-  "v5_flip|scripts/v5_flip-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_flip|scripts/v5_flip-paper-trade.py"
 
   # SHADOW (spec 2026-07-17): v5_chop = TrendScore chop filter (trade less +
   # smaller in chop, full-size on confirmed trend). ML-free. Gate 2: 2 weeks
   # vs v5 -> promote on better net + lower cost drag + no worse DD.
-  "v5_chop|scripts/v5_chop-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_chop|scripts/v5_chop-paper-trade.py"
 
   # SHADOW (RRG Gate-1 PASS, 2026-07-20, commit d23726e): v5_rrg = same
   # 2-tier CHOP-throttle machinery as v5_chop, score producer swapped to
@@ -169,7 +176,7 @@ ENGINES=(
   # intraday ("tilt, not trigger"). Gate 2: 2 weeks vs v5, same criteria as
   # v5_chop -- promote on better net + lower cost drag + no worse DD; early-
   # kill if trailing v5 by >Rs5k after week 1. Re-comment to end.
-  "v5_rrg|scripts/v5_rrg-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_rrg|scripts/v5_rrg-paper-trade.py"
 
   # SHADOW (Gate-2, spec 2026-07-20_risk_gate_three_state_verdict.md, Phase
   # 1+2): v5_gate = same v5 code, RiskGate DRIVES execution (RISK_GATE_DRIVE=1)
@@ -182,7 +189,7 @@ ENGINES=(
   # capture, gate never looser than inline, INVALIDATED exits beat the
   # eventual stop; early-kill if trailing v5 by >Rs5k after week 1.
   # Re-comment to end.
-  "v5_gate|scripts/v5_gate-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_gate|scripts/v5_gate-paper-trade.py"
 
   # MIGRATION CANARY (2026-08-04): v5_kite = v5 with NSE_DATA_SOURCE=kite. Exactly
   # ONE variable differs from live v5 — the data feed — so any divergence is
@@ -193,7 +200,7 @@ ENGINES=(
   # whole fleet only after trade count and P&L track v5 across a full week AND
   # kite_data.health() reports zero fallbacks — a session with fallbacks silently
   # ran on the control's feed and is not a clean comparison.
-  "v5_kite|scripts/v5_kite-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_kite|scripts/v5_kite-paper-trade.py"
 
   # SELECTIVITY SHADOW (2026-08-04): v5_pick = v5 + MIN_ENTRY_SCORE=70. Backtest over
   # v5's last 25 sessions: floor 70 -> 193 trades, net Rs 4,361 vs 414 trades, net Rs 256.
@@ -235,7 +242,7 @@ ENGINES=(
   # cancel, so nearly all profit comes from TIME_EXIT — the give-up exit. PDH/PDL backtest:
   # 1-day hold net -12,409 (70% unresolved) vs 3-day +33,913 (9% unresolved). RISK: a 1%
   # stop is jumped by 24% of overnight gaps, so the backtest ceiling is optimistic.
-  "v5_hold|scripts/v5_hold-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_hold|scripts/v5_hold-paper-trade.py"
 
   # UNIVERSE SHADOW (2026-08-05): v5_wide = v5 on 837 liquidity-SCREENED stocks vs 200.
   # Not a "trade more" change: v5_cut proves 2.23x universe gives only 1.14x trades because
@@ -257,10 +264,10 @@ ENGINES=(
   # config + April-21 ML model @ ml_score=0.25). Data layer stays CURRENT — April's
   # data_nse writes the shared cache the whole fleet reads and predates the 2026-05-08
   # cache-poisoning guards. Spec: 1cr-roadmap/design/2026-07-30-v10-april-replica-design.md
-  "v10|scripts/v10-paper-trade.py"
-  "v5_1L|scripts/v5_1L-paper-trade.py"
-  "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py"
-  "v5_long_1L|scripts/v5_long_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v10|scripts/v10-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_1L|scripts/v5_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_cut_1L|scripts/v5_cut_1L-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_long_1L|scripts/v5_long_1L-paper-trade.py"
 
   # SMALL-CAPITAL SHADOWS (2026-08-03): same strategies at Rs 1,00,000 instead of
   # Rs 10,00,000. At Rs 10L the position sizer is never the binding constraint; at
@@ -300,7 +307,7 @@ ENGINES=(
   # variable; v5 continues unchanged as the control. WATCH: median position must
   # exceed Rs66,667 or the experiment did not happen; and slippage, since the whole
   # gain is ~3bps and a Rs1.5L order that moves the book >2bps erases it.
-  "v5_size|scripts/v5_size-paper-trade.py"
+  # RETIRED 2026-08-23: "v5_size|scripts/v5_size-paper-trade.py"
 )
 
 # Expected number of active engines — derived from the ENGINES array length so the

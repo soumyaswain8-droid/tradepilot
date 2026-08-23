@@ -3626,6 +3626,22 @@ def api_us_status():
 # local files — no yfinance, no scorer, nothing that can block. The old desk
 # assembled itself from six endpoints, two of which could take 15-30s cold.
 
+_CNC_ENGINES = {"v5_swing"}   # multi-day delivery lanes — different fee physics
+
+
+def _tp_cnc_cost_pct(v):
+    """Zerodha CNC delivery round trip: brokerage 0, STT 0.1% EACH side, stamp
+    0.015% buy, DP ~Rs15.93+GST per sell, txn+SEBI+GST. ~0.24% at Rs1L+."""
+    if not v or v <= 0:
+        return 0.0
+    stt = 0.001 * v * 2
+    stamp = 0.00015 * v
+    dp = 15.93 * 1.18
+    txn, sebi = 0.0000297 * v * 2, 0.000001 * v * 2
+    gst = 0.18 * (txn + sebi)
+    return (stt + stamp + dp + txn + sebi + gst) / v * 100
+
+
 def _tp_cost_pct(v):
     """Zerodha intraday round trip. Brokerage 0.03% or Rs20/order (LOWER wins),
     STT 0.025% sell-side, txn 0.00297%x2, SEBI, 18% GST, stamp 0.003% buy-side.
@@ -3710,7 +3726,8 @@ def api_desk():
                         pnl = float(c.get("pnl") or 0)
                         ep, q = c.get("entry_price"), c.get("qty")
                         v = float(ep) * int(q) if ep and q else 0.0
-                        fee = v * _tp_cost_pct(v) / 100
+                        fee = v * (_tp_cnc_cost_pct(v) if d.name in _CNC_ENGINES
+                                   else _tp_cost_pct(v)) / 100
                         row["trades"] += 1
                         row["gross"] += pnl
                         row["fees"] += fee

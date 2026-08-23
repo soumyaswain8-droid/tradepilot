@@ -63,7 +63,9 @@ STOP_PCT = 2.5
 MAX_HOLD_SESSIONS = 3
 NEAR_LEVEL_PCT = 4.0
 COIL_RATIO = 0.60
-FEE_PCT = 0.0787                  # at-size round trip
+FEE_PCT = 0.24                    # CNC DELIVERY round trip — multi-day holds cannot
+                                  # use MIS. STT 0.1% EACH side + stamp + DP charge.
+                                  # Was wrongly 0.0787 (intraday) until 2026-08-23.
 
 CACHE = ROOT / "prototype" / "data" / "simcache"
 

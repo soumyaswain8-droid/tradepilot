@@ -42,7 +42,14 @@ sys.path.insert(0, str(ROOT))
 ENGINE = "real1k"
 DIR = ROOT / "docs" / "paper-trades" / ENGINE     # fleet schema -> desk shows it
 CAPITAL = 1000.0
-MAX_PRICE = 900.0        # must afford >=1 share with margin for slippage
+LEVERAGE = 4.0           # MIS intraday leverage (broker gives ~4-5x on liquid names).
+                         # Exposure = Rs4,000 on Rs1,000 capital: a caught 1% move
+                         # = ~Rs40 = 4% ON CAPITAL. This is the only honest
+                         # accelerant in cash equity; the Rs3-4k ambition otherwise
+                         # belongs to options (modal outcome -100%) or to months of
+                         # compounding. SL 0.8% on 4x = 3.2% of capital at risk per
+                         # day — the practical ceiling for a pilot.
+MAX_PRICE = 3500.0       # qty from exposure, so pricier liquid names now fit
 SL_PCT, TGT_PCT = 0.8, 1.5
 TIME_STOP = "14:45"
 
@@ -109,13 +116,16 @@ def cmd_card():
         print("  no BUY under Rs900 right now — try again after the next score refresh")
         return
     px = float(c["price"])
-    qty = int(CAPITAL / px)
+    qty = int(CAPITAL * LEVERAGE / px)
+    if qty < 1:
+        print(f"  {c['symbol']} too pricey even at {LEVERAGE}x — widen MAX_PRICE"); return
     sl = round(px * (1 - SL_PCT / 100), 2)
     tgt = round(px * (1 + TGT_PCT / 100), 2)
     card = {"symbol": c["symbol"], "ref_price": px, "qty": qty,
             "sl": sl, "target": tgt, "time_stop": TIME_STOP,
             "carded_at": now.strftime("%Y-%m-%d %H:%M:%S"),
             "score": c.get("score")}
+    card["paper"] = "--paper" in sys.argv
     s["open"] = {**card, "status": "CARDED"}
     save(s)
     msg = (f"*Rs1000 REAL PILOT — trade card*\n"
@@ -158,7 +168,8 @@ def cmd_exited(price):
         "sl_price": o["sl"], "target_price": o["target"],
         "pnl": round(pnl, 2), "pnl_pct": round(pct, 2),
         "reason": "MANUAL", "position_type": "LONG", "pool": "INTRADAY",
-        "slippage_entry_pct": o.get("slippage_vs_ref_pct"), "real_money": True})
+        "slippage_entry_pct": o.get("slippage_vs_ref_pct"),
+        "real_money": not o.get("paper", False)})
     j["pools"]["INTRADAY"]["pnl"] += pnl
     j["summary"]["total_pnl"] += pnl
     j["summary"]["trades"] += 1
@@ -187,6 +198,8 @@ def main():
     ap.add_argument("--filled", type=float)
     ap.add_argument("--exited", type=float)
     ap.add_argument("--skip", type=str)
+    ap.add_argument("--paper", action="store_true",
+                    help="rehearsal mode: identical flow, ledger marked paper")
     ap.add_argument("--status", action="store_true")
     a = ap.parse_args()
     if a.card: cmd_card()

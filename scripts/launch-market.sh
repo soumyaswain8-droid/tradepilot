@@ -132,7 +132,7 @@ ENGINES=(
   # Survivors: v5_wide (only live net-positive track), v5_swing (own launchd),
   # real1k (manual pilot). Lessons harvested in 1cr-roadmap/ENGINE-GRAVEYARD.md.
   # Retired entries are commented, never deleted — data and code stay.
-  # RETIRED 2026-08-23: "v5|scripts/v5-paper-trade.py"
+  "v5|scripts/v5-paper-trade.py"   # UN-RETIRED 2026-08-23 evening (Soumya: keep v5)
   # RETIRED 2026-08-23: "v5_classic|scripts/v5_classic-paper-trade.py"
 
   # RC-1 (TP-RCA, 2026-06-26): v5_long = v5 with shorts DISABLED (long-only), NIFTY-200.

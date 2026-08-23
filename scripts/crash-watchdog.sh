@@ -41,7 +41,7 @@ declare -a ENGINES=(
   # TP-RCA 2026-06-26 lightweight roster: v5 (live) + v5_classic (frozen benchmark)
   # + v5_long (RC-1 long-only fix) + v5_cut (profit experiment). Retired v5_noml/v5_apr/v7_regime.
   # "v4|scripts/v4-paper-trade.py|docs/paper-trades/v4/${TODAY}.json|python3 scripts/v4-paper-trade.py"
-  # RETIRED 2026-08-23: "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"
+  "v5|scripts/v5-paper-trade.py|docs/paper-trades/v5/${TODAY}.json|python3 scripts/v5-paper-trade.py"   # UN-RETIRED 2026-08-23
   # RETIRED 2026-08-23: "v5_classic|scripts/v5_classic-paper-trade.py|docs/paper-trades/v5_classic/${TODAY}.json|python3 scripts/v5_classic-paper-trade.py"
   # RC-1 (TP-RCA 2026-06-26): v5_long = long-only NIFTY-200 (shorts disabled). Primary fix experiment.
   # RETIRED 2026-08-23: "v5_long|scripts/v5_long-paper-trade.py|docs/paper-trades/v5_long/${TODAY}.json|python3 scripts/v5_long-paper-trade.py"

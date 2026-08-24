@@ -45,11 +45,24 @@ from prototype.v4 import kite_data as kd
 
 ENGINE = "opt1k"
 DIR = ROOT / "docs" / "paper-trades" / ENGINE
-BUDGET = 1000.0
+from prototype.lane_config import OPT_BUDGET, OPT_RT_FEES, LANE_MODE
+BUDGET = OPT_BUDGET
 SL_PCT, TGT_PCT = 50.0, 100.0      # of premium
 TIME_STOP = "14:45"
-RT_FEES = 47.0                      # Rs20x2 brokerage + taxes, flat-ish
+RT_FEES = OPT_RT_FEES               # brokerage + taxes, flat-ish
 GATE_MIN_CARDS = 8                  # paper gate before any real premium
+MIN_OI = 500_000                    # an affordable strike nobody trades can't be exited
+
+# EXPIRY-DAY RULES. On expiry the entire extrinsic value of an OTM option decays to
+# zero by 15:30 with certainty — theta is not a drag that day, it is the dominant
+# term, and it accelerates through the afternoon. Two consequences:
+#   - new entries stop early: after this, we are buying a melting ice cube
+#   - the square-off is earlier, because the final half hour is where OTM premium
+#     collapses fastest and the bid can vanish entirely
+# Budget forces us ONTO expiry day (it is the only expiry where Rs3,000 reaches a
+# near-ATM strike), so these guards are what make that affordable rather than reckless.
+EXPIRY_DAY_NO_ENTRY_AFTER = "13:00"
+EXPIRY_DAY_SQUARE_OFF = "15:00"
 
 def load():
     f = DIR / "pilot_state.json"
@@ -91,8 +104,17 @@ def breadth():
     return side, frac, len(rows)
 
 def pick_contract(side):
-    """Nearest weekly NIFTY expiry from the NFO dump; OTM strike whose premium fits
-    one lot in the budget. Everything read live, nothing hardcoded."""
+    """Nearest weekly NIFTY expiry; the CLOSEST-TO-SPOT strike whose lot fits budget.
+
+    Closest-to-spot matters more than cheap. A near-ATM option carries ~0.5 delta, so
+    it responds to the index move we actually forecast; a far-OTM at 0.1 delta needs a
+    move several times larger just to break even, which is how a budget lane turns
+    into a lottery ticket. Measured 2026-08-24 at Rs3,000: the nearest affordable
+    strike sat 31 points from spot on the current expiry, but 330+ points out on the
+    following one — the budget, not the view, decides moneyness.
+
+    Also screens OI: an affordable strike nobody trades cannot be exited.
+    """
     k = kd.client()
     nfo = k.instruments("NFO")
     opts = [i for i in nfo if i.get("name") == "NIFTY"
@@ -101,28 +123,35 @@ def pick_contract(side):
         return None
     expiry = min(i["expiry"] for i in opts if i.get("expiry"))
     week = [i for i in opts if i["expiry"] == expiry]
-    spot = None
     try:
-        q = k.quote(["NSE:NIFTY 50"])
-        spot = float(q["NSE:NIFTY 50"]["last_price"])
+        spot = float(k.quote(["NSE:NIFTY 50"])["NSE:NIFTY 50"]["last_price"])
     except Exception:
         return None
-    # OTM strikes stepping away from spot; take the nearest whose premium fits
     week.sort(key=lambda i: i["strike"])
-    otm = [i for i in week if (i["strike"] > spot if side == "CE" else i["strike"] < spot)]
-    if side == "PE":
-        otm = list(reversed(otm))
-    for inst in otm[:12]:
-        try:
-            q = k.quote([f"NFO:{inst['tradingsymbol']}"])
-            px = float(q[f"NFO:{inst['tradingsymbol']}"]["last_price"])
-        except Exception:
-            continue
+    otm = [i for i in week
+           if (i["strike"] > spot if side == "CE" else i["strike"] < spot)]
+    otm.sort(key=lambda i: abs(i["strike"] - spot))     # nearest the money first
+    scan = otm[:14]
+    if not scan:
+        return None
+    try:                                    # one batched call, not 14 round trips
+        q = k.quote([f"NFO:{i['tradingsymbol']}" for i in scan])
+    except Exception:
+        return None
+    for inst in scan:
+        d = q.get(f"NFO:{inst['tradingsymbol']}") or {}
+        px = float(d.get("last_price") or 0)
+        oi = float(d.get("oi") or 0)
         lot = int(inst.get("lot_size") or 75)
-        if px > 0 and px * lot <= BUDGET:
-            return {"tradingsymbol": inst["tradingsymbol"], "strike": inst["strike"],
-                    "expiry": str(inst["expiry"]), "lot": lot, "premium": px,
-                    "spot": spot, "cost": round(px * lot, 2)}
+        if px <= 0 or px * lot > BUDGET:
+            continue
+        if oi < MIN_OI:                     # nobody to sell it back to
+            continue
+        return {"tradingsymbol": inst["tradingsymbol"], "strike": inst["strike"],
+                "expiry": str(inst["expiry"]), "lot": lot, "premium": px,
+                "spot": spot, "cost": round(px * lot, 2), "oi": int(oi),
+                "otm_points": round(abs(inst["strike"] - spot), 1),
+                "is_expiry_day": expiry == datetime.now().date()}
     return None
 
 def cmd_card(force_real=False):
@@ -143,25 +172,40 @@ def cmd_card(force_real=False):
               f"— no-signal days are free"); return
     c = pick_contract(side)
     if not c:
-        print("  no affordable OTM contract found"); return
+        print(f"  no affordable {side} with OI >= {MIN_OI:,} in budget Rs{BUDGET:,.0f}")
+        return
+    # expiry-day guards — see the constants block for why theta makes these binding
+    stop_at = TIME_STOP
+    if c.get("is_expiry_day"):
+        if now.strftime("%H:%M") >= EXPIRY_DAY_NO_ENTRY_AFTER:
+            print(f"  [EXPIRY-DAY] no new entries after "
+                  f"{EXPIRY_DAY_NO_ENTRY_AFTER} — all remaining premium is "
+                  f"extrinsic and decays to zero by close"); return
+        stop_at = EXPIRY_DAY_SQUARE_OFF
     sl = round(c["premium"] * (1 - SL_PCT / 100), 2)
     tgt = round(c["premium"] * (1 + TGT_PCT / 100), 2)
+    # the honest breakeven: the target must clear fees, not just the premium
+    be = round(c["premium"] + RT_FEES / c["lot"], 2)
     card = {**c, "side": side, "breadth": round(frac, 3),
-            "sl": sl, "target": tgt, "time_stop": TIME_STOP,
+            "sl": sl, "target": tgt, "time_stop": stop_at, "breakeven": be,
             "paper": is_paper, "status": "CARDED",
             "carded_at": now.strftime("%Y-%m-%d %H:%M:%S")}
     s["open"] = card
     save(s)
     mode = "PAPER" if is_paper else "REAL"
-    msg = (f"*Rs1000 OPTIONS {mode} — card*\n"
+    exp_tag = "  *EXPIRY DAY*" if c.get("is_expiry_day") else ""
+    msg = (f"*Rs{BUDGET:,.0f} OPTIONS {mode} — card*{exp_tag}\n"
            f"BUY {c['tradingsymbol']} x{c['lot']}\n"
            f"premium ~{c['premium']:.2f} = Rs{c['cost']:,.0f} "
-           f"(spot {c['spot']:,.0f}, breadth {frac:.0%})\n"
-           f"SL {sl} (-50%) | target {tgt} (+100%) | square-off {TIME_STOP}\n"
-           f"fees ~Rs{RT_FEES:.0f} round trip — target must clear them")
+           f"({c['otm_points']:.0f} pts OTM, spot {c['spot']:,.0f}, "
+           f"breadth {frac:.0%}, OI {c['oi']:,})\n"
+           f"SL {sl} (-50%) | target {tgt} (+100%) | square-off {stop_at}\n"
+           f"breakeven {be} — fees Rs{RT_FEES:.0f} = "
+           f"{RT_FEES/c['cost']*100:.1f}% of the position")
     tg(msg)
-    print(f"  {mode} CARD: BUY {c['tradingsymbol']} x{c['lot']} @ ~{c['premium']:.2f} "
-          f"(Rs{c['cost']:,.0f})  SL {sl}  TGT {tgt}")
+    print(f"  {mode} CARD{exp_tag}: BUY {c['tradingsymbol']} x{c['lot']} "
+          f"@ ~{c['premium']:.2f} (Rs{c['cost']:,.0f}, {c['otm_points']:.0f}pts OTM)")
+    print(f"    SL {sl}  TGT {tgt}  breakeven {be}  square-off {stop_at}")
 
 def cmd_filled(price):
     s = load(); o = s.get("open")

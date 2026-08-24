@@ -63,6 +63,7 @@ CTX_TOP_N = 320              # daily history is pulled for the top-N by turnover
 MIN_PRICE, MAX_PRICE = 80.0, 800.0     # the Rs1k tradeable band (quantisation)
 MIN_TURNOVER = 2e7           # Rs2 crore traded today — below this, spread eats us
 MIN_DAY_RANGE_PCT = 0.30     # below this the instrument does not move at all
+CIRCUIT_HEADROOM_PCT = 0.50  # this close to a circuit limit there is no counterparty
 
 # ETFs are not stocks, and the gold ones are all THE SAME TRADE. The first sweep put
 # five gold ETFs in the top fourteen and scored it as confluence — it was one macro
@@ -413,6 +414,18 @@ class ScoutTeam:
             hi, lo = float(o.get("high") or px), float(o.get("low") or px)
             if (hi - lo) / px * 100 < MIN_DAY_RANGE_PCT:
                 continue     # dead instrument: nothing to trade even if we wanted to
+            # A stock at its circuit limit has NO COUNTERPARTY — you cannot buy a
+            # locked-upper name at any price, and you cannot exit a locked-lower one.
+            # The scouts' best-looking names are exactly the ones at risk of this,
+            # because a lock is what a huge move ends in. 0 of 20 tonight, but a
+            # +20% name would be untradeable and still top the board.
+            uc = float(d.get("upper_circuit_limit") or 0)
+            lc = float(d.get("lower_circuit_limit") or 0)
+            if uc and lc:
+                if (uc - px) / px * 100 < CIRCUIT_HEADROOM_PCT:
+                    continue
+                if (px - lc) / px * 100 < CIRCUIT_HEADROOM_PCT:
+                    continue
             rows.append({"sym": s, "ltp": px, "prev": prev, "vol": vol,
                          "high": float(o.get("high") or px),
                          "low": float(o.get("low") or px),
@@ -459,7 +472,15 @@ class ScoutTeam:
                 "chg": round(_pct(by_sym[sym]["ltp"], by_sym[sym]["prev"]), 2),
                 "turnover_cr": round(by_sym[sym]["turnover"] / 1e7, 1),
             })
-        board.sort(key=lambda x: (-x["agree"], -x["score"]))
+        # Rank by score ALONE. An earlier version sorted by (-agree, -score), which
+        # double-counted confluence — the score already carries it at 0.28 per extra
+        # scout — and made the list non-monotonic in score: a 3-scout name whose
+        # lenses all barely tripped scores 0.776 and sorted ABOVE a 2-scout name at
+        # full conviction scoring 0.880. The floor's swap loop breaks on the first
+        # challenger that misses its margin, so that inversion silently cost real
+        # reassignments. Sorting by score restores monotonicity and makes the break
+        # correct as well as cheap.
+        board.sort(key=lambda x: -x["score"])
         return board[:top]
 
 

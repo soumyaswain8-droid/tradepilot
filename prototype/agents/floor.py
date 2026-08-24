@@ -77,6 +77,27 @@ MIN_TENURE_S = 600          # an agent must hold a stock this long before a swap
 MAX_SWAPS_PER_CYCLE = 4     # never churn the whole floor at once
 
 
+def displaces(cand, incumbent_score, incumbent_agree):
+    """Does this challenger earn an incumbent's seat?
+
+    Two ways in, and the first one exists because the score arithmetic alone got it
+    wrong. Measured on the real board 2026-08-24: the weakest incumbent scored 0.635
+    on 2 scouts, so the margin bar was 0.785 — while a MARGINAL three-scout name
+    scores 0.776. A fresh three-way confluence, the strongest signal we measure,
+    would have been rejected by nine thousandths.
+
+    So state the rule instead of approximating it: MORE INDEPENDENT LENSES AGREEING
+    WINS. That is the one finding that survived falsification (edge rose monotonically
+    with agreeing predicates), and it should not be re-derived from a weighted sum
+    that can round it away.
+    """
+    if cand["agree"] > incumbent_agree:
+        return True, "more scouts agree (%d vs %d)" % (cand["agree"], incumbent_agree)
+    if cand["score"] >= incumbent_score + SWAP_MARGIN:
+        return True, "score %+.3f over incumbent" % (cand["score"] - incumbent_score)
+    return False, ""
+
+
 class StockAgent:
     """One agent, one stock. Holds a thesis; judges every tick against it."""
 
@@ -186,6 +207,7 @@ class Floor:
         self.scouts = None
         self.kws = None
         self.swap_log = []
+        self.near_miss_log = []
         KNOW.mkdir(parents=True, exist_ok=True)
         ESCALATIONS.mkdir(parents=True, exist_ok=True)
         self.shared = self._load_shared()
@@ -381,14 +403,28 @@ class Floor:
         if not challengers:
             return 0
         movable = sorted((a for a in self.agents.values() if a.can_be_reassigned()),
-                         key=lambda a: a.scout.get("score", 0))
-        swaps = 0
+                         key=lambda a: (a.scout.get("agree", 0),
+                                        a.scout.get("score", 0)))
+        swaps, near_misses = 0, []
         for cand in challengers:
             if swaps >= MAX_SWAPS_PER_CYCLE or not movable:
                 break
             weakest = movable[0]
-            if cand["score"] < weakest.scout.get("score", 0) + SWAP_MARGIN:
-                break                       # board is sorted: nothing below clears it
+            ok, why_swap = displaces(cand, weakest.scout.get("score", 0),
+                                     weakest.scout.get("agree", 0))
+            if not ok:
+                # Record what ALMOST cleared. Whether these brakes are set right is
+                # an empirical question we cannot answer by reasoning about it — the
+                # near-miss trail is how tomorrow's log tells us, instead of us
+                # guessing again.
+                near_misses.append({
+                    "cand": cand["symbol"], "cand_score": cand["score"],
+                    "cand_agree": cand["agree"], "vs": weakest.symbol,
+                    "inc_score": round(weakest.scout.get("score", 0), 3),
+                    "inc_agree": weakest.scout.get("agree", 0),
+                    "short_by": round(weakest.scout.get("score", 0) + SWAP_MARGIN
+                                      - cand["score"], 3)})
+                continue
             tok = kd.token_for(cand["symbol"])
             if not tok or tok in self.agents:
                 continue
@@ -413,13 +449,24 @@ class Floor:
             swaps += 1
             rec = {"at": datetime.now().strftime("%H:%M:%S"),
                    "out": old_sym, "out_score": round(weakest.scout.get("score", 0), 3),
+                   "out_agree": weakest.scout.get("agree", 0),
                    "in": cand["symbol"], "in_score": cand["score"],
-                   "agree": cand["agree"], "why": cand["why"]}
+                   "agree": cand["agree"], "rule": why_swap, "why": cand["why"],
+                   # the price at swap time, both sides — this is what makes the
+                   # end-of-day question answerable: did the stock we moved TO
+                   # actually move more than the one we left?
+                   "in_px": cand.get("ltp"),
+                   "out_px": weakest.ticks[-1][1] if weakest.ticks else None}
             self.swap_log.append(rec)
-            print(f"  ~~ {rec['at']} REASSIGN {old_sym} ({rec['out_score']}) "
-                  f"-> {cand['symbol']} ({cand['score']}, {cand['agree']} scouts)",
-                  flush=True)
+            print(f"  ~~ {rec['at']} REASSIGN {old_sym} ({rec['out_score']}, "
+                  f"{rec['out_agree']} scouts) -> {cand['symbol']} ({cand['score']}, "
+                  f"{cand['agree']} scouts) — {why_swap}", flush=True)
             print(f"       {cand['why']}", flush=True)
+        if near_misses:
+            self.near_miss_log.extend(near_misses)
+            best = min(near_misses, key=lambda x: x["short_by"])
+            print(f"     ({len(near_misses)} near-misses, closest: {best['cand']} "
+                  f"short by {best['short_by']})", flush=True)
         return swaps
 
     def escalate(self, ev):
@@ -447,6 +494,10 @@ class Floor:
             # the stocks the scouts swapped IN actually moved more than the ones they
             # swapped OUT. That is the only honest test of whether scouting pays.
             "reassignments": self.swap_log,
+            # if this list is long and the reassignment list is empty, the brakes are
+            # too tight; if reassignments churn and escalations stay flat, too loose.
+            "near_misses": self.near_miss_log[-200:],
+            "near_miss_total": len(self.near_miss_log),
             "watched_at_close": sorted(a.symbol for a in self.agents.values()),
         }, indent=2))
         print(f"  wrote {f}")

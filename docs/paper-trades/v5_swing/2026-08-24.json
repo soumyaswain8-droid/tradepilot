@@ -210,14 +210,54 @@
           ]
         }
       ],
-      "closed": [],
-      "pnl": 0.0
+      "closed": [
+        {
+          "symbol": "DIVISLAB",
+          "entry_price": 8557.5,
+          "qty": 14,
+          "cost": 119805.0,
+          "entry_time": "09:40:22",
+          "entry_date": "2026-08-20",
+          "sl_price": 8343.56,
+          "target_price": 8847.48,
+          "position_type": "LONG",
+          "pool": "SWING",
+          "breakout_level": 8674.0,
+          "score": 45.6,
+          "hold_until": null,
+          "sessions_held": 2,
+          "reasons": [
+            {
+              "text": "1mo high 8,674.0 is 1.33% away",
+              "type": "positive"
+            },
+            {
+              "text": "20DMA rising 0.725%/day, price above",
+              "type": "positive"
+            },
+            {
+              "text": "5d range coiled to 0.45x monthly avg",
+              "type": "positive"
+            },
+            {
+              "text": "dip day -0.33% \u2014 buying weakness in trend",
+              "type": "positive"
+            }
+          ],
+          "exit_price": 8506.5,
+          "exit_time": "15:05:07",
+          "pnl": -714.0,
+          "pnl_pct": -0.6,
+          "reason": "TIME_3D"
+        }
+      ],
+      "pnl": -714.0
     }
   },
   "summary": {
-    "total_pnl": 0.0,
-    "trades": 0,
+    "total_pnl": -714.0,
+    "trades": 1,
     "wins": 0,
-    "losses": 0
+    "losses": 1
   }
 }

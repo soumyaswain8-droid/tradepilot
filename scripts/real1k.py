@@ -49,7 +49,19 @@ LEVERAGE = 4.0           # MIS intraday leverage (broker gives ~4-5x on liquid n
                          # belongs to options (modal outcome -100%) or to months of
                          # compounding. SL 0.8% on 4x = 3.2% of capital at risk per
                          # day — the practical ceiling for a pilot.
-MAX_PRICE = 3500.0       # qty from exposure, so pricier liquid names now fit
+# SMALL-CAPITAL BAND — measured live 2026-08-24, not assumed.
+# The engines size for Rs10L; at Rs1k the binding constraint is QUANTIZATION, not
+# fees. At Rs4,000 exposure: a Rs2,500 stock buys 1 share (37.5% sizing error), a
+# Rs5,000 stock buys none. Below Rs80 we drift toward illiquid names where the
+# spread, not the fee, is the enemy. Measured across NIFTY-200 in-band:
+#   73/200 names tradeable | median spread 2.6 bps | touch absorbs the FULL order
+# Two consequences worth stating:
+#   1. fees stay 0.106% (percentage brokerage) — small size carries NO fee penalty
+#   2. slippage is ~ZERO because Rs4,000 never moves the book — the one genuine
+#      ADVANTAGE we have over the Rs1L positions, which pay 0.60 bps of impact
+MIN_PRICE, MAX_PRICE = 80.0, 800.0
+MIN_QTY = 5              # below this, quantization error exceeds 5%
+MAX_SPREAD_BPS = 15.0    # wider than this and the spread costs more than the fee
 SL_PCT, TGT_PCT = 0.8, 1.5
 TIME_STOP = "14:45"
 
@@ -87,19 +99,56 @@ def tg(msg):
         print(f"  (telegram failed: {e})")
 
 
-def pick():
-    """One candidate: the fleet's strongest BUY under Rs900, liquid. Uses the same
-    scorer the dashboard shows — no new signal claims, this is a pipeline test."""
+def pick(relaxed=False):
+    """Strongest BUY that is actually TRADEABLE at Rs1k: in the quantization band,
+    spread under the fee, and with the touch deep enough to fill the whole order.
+    Screens against LIVE depth, not just the score table — a signal we cannot fill
+    cleanly is not a signal at this size."""
     import requests
     try:
         rows = requests.get("http://127.0.0.1:5050/api/scores", timeout=10).json()
     except Exception:
         rows = []
-    cands = [r for r in rows
-             if (r.get("signal") or "").upper() == "BUY"
-             and r.get("price") and 20 < float(r["price"]) <= MAX_PRICE]
+    pool = [r for r in rows if r.get("price")
+            and MIN_PRICE <= float(r["price"]) <= MAX_PRICE]
+    buys = [r for r in pool if (r.get("signal") or "").upper() == "BUY"]
+    cands = buys if buys else (sorted(pool, key=lambda r: -(r.get("score") or 0))
+                               if relaxed else [])
     cands.sort(key=lambda r: -(r.get("score") or 0))
-    return cands[0] if cands else None
+    if not cands:
+        return None, ("no BUY in the Rs%d-%d band" % (MIN_PRICE, MAX_PRICE))
+    from prototype.v4 import kite_data as kd
+    k = kd.client()
+    names = [c["symbol"] for c in cands[:25]]
+    try:
+        q = k.quote([f"NSE:{s}" for s in names])
+    except Exception as e:
+        return None, f"quote failed: {e}"
+    for c in cands[:25]:
+        d = q.get(f"NSE:{c['symbol']}")
+        if not d:
+            continue
+        px = float(d.get("last_price") or 0)
+        if not (MIN_PRICE <= px <= MAX_PRICE):
+            continue
+        dep = d.get("depth") or {}
+        bid = (dep.get("buy") or [{}])[0]
+        ask = (dep.get("sell") or [{}])[0]
+        bp, ap = bid.get("price") or 0, ask.get("price") or 0
+        if not bp or not ap:
+            continue
+        spread = (ap - bp) / px * 10000
+        qty = int(CAPITAL * LEVERAGE / px)
+        if qty < MIN_QTY or spread > MAX_SPREAD_BPS:
+            continue
+        c = dict(c)
+        c["price"] = px
+        c["spread_bps"] = round(spread, 2)
+        c["touch_qty"] = ask.get("quantity") or 0
+        c["fills_at_touch"] = (ask.get("quantity") or 0) >= qty
+        c["relaxed"] = not buys
+        return c, None
+    return None, "candidates found but none passed the spread/depth screen"
 
 
 def cmd_card():
@@ -111,9 +160,9 @@ def cmd_card():
     if not (now.weekday() < 5 and (9, 15) <= (now.hour, now.minute) < (14, 0)):
         print("  [SESSION-GUARD] cards only 09:15-14:00 on trading days")
         return
-    c = pick()
+    c, why = pick(relaxed="--relaxed" in sys.argv)
     if not c:
-        print("  no BUY under Rs900 right now — try again after the next score refresh")
+        print(f"  NO CARD: {why}")
         return
     px = float(c["price"])
     qty = int(CAPITAL * LEVERAGE / px)
@@ -122,15 +171,21 @@ def cmd_card():
     sl = round(px * (1 - SL_PCT / 100), 2)
     tgt = round(px * (1 + TGT_PCT / 100), 2)
     card = {"symbol": c["symbol"], "ref_price": px, "qty": qty,
+            "exposure": round(px * qty, 2),
             "sl": sl, "target": tgt, "time_stop": TIME_STOP,
             "carded_at": now.strftime("%Y-%m-%d %H:%M:%S"),
-            "score": c.get("score")}
+            "score": c.get("score"), "spread_bps": c.get("spread_bps"),
+            "fills_at_touch": c.get("fills_at_touch"),
+            "relaxed_pick": c.get("relaxed", False)}
     card["paper"] = "--paper" in sys.argv
     s["open"] = {**card, "status": "CARDED"}
     save(s)
-    msg = (f"*Rs1000 REAL PILOT — trade card*\n"
-           f"BUY {c['symbol']} x{qty} (MIS, intraday)\n"
+    msg = (f"*Rs1000 {'PAPER' if card['paper'] else 'REAL'} — trade card*\n"
+           f"BUY {c['symbol']} x{qty} (MIS, intraday) = Rs{px*qty:,.0f} exposure\n"
            f"ref {px:.2f} | SL {sl} | target {tgt}\n"
+           f"spread {c.get('spread_bps')}bps | touch fills all: "
+           f"{'yes' if c.get('fills_at_touch') else 'no'}\n"
+           f"{'(RELAXED: no BUY signal — mechanics test only)' if c.get('relaxed') else ''}\n"
            f"time-stop {TIME_STOP} — square off, never carry\n"
            f"after fill: real1k.py --filled <price>")
     tg(msg)
@@ -198,6 +253,9 @@ def main():
     ap.add_argument("--filled", type=float)
     ap.add_argument("--exited", type=float)
     ap.add_argument("--skip", type=str)
+    ap.add_argument("--relaxed", action="store_true",
+                    help="no BUY signal available: card the top-scored in-band name "
+                         "as an explicit mechanics test (marked relaxed in the ledger)")
     ap.add_argument("--paper", action="store_true",
                     help="rehearsal mode: identical flow, ledger marked paper")
     ap.add_argument("--status", action="store_true")

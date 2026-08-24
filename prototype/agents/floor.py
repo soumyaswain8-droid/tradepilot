@@ -65,11 +65,22 @@ ESCALATE_COOLDOWN_S = 180        # per agent, per trigger type
 VOL_SPIKE_MULT = 3.0
 FAST_MOVE_BPS_PER_MIN = 25.0
 
+# ── dynamic reassignment (Soumya, 2026-08-24) ────────────────────────────────
+# "Do not look at these 20 stocks only — the moto is to make profit, so we cannot
+#  miss any stock that is good to trade."
+# A fixed watchlist can only be as good as 09:16's information. The scout team
+# (agents/scouts.py) sweeps all ~889 liquid names every minute and the floor moves
+# its watchers to whatever is actually worth watching.
+REBALANCE_EVERY_S = 120
+SWAP_MARGIN = 0.15          # a challenger must beat the incumbent by this much
+MIN_TENURE_S = 600          # an agent must hold a stock this long before a swap
+MAX_SWAPS_PER_CYCLE = 4     # never churn the whole floor at once
+
 
 class StockAgent:
     """One agent, one stock. Holds a thesis; judges every tick against it."""
 
-    def __init__(self, symbol, token, thesis, shared):
+    def __init__(self, symbol, token, thesis, shared, scout=None):
         self.symbol, self.token = symbol, token
         self.thesis = thesis            # levels + structure, set by the read
         self.shared = shared            # the floor's shared knowledge
@@ -78,6 +89,24 @@ class StockAgent:
         self.position = None
         self.state = "WATCHING"
         self.seen = 0
+        self.scout = scout or {}        # why the scouts sent this stock here
+        self.assigned_at = time.time()
+
+    @property
+    def tenure_s(self):
+        return time.time() - self.assigned_at
+
+    def can_be_reassigned(self):
+        """An agent is only movable when it has nothing at stake and has had a fair
+        look. Both halves matter:
+          - holding a position is absolute — walking away from an open trade to watch
+            something shinier is how a floor loses money it already committed;
+          - the tenure floor exists because the deepest triggers need history.
+            SWEEP_RECLAIM reads 30 ticks and VOL_SPIKE reads 60, so an agent churned
+            every minute could NEVER fire its two most valuable signals — it would be
+            permanently re-seeded into blindness.
+        """
+        return self.position is None and self.tenure_s >= MIN_TENURE_S
 
     # ── the tick path: must stay microseconds, no I/O, no LLM ──────────────
     def on_tick(self, t):
@@ -149,10 +178,14 @@ class StockAgent:
 class Floor:
     """Runs the agents, owns the stream, records escalations, shares knowledge."""
 
-    def __init__(self, dry=True):
+    def __init__(self, dry=True, verbose=False):
         self.agents = {}
         self.dry = dry
+        self.verbose = verbose
         self.escalation_log = []
+        self.scouts = None
+        self.kws = None
+        self.swap_log = []
         KNOW.mkdir(parents=True, exist_ok=True)
         ESCALATIONS.mkdir(parents=True, exist_ok=True)
         self.shared = self._load_shared()
@@ -170,49 +203,29 @@ class Floor:
         self.shared["updated"] = datetime.now().isoformat(timespec="seconds")
         (KNOW / "shared.json").write_text(json.dumps(self.shared, indent=2))
 
+    def scout_board(self, n=N_AGENTS, depth=3):
+        """Ask the scout team what is worth watching right now.
+
+        Asks for more than n: the extras are the bench. When the top pick is already
+        being watched — the common case on a rebalance — the floor needs the next
+        names down to have anything to move an idle agent to.
+        """
+        from prototype.agents.scouts import ScoutTeam
+        if self.scouts is None:
+            self.scouts = ScoutTeam(verbose=self.verbose)
+            print(f"  scouts: 4 lenses over {len(self.scouts.universe)} liquid names "
+                  f"({self.scouts.dropped_etf} ETFs/funds excluded)")
+        return self.scouts.scan(top=n * depth)
+
     def build_watchlist(self, n=N_AGENTS):
-        """The n stocks worth a dedicated agent: tradeable at Rs1k, liquid, and
-        with the engines' interest. One agent per stock — specialisation is the
-        point, so the list is fixed for the session."""
-        import requests
+        """The opening assignment: the scouts' top n that we can actually get a
+        tradeable token for."""
         from prototype.v4 import kite_data as kd
-        from prototype.v4.config import ACTIVE_SYMBOLS_YF
-        try:
-            rows = requests.get("http://127.0.0.1:5050/api/scores", timeout=10).json()
-        except Exception:
-            rows = []
-        scored = {r["symbol"]: r for r in rows if r.get("symbol")}
-        # /api/scores serves NIFTY-50 only — barely a dozen land in the Rs1k band,
-        # so the floor draws from the full NIFTY-200 and uses scores where present.
-        universe = [s.replace(".NS", "") for s in ACTIVE_SYMBOLS_YF]
-        k = kd.client()
-        live = {}
-        for i in range(0, len(universe), 200):
-            ch = universe[i:i + 200]
-            try:
-                live.update(k.quote([f"NSE:{s}" for s in ch]))
-            except Exception:
-                pass
-        cands = []
-        for s in universe:
-            d = live.get(f"NSE:{s}")
-            if not d:
-                continue
-            px = float(d.get("last_price") or 0)
-            if not (MIN_PRICE <= px <= MAX_PRICE):
-                continue
-            vol = int(d.get("volume") or 0)
-            sc = scored.get(s, {})
-            # rank: scored names first (engine interest), then by turnover — an
-            # agent on an illiquid stock watches a chart nobody else is trading.
-            cands.append(((0 if sc.get("score") else 1),
-                          -(sc.get("score") or 0), -(vol * px), s, px, sc))
-        cands.sort()
         out = []
-        for _, _, _, s, px, sc in cands:
-            tok = kd.token_for(s)
+        for b in self.scout_board(n):
+            tok = kd.token_for(b["symbol"])
             if tok:
-                out.append((s, tok, {**sc, "price": px}))
+                out.append((b["symbol"], tok, b))
             if len(out) >= n:
                 break
         return out
@@ -249,6 +262,28 @@ class Floor:
                 "last": round(last, 2),
                 "lessons": self.shared.get("per_symbol", {}).get(symbol, [])}
 
+    def seed_only(self):
+        """Everything the live floor does except the stream — so the scout board,
+        thesis seeding and the swap brakes can all be exercised outside market
+        hours, when a real run is impossible."""
+        wl = self.build_watchlist()
+        if not wl:
+            print("  no watchlist — scouts returned nothing"); return
+        print(f"\n  ASSIGNED {len(wl)} AGENTS")
+        for sym, tok, meta in wl:
+            self.agents[tok] = StockAgent(sym, tok, self.seed_thesis(sym, meta),
+                                          self.shared, scout=meta)
+            lv = self.agents[tok].thesis.get("levels", {})
+            print(f"    {sym:<13}[{meta.get('agree',0)} scouts {meta.get('score',0):.2f}] "
+                  + " ".join(f"{k}={v}" for k, v in list(lv.items())[:4]))
+        print("\n  REBALANCE DRY-RUN")
+        movable = [a for a in self.agents.values() if a.can_be_reassigned()]
+        print(f"    movable now: {len(movable)}/{len(self.agents)} "
+              f"(tenure floor is {MIN_TENURE_S}s — everything was just assigned, "
+              f"so a swap correctly cannot happen yet)")
+        n = self.rebalance()
+        print(f"    swaps executed: {n}")
+
     def start(self):
         from kiteconnect import KiteTicker
         from prototype.v4 import kite_data as kd
@@ -262,16 +297,17 @@ class Floor:
                     token = line.split("=", 1)[1].strip().strip('"')
         wl = self.build_watchlist()
         if not wl:
-            print("  no watchlist — is the scores API up?"); return
+            print("  no watchlist — scouts returned nothing"); return
         print(f"  seeding theses for {len(wl)} agents...")
         for sym, tok, meta in wl:
             self.agents[tok] = StockAgent(sym, tok, self.seed_thesis(sym, meta),
-                                          self.shared)
+                                          self.shared, scout=meta)
             lv = self.agents[tok].thesis.get("levels", {})
-            print(f"    {sym:<12} levels: " +
-                  " ".join(f"{k}={v}" for k, v in list(lv.items())[:4]))
-        tokens = list(self.agents)
+            print(f"    {sym:<12} [{meta.get('agree', 0)} scouts, "
+                  f"{meta.get('score', 0):.2f}] " +
+                  " ".join(f"{k}={v}" for k, v in list(lv.items())[:3]))
         kws = KiteTicker(api_key, token)
+        self.kws = kws
 
         def on_ticks(ws, ticks):
             for t in ticks:
@@ -283,9 +319,13 @@ class Floor:
                     self.escalate(ev)
 
         def on_connect(ws, resp):
-            ws.subscribe(tokens)
-            ws.set_mode(ws.MODE_FULL, tokens)
-            print(f"  STREAM LIVE — {len(tokens)} agents watching every tick "
+            # read the roster live, not from a captured list — after a reassignment
+            # a reconnect would otherwise resubscribe stocks nobody is watching and
+            # leave the newly assigned ones silent.
+            toks = list(self.agents)
+            ws.subscribe(toks)
+            ws.set_mode(ws.MODE_FULL, toks)
+            print(f"  STREAM LIVE — {len(toks)} agents watching every tick "
                   f"({datetime.now():%H:%M:%S})")
 
         def on_error(ws, code, reason):
@@ -295,19 +335,92 @@ class Floor:
         kws.on_connect = on_connect
         kws.on_error = on_error
         kws.connect(threaded=True)
+        last_rebalance = time.time()
         try:
             while True:
                 time.sleep(30)
                 live = sum(a.seen for a in self.agents.values())
-                print(f"  [{datetime.now():%H:%M:%S}] {live:,} ticks processed | "
-                      f"{len(self.escalation_log)} escalations")
+                held = sum(1 for a in self.agents.values() if a.position)
+                print(f"  [{datetime.now():%H:%M:%S}] {live:,} ticks | "
+                      f"{len(self.escalation_log)} escalations | "
+                      f"{len(self.swap_log)} reassignments | {held} in position")
                 if datetime.now().strftime("%H:%M") >= "15:30":
                     print("  session over — stopping"); break
+                # the scouts keep sweeping; the floor follows them
+                if time.time() - last_rebalance >= REBALANCE_EVERY_S:
+                    last_rebalance = time.time()
+                    self.rebalance()
         except KeyboardInterrupt:
             print("  interrupted")
         finally:
             self.save_shared()
             self.dump_escalations()
+
+    # ── dynamic reassignment ─────────────────────────────────────────────────
+    def rebalance(self):
+        """Move idle agents onto whatever the scouts now rank highest.
+
+        Three brakes, and each one prevents a specific failure:
+          SWAP_MARGIN         a challenger must clearly beat the incumbent, or the
+                              floor thrashes between names of equal merit;
+          MAX_SWAPS_PER_CYCLE at most a few move per cycle, so a single odd sweep
+                              cannot empty the floor of every settled agent;
+          can_be_reassigned() never abandons an open position, never churns an agent
+                              before it has the tick history its triggers need.
+        """
+        from prototype.v4 import kite_data as kd
+        try:
+            board = self.scout_board()
+        except Exception as e:
+            print(f"  rebalance skipped — scout sweep failed: {str(e)[:80]}")
+            return 0
+        if not board:
+            return 0
+        watching = {a.symbol for a in self.agents.values()}
+        challengers = [b for b in board if b["symbol"] not in watching]
+        if not challengers:
+            return 0
+        movable = sorted((a for a in self.agents.values() if a.can_be_reassigned()),
+                         key=lambda a: a.scout.get("score", 0))
+        swaps = 0
+        for cand in challengers:
+            if swaps >= MAX_SWAPS_PER_CYCLE or not movable:
+                break
+            weakest = movable[0]
+            if cand["score"] < weakest.scout.get("score", 0) + SWAP_MARGIN:
+                break                       # board is sorted: nothing below clears it
+            tok = kd.token_for(cand["symbol"])
+            if not tok or tok in self.agents:
+                continue
+            old_tok, old_sym = weakest.token, weakest.symbol
+            try:
+                new_agent = StockAgent(cand["symbol"], tok,
+                                       self.seed_thesis(cand["symbol"], cand),
+                                       self.shared, scout=cand)
+            except Exception as e:
+                print(f"  could not seed {cand['symbol']}: {str(e)[:60]}")
+                continue
+            del self.agents[old_tok]
+            self.agents[tok] = new_agent
+            if self.kws:
+                try:
+                    self.kws.unsubscribe([old_tok])
+                    self.kws.subscribe([tok])
+                    self.kws.set_mode(self.kws.MODE_FULL, [tok])
+                except Exception as e:
+                    print(f"  stream reassign warning: {str(e)[:60]}")
+            movable.pop(0)
+            swaps += 1
+            rec = {"at": datetime.now().strftime("%H:%M:%S"),
+                   "out": old_sym, "out_score": round(weakest.scout.get("score", 0), 3),
+                   "in": cand["symbol"], "in_score": cand["score"],
+                   "agree": cand["agree"], "why": cand["why"]}
+            self.swap_log.append(rec)
+            print(f"  ~~ {rec['at']} REASSIGN {old_sym} ({rec['out_score']}) "
+                  f"-> {cand['symbol']} ({cand['score']}, {cand['agree']} scouts)",
+                  flush=True)
+            print(f"       {cand['why']}", flush=True)
+        return swaps
 
     def escalate(self, ev):
         """Something happened. Record it for Sarathi's judgement — the slow layer."""
@@ -320,15 +433,22 @@ class Floor:
             fh.write(json.dumps(ev) + "\n")
 
     def dump_escalations(self):
-        if not self.escalation_log:
+        if not self.escalation_log and not self.swap_log:
             return
         f = ESCALATIONS / f"{datetime.now():%Y-%m-%d}_summary.json"
         by = {}
         for e in self.escalation_log:
             by.setdefault(e["symbol"], []).append(e["trigger"])
-        f.write_text(json.dumps({"total": len(self.escalation_log),
-                                 "by_symbol": {k: len(v) for k, v in by.items()},
-                                 "triggers": by}, indent=2))
+        f.write_text(json.dumps({
+            "total": len(self.escalation_log),
+            "by_symbol": {k: len(v) for k, v in by.items()},
+            "triggers": by,
+            # the reassignment trail is its own evidence: at EOD we can ask whether
+            # the stocks the scouts swapped IN actually moved more than the ones they
+            # swapped OUT. That is the only honest test of whether scouting pays.
+            "reassignments": self.swap_log,
+            "watched_at_close": sorted(a.symbol for a in self.agents.values()),
+        }, indent=2))
         print(f"  wrote {f}")
 
 
@@ -338,10 +458,15 @@ def main():
     ap.add_argument("--watchlist", default="auto")
     ap.add_argument("--dry", action="store_true", default=True)
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--seed-only", action="store_true",
+                    help="scout, seed 20 theses, run one rebalance — no stream")
     a = ap.parse_args()
     if a.status:
         f = ESCALATIONS / f"{datetime.now():%Y-%m-%d}_summary.json"
         print(f.read_text() if f.exists() else "  no escalations recorded today")
+        return
+    if a.seed_only:
+        Floor(dry=True, verbose=True).seed_only()
         return
     Floor(dry=a.dry).start()
 

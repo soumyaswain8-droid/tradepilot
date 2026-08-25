@@ -77,6 +77,14 @@ MIN_TENURE_S = 600          # an agent must hold a stock this long before a swap
 MAX_SWAPS_PER_CYCLE = 4     # never churn the whole floor at once
 
 
+def in_session_now(now=None):
+    now = now or datetime.now()
+    if now.weekday() >= 5:
+        return False
+    m = now.hour * 60 + now.minute
+    return (9 * 60 + 15) <= m < (15 * 60 + 30)
+
+
 def displaces(cand, incumbent_score, incumbent_agree):
     """Does this challenger earn an incumbent's seat?
 
@@ -208,6 +216,8 @@ class Floor:
         self.kws = None
         self.swap_log = []
         self.near_miss_log = []
+        self.gaps = []
+        self.gap_open = None
         KNOW.mkdir(parents=True, exist_ok=True)
         ESCALATIONS.mkdir(parents=True, exist_ok=True)
         self.shared = self._load_shared()
@@ -351,21 +361,49 @@ class Floor:
                   f"({datetime.now():%H:%M:%S})")
 
         def on_error(ws, code, reason):
-            print(f"  stream error {code}: {reason}")
+            print(f"  [{datetime.now():%H:%M:%S}] stream error {code}: {reason}",
+                  flush=True)
+
+        def on_close(ws, code, reason):
+            self.note_gap("CLOSE", f"{code}: {reason}")
+
+        def on_reconnect(ws, attempt):
+            print(f"  [{datetime.now():%H:%M:%S}] reconnecting (attempt {attempt})",
+                  flush=True)
+
+        def on_noreconnect(ws):
+            self.note_gap("GAVE_UP", "reconnect attempts exhausted")
 
         kws.on_ticks = on_ticks
         kws.on_connect = on_connect
         kws.on_error = on_error
-        kws.connect(threaded=True)
+        kws.on_close = on_close
+        kws.on_reconnect = on_reconnect
+        kws.on_noreconnect = on_noreconnect
+        # The link is unreliable today (Soumya, 2026-08-25). Be explicit rather than
+        # relying on library defaults: keep retrying all session, with backoff.
+        kws.connect(threaded=True, disable_ssl_verification=False)
         last_rebalance = time.time()
+        last_seen_total = 0
         try:
             while True:
                 time.sleep(30)
                 live = sum(a.seen for a in self.agents.values())
                 held = sum(1 for a in self.agents.values() if a.position)
+                # DATA GAP DETECTION. A dead link and a silent market look identical
+                # from in here: ticks simply stop arriving. Unrecorded, that turns
+                # today's escalation count — the one number this run exists to
+                # produce — into a figure nobody can interpret. So the absence of
+                # ticks is logged as a positive fact, not left as an absence.
+                if live == last_seen_total and in_session_now():
+                    self.note_gap("NO_TICKS", f"no ticks in 30s (total {live:,})")
+                elif self.gap_open:
+                    self.close_gap(live)
+                last_seen_total = live
                 print(f"  [{datetime.now():%H:%M:%S}] {live:,} ticks | "
                       f"{len(self.escalation_log)} escalations | "
-                      f"{len(self.swap_log)} reassignments | {held} in position")
+                      f"{len(self.swap_log)} reassignments | {held} in position | "
+                      f"{len(self.gaps)} data gaps", flush=True)
                 if datetime.now().strftime("%H:%M") >= "15:30":
                     print("  session over — stopping"); break
                 # the scouts keep sweeping; the floor follows them
@@ -377,6 +415,37 @@ class Floor:
         finally:
             self.save_shared()
             self.dump_escalations()
+
+    # ── data-gap ledger ──────────────────────────────────────────────────────
+    def note_gap(self, kind, detail):
+        """Record that we were BLIND, and for how long.
+
+        Carries forward the DATA-GUARD lesson from the July outage: when the feed
+        dies, every downstream artefact still renders — it just renders emptiness.
+        An escalation count of 3 means one thing if the stream ran all day and
+        something entirely different if we were disconnected for two hours, and
+        nothing in the output distinguishes them unless the blindness is written
+        down at the time.
+        """
+        now = datetime.now()
+        if self.gap_open:
+            return                      # already inside a gap; wait for it to close
+        self.gap_open = {"kind": kind, "detail": detail,
+                         "from": now.strftime("%H:%M:%S"), "t0": time.time()}
+        print(f"  !! {now:%H:%M:%S} DATA GAP OPENED ({kind}): {detail}", flush=True)
+
+    def close_gap(self, tick_total):
+        g = self.gap_open
+        if not g:
+            return
+        dur = round(time.time() - g["t0"], 1)
+        g.update({"to": datetime.now().strftime("%H:%M:%S"), "seconds": dur,
+                  "ticks_at_recovery": tick_total})
+        g.pop("t0", None)
+        self.gaps.append(g)
+        self.gap_open = None
+        print(f"  ++ {datetime.now():%H:%M:%S} DATA GAP CLOSED after {dur}s "
+              f"— ticks flowing again", flush=True)
 
     # ── dynamic reassignment ─────────────────────────────────────────────────
     def rebalance(self):
@@ -496,6 +565,9 @@ class Floor:
             "reassignments": self.swap_log,
             # if this list is long and the reassignment list is empty, the brakes are
             # too tight; if reassignments churn and escalations stay flat, too loose.
+            # blindness is reported as loudly as activity — see note_gap()
+            "data_gaps": self.gaps + ([self.gap_open] if self.gap_open else []),
+            "blind_seconds": round(sum(g.get("seconds", 0) for g in self.gaps), 1),
             "near_misses": self.near_miss_log[-200:],
             "near_miss_total": len(self.near_miss_log),
             "watched_at_close": sorted(a.symbol for a in self.agents.values()),

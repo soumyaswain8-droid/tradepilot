@@ -1,0 +1,70 @@
+#!/bin/bash
+# floor-watchdog — is the agent floor still alive, and restart it once if not.
+#
+# WHY THIS EXISTS. The floor is scheduled at 09:16 and nothing checked on it
+# afterwards; crash-watchdog.sh covers the paper engines and is not itself scheduled
+# by any launchd job. A mid-session crash would therefore be invisible until the EOD
+# summary came back empty — and an empty summary on an observation day is
+# indistinguishable from "the market was quiet", which is precisely the failure that
+# voided a v5_size experiment day once already.
+#
+# LIVENESS SIGNAL: the floor prints a status line to its log every 30 seconds. A log
+# untouched for STALE_S during the session means it is dead, whatever `pgrep` thinks
+# — a hung process that has stopped consuming ticks is just as broken as an absent
+# one, and pgrep cannot tell them apart.
+#
+# Restarts are capped so a crash-on-startup cannot become a restart loop that spends
+# the session relaunching instead of watching.
+set -u
+cd "$(dirname "$0")/.." || exit 1
+
+DAY=$(date +%Y-%m-%d)
+LOG="logs/agent-floor-$DAY.log"
+WLOG="logs/floor-watchdog-$DAY.log"
+STAMP="logs/.floor-restarts-$DAY"
+STALE_S=210            # 3.5 min — the floor speaks every 30s
+MAX_RESTARTS=2
+PY=/Users/soumyaswain/anaconda3/bin/python3
+mkdir -p logs
+
+say(){ echo "$(date '+%H:%M:%S') $*" | tee -a "$WLOG"; }
+
+# only meaningful inside the session.
+# 10# forces base 10: date pads to "08"/"09", which bash parses as OCTAL, and 08 is
+# not a valid octal literal — so this arithmetic aborted the script at every check
+# before 10:00, exactly when the floor most needs watching.
+mins=$(( 10#$(date +%H) * 60 + 10#$(date +%M) ))
+if [ "$(date +%u)" -ge 6 ] || [ "$mins" -lt 560 ] || [ "$mins" -ge 930 ]; then
+  exit 0
+fi
+
+alive=0
+pgrep -f "prototype.agents.floor" > /dev/null 2>&1 && alive=1
+
+fresh=0
+if [ -f "$LOG" ]; then
+  age=$(( $(date +%s) - $(stat -f %m "$LOG") ))
+  [ "$age" -lt "$STALE_S" ] && fresh=1
+else
+  age=-1
+fi
+
+if [ "$alive" -eq 1 ] && [ "$fresh" -eq 1 ]; then
+  say "OK — floor running, log ${age}s old"
+  exit 0
+fi
+
+n=$(cat "$STAMP" 2>/dev/null || echo 0)
+say "DEAD — process=$alive log_age=${age}s (restarts so far: $n)"
+
+if [ "$n" -ge "$MAX_RESTARTS" ]; then
+  say "restart cap reached — NOT relaunching. Investigate $LOG"
+  exit 1
+fi
+
+pkill -f "prototype.agents.floor" 2>/dev/null
+sleep 2
+nohup $PY -m prototype.agents.floor --dry >> "$LOG" 2>&1 &
+echo $((n + 1)) > "$STAMP"
+say "relaunched floor (restart $((n + 1))/$MAX_RESTARTS)"
+exit 1

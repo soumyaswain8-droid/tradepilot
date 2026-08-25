@@ -49,13 +49,43 @@ else
   age=-1
 fi
 
-if [ "$alive" -eq 1 ] && [ "$fresh" -eq 1 ]; then
-  say "OK — floor running, log ${age}s old"
+# THE TICK COUNTER IS THE ONLY REAL LIVENESS SIGNAL.
+#
+# Measured 2026-08-25, first live session: the WebSocket went silent at 10:44 and
+# stayed silent for 15 minutes while REST showed SAIL trading 44,471 shares in six
+# seconds. The process held its PID and the main loop kept printing its status line
+# every 30s, so BOTH earlier checks — pgrep and log freshness — reported healthy
+# throughout. The socket was a zombie: alive to the OS, silent to us.
+#
+# The status line carries a running tick total. If that number has not moved across
+# the last few lines, no data is arriving, whatever else looks fine.
+# Scope to the CURRENT run only. The counter restarts at zero on every relaunch, so
+# a window straddling a restart reads 48120 -> 353 and looks like death — which made
+# this watchdog restart a floor it had just started, one check away from burning its
+# own restart budget. Everything before the last STREAM LIVE belongs to a dead run.
+ticks_moving=0
+first=""; last=""
+if [ -f "$LOG" ]; then
+  vals=$(awk '/STREAM LIVE/{buf=""} /\] [0-9,]+ ticks/{buf=buf $0 "\n"} END{printf "%s", buf}' \
+         "$LOG" 2>/dev/null | grep -oE '\] [0-9,]+ ticks' | tr -d ',' \
+         | awk '{print $2}' | tail -4)
+  n_vals=$(echo "$vals" | grep -c . )
+  first=$(echo "$vals" | head -1); last=$(echo "$vals" | tail -1)
+  if [ "${n_vals:-0}" -lt 3 ]; then
+    ticks_moving=1                      # too early in this run to judge
+  elif [ -n "$first" ] && [ -n "$last" ] && [ "$last" -gt "$first" ]; then
+    ticks_moving=1
+  fi
+fi
+
+if [ "$alive" -eq 1 ] && [ "$fresh" -eq 1 ] && [ "$ticks_moving" -eq 1 ]; then
+  say "OK — floor running, log ${age}s old, ticks advancing (${first:-?} -> ${last:-?})"
   exit 0
 fi
 
 n=$(cat "$STAMP" 2>/dev/null || echo 0)
-say "DEAD — process=$alive log_age=${age}s (restarts so far: $n)"
+say "DEAD — process=$alive log_age=${age}s ticks_moving=$ticks_moving \
+(${first:-?} -> ${last:-?}) (restarts so far: $n)"
 
 if [ "$n" -ge "$MAX_RESTARTS" ]; then
   say "restart cap reached — NOT relaunching. Investigate $LOG"

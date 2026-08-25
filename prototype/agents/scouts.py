@@ -81,12 +81,64 @@ ETF_PAT = re.compile(
     r"\b(ETF|BEES)\b|MUTUAL FUND|INDEX FUND|EXCHANGE TRADED|\bFOF\b|AMC-", re.I)
 
 
+SESSION_MINS = 375                  # 09:15 -> 15:30
+RANGE_GRACE_MINS = 15               # a day range is structurally tiny before this
+
+
 def in_session(now=None):
     now = now or datetime.now()
     if now.weekday() >= 5:
         return False
     m = now.hour * 60 + now.minute
     return (9 * 60 + 15) <= m < (15 * 60 + 30)
+
+
+def session_elapsed(now=None):
+    """Minutes since the open, clamped to the session. 0 before 09:15."""
+    now = now or datetime.now()
+    m = now.hour * 60 + now.minute + now.second / 60.0
+    return max(0.0, min(m - (9 * 60 + 15), float(SESSION_MINS)))
+
+
+def passes_liquidity(px, vol, hi, lo, now=None):
+    """Is this name liquid enough and alive enough to trade — AT THIS TIME OF DAY?
+
+    THE BUG THIS FIXES (caught pre-open 2026-08-25, before the first live run).
+    Both screens were absolute: turnover >= Rs2cr and day range >= 0.30%. One minute
+    after the open almost nothing has traded Rs2cr and no day range exists yet, so the
+    09:16 sweep returned ZERO names and the floor would have assigned no agents at
+    all — silently, on the first live session, looking exactly like a quiet market.
+
+    Fix, mirroring what the FLOW lens already does: judge the RUN RATE, not the total.
+    Turnover is projected to a full session before it is compared to the threshold.
+    The day-range check is suspended for the first RANGE_GRACE_MINS and thereafter
+    scales with sqrt(elapsed) — a range that has not had time to form is not evidence
+    of a dead instrument.
+
+    Returns (ok, reason_if_not).
+    """
+    el = session_elapsed(now)
+    if px <= 0:
+        return False, "no price"
+    if not (MIN_PRICE <= px <= MAX_PRICE):
+        return False, "outside price band"
+    if el <= 0:
+        # pre-open: no volume exists yet, so liquidity cannot be judged. Let names
+        # through on price alone; the first in-session sweep re-screens them.
+        return True, ""
+    frac = max(el / SESSION_MINS, 1.0 / SESSION_MINS)
+    if (px * vol) / frac < MIN_TURNOVER:
+        return False, "projected turnover below floor"
+    # The range threshold scales with SQRT of elapsed time, because that is how a
+    # price range actually grows — not linearly, and certainly not as a step at some
+    # arbitrary grace boundary. A flat 0.30% check rejected a perfectly normal name
+    # 30 minutes in, when it had only had time to form 0.23%. Scaled, the same name
+    # passes while a genuinely dead instrument at 0.01% still fails at every hour.
+    if el >= RANGE_GRACE_MINS:
+        need = MIN_DAY_RANGE_PCT * math.sqrt(frac)
+        if (hi - lo) / px * 100 < need:
+            return False, f"dead instrument (<{need:.3f}% at {el:.0f}min)"
+    return True, ""
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -407,13 +459,10 @@ class ScoutTeam:
             vol = float(d.get("volume") or 0)
             if not px or not prev:
                 continue
-            if not (MIN_PRICE <= px <= MAX_PRICE):
-                continue                       # outside the Rs1k quantisation band
-            if px * vol < MIN_TURNOVER:
-                continue                       # too thin — spread would eat the edge
             hi, lo = float(o.get("high") or px), float(o.get("low") or px)
-            if (hi - lo) / px * 100 < MIN_DAY_RANGE_PCT:
-                continue     # dead instrument: nothing to trade even if we wanted to
+            ok, _why = passes_liquidity(px, vol, hi, lo)
+            if not ok:
+                continue
             # A stock at its circuit limit has NO COUNTERPARTY — you cannot buy a
             # locked-upper name at any price, and you cannot exit a locked-lower one.
             # The scouts' best-looking names are exactly the ones at risk of this,

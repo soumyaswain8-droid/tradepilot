@@ -110,15 +110,15 @@ def funnel_svg() -> str:
         (20,  "Given a full-time watcher", 0.22),
         (2,   "Actually bought", 0.09),
     ]
-    W, H = 700, 400
-    CX, SY = 258, 0.30
+    W, H = 700, 352
+    CX, SY = 258, 0.28
     NUM_X, LBL_X = 112, 430
-    gap = 47
+    gap = 41
     parts = [f'<svg viewBox="0 0 {W} {H}" width="100%" xmlns="http://www.w3.org/2000/svg">']
     for i, (n, lbl, frac) in enumerate(rows):
         w = 196 * frac + 30
         d = w * 0.34
-        cy = 54 + i * gap
+        cy = 46 + i * gap
         t = i / (len(rows) - 1)
         top = f"rgb({int(79+(140-79)*t)},{int(70+(152-70)*t)},{int(229+(250-229)*t)})"
         lf = f"rgb({int(48+(92-48)*t)},{int(42+(100-42)*t)},{int(150+(190-150)*t)})"
@@ -128,9 +128,30 @@ def funnel_svg() -> str:
         T = [pt(-hw, -hd, 18), pt(hw, -hd, 18), pt(hw, hd, 18), pt(-hw, hd, 18)]
         B = [pt(-hw, -hd, 0), pt(hw, -hd, 0), pt(hw, hd, 0), pt(-hw, hd, 0)]
         P = lambda pts: " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
-        parts.append(f'<polygon points="{P([T[3],T[2],B[2],B[3]])}" fill="{lf}"/>')
-        parts.append(f'<polygon points="{P([T[2],T[1],B[1],B[2]])}" fill="{rt}"/>')
-        parts.append(f'<polygon points="{P(T)}" fill="{top}"/>')
+        # GLASS SLAB. Three cues, all required: the side faces are darker and
+        # semi-opaque (the body of the glass), the top face carries a gradient
+        # (light passing through), and a bright 1px line runs along the leading
+        # edge (the specular catch). Drop the highlight and it reads as plastic.
+        gid = f"g{i}"
+        parts.append(
+            f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0.6" y2="1">'
+            f'<stop offset="0%" stop-color="{top}" stop-opacity="0.95"/>'
+            f'<stop offset="55%" stop-color="{top}" stop-opacity="0.72"/>'
+            f'<stop offset="100%" stop-color="{rt}" stop-opacity="0.88"/>'
+            f'</linearGradient>'
+            f'<linearGradient id="{gid}s" x1="0" y1="0" x2="1" y2="0.3">'
+            f'<stop offset="0%" stop-color="{lf}" stop-opacity="0.95"/>'
+            f'<stop offset="100%" stop-color="{lf}" stop-opacity="0.72"/>'
+            f'</linearGradient></defs>')
+        parts.append(f'<polygon points="{P([T[3],T[2],B[2],B[3]])}" fill="url(#{gid}s)"/>')
+        parts.append(f'<polygon points="{P([T[2],T[1],B[1],B[2]])}" fill="{rt}" '
+                     f'fill-opacity="0.86"/>')
+        parts.append(f'<polygon points="{P(T)}" fill="url(#{gid})"/>')
+        # specular highlight along the top-left edge
+        parts.append(f'<polyline points="{P([T[0],T[1]])}" fill="none" '
+                     f'stroke="#ffffff" stroke-opacity="0.75" stroke-width="1.4"/>')
+        parts.append(f'<polyline points="{P([T[0],T[3]])}" fill="none" '
+                     f'stroke="#ffffff" stroke-opacity="0.45" stroke-width="1.1"/>')
         # labels live outside the stack, so nothing can occlude them
         my = cy + 6
         parts.append(f'<text x="{NUM_X}" y="{my:.1f}" text-anchor="end" '
@@ -215,7 +236,9 @@ def confluence_svg() -> str:
     # the extruded ribbon body
     top = " ".join(f"{xs(i):.1f},{ys(v):.1f}" for i, v in pts)
     back = " ".join(f"{xs(i)+dx:.1f},{ys(v)+dy:.1f}" for i, v in reversed(pts))
-    s.append(f'<polygon points="{top} {back}" fill="url(#rib)" opacity="0.55"/>')
+    s.append(f'<polygon points="{top} {back}" fill="url(#rib)" opacity="0.42"/>')
+    s.append(f'<polyline points="{back}" fill="none" stroke="#ffffff" '
+             f'stroke-opacity="0.6" stroke-width="1.2"/>')
     s.append(f'<polyline points="{top}" fill="none" stroke="url(#rib)" stroke-width="3.5" '
              f'stroke-linejoin="round"/>')
     for i, v in pts:
@@ -390,7 +413,16 @@ def cost_svg() -> str:
                  f'{x+bw},{y+bh}" fill="{col}" opacity="0.5"/>')
         s.append(f'<polygon points="{x},{y} {x+7},{y-5} {x+bw+7},{y-5} {x+bw},{y}" '
                  f'fill="{col}" opacity="0.72"/>')
-        s.append(f'<rect x="{x:.1f}" y="{y}" width="{bw:.1f}" height="{bh}" fill="{col}"/>')
+        bid = f"b{i}"
+        s.append(f'<defs><linearGradient id="{bid}" x1="0" y1="0" x2="0" y2="1">'
+                 f'<stop offset="0%" stop-color="#ffffff" stop-opacity="0.42"/>'
+                 f'<stop offset="35%" stop-color="{col}" stop-opacity="0.98"/>'
+                 f'<stop offset="100%" stop-color="{col}" stop-opacity="0.82"/>'
+                 f'</linearGradient></defs>')
+        s.append(f'<rect x="{x:.1f}" y="{y}" width="{bw:.1f}" height="{bh}" '
+                 f'fill="url(#{bid})" rx="1.5"/>')
+        s.append(f'<line x1="{x:.1f}" y1="{y+0.8}" x2="{x+bw:.1f}" y2="{y+0.8}" '
+                 f'stroke="#ffffff" stroke-opacity="0.7" stroke-width="1.2"/>')
         s.append(f'<text x="{pad_l-14}" y="{y+16}" text-anchor="end" font-family="Helvetica" '
                  f'font-size="11" fill="{INK}">{lbl}</text>')
         # Labels sit INSIDE the bar when its end is close to the toll line, otherwise
@@ -424,6 +456,40 @@ def build_html() -> str:
     css = f"""
 {faces}
 @page {{ size: A4; margin: 0; }}
+
+/* ── GLASS SYSTEM ────────────────────────────────────────────────────────────
+   Real glass has three cues and needs all three or it reads as a grey box:
+     1. it TINTS what is behind it   -> translucent gradient fill
+     2. it catches light on its edge -> 1px inset highlight along the top
+     3. it floats                    -> a soft, wide, low-opacity shadow
+   backdrop-filter is unreliable in print, so the ground carries its own colour
+   and the panels tint it with rgba instead of blurring it. */
+.glass{{
+  background:linear-gradient(150deg,rgba(255,255,255,.86),rgba(255,255,255,.52));
+  border:0.6pt solid rgba(255,255,255,.9);
+  border-radius:5pt;
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.10), 0 2pt 0 rgba(49,46,129,.05),inset 0 0.6pt 0 rgba(255,255,255,.95);
+}}
+.glass-d{{
+  background:linear-gradient(150deg,rgba(79,70,229,.13),rgba(129,140,248,.05));
+  border:0.6pt solid rgba(255,255,255,.75);
+  border-radius:5pt;
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.14), 0 2pt 0 rgba(49,46,129,.06),inset 0 0.6pt 0 rgba(255,255,255,.85);
+}}
+/* The ground the glass sits on. Drawn as inline SVG, NOT css radial-gradient:
+   Chrome rasterises css radial gradients into image XObjects when printing —
+   6-11 per page, and the file went from 551KB to 7.4MB. SVG gradients stay
+   vector into the PDF at no size cost. */
+.mesh{{position:absolute;inset:0;z-index:0;overflow:hidden;}}
+.mesh svg{{width:100%;height:100%;display:block;}}
+.page > *:not(.mesh){{position:relative;z-index:1;}}
+/* ...but NOT the page furniture. The rule above exists so glass panels sit above
+   the tinted ground; applied blindly it also overrode position:absolute on the
+   running header and footer, which dropped into normal flow and printed on top of
+   the H1 and the last table row. Re-assert them AFTER, so specificity resolves in
+   their favour. */
+.page > .rh{{position:absolute;top:9mm;left:18mm;right:18mm;z-index:2;}}
+.page > .rf{{position:absolute;bottom:9mm;left:18mm;right:18mm;z-index:2;}}
 *{{box-sizing:border-box;}}
 html,body{{margin:0;padding:0;}}
 body{{
@@ -431,8 +497,9 @@ body{{
   color:{BODY}; -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }}
 .page{{
-  width:210mm; min-height:297mm; padding:20mm 18mm 16mm; position:relative;
-  page-break-after:always; background:#fff;
+  width:210mm; min-height:296mm; padding:20mm 18mm 16mm; position:relative;
+  page-break-after:always;
+  background:linear-gradient(165deg,#ffffff 0%,#f7f8fe 55%,#eef0fe 100%);
 }}
 .page:last-child{{page-break-after:auto;}}
 h1,h2,h3,h4{{font-family:'Syne',"Helvetica Neue",sans-serif;color:{INK};
@@ -478,22 +545,32 @@ strong{{color:{INK};}}
 .lead{{font-size:12pt;line-height:1.55;color:{INK};margin:0 0 5mm;}}
 .fig{{margin:5mm 0;page-break-inside:avoid;}}
 .figcap{{font-size:8.2pt;color:{MUTED};margin-top:1.5mm;font-style:italic;}}
-.box{{background:{CREAM};border-left:2.6pt solid {INDIGO};padding:4mm 5mm;
-  margin:4mm 0;page-break-inside:avoid;border-radius:0 2pt 2pt 0;}}
-.box.warn{{border-left-color:{WARN};background:#fdf6ec;}}
-.box.bad{{border-left-color:{BAD};background:#fdf0f3;}}
-.box.ok{{border-left-color:{OK};background:#eef8f2;}}
+.box{{background:rgba(255,255,255,.80);
+  border:0.6pt solid rgba(255,255,255,.9);border-left:2.6pt solid {INDIGO};
+  padding:4mm 5mm;margin:4mm 0;page-break-inside:avoid;border-radius:0 5pt 5pt 0;
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.10), inset 0 0.6pt 0 rgba(255,255,255,.95);}}
+.box.warn{{border-left-color:{WARN};
+  background:rgba(253,246,236,.82);}}
+.box.bad{{border-left-color:{BAD};
+  background:rgba(253,240,243,.82);}}
+.box.ok{{border-left-color:{OK};
+  background:rgba(238,248,242,.82);}}
 .box h4{{margin:0 0 1.5mm;font-size:10.5pt;}}
 .box p{{margin:0 0 2mm;}} .box p:last-child{{margin:0;}}
-.jargon{{border:.6pt solid {RULE};border-radius:2pt;padding:3mm 4mm;margin:3mm 0;
-  page-break-inside:avoid;}}
+.jargon{{border:0.6pt solid rgba(255,255,255,.9);border-radius:5pt;padding:3.2mm 4mm;
+  margin:3mm 0;page-break-inside:avoid;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.08), inset 0 0.6pt 0 rgba(255,255,255,.95);}}
 .jargon b{{font-family:'JetBrains Mono',monospace;font-size:9pt;color:{INDIGO_D};}}
-table{{width:100%;border-collapse:collapse;font-size:9pt;margin:3.5mm 0;
-  page-break-inside:avoid;}}
-th{{text-align:left;background:{INK};color:#fff;padding:2.2mm 3mm;
+table{{width:100%;border-collapse:separate;border-spacing:0;font-size:9pt;
+  margin:3.5mm 0;page-break-inside:avoid;border-radius:5pt;overflow:hidden;
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.12);}}
+th{{text-align:left;color:#fff;padding:2.4mm 3mm;
+  background:linear-gradient(135deg,{INK},{INDIGO_D});
   font-family:'JetBrains Mono',monospace;font-size:7.4pt;letter-spacing:.1em;
   text-transform:uppercase;font-weight:500;}}
-td{{padding:2.2mm 3mm;border-bottom:.5pt solid {RULE};vertical-align:top;}}
+td{{padding:2.3mm 3mm;border-bottom:.5pt solid rgba(221,222,245,.8);vertical-align:top;
+  background:rgba(255,255,255,.62);}}
 tr:last-child td{{border-bottom:none;}}
 td.n{{font-family:'JetBrains Mono',monospace;white-space:nowrap;}}
 /* SCOPED to table cells and spans on purpose. Bare .ok/.bad/.warn also matched
@@ -505,8 +582,10 @@ td.bad,span.bad{{color:{BAD};}}
 td.warn,span.warn{{color:{WARN};}}
 td.dim{{color:{MUTED};}}
 .cards{{display:flex;gap:3mm;margin:4mm 0;page-break-inside:avoid;}}
-.c{{flex:1;border:.6pt solid {RULE};border-top:2.2pt solid {INDIGO};
-  border-radius:2pt;padding:3mm;}}
+.c{{flex:1;border:0.6pt solid rgba(255,255,255,.9);border-top:2.2pt solid {INDIGO};
+  border-radius:5pt;padding:3.5mm;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 0.8pt 0 rgba(49,46,129,.10), inset 0 0.6pt 0 rgba(255,255,255,.95);}}
 .c h5{{margin:0 0 1mm;font-family:'Syne',sans-serif;font-size:9.6pt;color:{INK};}}
 .c p{{margin:0;font-size:8.4pt;line-height:1.45;color:{BODY};}}
 .c .pm{{font-family:'JetBrains Mono',monospace;font-size:7.4pt;color:{MUTED};
@@ -525,10 +604,24 @@ ol.steps b{{color:{INK};}}
 .kv .v{{font-family:'JetBrains Mono',monospace;color:{INK};}}
 """
 
+    MESH = ("<svg viewBox='0 0 210 297' preserveAspectRatio='none'>"
+            "<defs>"
+            "<radialGradient id='m1' cx='.5' cy='.5' r='.5'>"
+            "<stop offset='0%' stop-color='#818cf8' stop-opacity='.20'/>"
+            "<stop offset='100%' stop-color='#818cf8' stop-opacity='0'/></radialGradient>"
+            "<radialGradient id='m2' cx='.5' cy='.5' r='.5'>"
+            "<stop offset='0%' stop-color='#4f46e5' stop-opacity='.13'/>"
+            "<stop offset='100%' stop-color='#4f46e5' stop-opacity='0'/></radialGradient>"
+            "</defs>"
+            "<ellipse cx='196' cy='26' rx='62' ry='62' fill='url(#m1)'/>"
+            "<ellipse cx='12' cy='232' rx='54' ry='54' fill='url(#m2)'/>"
+            "</svg>")
+
     def page(inner, num, title, cover=False):
         if cover:
             return f'<div class="page cover">{inner}</div>'
         return f"""<div class="page">
+  <div class="mesh">{MESH}</div>
   <div class="rh">
     <div class="brand"><img src="{logo}"/><span class="wm">TradePilot</span></div>
     <span class="sec">{title}</span>
@@ -549,8 +642,8 @@ ol.steps b{{color:{INK};}}
     even if you have never bought a share in your life.</p>
     <div class="meta">
       <div>PREPARED BY<b>Soumya Swain</b></div>
-      <div>DATE<b>25 August 2026</b></div>
-      <div>STATUS<b>Paper trading — real money Wednesday</b></div>
+      <div>DATE<b>26 August 2026</b></div>
+      <div>STATUS<b>Paper trading — the agents now trade on their own</b></div>
     </div>
   </div>
   <div class="strip"></div>""", 0, "", cover=True))
@@ -856,14 +949,56 @@ ol.steps b{{color:{INK};}}
       <tr><td>Level touch</td><td>Price has arrived at one of the important prices it memorised</td><td class="n">within 0.08%</td></tr>
       <tr><td>Sweep and reclaim</td><td>Price dipped below an important price and jumped straight back above it</td><td class="n">dip &gt;0.05%, then recover</td></tr>
       <tr><td>Fast move</td><td>Price is moving unusually quickly right now</td><td class="n">0.25% in a minute</td></tr>
-      <tr><td>Volume burst</td><td>A sudden rush of buying and selling</td><td class="n">3× the recent rate</td></tr>
+      <tr><td>Volume burst <em>(retired)</em></td><td>A sudden rush of buying and selling</td><td class="n">was 3× — see below</td></tr>
       <tr><td class="bad">Invalidation</td><td>A trade we already hold has gone wrong</td><td class="n">instant, highest priority</td></tr>
     </tbody>
   </table>
 
   <p class="dim">After any one of these fires, that agent stays quiet about the same
   kind of event for three minutes. Without that pause, a single jumpy company could
-  raise its hand hundreds of times and drown out the other nineteen.</p>""", 11, "The agent floor"))
+  raise its hand hundreds of times and drown out the other nineteen.</p>
+
+  </div>""", 11, "The agent floor"))
+
+    P.append(page(f"""
+  <h2>One trigger was retired — on evidence</h2>
+  <p class="lead">Every alert type was scored against a control: what the same stock
+  did after a <em>random</em> minute of the same day. That control is what separates a
+  real signal from a stock that was simply moving anyway.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Alert</th><th>Fired</th><th>Move after vs random</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Dipped below, jumped back</td><td class="n">118</td>
+        <td class="n ok">+0.278pp</td><td class="ok">best by 3×</td></tr>
+      <tr><td>At an important number</td><td class="n">473</td>
+        <td class="n ok">+0.085pp</td><td>keeps its place</td></tr>
+      <tr><td>Moving fast</td><td class="n">432</td>
+        <td class="n ok">+0.068pp</td><td>keeps its place</td></tr>
+      <tr><td>Volume burst</td><td class="n">540</td>
+        <td class="n bad">−0.014pp</td><td class="bad">retired</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="box bad">
+    <h4>The loudest one was the worst one</h4>
+    <p>Every trigger was scored against a control — what the same stock did after a
+    <em>random</em> minute of the same day. Four beat the control. <strong>Volume burst
+    did not:</strong> it fired more than any other (540 times in one session) and
+    predicted <em>less</em> than random. It was switched off, removing about a third of
+    all alerts and losing nothing that had ever been measured.</p>
+    <p>It is disabled rather than deleted, so the decision can be reversed and the
+    evidence stays readable.</p>
+  </div>
+
+  <div class="box">
+    <h4>An open puzzle worth stating</h4>
+    <p>The best-performing alert — <em>dipped below, jumped back</em> — scored well
+    here but scored <strong>badly</strong> in our older historical testing. Both were
+    measured properly. Either watching live prices tick by tick catches something the
+    older method flattened out, or 118 examples is simply too few to trust yet. We do
+    not know which, and it matters before anything else is built on top of it.</p>
+  </div>""", 11, "The agent floor"))
 
     # ── 6. AGENT DAY / REASSIGNMENT ─────────────────────────────────────────
     P.append(page(f"""
@@ -915,6 +1050,54 @@ ol.steps b{{color:{INK};}}
   </div>""", 12, "An agent's day"))
 
     # ── 7. WORKED EXAMPLE ───────────────────────────────────────────────────
+    P.append(page(f"""
+  <h2>The agents now trade on their own</h2>
+  <p class="lead">Until 26 August the agents could only <em>shout</em>. One would spot
+  something and write it down — 1,563 times in a single session — and then nothing
+  happened. Nobody bought anything. A very attentive guard who was never allowed to
+  open a door.</p>
+
+  <p>They now act without asking anyone. Fake money, real prices, real timing — so at
+  the end of the day we can ask <strong>"was that a good idea?"</strong> instead of
+  "I wonder what would have happened."</p>
+
+  <h3>Only one kind of alert is allowed to start a trade</h3>
+  <p>Buying needs a <em>direction</em>, and only one of the four alerts implies one.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Alert</th><th>Does it tell you which way?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dipped below a line, jumped back</strong></td>
+        <td class="ok">Yes — buyers defended that price. Buy.</td></tr>
+      <tr><td>Price is at an important number</td>
+        <td>No — it says <em>where</em>, not which way</td></tr>
+      <tr><td>Moving fast</td>
+        <td>No — and our own data says that within a day, shares that shoot up drift back</td></tr>
+      <tr><td>Volume burst</td><td>No — and retired anyway</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="box ok">
+    <h4>Where the exit price comes from — it is not a guess</h4>
+    <p>Most people pick a stop loss arbitrarily: "I'll sell if I lose 1%." Why 1%? No
+    reason.</p>
+    <p>Ours writes itself. The trade's whole logic was <em>"price dipped and buyers
+    defended it."</em> So if price goes back below that dip, the story we believed is
+    simply false. <strong>That exact price is the exit.</strong> And because it is a
+    real price, the arithmetic becomes honest: risking ₹100, we aim to make ₹150 —
+    with the full ₹0.106 per ₹100 of fees already charged against it.</p>
+  </div>
+
+  <div class="box warn">
+    <h4>What this is, and what it is not</h4>
+    <p>It is <strong>not</strong> a money-making machine, and I am not claiming it is
+    profitable. Nothing we have measured reliably predicts direction.</p>
+    <p>It is a <strong>measuring instrument</strong>. It turns "the agent noticed
+    something" into "here is exactly what happened next, priced honestly" — the one
+    thing 1,563 unanswered alerts could never give us. It also records every trade it
+    <em>refused</em> and why, so "no trades today" can never hide a setting that is
+    silently rejecting everything.</p>
+  </div>""", 15, "The agents trade"))
+
     P.append(page(f"""
   <h2>Watch one trade happen, step by step</h2>
   <p class="lead">This is the clearest way to understand the whole system: follow a
@@ -1085,11 +1268,9 @@ ol.steps b{{color:{INK};}}
 
   <div class="box">
     <h4>Why this lane is capped, and gated</h4>
-    <p>The options experiment cannot spend real money until it has produced
-    <strong>eight paper trades that are profitable after fees</strong>. It has produced
-    zero so far. That gate is not a formality — six earlier ideas in this project were
-    killed by exactly this kind of pre-agreed test, and killing them was the right
-    outcome each time.</p>
+    <p>It cannot spend real money until it has produced <strong>eight paper trades
+    profitable after fees</strong>. So far: zero. That gate is not a formality — six
+    earlier ideas here were killed by exactly this kind of pre-agreed test.</p>
   </div>""", 17, "Options"))
 
     P.append(page(f"""
@@ -1100,10 +1281,12 @@ ol.steps b{{color:{INK};}}
   <table>
     <thead><tr><th>Question</th><th>How it gets answered</th><th>Where we are</th></tr></thead>
     <tbody>
-      <tr><td>Do 20 agents produce useful alerts?</td><td>Count and quality of alerts in today's log</td><td class="warn">first live run</td></tr>
+      <tr><td>Do 20 agents produce useful alerts?</td><td>Alerts scored against a random-minute control</td><td class="ok">answered — 3 of 4 beat it, 1 retired</td></tr>
+      <tr><td>Does acting on an alert make money?</td><td>Paper trades, priced with full fees</td><td class="bad">25 trades, −₹360, 32% win rate</td></tr>
       <tr><td>Should agents move companies mid-day?</td><td>Did companies moved <em>to</em> beat the ones left behind?</td><td class="warn">measured, not yet known</td></tr>
       <tr><td>Does reading charts beat pure arithmetic?</td><td>20 trades, profitable after costs, beating random picks</td><td class="bad">open</td></tr>
       <tr><td>Do options work at this size?</td><td>8 paper trades, profitable after ₹47 of fees</td><td class="bad">0 of 8</td></tr>
+      <tr><td>Are the agents watching the right prices?</td><td>Compare each agent's memorised levels against the live ones</td><td class="bad">no — frozen at 9:16am, one drifted 10%</td></tr>
       <tr><td>Do real orders fill at the price we expect?</td><td>10 real sessions, fills within 0.15% of the plan</td><td class="bad">starts Wednesday</td></tr>
     </tbody>
   </table>
@@ -1115,9 +1298,12 @@ ol.steps b{{color:{INK};}}
     that most popular trading ideas do not survive costs, and we have found one that
     does: independent agreement.</p>
     <p><strong>We have not yet proved that the finished system makes money.</strong>
-    That is what today, and the ten sessions after it, are for. Every number in this
-    document came from a measurement, and where we do not know something, this document
-    says so.</p>
+    On its first day of trading on its own it lost ₹360 across 25 paper trades — and we
+    then found that every agent had been watching prices frozen at 9:16am, one of them
+    10% stale. So that loss is not yet a fair test of the idea; it was measured on a
+    broken instrument, and that gets fixed before it is measured again.</p>
+    <p>Every number here came from a measurement, and where we do not know something,
+    this document says so.</p>
     <p>If someone shows you a trading system with no page like this one, that is the
     page they chose not to write.</p>
   </div>""", 18, "Status"))
@@ -1158,8 +1344,11 @@ async def measure(html_path: Path):
     rows = await pg.evaluate("""() => {
         const mm = 297 / document.querySelector('.page').getBoundingClientRect().height;
         return [...document.querySelectorAll('.page')].map((p,i) => {
+            // .mesh is position:absolute inset:0, so it is ALWAYS 297mm tall and
+            // would report every page as full. Measure content only.
             const kids = [...p.children].filter(c => !c.classList.contains('rh')
-                                                  && !c.classList.contains('rf'));
+                                                  && !c.classList.contains('rf')
+                                                  && !c.classList.contains('mesh'));
             const bottom = kids.length ? Math.max(...kids.map(c =>
                 c.getBoundingClientRect().bottom)) : 0;
             const top = p.getBoundingClientRect().top;
@@ -1168,7 +1357,15 @@ async def measure(html_path: Path):
         });
     }""")
     await br.close()
-    BUDGET = 297 - 16          # top padding is inside; bottom margin reserved for footer
+    # The true content area is page height minus BOTH paddings: 296 - 20 - 16 = 260mm,
+    # measured from the top of the content box. An earlier budget of 297-16 measured
+    # from the page top and so declared pages "fitting" that were spilling a few
+    # millimetres onto a second sheet — which is what produced the blank pages.
+    # getBoundingClientRect() EXCLUDES the trailing margin of the last child, so a
+    # page ending in a .box (margin 4mm) is ~4mm taller than measured and spills a
+    # sliver onto a blank sheet. Hold a 6mm safety band rather than chase exact
+    # margin arithmetic per element.
+    BUDGET = 296 - 16 - 6      # content bottom, measured from page top
     print(f"  page budget ~{BUDGET:.0f}mm of content height")
     for r in rows:
         over = r["used"] - BUDGET
@@ -1197,6 +1394,29 @@ def qa(pdf_path: Path):
     return n
 
 
+def shrink(pdf: Path):
+    """Merge duplicated resources. Chrome embeds a SEPARATE font subset on every
+    page rather than sharing one — 32 subsets across 20 pages, and ~5MB of a 6.6MB
+    file. Ghostscript rewrites them as a single shared set."""
+    import shutil, subprocess
+    gs = shutil.which("gs")
+    if not gs:
+        print("  (ghostscript not found — skipping font de-duplication)")
+        return
+    tmp = pdf.with_suffix(".opt.pdf")
+    before = pdf.stat().st_size
+    r = subprocess.run([gs, "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.7",
+                        "-dPDFSETTINGS=/prepress", "-dNOPAUSE", "-dQUIET", "-dBATCH",
+                        "-dSubsetFonts=true", "-dCompressFonts=true",
+                        f"-sOutputFile={tmp}", str(pdf)], capture_output=True)
+    if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 40_000:
+        tmp.replace(pdf)
+        print(f"  optimised: {before/1024:.0f}KB -> {pdf.stat().st_size/1024:.0f}KB")
+    else:
+        tmp.unlink(missing_ok=True)
+        print(f"  optimisation skipped (gs rc={r.returncode})")
+
+
 def main():
     OUT_PDF.parent.mkdir(parents=True, exist_ok=True)
     OUT_HTML.write_text(build_html())
@@ -1207,6 +1427,7 @@ def main():
         return
     loop.run_until_complete(render(OUT_HTML, OUT_PDF))
     print(f"  pdf : {OUT_PDF}")
+    shrink(OUT_PDF)
     qa(OUT_PDF)
 
 

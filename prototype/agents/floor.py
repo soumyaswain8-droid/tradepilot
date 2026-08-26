@@ -65,6 +65,26 @@ ESCALATE_COOLDOWN_S = 180        # per agent, per trigger type
 VOL_SPIKE_MULT = 3.0
 FAST_MOVE_BPS_PER_MIN = 25.0
 
+# ── measured 2026-08-25, first live session (1,563 escalations) ──────────────
+# Each trigger was scored against a CONTROL: random minutes in the same stock on the
+# same day. Absolute move in the 15 min after the trigger, vs after a random minute:
+#
+#   SWEEP_RECLAIM  n=118  0.637% vs 0.359%  lift +0.278pp   <- best by 3x, quietest
+#   LEVEL_TOUCH    n=473  0.404% vs 0.318%  lift +0.085pp
+#   FAST_MOVE      n=432  0.417% vs 0.349%  lift +0.068pp
+#   VOL_SPIKE      n=540  0.311% vs 0.325%  lift -0.014pp   <- loudest, NEGATIVE
+#
+# VOL_SPIKE fired more than any other trigger and predicted less than random. It is
+# disabled rather than deleted, so the decision stays reversible and the evidence
+# stays readable. Removing it drops ~35% of all traffic and loses nothing measured.
+DISABLED_TRIGGERS = {"VOL_SPIKE"}
+
+# SWEEP_RECLAIM was our strongest signal AND our quietest, which is the wrong way
+# round — we were almost certainly missing valid instances. Loosened on both axes:
+# a shallower pierce counts, and the reclaim gets longer to happen.
+SWEEP_PIERCE_BPS = 3.0      # was 5.0
+SWEEP_LOOKBACK = 45         # ticks; was 30
+
 # ── dynamic reassignment (Soumya, 2026-08-24) ────────────────────────────────
 # "Do not look at these 20 stocks only — the moto is to make profit, so we cannot
 #  miss any stock that is good to trade."
@@ -148,6 +168,8 @@ class StockAgent:
         return self._evaluate(now, float(ltp), t)
 
     def _fire(self, kind, detail, now):
+        if kind.split(":")[0] in DISABLED_TRIGGERS:
+            return None
         last = self.last_escalation.get(kind, 0)
         if now - last < ESCALATE_COOLDOWN_S:
             return None
@@ -176,12 +198,13 @@ class StockAgent:
                 return self._fire(f"LEVEL_TOUCH:{name}",
                                   f"{ltp} at {name} {lvl} ({dist_bps:.1f}bps)", now)
         # 3. sweep + reclaim: pierced a level, came back inside
-        if len(self.ticks) > 30:
-            recent = [p for _, p, _ in list(self.ticks)[-30:]]
+        if len(self.ticks) > SWEEP_LOOKBACK:
+            recent = [p for _, p, _ in list(self.ticks)[-SWEEP_LOOKBACK:]]
             for name, lvl in (th.get("levels") or {}).items():
                 if not lvl:
                     continue
-                if min(recent) < lvl < ltp and (lvl - min(recent)) / lvl * 10000 > 5:
+                if (min(recent) < lvl < ltp
+                        and (lvl - min(recent)) / lvl * 10000 > SWEEP_PIERCE_BPS):
                     return self._fire(f"SWEEP_RECLAIM:{name}",
                                       f"swept {min(recent):.2f} below {name} {lvl}, "
                                       f"reclaimed to {ltp}", now)

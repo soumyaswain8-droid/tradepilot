@@ -94,7 +94,35 @@ fi
 
 pkill -f "prototype.agents.floor" 2>/dev/null
 sleep 2
-nohup $PY -m prototype.agents.floor --dry >> "$LOG" 2>&1 &
+
+# RESTART VIA LAUNCHD, NOT nohup.
+#
+# Measured 2026-08-25: this watchdog is itself a launchd job, and both of its
+# nohup'd relaunches were dead within ten minutes having written NOTHING to the log
+# — not even a traceback. launchd tracks the job's process group and reaps what is
+# left when the script exits, so a background child of a launchd job cannot outlive
+# its parent. The watchdog reported "relaunched", the floor was already gone, and
+# the session lost 2h40m.
+#
+# kickstart -k restarts the floor's OWN launchd job, which launchd then owns and
+# keeps alive independently of this script.
+LABEL="gui/$(id -u)/com.tradepilot.agent-floor"
+if launchctl kickstart -k "$LABEL" 2>>"$WLOG"; then
+  say "relaunched via launchd $LABEL (restart $((n + 1))/$MAX_RESTARTS)"
+else
+  # fall back to a detached process, disowned so it survives this shell
+  setsid $PY -m prototype.agents.floor --dry >> "$LOG" 2>&1 < /dev/null &
+  disown 2>/dev/null || true
+  say "launchctl kickstart failed — fell back to setsid (restart $((n + 1))/$MAX_RESTARTS)"
+fi
 echo $((n + 1)) > "$STAMP"
-say "relaunched floor (restart $((n + 1))/$MAX_RESTARTS)"
+
+# Verify the relaunch actually took. "I issued a restart" is not "it is running" —
+# that gap is precisely what hid the failure for two and a half hours.
+sleep 12
+if pgrep -f "prototype.agents.floor" > /dev/null 2>&1; then
+  say "verified: floor process is up after restart"
+else
+  say "RESTART DID NOT TAKE — no floor process 12s after relaunch. Investigate $LOG"
+fi
 exit 1

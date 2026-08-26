@@ -85,6 +85,35 @@ DISABLED_TRIGGERS = {"VOL_SPIKE"}
 SWEEP_PIERCE_BPS = 3.0      # was 5.0
 SWEEP_LOOKBACK = 45         # ticks; was 30
 
+# ── autonomous paper entry (Soumya, 2026-08-26) ──────────────────────────────
+# "we need an automation system where the system doesn't need my approvals at all,
+#  but whenever I want to see, I can see."
+#
+# Until now self.position was assigned exactly once — to None — and never again. So
+# INVALIDATION and TARGET_REACHED were unreachable code, the "never reassign an agent
+# holding a position" brake had nothing to protect, and the console's position count
+# could only ever read zero. This closes that loop.
+#
+# WHY ONLY SWEEP_RECLAIM. A rule needs a SIDE, and only one trigger implies one:
+# price pierced a level, then reclaimed it, so buyers defended -> long. LEVEL_TOUCH
+# says where, not which way. FAST_MOVE has no side and our own data says intraday
+# this market mean-reverts, so chasing it is the losing trade. SWEEP_RECLAIM also
+# carried the best measured lift on 2026-08-25 (+0.278pp, 3x the next).
+#
+# HONEST STATUS: no trigger showed a DIRECTIONAL edge (signed returns -0.014%,
+# 45.6% up, all inside the 0.106% toll). This rule is not believed to be profitable.
+# It exists so that acting on an escalation produces evidence instead of a guess —
+# which is the only thing 1,563 fired-and-forgotten escalations could never give us.
+AUTO_ENTRY = True
+ENTRY_TRIGGER = "SWEEP_RECLAIM"
+ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
+MAX_CONCURRENT = 5
+ENTRY_WINDOW = ("09:30", "14:30")   # not the open (noise), not near the close
+FORCE_EXIT_AT = "15:15"
+NOTIONAL = 6000.0            # matches the equity lane's per-slot size
+TARGET_R = 1.5               # reward per unit of risk; below this the toll eats it
+POSITIONS_FILE = KNOW / "positions"
+
 # ── dynamic reassignment (Soumya, 2026-08-24) ────────────────────────────────
 # "Do not look at these 20 stocks only — the moto is to make profit, so we cannot
 #  miss any stock that is good to trade."
@@ -165,19 +194,39 @@ class StockAgent:
         now = time.time()
         self.ticks.append((now, float(ltp), t.get("volume_traded") or 0))
         self.seen += 1
+        if self.position:
+            self.mark(float(ltp))
         return self._evaluate(now, float(ltp), t)
 
-    def _fire(self, kind, detail, now):
+    def _fire(self, kind, detail, now, extra=None):
         if kind.split(":")[0] in DISABLED_TRIGGERS:
             return None
         last = self.last_escalation.get(kind, 0)
         if now - last < ESCALATE_COOLDOWN_S:
             return None
         self.last_escalation[kind] = now
-        return {"symbol": self.symbol, "trigger": kind, "detail": detail,
-                "ltp": self.ticks[-1][1] if self.ticks else None,
-                "at": datetime.now().strftime("%H:%M:%S"),
-                "thesis": self.thesis, "state": self.state}
+        ev = {"symbol": self.symbol, "trigger": kind, "detail": detail,
+              "ltp": self.ticks[-1][1] if self.ticks else None,
+              "at": datetime.now().strftime("%H:%M:%S"),
+              "thesis": self.thesis, "state": self.state,
+              "agree": self.scout.get("agree", 0), "score": self.scout.get("score", 0)}
+        if extra:
+            ev.update(extra)
+        return ev
+
+    # ── position handling ────────────────────────────────────────────────────
+    def open_position(self, entry, stop, target, qty, why):
+        self.position = {"entry": entry, "stop": stop, "target": target, "qty": qty,
+                         "why": why, "at": datetime.now().strftime("%H:%M:%S"),
+                         "t0": time.time(), "peak": entry, "trough": entry}
+        self.state = "IN_POSITION"
+        return self.position
+
+    def mark(self, ltp):
+        p = self.position
+        if p:
+            p["peak"] = max(p["peak"], ltp)
+            p["trough"] = min(p["trough"], ltp)
 
     def _evaluate(self, now, ltp, t):
         th = self.thesis
@@ -205,9 +254,14 @@ class StockAgent:
                     continue
                 if (min(recent) < lvl < ltp
                         and (lvl - min(recent)) / lvl * 10000 > SWEEP_PIERCE_BPS):
+                    # the swept low is the invalidation: if price returns below what
+                    # it just reclaimed, the read was simply wrong. A structural stop,
+                    # not an arbitrary percentage.
                     return self._fire(f"SWEEP_RECLAIM:{name}",
                                       f"swept {min(recent):.2f} below {name} {lvl}, "
-                                      f"reclaimed to {ltp}", now)
+                                      f"reclaimed to {ltp}", now,
+                                      extra={"swept_low": round(min(recent), 2),
+                                             "level": lvl, "level_name": name})
         # 4. velocity — "the market turns in seconds"
         if len(self.ticks) > 20:
             t0, p0, _ = self.ticks[-20]
@@ -241,6 +295,9 @@ class Floor:
         self.near_miss_log = []
         self.gaps = []
         self.gap_open = None
+        self.positions = []
+        self.declined = []
+        self.sandbox = False       # set True in tests; blocks ledger writes
         KNOW.mkdir(parents=True, exist_ok=True)
         ESCALATIONS.mkdir(parents=True, exist_ok=True)
         self.shared = self._load_shared()
@@ -427,7 +484,18 @@ class Floor:
                       f"{len(self.escalation_log)} escalations | "
                       f"{len(self.swap_log)} reassignments | {held} in position | "
                       f"{len(self.gaps)} data gaps", flush=True)
+                closed = [p for p in self.positions if p["status"] == "CLOSED"]
+                if self.positions:
+                    print(f"     paper: {len(closed)} closed, {held} open, "
+                          f"net Rs{sum(p.get('pnl_net',0) for p in closed):+.2f}, "
+                          f"{len(self.declined)} declined", flush=True)
+                if datetime.now().strftime("%H:%M") >= FORCE_EXIT_AT and \
+                        self.open_count():
+                    print(f"  {FORCE_EXIT_AT} — squaring off every open position",
+                          flush=True)
+                    self.force_exit_all()
                 if datetime.now().strftime("%H:%M") >= "15:30":
+                    self.force_exit_all("SESSION_END")
                     print("  session over — stopping"); break
                 # the scouts keep sweeping; the floor follows them
                 if time.time() - last_rebalance >= REBALANCE_EVERY_S:
@@ -561,9 +629,129 @@ class Floor:
                   f"short by {best['short_by']})", flush=True)
         return swaps
 
+    # ── autonomous paper trading ─────────────────────────────────────────────
+    def _in_window(self, now=None):
+        t = (now or datetime.now()).strftime("%H:%M")
+        return ENTRY_WINDOW[0] <= t <= ENTRY_WINDOW[1]
+
+    def open_count(self):
+        return sum(1 for a in self.agents.values() if a.position)
+
+    def maybe_enter(self, agent, ev):
+        """Take a paper position, with no human in the loop.
+
+        Every condition below is a reason to say NO, and they are all recorded when
+        they fire — a rule that only logs its entries teaches you nothing about the
+        trades it declined.
+        """
+        if not AUTO_ENTRY or agent.position:
+            return None
+        if ev["trigger"].split(":")[0] != ENTRY_TRIGGER:
+            return None
+        why_not = None
+        if ev.get("agree", 0) < ENTRY_MIN_AGREE:
+            why_not = f"only {ev.get('agree',0)} scout(s) agree"
+        elif not self._in_window():
+            why_not = f"outside {ENTRY_WINDOW[0]}-{ENTRY_WINDOW[1]}"
+        elif self.open_count() >= MAX_CONCURRENT:
+            why_not = f"{MAX_CONCURRENT} positions already open"
+        elif not ev.get("swept_low") or not ev.get("ltp"):
+            why_not = "no swept low to anchor the stop"
+        if why_not:
+            self.declined.append({**{k: ev[k] for k in ("at", "symbol", "trigger")},
+                                  "reason": why_not})
+            return None
+
+        entry = float(ev["ltp"])
+        stop = float(ev["swept_low"])
+        risk = entry - stop
+        if risk <= 0 or risk / entry > 0.02:      # >2% risk is not a scalp
+            self.declined.append({"at": ev["at"], "symbol": ev["symbol"],
+                                  "trigger": ev["trigger"],
+                                  "reason": f"risk {risk/entry*100:.2f}% out of range"})
+            return None
+        target = round(entry + TARGET_R * risk, 2)
+        qty = max(1, int(NOTIONAL / entry))
+        pos = agent.open_position(entry, round(stop, 2), target, qty,
+                                  ev.get("detail", "")[:70])
+        rec = {"symbol": agent.symbol, "side": "LONG", "entry": entry,
+               "stop": pos["stop"], "target": target, "qty": qty,
+               "risk_pct": round(risk / entry * 100, 3), "r_target": TARGET_R,
+               "entered_at": pos["at"], "trigger": ev["trigger"],
+               "agree": ev.get("agree"), "score": ev.get("score"),
+               "level": ev.get("level"), "level_name": ev.get("level_name"),
+               "status": "OPEN"}
+        self.positions.append(rec)
+        print(f"  ## {pos['at']} ENTER {agent.symbol} x{qty} @ {entry} "
+              f"stop {pos['stop']} target {target} "
+              f"(risk {rec['risk_pct']}%, {ev.get('agree')} scouts)", flush=True)
+        self._write_positions()
+        return rec
+
+    def close_position(self, agent, price, reason):
+        p = agent.position
+        if not p:
+            return
+        pnl = (price - p["entry"]) * p["qty"]
+        gross_pct = (price / p["entry"] - 1) * 100
+        fee = p["entry"] * p["qty"] * 0.00106      # our measured round-trip toll
+        rec = next((r for r in self.positions
+                    if r["symbol"] == agent.symbol and r["status"] == "OPEN"), None)
+        if rec:
+            rec.update({"status": "CLOSED", "exit": round(price, 2), "reason": reason,
+                        "exited_at": datetime.now().strftime("%H:%M:%S"),
+                        "pnl_gross": round(pnl, 2), "pnl_net": round(pnl - fee, 2),
+                        "fee": round(fee, 2), "gross_pct": round(gross_pct, 3),
+                        "held_s": int(time.time() - p["t0"]),
+                        "mfe_pct": round((p["peak"] / p["entry"] - 1) * 100, 3),
+                        "mae_pct": round((p["trough"] / p["entry"] - 1) * 100, 3)})
+        agent.position = None
+        agent.state = "WATCHING"
+        print(f"  ## {datetime.now():%H:%M:%S} EXIT  {agent.symbol} @ {price} "
+              f"{reason} gross Rs{pnl:+.2f} net Rs{pnl-fee:+.2f}", flush=True)
+        self._write_positions()
+
+    def _write_positions(self):
+        # A unit test of maybe_enter() once wrote a synthetic TESTCO trade straight
+        # into the live ledger. Anything not on a real stream stays out of the book.
+        if getattr(self, "sandbox", False):
+            return
+        POSITIONS_FILE.mkdir(parents=True, exist_ok=True)
+        f = POSITIONS_FILE / f"{datetime.now():%Y-%m-%d}.json"
+        closed = [p for p in self.positions if p["status"] == "CLOSED"]
+        f.write_text(json.dumps({
+            "positions": self.positions,
+            "declined": self.declined[-60:],
+            "declined_total": len(self.declined),
+            "open": sum(1 for p in self.positions if p["status"] == "OPEN"),
+            "closed": len(closed),
+            "net": round(sum(p.get("pnl_net", 0) for p in closed), 2),
+            "gross": round(sum(p.get("pnl_gross", 0) for p in closed), 2),
+            "wins": sum(1 for p in closed if p.get("pnl_net", 0) > 0),
+            "rule": {"trigger": ENTRY_TRIGGER, "min_agree": ENTRY_MIN_AGREE,
+                     "target_r": TARGET_R, "notional": NOTIONAL,
+                     "window": list(ENTRY_WINDOW)},
+        }, indent=1))
+
+    def force_exit_all(self, reason="TIME_STOP"):
+        for a in list(self.agents.values()):
+            if a.position:
+                last = a.ticks[-1][1] if a.ticks else a.position["entry"]
+                self.close_position(a, last, reason)
+
     def escalate(self, ev):
-        """Something happened. Record it for Sarathi's judgement — the slow layer."""
+        """Something happened. Record it, and act on it if the rule says so."""
         self.escalation_log.append(ev)
+        agent = next((a for a in self.agents.values()
+                      if a.symbol == ev["symbol"]), None)
+        if agent:
+            base = ev["trigger"].split(":")[0]
+            if base == "INVALIDATION" and agent.position:
+                self.close_position(agent, float(ev["ltp"]), "STOP")
+            elif base == "TARGET_REACHED" and agent.position:
+                self.close_position(agent, float(ev["ltp"]), "TARGET")
+            else:
+                self.maybe_enter(agent, ev)
         line = (f"  >> {ev['at']} {ev['symbol']:<12} {ev['trigger']:<22} "
                 f"{ev['ltp']}  {ev['detail']}")
         print(line, flush=True)
@@ -594,6 +782,8 @@ class Floor:
             "near_misses": self.near_miss_log[-200:],
             "near_miss_total": len(self.near_miss_log),
             "watched_at_close": sorted(a.symbol for a in self.agents.values()),
+            "positions": self.positions,
+            "declined_total": len(self.declined),
         }, indent=2))
         print(f"  wrote {f}")
 

@@ -35,6 +35,7 @@ for _p in (str(ROOT), str(ROOT / "prototype")):
         _sys.path.insert(0, _p)
 LOGS = ROOT / "logs"
 ESC = ROOT / "docs" / "sarathi" / "knowledge" / "escalations"
+POS = ROOT / "docs" / "sarathi" / "knowledge" / "positions"
 
 _CACHE = {"board": None, "board_at": 0, "quotes": None, "quotes_at": 0}
 BOARD_TTL = 25.0          # the scouts themselves only re-rank every 120s
@@ -209,6 +210,25 @@ def board():
                                    "error": str(e)[:80]}
 
 
+def positions(day=None):
+    """The floor's autonomous paper book, plus what it DECLINED.
+
+    Declines matter as much as fills: a rule that only shows what it took teaches
+    nothing about what it passed on, and 'no trades today' could mean the market was
+    quiet or that a threshold is silently rejecting everything.
+    """
+    day = day or _today()
+    f = POS / f"{day}.json"
+    if not f.exists():
+        return {"positions": [], "declined": [], "open": 0, "closed": 0,
+                "net": 0, "gross": 0, "wins": 0, "declined_total": 0}
+    try:
+        return json.loads(f.read_text())
+    except Exception:
+        return {"positions": [], "declined": [], "open": 0, "closed": 0,
+                "net": 0, "gross": 0, "wins": 0, "declined_total": 0}
+
+
 def snapshot(day=None, with_board=True):
     """Everything the console needs, in one payload."""
     day = day or _today()
@@ -249,6 +269,17 @@ def snapshot(day=None, with_board=True):
                        "armed": (ndist is not None and ndist <= 25)})
     agents.sort(key=lambda a: (a["dist_bps"] is None, a["dist_bps"]))
 
+    pos = positions(day)
+    live_pos = {p["symbol"]: p for p in pos.get("positions", [])
+                if p.get("status") == "OPEN"}
+    for a in agents:
+        p = live_pos.get(a["symbol"])
+        if p:
+            a["position"] = {"entry": p["entry"], "stop": p["stop"],
+                             "target": p["target"], "qty": p["qty"],
+                             "r_now": round((a["ltp"] - p["entry"]) /
+                                            max(p["entry"] - p["stop"], 1e-9), 2)
+                             if a["ltp"] else None}
     b = board() if with_board else (_CACHE["board"] or {})
     open_gap = any(g.get("open") for g in st["gaps"])
     return {
@@ -271,7 +302,7 @@ def snapshot(day=None, with_board=True):
             "screened": b.get("screened", 0),
             "board": len(b.get("rows", [])),
             "agents": len(agents),
-            "positions": last.get("pos", 0),
+            "positions": pos.get("open", 0),
         },
         "agents": agents,
         "board": b.get("rows", [])[:40],
@@ -280,6 +311,10 @@ def snapshot(day=None, with_board=True):
         "swaps": st["swaps"][-12:],
         "gaps": st["gaps"][-6:],
         "near": st["near"],
+        "book": {k: pos.get(k) for k in
+                 ("open", "closed", "net", "gross", "wins", "declined_total", "rule")},
+        "trades": [p for p in pos.get("positions", [])][-14:],
+        "declined": pos.get("declined", [])[-10:],
         "errors": {k: v for k, v in
                    {"quotes": _CACHE.get("quote_err"),
                     "board": b.get("error")}.items() if v},

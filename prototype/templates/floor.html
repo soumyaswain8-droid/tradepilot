@@ -107,6 +107,20 @@ body::after{
 @keyframes flow{from{left:-4px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:44px;opacity:0}}
 .stage:nth-child(9) .n{color:var(--lime)}
 .err{padding:10px 12px;color:var(--rose);font-size:10px}
+/* a pod holding a position outranks everything visually — it has money at stake */
+.pod.held{background:#071a12;box-shadow:inset 3px 0 0 var(--lime)}
+.pod .pos{margin-top:5px;font-size:9px;color:var(--lime);display:flex;
+          justify-content:space-between;border-top:1px solid #14322a;padding-top:4px}
+.pod .pos .r{font-weight:700}
+.book{border-top:1px solid var(--edge)}
+.book .row{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:4px 12px;
+           font-size:10px;border-bottom:1px solid #0f1c2b}
+.book .row .sym{font-weight:700}
+.book .row .st{font-size:8.5px;color:var(--faint)}
+.tot{display:flex;justify-content:space-between;padding:6px 12px;font-size:10px;
+     background:var(--panel)}
+.tot b{font-variant-numeric:tabular-nums}
+.decl{padding:4px 12px;font-size:9px;color:var(--faint);border-bottom:1px solid #0f1c2b}
 </style>
 </head>
 <body>
@@ -145,6 +159,14 @@ body::after{
   <div class="cell">
     <div class="hd"><h2>Escalation Stream</h2><span class="sub" id="evSub">—</span></div>
     <div class="body" id="stream"></div>
+    <div class="hd" style="border-top:1px solid var(--edge)">
+      <h2>Paper Book · autonomous</h2><span class="sub" id="ruleSub">—</span></div>
+    <div class="tot">
+      <span>open <b id="bOpen">0</b> · closed <b id="bClosed">0</b>
+        · won <b id="bWins">0</b></span>
+      <span>net <b id="bNet">—</b></span>
+    </div>
+    <div class="book" id="book" style="max-height:150px;overflow-y:auto"></div>
   </div>
 
   <div class="pipe" id="pipe"></div>
@@ -209,7 +231,7 @@ function drawRadar(){
 drawRadar();
 
 function pod(a){
-  const armed=a.armed?' armed':'';
+  const armed=(a.position?' held':(a.armed?' armed':''));
   const d=a.dist_bps==null?'—':a.dist_bps.toFixed(1)+'bps';
   const w=a.dist_bps==null?0:Math.max(0,Math.min(100,100-(a.dist_bps/60*100)));
   const chg=a.chg_pct==null?'':(a.chg_pct>=0?'+':'')+a.chg_pct+'%';
@@ -222,6 +244,8 @@ function pod(a){
     <div class="prox"><i style="width:${w}%"></i></div>
     <div class="meta"><span class="scouts">${a.agree||0} scouts · ${(a.score||0).toFixed(2)}</span>
       <span>${a.since||''}</span></div>
+    ${a.position?`<div class="pos"><span>@${a.position.entry} → ${a.position.target}</span>
+      <span class="r">${a.position.r_now>=0?'+':''}${a.position.r_now}R</span></div>`:''}
   </div>`;
 }
 
@@ -265,6 +289,24 @@ function render(s){
       <div class="d">${e.detail||''}</div></span></div>`;}).join('');
   $('evSub').textContent=ev.length+' shown';
   $('bAt').textContent=s.board_at?('swept '+s.board_at):'—';
+
+  const bk=s.book||{}, tr=s.trades||[], dc=s.declined||[];
+  $('bOpen').textContent=bk.open??0; $('bClosed').textContent=bk.closed??0;
+  $('bWins').textContent=bk.wins??0;
+  const net=bk.net??0;
+  $('bNet').textContent=(net>=0?'+':'')+'\u20b9'+net.toFixed(2);
+  $('bNet').style.color=net>0?'var(--lime)':(net<0?'var(--rose)':'var(--txt)');
+  const r=bk.rule||{};
+  $('ruleSub').textContent=r.trigger?`${r.trigger} · ${r.min_agree}+ scouts · ${r.target_r}R`:'—';
+  $('book').innerHTML = (tr.length? tr.slice().reverse().map(t=>{
+      const done=t.status==='CLOSED';
+      const pn=done?(t.pnl_net>=0?'up':'dn'):'';
+      return `<div class="row"><span><span class="sym">${t.symbol}</span>
+        <div class="st">${t.entered_at}${done?' → '+t.exited_at+' · '+t.reason:' · open'}</div></span>
+        <span>${t.entry}${done?' → '+t.exit:''}</span>
+        <span class="${pn}">${done?(t.pnl_net>=0?'+':'')+'\u20b9'+t.pnl_net.toFixed(0):'—'}</span></div>`;
+    }).join('') : '<div class="decl">no entries yet</div>')
+    + (dc.length?`<div class="decl">declined ${bk.declined_total}: ${dc.slice(-3).map(d=>d.symbol+' ('+d.reason+')').join(' · ')}</div>`:'');
 
   const f=s.funnel||{};
   const stages=[['universe',f.universe,'liquid equities'],

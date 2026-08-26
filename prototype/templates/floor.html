@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TradePilot · Agent Floor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2712%27 fill=%27none%27 stroke=%27%233ff0d8%27 stroke-width=%272%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%273%27 fill=%27%23ffb020%27/%3E%3C/svg%3E">
+<style>
+:root{
+  --void:#04080f; --deck:#0a121e; --panel:#0d1826; --edge:#17293d;
+  --phos:#3ff0d8;         /* scanning / data */
+  --indigo:#6c63ff;       /* structure, brand link */
+  --amber:#ffb020;        /* armed — closing on a level */
+  --rose:#ff4d6d;         /* escalation */
+  --lime:#5ddc7a;         /* position / good */
+  --txt:#c3d4e4; --dim:#6a8199; --faint:#3c526b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--void); color:var(--txt);
+  font:12px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+}
+/* faint CRT scanlines — texture, not decoration: it reads as instrumentation */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);
+  mix-blend-mode:multiply;
+}
+.hud{display:grid;grid-template-columns:340px 1fr 320px;grid-template-rows:44px 1fr 92px;
+     height:100vh;gap:1px;background:var(--edge)}
+.bar,.cell{background:var(--deck)}
+.bar{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 16px;
+     border-bottom:1px solid var(--edge)}
+.brand{font-weight:700;letter-spacing:.18em;color:var(--phos);font-size:12px}
+.brand b{color:var(--txt);font-weight:700}
+.stat{display:flex;gap:6px;align-items:baseline}
+.stat .k{color:var(--dim);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}
+.stat .v{color:var(--txt);font-variant-numeric:tabular-nums}
+.stat .v.hot{color:var(--amber)} .stat .v.bad{color:var(--rose)} .stat .v.ok{color:var(--lime)}
+.spacer{flex:1}
+.live{display:flex;align-items:center;gap:7px;color:var(--lime)}
+.live .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);
+     box-shadow:0 0 10px var(--lime);animation:bp 1.6s infinite}
+.live.dead{color:var(--rose)} .live.dead .dot{background:var(--rose);box-shadow:0 0 10px var(--rose)}
+@keyframes bp{0%,100%{opacity:1}50%{opacity:.25}}
+
+.cell{position:relative;overflow:hidden;display:flex;flex-direction:column}
+.hd{padding:7px 12px;border-bottom:1px solid var(--edge);display:flex;
+    justify-content:space-between;align-items:center;flex:0 0 auto}
+.hd h2{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--phos);font-weight:600}
+.hd .sub{font-size:9.5px;color:var(--faint)}
+.body{flex:1;overflow-y:auto;overflow-x:hidden}
+.body::-webkit-scrollbar{width:5px}.body::-webkit-scrollbar-thumb{background:var(--edge)}
+
+/* ── radar ───────────────────────────────────────── */
+#radar{display:block;width:100%;height:auto}
+.legend{padding:8px 12px;font-size:9.5px;color:var(--dim);display:grid;gap:3px}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
+
+/* ── agent pods ──────────────────────────────────── */
+.pods{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));
+      gap:1px;background:var(--edge);padding:1px}
+.pod{background:var(--panel);padding:8px 10px;position:relative;transition:background .3s}
+.pod.armed{background:#17140a}
+.pod.fired{animation:fire 1.4s ease-out}
+@keyframes fire{0%{background:#2a0f18;box-shadow:inset 0 0 30px rgba(255,77,109,.5)}
+                100%{background:var(--panel)}}
+.pod .sym{font-weight:700;letter-spacing:.04em;font-size:12.5px;display:flex;
+          justify-content:space-between;align-items:baseline}
+.pod .sym .chg{font-size:10px;font-variant-numeric:tabular-nums}
+.up{color:var(--lime)} .dn{color:var(--rose)}
+.pod .px{font-size:15px;font-variant-numeric:tabular-nums;margin:1px 0 5px;color:#e9f2fa}
+.pod .lv{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between}
+.prox{height:3px;background:#0a1420;margin-top:5px;position:relative;overflow:hidden}
+.prox i{position:absolute;left:0;top:0;bottom:0;background:var(--phos);
+        transition:width .5s ease,background .3s}
+.pod.armed .prox i{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.pod .meta{display:flex;justify-content:space-between;font-size:9px;color:var(--faint);margin-top:5px}
+.scouts{color:var(--indigo)}
+.pod .badge{position:absolute;top:6px;right:8px;font-size:8.5px;color:var(--rose)}
+
+/* ── stream ──────────────────────────────────────── */
+.ev{padding:5px 12px;border-bottom:1px solid #0f1c2b;display:grid;
+    grid-template-columns:52px 1fr;gap:8px;font-size:10.5px;animation:slide .35s ease-out}
+@keyframes slide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.ev .t{color:var(--faint);font-variant-numeric:tabular-nums}
+.ev .s{font-weight:700}
+.ev .d{color:var(--dim);font-size:9.5px}
+.tg-LEVEL_TOUCH{color:var(--amber)} .tg-FAST_MOVE{color:var(--phos)}
+.tg-SWEEP_RECLAIM{color:var(--lime)} .tg-VOL_SPIKE{color:var(--dim)}
+.tg-INVALIDATION{color:var(--rose)}
+
+/* ── pipeline ────────────────────────────────────── */
+.pipe{grid-column:1/-1;background:var(--deck);display:flex;align-items:center;
+      justify-content:space-between;padding:0 22px;gap:6px;border-top:1px solid var(--edge)}
+.stage{flex:1;text-align:center;position:relative}
+.stage .n{font-size:22px;font-weight:700;color:var(--phos);font-variant-numeric:tabular-nums;
+          line-height:1.1}
+.stage .l{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+.stage .c{font-size:8.5px;color:var(--faint)}
+.arrow{flex:0 0 44px;height:1px;background:linear-gradient(90deg,var(--edge),var(--indigo),var(--edge));
+       position:relative}
+.arrow::after{content:"";position:absolute;top:-2px;width:5px;height:5px;border-radius:50%;
+  background:var(--phos);box-shadow:0 0 8px var(--phos);animation:flow 2.4s linear infinite}
+@keyframes flow{from{left:-4px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:44px;opacity:0}}
+.stage:nth-child(9) .n{color:var(--lime)}
+.err{padding:10px 12px;color:var(--rose);font-size:10px}
+</style>
+</head>
+<body>
+<div class="hud">
+
+  <div class="bar">
+    <span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>
+    <span class="live" id="live"><span class="dot"></span><span id="liveTxt">CONNECTING</span></span>
+    <div class="stat"><span class="k">ticks</span><span class="v" id="sTicks">—</span></div>
+    <div class="stat"><span class="k">rate</span><span class="v" id="sRate">—</span></div>
+    <div class="stat"><span class="k">escalations</span><span class="v" id="sEsc">—</span></div>
+    <div class="stat"><span class="k">swaps</span><span class="v" id="sSwap">—</span></div>
+    <div class="stat"><span class="k">armed</span><span class="v hot" id="sArm">—</span></div>
+    <div class="stat"><span class="k">gaps</span><span class="v" id="sGap">—</span></div>
+    <span class="spacer"></span>
+    <div class="stat"><span class="k">clock</span><span class="v" id="sNow">—</span></div>
+  </div>
+
+  <div class="cell">
+    <div class="hd"><h2>Market Scan</h2><span class="sub" id="bAt">—</span></div>
+    <canvas id="radar" width="640" height="640"></canvas>
+    <div class="legend">
+      <div><i style="background:var(--faint)"></i>screened universe — tradeable now</div>
+      <div><i style="background:var(--indigo)"></i>scout board — at least one lens fired</div>
+      <div><i style="background:var(--phos);box-shadow:0 0 6px var(--phos)"></i>watched — an agent is assigned</div>
+      <div><i style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></i>armed — closing on a level</div>
+    </div>
+  </div>
+
+  <div class="cell">
+    <div class="hd"><h2>Agents · sorted by proximity to trigger</h2>
+      <span class="sub" id="podSub">—</span></div>
+    <div class="body"><div class="pods" id="pods"></div></div>
+  </div>
+
+  <div class="cell">
+    <div class="hd"><h2>Escalation Stream</h2><span class="sub" id="evSub">—</span></div>
+    <div class="body" id="stream"></div>
+  </div>
+
+  <div class="pipe" id="pipe"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let prevEsc=new Set(), firstPaint=true, S=null;
+
+// stable pseudo-random angle per symbol so a stock keeps its place on the radar
+function ang(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffffffff;
+  return (Math.abs(h)%3600)/3600*Math.PI*2;}
+
+const cv=$('radar'), cx=cv.getContext('2d');
+let sweep=0;
+function drawRadar(){
+  const W=cv.width,H=cv.height,C=W/2,R=W/2-18;
+  cx.clearRect(0,0,W,H);
+  // rings
+  cx.strokeStyle='#132638';cx.lineWidth=1;
+  for(let i=1;i<=4;i++){cx.beginPath();cx.arc(C,C,R*i/4,0,7);cx.stroke();}
+  cx.beginPath();cx.moveTo(C,C-R);cx.lineTo(C,C+R);cx.moveTo(C-R,C);cx.lineTo(C+R,C);cx.stroke();
+
+  // sweep wedge
+  const g=cx.createRadialGradient(C,C,0,C,C,R);
+  g.addColorStop(0,'rgba(63,240,216,0.16)');g.addColorStop(1,'rgba(63,240,216,0)');
+  cx.beginPath();cx.moveTo(C,C);cx.arc(C,C,R,sweep-0.42,sweep);cx.closePath();
+  cx.fillStyle=g;cx.fill();
+  cx.strokeStyle='rgba(63,240,216,.55)';cx.beginPath();cx.moveTo(C,C);
+  cx.lineTo(C+Math.cos(sweep)*R,C+Math.sin(sweep)*R);cx.stroke();
+
+  if(S){
+    const watched=new Set(S.agents.map(a=>a.symbol));
+    const armed=new Set(S.agents.filter(a=>a.armed).map(a=>a.symbol));
+    const board=S.board||[];
+    // board names: radius by score (stronger = closer to centre)
+    board.forEach(b=>{
+      const a=ang(b.symbol), r=R*(1.02-Math.min(b.score,1)*0.72);
+      const x=C+Math.cos(a)*r, y=C+Math.sin(a)*r;
+      const near=Math.abs(((sweep-a)%(Math.PI*2)+Math.PI*2)%(Math.PI*2));
+      const glow=near<0.45?1:0.42;
+      cx.beginPath();cx.arc(x,y,b.agree>=3?3.4:2.4,0,7);
+      cx.fillStyle=`rgba(108,99,255,${glow})`;cx.fill();
+    });
+    // watched + armed on top
+    S.agents.forEach(a=>{
+      const an=ang(a.symbol), sc=a.score||0.6, r=R*(1.02-Math.min(sc,1)*0.72);
+      const x=C+Math.cos(an)*r, y=C+Math.sin(an)*r;
+      const hot=armed.has(a.symbol);
+      cx.beginPath();cx.arc(x,y,hot?5:3.8,0,7);
+      cx.fillStyle=hot?'#ffb020':'#3ff0d8';cx.fill();
+      cx.shadowColor=hot?'#ffb020':'#3ff0d8';cx.shadowBlur=hot?16:8;cx.fill();cx.shadowBlur=0;
+      cx.beginPath();cx.arc(x,y,hot?9:7,0,7);
+      cx.strokeStyle=hot?'rgba(255,176,32,.55)':'rgba(63,240,216,.3)';cx.stroke();
+      cx.fillStyle=hot?'#ffb020':'#5f7f96';cx.font='9px ui-monospace,monospace';
+      cx.fillText(a.symbol,x+11,y+3);
+    });
+  }
+  sweep=(sweep+0.016)%(Math.PI*2);
+  requestAnimationFrame(drawRadar);
+}
+drawRadar();
+
+function pod(a){
+  const armed=a.armed?' armed':'';
+  const d=a.dist_bps==null?'—':a.dist_bps.toFixed(1)+'bps';
+  const w=a.dist_bps==null?0:Math.max(0,Math.min(100,100-(a.dist_bps/60*100)));
+  const chg=a.chg_pct==null?'':(a.chg_pct>=0?'+':'')+a.chg_pct+'%';
+  return `<div class="pod${armed}" data-sym="${a.symbol}">
+    ${a.escalations?`<span class="badge">${a.escalations}</span>`:''}
+    <div class="sym"><span>${a.symbol}</span>
+      <span class="chg ${a.chg_pct>=0?'up':'dn'}">${chg}</span></div>
+    <div class="px">${a.ltp?a.ltp.toLocaleString('en-IN',{minimumFractionDigits:2}):'—'}</div>
+    <div class="lv"><span>${a.nearest||'—'}</span><span>${d}</span></div>
+    <div class="prox"><i style="width:${w}%"></i></div>
+    <div class="meta"><span class="scouts">${a.agree||0} scouts · ${(a.score||0).toFixed(2)}</span>
+      <span>${a.since||''}</span></div>
+  </div>`;
+}
+
+function render(s){
+  S=s;
+  const ss=s.session||{};
+  const dead=!ss.running;
+  $('live').className='live'+(dead?' dead':'');
+  $('liveTxt').textContent=ss.blind_open?'DATA GAP':(dead?'FLOOR DOWN':'STREAMING');
+  $('sTicks').textContent=(ss.ticks||0).toLocaleString();
+  $('sRate').textContent=ss.tick_rate!=null?ss.tick_rate+'/s':'—';
+  $('sEsc').textContent=ss.escalations??'—';
+  $('sSwap').textContent=ss.swaps??'—';
+  $('sGap').textContent=ss.gaps??'—';
+  $('sGap').className='v'+((ss.gaps>0)?' bad':'');
+  $('sNow').textContent=s.now||'';
+
+  const ag=s.agents||[];
+  const armed=ag.filter(a=>a.armed).length;
+  $('sArm').textContent=armed+'/'+ag.length;
+  $('podSub').textContent=ag.length+' assigned · '+armed+' within 25bps';
+  $('pods').innerHTML=ag.map(pod).join('');
+
+  // flash the pod of anything that just escalated
+  const ev=s.stream||[];
+  const ids=new Set(ev.map(e=>e.at+e.symbol+e.trigger));
+  if(!firstPaint){
+    ev.forEach(e=>{const k=e.at+e.symbol+e.trigger;
+      if(!prevEsc.has(k)){
+        const el=document.querySelector(`.pod[data-sym="${e.symbol}"]`);
+        if(el){el.classList.remove('fired');void el.offsetWidth;el.classList.add('fired');}
+      }});
+  }
+  prevEsc=ids; firstPaint=false;
+
+  $('stream').innerHTML=ev.slice().reverse().map(e=>{
+    const base=(e.trigger||'').split(':')[0];
+    return `<div class="ev"><span class="t">${e.at}</span><span>
+      <span class="s tg-${base}">${e.symbol}</span>
+      <span class="tg-${base}"> ${base}</span>
+      <div class="d">${e.detail||''}</div></span></div>`;}).join('');
+  $('evSub').textContent=ev.length+' shown';
+  $('bAt').textContent=s.board_at?('swept '+s.board_at):'—';
+
+  const f=s.funnel||{};
+  const stages=[['universe',f.universe,'liquid equities'],
+    ['screened',f.screened,'tradeable now'],['board',f.board,'a lens fired'],
+    ['agents',f.agents,'watched live'],['positions',f.positions,'held']];
+  $('pipe').innerHTML=stages.map((st,i)=>
+    `<div class="stage"><div class="n">${st[1]??'—'}</div><div class="l">${st[0]}</div>
+     <div class="c">${st[2]}</div></div>`+
+    (i<stages.length-1?'<div class="arrow"></div>':'')).join('');
+}
+
+async function poll(){
+  try{
+    const r=await fetch('/api/floor/live',{cache:'no-store'});
+    const j=await r.json();
+    if(j.error){$('stream').innerHTML=`<div class="err">${j.error}</div>`;}
+    render(j);
+  }catch(e){
+    $('live').className='live dead';$('liveTxt').textContent='CONSOLE OFFLINE';
+  }
+  setTimeout(poll,2000);
+}
+poll();
+</script>
+</body>
+</html>

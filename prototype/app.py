@@ -117,6 +117,35 @@ def lab_view():
     """A/B testing lab — challenger-vs-live experiments in one place."""
     return render_template("lab.html")
 
+
+@app.route("/floor")
+def floor_view():
+    """Live console for the agent floor — what each agent is watching, right now."""
+    return render_template("floor.html")
+
+
+@app.route("/api/floor/live")
+def api_floor_live():
+    """Live state for the console.
+
+    Read-only by design: the floor is a separate process holding real session state,
+    so this reconstructs from what it already writes rather than asking it for
+    anything. A bug in here cannot take the floor down mid-session.
+    """
+    from flask import request as _rq
+    try:
+        from prototype import floor_live
+    except Exception:
+        import floor_live                      # when run from inside prototype/
+    day = _rq.args.get("day")
+    want_board = _rq.args.get("board", "1") != "0"
+    try:
+        return jsonify(floor_live.snapshot(day, with_board=want_board))
+    except Exception as e:
+        # never 500 into the console's face — it polls once a second
+        return jsonify({"error": str(e)[:200], "agents": [], "stream": [],
+                        "session": {"running": False}, "funnel": {}}), 200
+
 @app.route("/decisions")
 def decisions_view():
     """Decision dashboard — root-cause verdict, engine roster, and the RC roadmap (TP-RCA)."""

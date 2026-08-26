@@ -107,6 +107,19 @@ SWEEP_LOOKBACK = 45         # ticks; was 30
 AUTO_ENTRY = True
 ENTRY_TRIGGER = "SWEEP_RECLAIM"
 ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
+
+# Only levels where ORDERS ACTUALLY REST can be swept. Found by reading the charts
+# behind two live sweep-reclaims on 2026-08-26 (UDS, QUESS): both fired on VWAP, and
+# in both cases price had been oscillating across VWAP all session. VWAP is a MEAN —
+# price crosses it by construction — so "pierced then reclaimed" there describes
+# noise in a range, not a stop-run. On QUESS the mechanical rule would have gone LONG
+# into a textbook downtrend (lower highs 374, 372, 370, 368).
+#
+# VWAP was 33% of Tuesday's sweep-reclaims and 42% of Wednesday's, so this removes
+# the largest single slice of the entry candidates — the slice a chart read says is
+# not tradeable. Escalations on VWAP are still RECORDED; they just cannot open a
+# position.
+ENTRY_LEVELS = {"PDH", "PDL", "DAY_HIGH", "DAY_LOW", "ROUND"}
 MAX_CONCURRENT = 5
 ENTRY_WINDOW = ("09:30", "14:30")   # not the open (noise), not near the close
 FORCE_EXIT_AT = "15:15"
@@ -655,6 +668,8 @@ class Floor:
             why_not = f"outside {ENTRY_WINDOW[0]}-{ENTRY_WINDOW[1]}"
         elif self.open_count() >= MAX_CONCURRENT:
             why_not = f"{MAX_CONCURRENT} positions already open"
+        elif ev.get("level_name") not in ENTRY_LEVELS:
+            why_not = f"{ev.get('level_name')} is a mean, not a liquidity pool"
         elif not ev.get("swept_low") or not ev.get("ltp"):
             why_not = "no swept low to anchor the stop"
         if why_not:

@@ -497,6 +497,7 @@ class Floor:
                       f"{len(self.escalation_log)} escalations | "
                       f"{len(self.swap_log)} reassignments | {held} in position | "
                       f"{len(self.gaps)} data gaps", flush=True)
+                self.guard_stops()
                 closed = [p for p in self.positions if p["status"] == "CLOSED"]
                 if self.positions:
                     print(f"     paper: {len(closed)} closed, {held} open, "
@@ -747,6 +748,44 @@ class Floor:
                      "target_r": TARGET_R, "notional": NOTIONAL,
                      "window": list(ENTRY_WINDOW)},
         }, indent=1))
+
+    def guard_stops(self):
+        """Check every open position against a REST quote, not just against ticks.
+
+        The tick path is the primary exit: stop and target are evaluated on arrival,
+        in microseconds. But it is only as alive as the socket. On 2026-08-25 the
+        WebSocket died for 53% of the session — with a position open that would mean
+        no stop check at all until the 15:15 square-off, and an exit price invented
+        hours after the level broke.
+
+        So the heartbeat carries a slower, independent backstop: one REST quote per
+        30s while anything is open. Coarser than ticks and that is fine — its job is
+        not to be fast, it is to exist when the fast path does not.
+        """
+        held = [a for a in self.agents.values() if a.position]
+        if not held:
+            return
+        try:
+            from prototype.v4 import kite_data as kd
+            q = kd.client().quote([f"NSE:{a.symbol}" for a in held])
+        except Exception as e:
+            print(f"  stop-guard quote failed: {str(e)[:60]}", flush=True)
+            return
+        for a in held:
+            d = q.get(f"NSE:{a.symbol}") or {}
+            ltp = float(d.get("last_price") or 0)
+            if not ltp:
+                continue
+            p = a.position
+            a.mark(ltp)
+            if ltp <= p["stop"]:
+                print(f"  !! stop-guard caught {a.symbol} at {ltp} "
+                      f"(stop {p['stop']}) — tick path did not fire", flush=True)
+                self.close_position(a, ltp, "STOP_GUARD")
+            elif ltp >= p["target"]:
+                print(f"  !! stop-guard caught {a.symbol} at {ltp} "
+                      f"(target {p['target']}) — tick path did not fire", flush=True)
+                self.close_position(a, ltp, "TARGET_GUARD")
 
     def force_exit_all(self, reason="TIME_STOP"):
         for a in list(self.agents.values()):

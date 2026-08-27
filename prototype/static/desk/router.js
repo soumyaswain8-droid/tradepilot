@@ -18,6 +18,15 @@
                                                  { id: "floor", label: "Live Floor" }] }
   ];
 
+  /* External destinations. Deliberately NOT in SECTIONS: TPRoute matches by
+     section id, so an entry here would let "#classic" resolve to a section
+     with no registered view and render a blank tab. These are plain links,
+     never routed. */
+  var EXTERNAL = [
+    { label: "Decisions", href: "/decisions" },
+    { label: "Classic",   href: "/classic" }
+  ];
+
   var views = {};     // viewId -> hooks
   var mounted = {};   // viewId -> true
   var cur = { section: null, sub: null, rest: [] };
@@ -58,6 +67,16 @@
       a.textContent = s.label;
       a.href = "#" + s.id;
       a.addEventListener("click", function (e) { e.preventDefault(); go(s.id, null, []); });
+      nav.appendChild(a);
+    });
+    EXTERNAL.forEach(function (x) {
+      var a = document.createElement("a");
+      a.href = x.href;
+      a.appendChild(document.createTextNode(x.label + " "));
+      var ext = document.createElement("span");
+      ext.className = "ext";
+      ext.textContent = "↗";
+      a.appendChild(ext);
       nav.appendChild(a);
     });
   }

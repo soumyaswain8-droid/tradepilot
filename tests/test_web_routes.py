@@ -89,3 +89,13 @@ def test_terminal_loads_router_modules(client):
                 b"/static/desk/router.js",
                 b"/static/desk.js"):
         assert src in body
+
+
+def test_router_keeps_external_links(client):
+    """The nav is registry-rendered, so external destinations must be declared
+    in the module. /classic is the client-facing surface and must stay
+    reachable from the terminal until it is absorbed."""
+    r = client.get("/static/desk/router.js")
+    assert r.status_code == 200
+    assert b'href: "/decisions"' in r.data
+    assert b'href: "/classic"' in r.data

@@ -433,10 +433,16 @@ class ScoutTeam:
             return {}
 
     def kite(self):
-        if self._k is None:
-            from prototype.v4 import kite_data as kd
-            self._k = kd.client()
-        return self._k
+        """Always ask the central cache; never hold our own reference.
+
+        The floor creates ONE ScoutTeam and reuses it for the whole session, so an
+        instance-level client survives a token refresh and goes dead for the day —
+        the same failure that took the console out on 2026-08-27, one layer up.
+        kd.client() is itself cached and keyed on the token, so this is cheap and
+        self-healing.
+        """
+        from prototype.v4 import kite_data as kd
+        return kd.client()
 
     def sweep(self):
         """One quote pass over the whole liquid universe. Two API calls, ~0.3s."""

@@ -26,6 +26,11 @@ fi
 
 echo "=== $(date '+%Y-%m-%d %H:%M:%S') lane=$1 capital=$LANE_CAPITAL mode=$LANE_MODE ===" >> "$LOG"
 case "$1" in
+  tokencheck)
+             # Runs before the first lane each morning. The dead-token bug of
+             # 2026-08-27 was invisible for 90 minutes; this makes it loud.
+             $PY scripts/test-token-refresh.py >> "$LOG" 2>&1 || \
+               echo "$(date '+%H:%M:%S') TOKEN REFRESH TEST FAILED" >> "$LOG" ;;
   real)      $PY scripts/real1k.py --card       >> "$LOG" 2>&1 ;;
   opt)       $PY scripts/opt1k.py  --card       >> "$LOG" 2>&1 ;;
   sarathi)   $PY scripts/sarathi-lane.py --watch --limit 8 >> "$LOG" 2>&1 ;;

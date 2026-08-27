@@ -212,8 +212,13 @@ def board():
         _CACHE["board"], _CACHE["board_at"] = b, now
         return b
     except Exception as e:
-        return _CACHE["board"] or {"rows": [], "universe": 0, "screened": 0,
-                                   "error": str(e)[:80]}
+        # same rule as quotes: a board old enough to be misleading is worse than an
+        # empty one, because an empty board reads as "nothing qualifies" while a
+        # stale board reads as live conviction about prices that have moved on.
+        if now - _CACHE["board_at"] > 180:
+            _CACHE["board"] = None
+        b = _CACHE["board"] or {"rows": [], "universe": 0, "screened": 0}
+        return {**b, "error": str(e)[:80]}
 
 
 def positions(day=None):

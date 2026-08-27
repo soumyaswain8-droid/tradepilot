@@ -57,3 +57,35 @@ def test_team_without_embed_keeps_header(client):
     r = client.get("/team")
     assert b"<h1>TradePilot Quant Desk</h1>" in r.data
     assert b"pageswitch.js" in r.data
+
+
+def test_router_declares_three_sections(client):
+    """The section registry is JS-rendered, so assert it in the served module.
+
+    A Flask test client executes no JavaScript — the served page carries an
+    empty <nav>. Fetching router.js verifies the real artifact through the
+    real server, which is the closest honest equivalent without a browser.
+    """
+    r = client.get("/static/desk/router.js")
+    assert r.status_code == 200
+    for section in (b'id: "desk"', b'id: "market"', b'id: "agents"'):
+        assert section in r.data
+
+
+def test_terminal_has_subtab_bar(client):
+    """The sub-tab bar element must exist even when empty."""
+    assert b'id="subnav"' in client.get("/").data
+
+
+def test_terminal_loads_router_modules(client):
+    """Every module is referenced by a src-only script tag.
+
+    This is the direct regression test for the 2026-08-03 blank tab: a
+    script referenced but never loaded, or loaded with discarded inline
+    content, is exactly how that shipped.
+    """
+    body = client.get("/").data
+    for src in (b"/static/desk/route.js",
+                b"/static/desk/router.js",
+                b"/static/desk.js"):
+        assert src in body

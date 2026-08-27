@@ -8,6 +8,8 @@
 <!-- JS is a separate file BY RULE: on 2026-08-03 a tab shipped blank because its
      logic was appended inside a <script src> tag, whose inline content the
      browser silently discards. -->
+<script src="/static/desk/route.js" defer></script>
+<script src="/static/desk/router.js" defer></script>
 <script src="/static/desk.js" defer></script>
 </head>
 <body>
@@ -44,12 +46,10 @@
   </div>
 </header>
 
-<nav class="nav">
-  <a data-tab="desk" class="on">Desk</a>
-  <a data-tab="market">Market</a>
-  <a href="/decisions">Decisions <span class="ext">↗</span></a>
-  <a href="/classic">Classic <span class="ext">↗</span></a>
-</nav>
+<!-- Nav and sub-tabs are rendered from TPRouter.SECTIONS. Do not hand-edit
+     links here: a link the registry does not know about routes to nothing. -->
+<nav class="nav"></nav>
+<div class="subnav" id="subnav" style="display:none"></div>
 
 <main class="main">
 
@@ -117,6 +117,14 @@
     <div class="card" style="padding:0 6px">
       <div id="mktBody"><div class="empty skel" style="height:300px;margin:10px"></div></div>
     </div>
+  </section>
+
+  <!-- ═══ AGENT FLOOR ═══ -->
+  <section class="view pane" id="view-agents-quant">
+    <iframe class="paneframe" id="frameQuant" title="Quant Desk" src=""></iframe>
+  </section>
+  <section class="view pane" id="view-agents-floor">
+    <iframe class="paneframe" id="frameFloor" title="Live Floor" src=""></iframe>
   </section>
 
 </main>

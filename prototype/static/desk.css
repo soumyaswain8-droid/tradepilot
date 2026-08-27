@@ -250,3 +250,26 @@ body {
 .rstats { display: flex; gap: 18px; margin-bottom: 8px; }
 .rstats div { font-size: 11px; color: var(--dim); display: flex; flex-direction: column; }
 .rstats b { font-size: 13px; color: var(--ink); margin-top: 1px; }
+
+/* ── sub-tabs ───────────────────────────────────────────────────────────── */
+.subnav {
+  display: flex; gap: 2px; padding: 0 16px;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.subnav a {
+  padding: 7px 12px 6px; font-size: 11px; font-weight: 600;
+  color: var(--dim); text-decoration: none; letter-spacing: .3px;
+  border-bottom: 2px solid transparent; cursor: pointer;
+}
+.subnav a:hover { color: var(--ink); }
+.subnav a.on { color: var(--ink); border-bottom-color: var(--acc); }
+
+/* ── iframe panes ───────────────────────────────────────────────────────── */
+/* The framed consoles set their own body height, so the frame must be given
+   an explicit one -- a percentage height against an auto-height parent
+   collapses to zero and the pane renders as a 0px sliver. */
+.view.pane.on { display: block; }
+.paneframe {
+  display: block; width: 100%; height: calc(100vh - 132px);
+  min-height: 520px; border: 0; background: var(--bg);
+}

@@ -73,3 +73,6 @@ docs/research/orderbook/
 # Backtest bar cache — regenerable from yfinance in minutes, 33MB+ of parquet.
 # Same reasoning as docs/research/orderbook: derived data, not source.
 prototype/data/waterfall/
+
+# Isolated worktrees for plan execution (local scratch, never committed)
+.worktrees/

@@ -78,6 +78,7 @@
 </style>
 </head>
 <body>
+{% if not embed %}
 <header>
   <h1>TradePilot Quant Desk</h1>
   <div class="meta">
@@ -88,6 +89,7 @@
     <a class="nav-link" href="/live">Live Engines</a>
   </div>
 </header>
+{% endif %}
 <main>
   <section>
     <h2>KPI · Today</h2>
@@ -230,7 +232,8 @@ async function tick() {
   try {
     const r = await fetch("/api/team/status");
     const j = await r.json();
-    document.getElementById("ts").textContent = fmt(j.ts);
+    var tsEl = document.getElementById("ts");
+    if (tsEl) tsEl.textContent = fmt(j.ts);
     const dueList = j.due || [];
     const dueSet = new Set(dueList.map(d => d.agent));
     renderKpi(j.kpi || {});
@@ -246,6 +249,6 @@ async function tick() {
 tick();
 setInterval(tick, POLL_MS);
 </script>
-<script src="/static/pageswitch.js"></script>
+{% if not embed %}<script src="/static/pageswitch.js"></script>{% endif %}
 </body>
 </html>

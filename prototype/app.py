@@ -120,8 +120,13 @@ def lab_view():
 
 @app.route("/floor")
 def floor_view():
-    """Live console for the agent floor — what each agent is watching, right now."""
-    return render_template("floor.html")
+    """Live console for the agent floor -- what each agent is watching, right now.
+
+    ?embed=1 strips the brand span so the console can be framed inside the
+    terminal, which supplies its own chrome. The stats strip stays: it is the
+    point of the screen.
+    """
+    return render_template("floor.html", embed=request.args.get("embed") == "1")
 
 
 @app.route("/api/floor/live")
@@ -3093,8 +3098,12 @@ def _team_read_jsonl_tail(directory: Path, n: int = 60,
 
 @app.route("/team")
 def team_dashboard():
-    """Permanent agent team dashboard."""
-    return render_template("team.html")
+    """Permanent agent team dashboard.
+
+    ?embed=1 strips the header and skips pageswitch.js, which must never
+    render inside a terminal pane.
+    """
+    return render_template("team.html", embed=request.args.get("embed") == "1")
 
 
 @app.route("/team/sarathi")

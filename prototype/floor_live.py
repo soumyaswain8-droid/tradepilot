@@ -189,6 +189,12 @@ def _quotes(symbols):
         return q
     except Exception as e:
         _CACHE["quote_err"] = str(e)[:120]
+        # DO NOT serve a stale quote as if it were live. On 2026-08-27 a dead token
+        # made every quote fail, and returning the last good cache painted two
+        # yesterday prices next to eighteen blanks — which reads as a quiet market
+        # rather than a broken credential. A blank is honest; a stale number is not.
+        if now - _CACHE["quotes_at"] > 30:
+            _CACHE["quotes"] = None
         return _CACHE["quotes"] or {}
 
 

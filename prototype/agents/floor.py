@@ -104,7 +104,15 @@ SWEEP_LOOKBACK = 45         # ticks; was 30
 # 45.6% up, all inside the 0.106% toll). This rule is not believed to be profitable.
 # It exists so that acting on an escalation produces evidence instead of a guess —
 # which is the only thing 1,563 fired-and-forgotten escalations could never give us.
-AUTO_ENTRY = True
+# DISABLED 2026-08-27. Sweep-reclaim is now falsified in BOTH directions across 248
+# samples over two days: LONG -0.104% to -0.133%, SHORT -0.079% to -0.108%, no
+# t-statistic near significance. An excited +0.283% SHORT result came from the 33
+# trades that had passed the entry filters -- a selected subset, not the population.
+# Further trades buy no new information at 0.106% each.
+# The floor keeps observing, escalating and DECLINING, which is the part that works:
+# its 32 declines on 26 Aug averaged -0.234% with only 14 of 32 rising.
+# One line to reverse.
+AUTO_ENTRY = False
 ENTRY_TRIGGER = "SWEEP_RECLAIM"
 ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
 

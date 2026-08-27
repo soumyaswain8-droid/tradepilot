@@ -53,6 +53,7 @@ QUOTE_BATCH = 200
 _lock = threading.RLock()
 _kite = None
 _kite_day = None            # the date the client was built for
+_kite_tok = None
 _token_map: dict = {}       # "RELIANCE" -> instrument_token
 _token_map_day = None
 
@@ -84,16 +85,27 @@ def _creds() -> dict:
 
 
 def client():
-    """Cached KiteConnect, rebuilt each calendar day.
+    """Cached KiteConnect, rebuilt whenever the TOKEN CHANGES — not merely daily.
 
-    The daily rebuild matters: tokens expire at 06:00, so a client cached across
-    midnight holds a credential that is already dead. Rebuilding on date change
-    means an expired token surfaces as a clean error rather than a stale object.
+    A daily rebuild is not enough, and this cost a live session to learn. Measured
+    2026-08-27: Flask served a request at 08:40, before the morning login. client()
+    saw a new calendar day, rebuilt with the PREVIOUS day's dead token, and cached
+    that for the rest of the day. The 09:00 login wrote a fresh token to .env and
+    nothing noticed. Every quote failed with "Incorrect api_key or access_token"
+    until the process was restarted.
+
+    Worse, the failure was invisible: callers fall back to their last good cache, so
+    the console showed two stale prices from yesterday next to eighteen blanks —
+    which reads as a quiet market rather than a dead credential.
+
+    Keying the cache on the token itself means a refreshed .env is picked up on the
+    next call by every long-running process, with no restart.
     """
-    global _kite, _kite_day
+    global _kite, _kite_day, _kite_tok
     today = datetime.now().date()
     with _lock:
-        if _kite is not None and _kite_day == today:
+        cur = _creds().get("KITE_ACCESS_TOKEN")
+        if _kite is not None and _kite_day == today and _kite_tok == cur:
             return _kite
         c = _creds()
         if not c.get("KITE_API_KEY") or not c.get("KITE_ACCESS_TOKEN"):
@@ -104,7 +116,7 @@ def client():
             raise KiteUnavailable("kiteconnect not installed")
         k = KiteConnect(api_key=c["KITE_API_KEY"])
         k.set_access_token(c["KITE_ACCESS_TOKEN"])
-        _kite, _kite_day = k, today
+        _kite, _kite_day, _kite_tok = k, today, c["KITE_ACCESS_TOKEN"]
         return k
 
 

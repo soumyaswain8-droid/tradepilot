@@ -23,7 +23,11 @@ LOG="logs/agent-floor-$DAY.log"
 WLOG="logs/floor-watchdog-$DAY.log"
 STAMP="logs/.floor-restarts-$DAY"
 STALE_S=210            # 3.5 min — the floor speaks every 30s
-MAX_RESTARTS=2
+# Raised from 2 on 2026-08-27: both of that day's restarts were legitimate and both
+# succeeded, so the cap became the binding constraint rather than a runaway guard.
+# It is safer to raise now because the script VERIFIES each relaunch took — a restart
+# loop would be visible in the log rather than silent.
+MAX_RESTARTS=4
 PY=/Users/soumyaswain/anaconda3/bin/python3
 mkdir -p logs
 

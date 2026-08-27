@@ -104,15 +104,36 @@ SWEEP_LOOKBACK = 45         # ticks; was 30
 # 45.6% up, all inside the 0.106% toll). This rule is not believed to be profitable.
 # It exists so that acting on an escalation produces evidence instead of a guess —
 # which is the only thing 1,563 fired-and-forgotten escalations could never give us.
-# DISABLED 2026-08-27. Sweep-reclaim is now falsified in BOTH directions across 248
-# samples over two days: LONG -0.104% to -0.133%, SHORT -0.079% to -0.108%, no
-# t-statistic near significance. An excited +0.283% SHORT result came from the 33
-# trades that had passed the entry filters -- a selected subset, not the population.
-# Further trades buy no new information at 0.106% each.
-# The floor keeps observing, escalating and DECLINING, which is the part that works:
-# its 32 declines on 26 Aug averaged -0.234% with only 14 of 32 rising.
-# One line to reverse.
-AUTO_ENTRY = False
+# ── ENTRY MODE ───────────────────────────────────────────────────────────────
+# Three states, because on/off was too coarse and cost us the ability to learn.
+#
+#   "live"    open real paper positions, pay the 0.106% toll, book the P&L
+#   "shadow"  record exactly what WOULD have been opened -- entry, stop, target,
+#             trigger, confluence -- and settle it at EOD against real minute bars.
+#             No capital, no toll, no distortion of the floor's behaviour.
+#   "off"     record nothing
+#
+# WHY SHADOW IS THE DEFAULT NOW. Sweep-reclaim was falsified in both directions on
+# 248 samples (LONG -0.104% to -0.133%, SHORT -0.079% to -0.108%, no t-statistic near
+# significance), so trading it live buys nothing at 0.106% a go. But switching it OFF
+# outright also stopped the evidence, and the next candidate rule would have started
+# from zero all over again.
+#
+# Shadow keeps the sample growing for free. A rule earns "live" by clearing a
+# PRE-REGISTERED bar in shadow -- stated before the data arrives, so it cannot be
+# fitted afterwards. That is the discipline that killed six ideas already, and the
+# only reason to trust the seventh.
+ENTRY_MODE = "shadow"
+SHADOW_FILE = KNOW / "shadow"
+
+# The bar a rule must clear in shadow before it may go live. Written down FIRST.
+SHADOW_GATE = {
+    "min_trades": 150,        # a fortnight of signal, not one lucky session
+    "min_days": 8,            # spread across sessions, so one regime cannot carry it
+    "min_net_pct": 0.05,      # per trade, AFTER the 0.106% toll
+    "min_t": 2.0,             # unlikely to be chance
+}
+AUTO_ENTRY = ENTRY_MODE == "live"
 ENTRY_TRIGGER = "SWEEP_RECLAIM"
 ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
 
@@ -318,6 +339,7 @@ class Floor:
         self.gap_open = None
         self.positions = []
         self.declined = []
+        self.shadow = []
         self.sandbox = False       # set True in tests; blocks ledger writes
         KNOW.mkdir(parents=True, exist_ok=True)
         ESCALATIONS.mkdir(parents=True, exist_ok=True)
@@ -659,6 +681,27 @@ class Floor:
     def open_count(self):
         return sum(1 for a in self.agents.values() if a.position)
 
+    def record_shadow(self, agent, ev, entry, stop, target, qty):
+        """Write down what we WOULD have traded, and settle it later.
+
+        Deliberately does not touch agent.position. A shadow trade must not change
+        what the floor does -- it cannot block a reassignment or occupy a slot -- or
+        the hypothetical starts distorting the thing it is measuring. Outcome is
+        computed at EOD from real minute bars, which is both exact and free.
+        """
+        SHADOW_FILE.mkdir(parents=True, exist_ok=True)
+        f = SHADOW_FILE / f"{datetime.now():%Y-%m-%d}.jsonl"
+        rec = {"at": ev["at"], "symbol": agent.symbol, "side": "LONG",
+               "entry": entry, "stop": stop, "target": target, "qty": qty,
+               "risk_pct": round((entry - stop) / entry * 100, 3),
+               "r_target": TARGET_R, "trigger": ev["trigger"],
+               "agree": ev.get("agree"), "score": ev.get("score"),
+               "level_name": ev.get("level_name"), "rule": ENTRY_TRIGGER}
+        with open(f, "a") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        self.shadow.append(rec)
+        return rec
+
     def maybe_enter(self, agent, ev):
         """Take a paper position, with no human in the loop.
 
@@ -666,7 +709,7 @@ class Floor:
         they fire — a rule that only logs its entries teaches you nothing about the
         trades it declined.
         """
-        if not AUTO_ENTRY or agent.position:
+        if ENTRY_MODE == "off" or agent.position:
             return None
         if ev["trigger"].split(":")[0] != ENTRY_TRIGGER:
             return None
@@ -696,6 +739,12 @@ class Floor:
             return None
         target = round(entry + TARGET_R * risk, 2)
         qty = max(1, int(NOTIONAL / entry))
+        if ENTRY_MODE == "shadow":
+            r = self.record_shadow(agent, ev, entry, round(stop, 2), target, qty)
+            print(f"  ~ {ev['at']} SHADOW {agent.symbol} @ {entry} "
+                  f"stop {r['stop']} target {target} ({ev.get('agree')} scouts)",
+                  flush=True)
+            return None
         pos = agent.open_position(entry, round(stop, 2), target, qty,
                                   ev.get("detail", "")[:70])
         rec = {"symbol": agent.symbol, "side": "LONG", "entry": entry,

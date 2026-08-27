@@ -34,8 +34,9 @@ case "$1" in
   real)      $PY scripts/real1k.py --card       >> "$LOG" 2>&1 ;;
   opt)       $PY scripts/opt1k.py  --card       >> "$LOG" 2>&1 ;;
   sarathi)   $PY scripts/sarathi-lane.py --watch --limit 8 >> "$LOG" 2>&1 ;;
+  shadow)    $PY scripts/shadow-settle.py       >> "$LOG" 2>&1 ;;
   squareoff) $PY scripts/real1k.py --status     >> "$LOG" 2>&1
              $PY scripts/opt1k.py  --status     >> "$LOG" 2>&1 ;;
-  *) echo "usage: run-lane.sh real|opt|sarathi|squareoff"; exit 2 ;;
+  *) echo "usage: run-lane.sh tokencheck|real|opt|sarathi|shadow|squareoff"; exit 2 ;;
 esac
 tail -20 "$LOG"

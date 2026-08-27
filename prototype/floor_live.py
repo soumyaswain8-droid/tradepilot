@@ -257,6 +257,20 @@ def snapshot(day=None, with_board=True):
         rate = max(0.0, (beats[-1]["ticks"] - beats[-2]["ticks"]) / dt_)
     last = beats[-1] if beats else {}
 
+    # THE DAY, NOT THE RUN. Every counter in the floor's heartbeat resets to zero on
+    # a restart, so after the 15:00 relaunch the console read "6,185 ticks, 64
+    # escalations" for a day that had actually seen 220,203 and 1,734. A restart is
+    # an implementation detail; the day is what is being measured. Ticks are summed
+    # across runs by taking each run's peak, and escalations come from the journal,
+    # which is append-only and therefore already whole-day.
+    day_ticks = peak = 0
+    for b in beats:
+        if b["ticks"] < peak:          # counter went backwards => a new run began
+            day_ticks += peak
+            peak = 0
+        peak = max(peak, b["ticks"])
+    day_ticks += peak
+
     syms = list(st["roster"])
     q = _quotes(syms) if syms else {}
     agents = []
@@ -298,10 +312,12 @@ def snapshot(day=None, with_board=True):
         "now": datetime.now().strftime("%H:%M:%S"),
         "session": {
             "running": bool(beats) and not open_gap,
-            "ticks": last.get("ticks", 0),
+            "ticks": day_ticks,
+            "ticks_this_run": last.get("ticks", 0),
+            "runs": max(1, st["restarts"]),
             "tick_rate": round(rate, 1) if rate is not None else None,
-            "escalations": last.get("esc", len(ev)),
-            "swaps": last.get("swaps", len(st["swaps"])),
+            "escalations": len(stream(day, limit=10**9)),   # journal = whole day
+            "swaps": len(st["swaps"]),                       # replayed across runs
             "positions": last.get("pos", 0),
             "gaps": len(st["gaps"]),
             "blind_open": open_gap,

@@ -123,7 +123,20 @@ SWEEP_LOOKBACK = 45         # ticks; was 30
 # PRE-REGISTERED bar in shadow -- stated before the data arrives, so it cannot be
 # fitted afterwards. That is the discipline that killed six ideas already, and the
 # only reason to trust the seventh.
-ENTRY_MODE = "shadow"
+# 2026-08-28, Soumya's call: switched shadow -> live on the PAPER book so the floor
+# actually holds names during the session and the console stops reading empty.
+#
+# What this sets aside, stated plainly so nobody later mistakes it for a passed gate:
+# SHADOW_GATE below was NOT met — 18 trades across 1 session against a bar of 150
+# across 8. The gate's purpose is to keep unproven rules away from REAL money, and
+# this book is simulated at NOTIONAL, so nothing is at risk but the evidence. Two
+# consequences worth knowing when this sample is analysed:
+#   - live is capped by MAX_CONCURRENT, so it takes FEWER trades than shadow recorded
+#     (18 shadow entries today would not all have been openable)
+#   - the live sample is therefore smaller but more honest — it pays the concurrency
+#     and exit-management constraints a real book faces
+# To revert: set this back to "shadow". Nothing else needs changing.
+ENTRY_MODE = "live"
 SHADOW_FILE = KNOW / "shadow"
 
 # The bar a rule must clear in shadow before it may go live. Written down FIRST.
@@ -134,7 +147,14 @@ SHADOW_GATE = {
     "min_t": 2.0,             # unlikely to be chance
 }
 AUTO_ENTRY = ENTRY_MODE == "live"
-ENTRY_TRIGGER = "SWEEP_RECLAIM"
+ENTRY_TRIGGER = "SWEEP_RECLAIM"   # the rule under test; kept for shadow-settle.py
+# Widened 2026-08-28 at Soumya's request so the book is not empty all session.
+# SWEEP_RECLAIM alone is rare — none fired in the twenty minutes after the 09:51
+# restart, so the floor can watch all day and hold nothing. LEVEL_TOUCH is the
+# evidence-backed addition: this floor's own tally has it at n=473, 0.404% vs a
+# 0.318% base, lift +0.085pp. VOL_SPIKE stays in DISABLED_TRIGGERS (n=540, lift
+# -0.014pp) because widening should not mean admitting what was measured as harmful.
+ENTRY_TRIGGERS = {"SWEEP_RECLAIM", "LEVEL_TOUCH"}
 ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
 
 # Only levels where ORDERS ACTUALLY REST can be swept. Found by reading the charts
@@ -149,7 +169,12 @@ ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsifi
 # not tradeable. Escalations on VWAP are still RECORDED; they just cannot open a
 # position.
 ENTRY_LEVELS = {"PDH", "PDL", "DAY_HIGH", "DAY_LOW", "ROUND"}
-MAX_CONCURRENT = 5
+# Raised 5 -> 8 on 2026-08-28 so more of the day is visible in the book. Deliberately
+# NOT loosened further: today's 18 shadow entries all carried agree 3-4 against a
+# threshold of 2, so confluence was never the binding constraint — concurrency was.
+# Loosening ENTRY_MIN_AGREE or re-adding VWAP to ENTRY_LEVELS would manufacture trades
+# the evidence says are worse, which is the opposite of seeing what the floor can do.
+MAX_CONCURRENT = 8
 ENTRY_WINDOW = ("09:30", "14:30")   # not the open (noise), not near the close
 FORCE_EXIT_AT = "15:15"
 NOTIONAL = 6000.0            # matches the equity lane's per-slot size
@@ -286,8 +311,14 @@ class StockAgent:
                 continue
             dist_bps = abs(ltp - lvl) / lvl * 10000
             if dist_bps <= 8:                      # within 8 bps of a thesis level
+                # Carry the level through. Without these the event cannot be entered
+                # on: the level filter sees level_name=None and rejects it, and there
+                # is no anchor for a stop. SWEEP_RECLAIM has always carried them;
+                # LEVEL_TOUCH did not, which is why it could never open a position
+                # even when it was an allowed trigger.
                 return self._fire(f"LEVEL_TOUCH:{name}",
-                                  f"{ltp} at {name} {lvl} ({dist_bps:.1f}bps)", now)
+                                  f"{ltp} at {name} {lvl} ({dist_bps:.1f}bps)", now,
+                                  extra={"level": lvl, "level_name": name})
         # 3. sweep + reclaim: pierced a level, came back inside
         if len(self.ticks) > SWEEP_LOOKBACK:
             recent = [p for _, p, _ in list(self.ticks)[-SWEEP_LOOKBACK:]]
@@ -711,7 +742,8 @@ class Floor:
         """
         if ENTRY_MODE == "off" or agent.position:
             return None
-        if ev["trigger"].split(":")[0] != ENTRY_TRIGGER:
+        kind = ev["trigger"].split(":")[0]
+        if kind not in ENTRY_TRIGGERS:
             return None
         why_not = None
         if ev.get("agree", 0) < ENTRY_MIN_AGREE:
@@ -722,15 +754,31 @@ class Floor:
             why_not = f"{MAX_CONCURRENT} positions already open"
         elif ev.get("level_name") not in ENTRY_LEVELS:
             why_not = f"{ev.get('level_name')} is a mean, not a liquidity pool"
-        elif not ev.get("swept_low") or not ev.get("ltp"):
+        elif not ev.get("ltp"):
+            why_not = "no price"
+        elif kind == "SWEEP_RECLAIM" and not ev.get("swept_low"):
             why_not = "no swept low to anchor the stop"
+        elif kind == "LEVEL_TOUCH" and float(ev.get("ltp") or 0) < float(ev.get("level") or 0):
+            # Touching from BELOW is resistance, not support. Going long into it is
+            # buying at the ceiling; the same level only justifies a long when price
+            # is sitting on top of it.
+            why_not = f"{ev.get('level_name')} is overhead, not support"
         if why_not:
             self.declined.append({**{k: ev[k] for k in ("at", "symbol", "trigger")},
                                   "reason": why_not})
             return None
 
         entry = float(ev["ltp"])
-        stop = float(ev["swept_low"])
+        if kind == "SWEEP_RECLAIM":
+            # the swept low IS the invalidation — structural, not a percentage
+            stop = float(ev["swept_low"])
+        else:
+            # LEVEL_TOUCH has no sweep to anchor to, so the level itself is the
+            # invalidation: price is resting on it, and losing it by more than a few
+            # bps means the level did not hold. 20 bps below keeps the stop clear of
+            # the touch tolerance (8 bps) rather than sitting inside the noise that
+            # fired the event.
+            stop = round(float(ev["level"]) * 0.998, 2)
         risk = entry - stop
         if risk <= 0 or risk / entry > 0.02:      # >2% risk is not a scalp
             self.declined.append({"at": ev["at"], "symbol": ev["symbol"],
@@ -791,17 +839,46 @@ class Floor:
             return
         POSITIONS_FILE.mkdir(parents=True, exist_ok=True)
         f = POSITIONS_FILE / f"{datetime.now():%Y-%m-%d}.json"
-        closed = [p for p in self.positions if p["status"] == "CLOSED"]
+
+        # MERGE, never overwrite. self.positions holds only THIS run's trades, so a
+        # plain write erases every earlier run of the same day. On 2026-08-28 the floor
+        # restarted eight times and the book went from 44 closed trades at 11:36 to 5
+        # by the close — the record of the day was destroyed by its own process.
+        #
+        # Trades are keyed on (symbol, entered_at), which is stable across re-writes,
+        # so the current run UPDATES its own rows (an open position becoming closed)
+        # while rows from earlier runs are carried forward untouched.
+        merged, seen = [], set()
+        for p in self.positions:
+            merged.append(p)
+            seen.add((p.get("symbol"), p.get("entered_at")))
+        try:
+            if f.exists():
+                for p in (json.loads(f.read_text()).get("positions") or []):
+                    if (p.get("symbol"), p.get("entered_at")) not in seen:
+                        merged.append(p)
+        except Exception as e:                       # a corrupt file must not lose today
+            print(f"  WARNING could not merge prior book: {str(e)[:80]}", flush=True)
+        merged.sort(key=lambda p: p.get("entered_at") or "")
+
+        closed = [p for p in merged if p["status"] == "CLOSED"]
         f.write_text(json.dumps({
-            "positions": self.positions,
+            "positions": merged,
             "declined": self.declined[-60:],
             "declined_total": len(self.declined),
-            "open": sum(1 for p in self.positions if p["status"] == "OPEN"),
+            # count opens over the MERGED book too — a position left open by a run that
+            # died is still an open position, and reporting only this run's would show
+            # zero exposure while the ledger still carries it
+            "open": sum(1 for p in merged if p["status"] == "OPEN"),
             "closed": len(closed),
             "net": round(sum(p.get("pnl_net", 0) for p in closed), 2),
             "gross": round(sum(p.get("pnl_gross", 0) for p in closed), 2),
             "wins": sum(1 for p in closed if p.get("pnl_net", 0) > 0),
-            "rule": {"trigger": ENTRY_TRIGGER, "min_agree": ENTRY_MIN_AGREE,
+            # report the triggers actually in force, not the historical single rule —
+            # a book labelled SWEEP_RECLAIM while taking LEVEL_TOUCH entries would
+            # mis-attribute every trade in it
+            "rule": {"trigger": "+".join(sorted(ENTRY_TRIGGERS)),
+                     "mode": ENTRY_MODE, "min_agree": ENTRY_MIN_AGREE,
                      "target_r": TARGET_R, "notional": NOTIONAL,
                      "window": list(ENTRY_WINDOW)},
         }, indent=1))
@@ -899,6 +976,48 @@ class Floor:
         print(f"  wrote {f}")
 
 
+LOCK_FILE = KNOW / "floor.lock"
+
+
+def acquire_single_instance():
+    """Refuse to start if another floor is already streaming.
+
+    2026-08-28: two instances ran concurrently for most of the afternoon. Both
+    appended to the same log and both wrote their own book to the same positions
+    file, which
+      - destroyed the day's record — 44 closed trades at 11:36 became 5 by the close,
+        because each process persisted ITS book over the other's
+      - fed the watchdog a tick counter that went DOWN (7,187 then 6,514 thirty
+        seconds later, from the other process), which it read as a dead socket and
+        "fixed" by restarting — spawning more instances, until it burned its whole
+        restart budget
+
+    An exclusive lock is the fix at the root. flock is released automatically when the
+    process dies for ANY reason, including SIGKILL, so a crashed floor cannot leave a
+    stale lock that blocks the next legitimate start — which is why this is a lock and
+    not a PID file.
+    """
+    import fcntl
+    LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+    fh = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        prior = ""
+        try:
+            prior = LOCK_FILE.read_text().strip()
+        except Exception:
+            pass
+        print(f"  another floor is already running ({prior or 'pid unknown'}) — "
+              f"refusing to start a second one.", flush=True)
+        print("  Two instances corrupt the day's book and confuse the watchdog; "
+              "stop the running one first.", flush=True)
+        raise SystemExit(3)
+    fh.write(f"pid {os.getpid()} started {datetime.now():%Y-%m-%d %H:%M:%S}\n")
+    fh.flush()
+    return fh                      # keep the handle alive for the process lifetime
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser()
@@ -915,6 +1034,8 @@ def main():
     if a.seed_only:
         Floor(dry=True, verbose=True).seed_only()
         return
+    # held for the process lifetime; the OS releases it on exit, however that happens
+    _lock = acquire_single_instance()          # noqa: F841
     Floor(dry=a.dry).start()
 
 

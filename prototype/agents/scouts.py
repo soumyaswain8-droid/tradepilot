@@ -418,6 +418,7 @@ class ScoutTeam:
         self.verbose = verbose
         self.ctx = DailyContext()
         self._k = None
+        self.last_error = None      # last sweep batch failure, for callers to surface
         raw = [l.strip().replace(".NS", "")
                for l in UNIVERSE_F.read_text().splitlines() if l.strip()]
         names = self._instrument_names()
@@ -445,15 +446,35 @@ class ScoutTeam:
         return kd.client()
 
     def sweep(self):
-        """One quote pass over the whole liquid universe. Two API calls, ~0.3s."""
+        """One quote pass over the whole liquid universe. Two API calls, ~0.3s.
+
+        A TOTAL quote failure raises rather than returning an empty list. Returning []
+        is a lie with the shape of a fact: on 2026-08-28 every batch failed inside the
+        dashboard process and the console displayed "889 universe, 0 screened, 0 board"
+        for twenty minutes — which reads as a market with nothing worth trading, not as
+        a broken client. The zero was indistinguishable from an observation, so the
+        diagnosis went to the screen thresholds instead of the credential.
+
+        A PARTIAL failure is different and is allowed through, because 400 of 889 names
+        is still a usable board — but it is recorded on last_error so the caller can
+        say the board is incomplete instead of implying it is the whole market.
+        """
         k, live = self.kite(), {}
+        batches = failed = 0
+        self.last_error = None
         for i in range(0, len(self.universe), SWEEP_BATCH):
             ch = self.universe[i:i + SWEEP_BATCH]
+            batches += 1
             try:
                 live.update(k.quote([f"NSE:{s}" for s in ch]))
             except Exception as e:
+                failed += 1
+                self.last_error = str(e)[:120]
                 if self.verbose:
                     print(f"  sweep batch error: {str(e)[:70]}")
+        if batches and failed == batches:
+            raise RuntimeError(
+                f"sweep failed on all {batches} quote batches: {self.last_error}")
         rows = []
         for s in self.universe:
             d = live.get(f"NSE:{s}")

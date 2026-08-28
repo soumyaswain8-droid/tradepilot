@@ -75,6 +75,9 @@ def main():
             print("  no panel cached")
         return 0
 
+    from quant.diskguard import report
+    report(2.0, "the 5-minute panel cache runs to tens of MB and grows with the universe")
+
     from prototype.v4 import kite_data as kd
     k = kd.client()
     syms = universe()

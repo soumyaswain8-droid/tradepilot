@@ -15,6 +15,14 @@
   --lime:#5ddc7a;         /* position / good */
   --txt:#c3d4e4; --dim:#6a8199; --faint:#3c526b;
 }
+.known{
+  margin:0 12px 8px; padding:7px 12px; border-radius:4px;
+  background:rgba(255,77,109,.10); border:1px solid rgba(255,77,109,.42);
+  border-left:3px solid var(--rose);
+  color:#ffd7de; font-size:11px; letter-spacing:.03em;
+}
+.known b{color:var(--rose); letter-spacing:.10em}
+.known .why{color:var(--dim); display:block; margin-top:2px}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -169,6 +177,12 @@ body::after{
     <div class="book" id="book" style="max-height:150px;overflow-y:auto"></div>
   </div>
 
+  <!-- Known-issue strip. Hidden until the failure signature actually appears, so it
+       never becomes wallpaper. The signature is specific: ticks arriving (so the
+       socket is alive) while the screen returns nothing. That combination happened on
+       2026-08-27 and again on 08-28 and both times the console showed a confident
+       zero, which reads as a quiet market rather than a broken client. -->
+  <div class="known" id="known" style="display:none"></div>
   <div class="pipe" id="pipe"></div>
 </div>
 
@@ -309,6 +323,25 @@ function render(s){
     + (dc.length?`<div class="decl">declined ${bk.declined_total}: ${dc.slice(-3).map(d=>d.symbol+' ('+d.reason+')').join(' · ')}</div>`:'');
 
   const f=s.funnel||{};
+  // KNOWN ISSUE TP-FLOOR-BLANK, seen 2026-08-27 and 2026-08-28. The screen returning
+  // nothing WHILE ticks arrive is not a market state — it means the quote client in
+  // this process is broken. Say so on the page rather than letting a zero pass for an
+  // observation. Root cause is still open; scheduled for the weekend.
+  const ses=s.session||{}, err=s.errors||{};
+  const blank = (ses.ticks>200) && !f.screened && !f.board;
+  const kn=$('known');
+  if(blank || err.board || err.quotes){
+    kn.style.display='block';
+    kn.innerHTML = blank
+      ? `<b>KNOWN ISSUE · TP-FLOOR-BLANK</b> — ticks are arriving but the screen returned
+         nothing. This is a broken quote client in the dashboard process, <u>not</u> an
+         empty market. Restart Flask to clear it.
+         <span class="why">Seen 2026-08-27 and 2026-08-28 · root cause still open ·
+         scheduled for the weekend${err.board?' · '+err.board:''}</span>`
+      : `<b>DEGRADED</b> — ${err.board||err.quotes}
+         <span class="why">the board below may be incomplete</span>`;
+  } else { kn.style.display='none'; }
+
   const stages=[['universe',f.universe,'liquid equities'],
     ['screened',f.screened,'tradeable now'],['board',f.board,'a lens fired'],
     ['agents',f.agents,'watched live'],['positions',f.positions,'held']];

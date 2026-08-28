@@ -186,6 +186,11 @@ def _quotes(symbols):
         kd = _kite()
         q = kd.client().quote([f"NSE:{s}" for s in symbols])
         _CACHE["quotes"], _CACHE["quotes_at"] = q, now
+        # Clear the error on success. Left uncleared it outlives its cause: on
+        # 2026-08-28 a credential error from before the morning login was still being
+        # served an hour later beside working quotes, which sent the diagnosis
+        # straight at the token when the token was fine.
+        _CACHE["quote_err"] = None
         return q
     except Exception as e:
         _CACHE["quote_err"] = str(e)[:120]

@@ -119,14 +119,20 @@
     });
   }
 
-  function go(section, sub, rest) {
+  function go(section, sub, rest, replace) {
     var parsed = window.TPRoute.parse(
       window.TPRoute.build(section, sub, rest || []), SECTIONS);
     cur = parsed;
     renderSubnav(parsed.section, parsed.sub);
     show(parsed.section, parsed.sub);
     var hash = window.TPRoute.build(parsed.section, parsed.sub, parsed.rest);
-    if (location.hash !== hash) location.hash = hash;
+    if (location.hash === hash) return;
+    /* Normalizing (boot, or reacting to a hashchange the browser already
+       recorded) must NOT create a history entry -- otherwise Back lands on the
+       un-normalized URL, we normalize again, and the user is trapped. Only a
+       deliberate click pushes. */
+    if (replace && history.replaceState) history.replaceState(null, "", hash);
+    else location.hash = hash;
   }
 
   function register(viewId, hooks) { views[viewId] = hooks || {}; }
@@ -135,11 +141,11 @@
   function boot() {
     renderNav();
     var p = window.TPRoute.parse(location.hash, SECTIONS);
-    go(p.section, p.sub, p.rest);
+    go(p.section, p.sub, p.rest, true);
 
     window.addEventListener("hashchange", function () {
       var q = window.TPRoute.parse(location.hash, SECTIONS);
-      go(q.section, q.sub, q.rest);
+      go(q.section, q.sub, q.rest, true);
     });
 
     /* One timer drives every view. Each hook declares its own cadence, so a

@@ -99,3 +99,29 @@ def test_router_keeps_external_links(client):
     assert r.status_code == 200
     assert b'href: "/decisions"' in r.data
     assert b'href: "/classic"' in r.data
+
+
+def test_agent_floor_panes_exist(client):
+    """Both panes are in the shell."""
+    body = client.get("/").data
+    assert b'id="view-agents-quant"' in body
+    assert b'id="view-agents-floor"' in body
+
+
+def test_agent_floor_frames_ship_empty(client):
+    """Frames must have no src in the served HTML.
+
+    A hardcoded src would load and start polling both consoles on every
+    page load, whether or not anyone opens the section.
+    """
+    body = client.get("/").data
+    # Assert the behaviour, not the attribute order: no framed URL may appear
+    # in the served HTML at all. panes.js sets src at mount time.
+    assert b"/team?embed=1" not in body
+    assert b"/floor?embed=1" not in body
+    assert b'id="frameQuant"' in body
+    assert b'id="frameFloor"' in body
+
+
+def test_panes_module_loaded(client):
+    assert b"/static/desk/panes.js" in client.get("/").data

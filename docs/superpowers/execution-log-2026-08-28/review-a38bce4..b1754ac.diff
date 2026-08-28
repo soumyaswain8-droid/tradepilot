@@ -1,0 +1,117 @@
+# Review package: a38bce4b8aacf5208a711292fc420d6a766982ec..HEAD
+
+## Commits
+b1754ac feat(terminal): mount the agent floor as lazy panes
+
+## Files changed
+ prototype/static/desk/panes.js | 32 ++++++++++++++++++++++++++++++++
+ prototype/templates/desk.html  |  1 +
+ tests/test_web_routes.py       | 26 ++++++++++++++++++++++++++
+ 3 files changed, 59 insertions(+)
+
+## Diff
+diff --git a/prototype/static/desk/panes.js b/prototype/static/desk/panes.js
+new file mode 100644
+index 0000000..c9e9e71
+--- /dev/null
++++ b/prototype/static/desk/panes.js
+@@ -0,0 +1,32 @@
++/* panes.js — the two Agent Floor consoles, framed.
++
++   Why iframes: /floor and /team are self-contained documents that assume they
++   own the browser. floor.html sets body{overflow:hidden}, paints scanlines via
++   body::after and sizes a canvas to the viewport; team.html styles bare
++   header/main/section selectors. All three stylesheets also define --bg,
++   --panel and --green with DIFFERENT values, so concatenating them would let
++   last-one-wins quietly restyle whichever loaded first. A frame is a document
++   boundary, which is exactly the isolation those two need.
++
++   Why unmount clears src: both poll once a second. Left mounted behind a
++   hidden tab that is ~3,600 requests an hour for a screen nobody is looking
++   at. about:blank tears the document down and takes its timers with it. */
++(function () {
++  "use strict";
++
++  function pane(viewId, frameId, src) {
++    window.TPRouter.register(viewId, {
++      mount: function () {
++        var f = document.getElementById(frameId);
++        if (f && f.getAttribute("src") !== src) f.setAttribute("src", src);
++      },
++      unmount: function () {
++        var f = document.getElementById(frameId);
++        if (f) f.setAttribute("src", "about:blank");
++      }
++    });
++  }
++
++  pane("agents-quant", "frameQuant", "/team?embed=1");
++  pane("agents-floor", "frameFloor", "/floor?embed=1");
++})();
+diff --git a/prototype/templates/desk.html b/prototype/templates/desk.html
+index da7074a..fcf334a 100644
+--- a/prototype/templates/desk.html
++++ b/prototype/templates/desk.html
+@@ -3,20 +3,21 @@
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>TradePilot Terminal</title>
+ <link rel="stylesheet" href="/static/desk.css">
+ <!-- JS is a separate file BY RULE: on 2026-08-03 a tab shipped blank because its
+      logic was appended inside a <script src> tag, whose inline content the
+      browser silently discards. -->
+ <script src="/static/desk/route.js" defer></script>
+ <script src="/static/desk/router.js" defer></script>
++<script src="/static/desk/panes.js" defer></script>
+ <script src="/static/desk.js" defer></script>
+ </head>
+ <body>
+ 
+ <header class="topbar">
+   <div class="brand">
+     <svg viewBox="0 0 72 72" aria-label="TradePilot">
+       <defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse">
+         <stop offset="0%" stop-color="#4338CA"/><stop offset="100%" stop-color="#7C7FF3"/>
+       </linearGradient></defs>
+diff --git a/tests/test_web_routes.py b/tests/test_web_routes.py
+index acae3cf..8b93894 100644
+--- a/tests/test_web_routes.py
++++ b/tests/test_web_routes.py
+@@ -92,10 +92,36 @@ def test_terminal_loads_router_modules(client):
+ 
+ 
+ def test_router_keeps_external_links(client):
+     """The nav is registry-rendered, so external destinations must be declared
+     in the module. /classic is the client-facing surface and must stay
+     reachable from the terminal until it is absorbed."""
+     r = client.get("/static/desk/router.js")
+     assert r.status_code == 200
+     assert b'href: "/decisions"' in r.data
+     assert b'href: "/classic"' in r.data
++
++
++def test_agent_floor_panes_exist(client):
++    """Both panes are in the shell."""
++    body = client.get("/").data
++    assert b'id="view-agents-quant"' in body
++    assert b'id="view-agents-floor"' in body
++
++
++def test_agent_floor_frames_ship_empty(client):
++    """Frames must have no src in the served HTML.
++
++    A hardcoded src would load and start polling both consoles on every
++    page load, whether or not anyone opens the section.
++    """
++    body = client.get("/").data
++    # Assert the behaviour, not the attribute order: no framed URL may appear
++    # in the served HTML at all. panes.js sets src at mount time.
++    assert b"/team?embed=1" not in body
++    assert b"/floor?embed=1" not in body
++    assert b'id="frameQuant"' in body
++    assert b'id="frameFloor"' in body
++
++
++def test_panes_module_loaded(client):
++    assert b"/static/desk/panes.js" in client.get("/").data

@@ -1,0 +1,66 @@
+# Review package: 9e76397..HEAD
+
+## Commits
+a38bce4 fix(terminal): stop the router trapping the back button
+
+## Files changed
+ prototype/static/desk/router.js | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+## Diff
+diff --git a/prototype/static/desk/router.js b/prototype/static/desk/router.js
+index dc18be4..3c04135 100644
+--- a/prototype/static/desk/router.js
++++ b/prototype/static/desk/router.js
+@@ -112,41 +112,47 @@
+       } else if (mounted[viewId] && views[viewId] && views[viewId].unmount) {
+         guard(viewId, "unmount");
+         mounted[viewId] = false;
+       }
+     });
+     document.querySelectorAll(".nav a[data-section]").forEach(function (a) {
+       a.classList.toggle("on", a.getAttribute("data-section") === section);
+     });
+   }
+ 
+-  function go(section, sub, rest) {
++  function go(section, sub, rest, replace) {
+     var parsed = window.TPRoute.parse(
+       window.TPRoute.build(section, sub, rest || []), SECTIONS);
+     cur = parsed;
+     renderSubnav(parsed.section, parsed.sub);
+     show(parsed.section, parsed.sub);
+     var hash = window.TPRoute.build(parsed.section, parsed.sub, parsed.rest);
+-    if (location.hash !== hash) location.hash = hash;
++    if (location.hash === hash) return;
++    /* Normalizing (boot, or reacting to a hashchange the browser already
++       recorded) must NOT create a history entry -- otherwise Back lands on the
++       un-normalized URL, we normalize again, and the user is trapped. Only a
++       deliberate click pushes. */
++    if (replace && history.replaceState) history.replaceState(null, "", hash);
++    else location.hash = hash;
+   }
+ 
+   function register(viewId, hooks) { views[viewId] = hooks || {}; }
+   function current() { return { section: cur.section, sub: cur.sub, rest: cur.rest.slice() }; }
+ 
+   function boot() {
+     renderNav();
+     var p = window.TPRoute.parse(location.hash, SECTIONS);
+-    go(p.section, p.sub, p.rest);
++    go(p.section, p.sub, p.rest, true);
+ 
+     window.addEventListener("hashchange", function () {
+       var q = window.TPRoute.parse(location.hash, SECTIONS);
+-      go(q.section, q.sub, q.rest);
++      go(q.section, q.sub, q.rest, true);
+     });
+ 
+     /* One timer drives every view. Each hook declares its own cadence, so a
+        60s view is not woken by a 30s neighbour. */
+     setInterval(function () {
+       if (document.hidden) return;
+       var now = Date.now();
+       Object.keys(views).forEach(function (viewId) {
+         var h = views[viewId];
+         if (!mounted[viewId] || !h || typeof h.refresh !== "function") return;

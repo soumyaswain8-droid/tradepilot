@@ -1,0 +1,147 @@
+# Review package: 39897b4089542c74e15dabeaae9cdf1ee5a7c87f..HEAD
+
+## Commits
+c1b09ae feat(terminal): pure hash router, tested under node
+
+## Files changed
+ prototype/static/desk/route.js | 48 ++++++++++++++++++++++++++
+ tests/js/route.test.js         | 76 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 124 insertions(+)
+
+## Diff
+diff --git a/prototype/static/desk/route.js b/prototype/static/desk/route.js
+new file mode 100644
+index 0000000..13274ba
+--- /dev/null
++++ b/prototype/static/desk/route.js
+@@ -0,0 +1,48 @@
++/* route.js — pure hash routing for the terminal. No DOM, no globals, no deps.
++   Kept separate from router.js precisely so it can be tested under Node:
++   these rules are the one place a mistake silently breaks live bookmarks.
++
++   Hash grammar:  #section[/sub][/rest...]
++   Segment 2 is a sub-tab only if it matches one of that section's sub ids.
++   Anything else is payload against the default sub — which is what keeps
++   the pre-sub-tab links (#market/TITAN/5y) working. */
++(function (root, factory) {
++  "use strict";
++  var api = factory();
++  if (typeof module === "object" && module.exports) module.exports = api;
++  else root.TPRoute = api;
++})(typeof self !== "undefined" ? self : this, function () {
++  "use strict";
++
++  function findSection(id, sections) {
++    for (var i = 0; i < sections.length; i++) {
++      if (sections[i].id === id) return sections[i];
++    }
++    return null;
++  }
++
++  function parse(hash, sections) {
++    var segs = String(hash || "").replace(/^#/, "").split("/").filter(Boolean);
++    var section = findSection(segs[0], sections) || sections[0];
++    var subs = section.subs || [];
++    var rest = segs.slice(1);
++    var sub = null;
++
++    if (subs.length) {
++      sub = subs[0].id;
++      if (rest.length && findSection(rest[0], subs)) {
++        sub = rest[0];
++        rest = rest.slice(1);
++      }
++    }
++    return { section: section.id, sub: sub, rest: rest };
++  }
++
++  function build(section, sub, rest) {
++    var parts = [section];
++    if (sub) parts.push(sub);
++    return "#" + parts.concat(rest || []).join("/");
++  }
++
++  return { parse: parse, build: build };
++});
+diff --git a/tests/js/route.test.js b/tests/js/route.test.js
+new file mode 100644
+index 0000000..2725c47
+--- /dev/null
++++ b/tests/js/route.test.js
+@@ -0,0 +1,76 @@
++"use strict";
++const test = require("node:test");
++const assert = require("node:assert");
++const TPRoute = require("../../prototype/static/desk/route.js");
++
++const SECTIONS = [
++  { id: "desk",   label: "Desk",        subs: [] },
++  { id: "market", label: "Market",      subs: [{ id: "india", label: "India" },
++                                               { id: "fno",   label: "F&O" },
++                                               { id: "us",    label: "US" }] },
++  { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
++                                               { id: "floor", label: "Live Floor" }] },
++];
++
++test("empty hash falls back to the first section", () => {
++  assert.deepStrictEqual(TPRoute.parse("", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("bare section resolves to its default sub", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents", SECTIONS),
++    { section: "agents", sub: "quant", rest: [] });
++});
++
++test("explicit sub is honoured", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents/floor", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("flat section takes no sub", () => {
++  assert.deepStrictEqual(TPRoute.parse("#desk", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("legacy deep link treats an unknown segment as payload", () => {
++  // #market/TITAN/5y predates sub-tabs. TITAN is not a sub, so it is a symbol
++  // against the default sub. Breaking this breaks live bookmarks.
++  assert.deepStrictEqual(TPRoute.parse("#market/TITAN/5y", SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("known sub is not mistaken for payload", () => {
++  assert.deepStrictEqual(TPRoute.parse("#market/fno", SECTIONS),
++    { section: "market", sub: "fno", rest: [] });
++});
++
++test("sub plus payload", () => {
++  assert.deepStrictEqual(TPRoute.parse("#market/india/TITAN/5y", SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("unknown section falls back to the first", () => {
++  assert.deepStrictEqual(TPRoute.parse("#nonsense", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("leading hash is optional", () => {
++  assert.deepStrictEqual(TPRoute.parse("agents/floor", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("trailing and doubled slashes are ignored", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents//floor/", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("build round-trips through parse", () => {
++  const h = TPRoute.build("market", "india", ["TITAN", "5y"]);
++  assert.strictEqual(h, "#market/india/TITAN/5y");
++  assert.deepStrictEqual(TPRoute.parse(h, SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("build omits a null sub", () => {
++  assert.strictEqual(TPRoute.build("desk", null, []), "#desk");
++});

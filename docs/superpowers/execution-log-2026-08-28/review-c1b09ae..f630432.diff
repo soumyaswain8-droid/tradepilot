@@ -1,0 +1,29 @@
+# Review package: c1b09ae6dd00c1e108e223d5276fd80ed912922b..HEAD
+
+## Commits
+f630432 chore(gitignore): exclude .superpowers plan-execution scratch
+bb451ac docs(task-3): fix round 1 — correct pytest count, document node test command substitution, clarify fail-step result
+
+## Files changed
+ .gitignore | 3 +++
+ 1 file changed, 3 insertions(+)
+
+## Diff
+diff --git a/.gitignore b/.gitignore
+index 1d816d8..fb1a9fe 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -69,10 +69,13 @@ prototype/data/us_cache/
+ 
+ # Order-book depth snapshots — ~58 MB/day raw. Local research data, never committed.
+ docs/research/orderbook/
+ 
+ # Backtest bar cache — regenerable from yfinance in minutes, 33MB+ of parquet.
+ # Same reasoning as docs/research/orderbook: derived data, not source.
+ prototype/data/waterfall/
+ 
+ # Isolated worktrees for plan execution (local scratch, never committed)
+ .worktrees/
++
++# Superpower plan-execution scratch (disposable: briefs, reports, internal process detail)
++.superpowers/

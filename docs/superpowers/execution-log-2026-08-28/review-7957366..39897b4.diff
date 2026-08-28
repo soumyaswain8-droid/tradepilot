@@ -1,0 +1,219 @@
+# Review package: 7957366e14bf4c9b3e1ac65898b221cd727151e5..HEAD
+
+## Commits
+39897b4 feat(floor,team): embed mode for framing inside the terminal
+
+## Files changed
+ prototype/app.py               | 17 +++++++++++++----
+ prototype/templates/floor.html |  2 +-
+ prototype/templates/team.html  |  7 +++++--
+ tests/test_web_routes.py       | 31 +++++++++++++++++++++++++++++++
+ 4 files changed, 50 insertions(+), 7 deletions(-)
+
+## Diff
+diff --git a/prototype/app.py b/prototype/app.py
+index 8c10486..92e5540 100644
+--- a/prototype/app.py
++++ b/prototype/app.py
+@@ -113,22 +113,27 @@ def live_view():
+ 
+ 
+ @app.route("/lab")
+ def lab_view():
+     """A/B testing lab — challenger-vs-live experiments in one place."""
+     return render_template("lab.html")
+ 
+ 
+ @app.route("/floor")
+ def floor_view():
+-    """Live console for the agent floor — what each agent is watching, right now."""
+-    return render_template("floor.html")
++    """Live console for the agent floor -- what each agent is watching, right now.
++
++    ?embed=1 strips the brand span so the console can be framed inside the
++    terminal, which supplies its own chrome. The stats strip stays: it is the
++    point of the screen.
++    """
++    return render_template("floor.html", embed=request.args.get("embed") == "1")
+ 
+ 
+ @app.route("/api/floor/live")
+ def api_floor_live():
+     """Live state for the console.
+ 
+     Read-only by design: the floor is a separate process holding real session state,
+     so this reconstructs from what it already writes rather than asking it for
+     anything. A bug in here cannot take the floor down mid-session.
+     """
+@@ -3086,22 +3091,26 @@ def _team_read_jsonl_tail(directory: Path, n: int = 60,
+                     continue
+                 out.append(r)
+         except Exception:
+             continue
+     out.sort(key=lambda r: r.get("ts", ""), reverse=True)
+     return out[:n]
+ 
+ 
+ @app.route("/team")
+ def team_dashboard():
+-    """Permanent agent team dashboard."""
+-    return render_template("team.html")
++    """Permanent agent team dashboard.
++
++    ?embed=1 strips the header and skips pageswitch.js, which must never
++    render inside a terminal pane.
++    """
++    return render_template("team.html", embed=request.args.get("embed") == "1")
+ 
+ 
+ @app.route("/team/sarathi")
+ def team_sarathi():
+     """Sarathi verification ledger — drill-down on gate decisions."""
+     return render_template("team_sarathi.html")
+ 
+ 
+ @app.route("/api/team/status")
+ def api_team_status():
+diff --git a/prototype/templates/floor.html b/prototype/templates/floor.html
+index ab1b952..a7a3ba7 100644
+--- a/prototype/templates/floor.html
++++ b/prototype/templates/floor.html
+@@ -120,21 +120,21 @@ body::after{
+ .tot{display:flex;justify-content:space-between;padding:6px 12px;font-size:10px;
+      background:var(--panel)}
+ .tot b{font-variant-numeric:tabular-nums}
+ .decl{padding:4px 12px;font-size:9px;color:var(--faint);border-bottom:1px solid #0f1c2b}
+ </style>
+ </head>
+ <body>
+ <div class="hud">
+ 
+   <div class="bar">
+-    <span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>
++    {% if not embed %}<span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>{% endif %}
+     <span class="live" id="live"><span class="dot"></span><span id="liveTxt">CONNECTING</span></span>
+     <div class="stat"><span class="k">ticks</span><span class="v" id="sTicks">—</span></div>
+     <div class="stat"><span class="k">rate</span><span class="v" id="sRate">—</span></div>
+     <div class="stat"><span class="k">escalations</span><span class="v" id="sEsc">—</span></div>
+     <div class="stat"><span class="k">swaps</span><span class="v" id="sSwap">—</span></div>
+     <div class="stat"><span class="k">armed</span><span class="v hot" id="sArm">—</span></div>
+     <div class="stat"><span class="k">gaps</span><span class="v" id="sGap">—</span></div>
+     <span class="spacer"></span>
+     <div class="stat"><span class="k">clock</span><span class="v" id="sNow">—</span></div>
+   </div>
+diff --git a/prototype/templates/team.html b/prototype/templates/team.html
+index 5c6f94e..04677d0 100644
+--- a/prototype/templates/team.html
++++ b/prototype/templates/team.html
+@@ -71,30 +71,32 @@
+   .due-badge { display:inline-block; background:#7c2d12; color:#fed7aa;
+                font-size:9px; padding:1px 5px; border-radius:3px;
+                margin-left:6px; font-weight:600; letter-spacing:.5px; }
+   .due-panel { background:var(--panel); border:1px solid var(--border);
+                border-radius:6px; padding:10px 14px; }
+   .due-panel .row { font-size:12px; padding:4px 0; color:var(--text-dim); }
+   .due-panel .agent-name { color:#fbbf24; font-weight:600; }
+ </style>
+ </head>
+ <body>
++{% if not embed %}
+ <header>
+   <h1>TradePilot Quant Desk</h1>
+   <div class="meta">
+     <span id="ts">—</span>
+     &nbsp;·&nbsp;
+     <a class="nav-link" href="/team/sarathi">Sarathi Ledger</a>
+     &nbsp;·&nbsp;
+     <a class="nav-link" href="/live">Live Engines</a>
+   </div>
+ </header>
++{% endif %}
+ <main>
+   <section>
+     <h2>KPI · Today</h2>
+     <div class="kpi-strip" id="kpi"></div>
+   </section>
+ 
+   <section>
+     <h2>Agent Grid · 10 roles</h2>
+     <div class="agent-grid" id="agents"></div>
+   </section>
+@@ -223,29 +225,30 @@ function renderAudit(rows) {
+     const tail = `${r.action || ""} → ${r.subject || ""}${r.reason ? " · " + r.reason : ""}`;
+     row.appendChild(makeEl("div", {cls: "text", text: tail, title: tail}));
+     root.appendChild(row);
+   });
+ }
+ 
+ async function tick() {
+   try {
+     const r = await fetch("/api/team/status");
+     const j = await r.json();
+-    document.getElementById("ts").textContent = fmt(j.ts);
++    var tsEl = document.getElementById("ts");
++    if (tsEl) tsEl.textContent = fmt(j.ts);
+     const dueList = j.due || [];
+     const dueSet = new Set(dueList.map(d => d.agent));
+     renderKpi(j.kpi || {});
+     renderAgents(j.agents || [], dueSet);
+     renderDue(dueList);
+     renderActivity(j.activity || []);
+     renderAudit(j.audit || []);
+   } catch (e) {
+     console.error(e);
+   }
+ }
+ 
+ tick();
+ setInterval(tick, POLL_MS);
+ </script>
+-<script src="/static/pageswitch.js"></script>
++{% if not embed %}<script src="/static/pageswitch.js"></script>{% endif %}
+ </body>
+ </html>
+diff --git a/tests/test_web_routes.py b/tests/test_web_routes.py
+index 810f65f..3a4a9a3 100644
+--- a/tests/test_web_routes.py
++++ b/tests/test_web_routes.py
+@@ -19,10 +19,41 @@ def test_floor_renders(client):
+     r = client.get("/floor")
+     assert r.status_code == 200
+     assert b"Market Scan" in r.data
+ 
+ 
+ def test_team_renders(client):
+     """GET /team returns the Quant Desk."""
+     r = client.get("/team")
+     assert r.status_code == 200
+     assert b"<h1>TradePilot Quant Desk</h1>" in r.data
++
++
++def test_floor_embed_hides_brand(client):
++    """?embed=1 drops the brand span; the stats strip must survive."""
++    r = client.get("/floor?embed=1")
++    assert r.status_code == 200
++    assert b"AGENT FLOOR</span>" not in r.data
++    assert b'id="sTicks"' in r.data          # stats strip kept
++
++
++def test_floor_without_embed_keeps_brand(client):
++    """The standalone page is unchanged."""
++    r = client.get("/floor")
++    assert b"AGENT FLOOR</span>" in r.data
++
++
++def test_team_embed_hides_header_and_pageswitch(client):
++    """?embed=1 drops the header and must not load the operator nav."""
++    r = client.get("/team?embed=1")
++    assert r.status_code == 200
++    # Match the <h1>, not the bare string: team.html:5 also carries
++    # "TradePilot Quant Desk" in its <title>, which embed mode keeps.
++    assert b"<h1>TradePilot Quant Desk</h1>" not in r.data
++    assert b"pageswitch.js" not in r.data
++
++
++def test_team_without_embed_keeps_header(client):
++    """The standalone page is unchanged."""
++    r = client.get("/team")
++    assert b"<h1>TradePilot Quant Desk</h1>" in r.data
++    assert b"pageswitch.js" in r.data

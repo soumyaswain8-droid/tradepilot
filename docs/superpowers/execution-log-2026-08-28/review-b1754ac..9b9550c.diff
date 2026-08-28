@@ -1,0 +1,217 @@
+# Review package: b1754ac..HEAD
+
+## Commits
+9b9550c fix: final review wave — router/panes correctness, docs, test coverage
+
+## Files changed
+ docs/TERMINAL_MANUAL_CHECKS.md  | 25 +++++++++++++++++++++++++
+ prototype/static/desk.js        |  6 ++++--
+ prototype/static/desk/panes.js  |  8 +++++---
+ prototype/static/desk/router.js | 16 +++++++++++++++-
+ tests/test_web_routes.py        | 16 ++++++++++++++++
+ 5 files changed, 65 insertions(+), 6 deletions(-)
+
+## Diff
+diff --git a/docs/TERMINAL_MANUAL_CHECKS.md b/docs/TERMINAL_MANUAL_CHECKS.md
+new file mode 100644
+index 0000000..29e4c92
+--- /dev/null
++++ b/docs/TERMINAL_MANUAL_CHECKS.md
+@@ -0,0 +1,25 @@
++# Terminal Manual Verification Checklist
++
++`prototype/static/desk/router.js` and `prototype/static/desk/panes.js` touch
++the DOM directly (view mounting, iframe lifecycle, hash-based navigation) and
++have no automated coverage: exercising them properly needs a DOM environment
++such as jsdom, and the terminal build carries a no-new-dependencies
++constraint. `route.js` is pure and node-tested; `router.js` and `panes.js`
++are not. This checklist is the only backstop for that gap and must be run by
++hand in a real browser.
++
++Run this checklist after any change under `prototype/static/desk/`.
++
++::: {.checklist}
++
++| | Verification |
++|:---:|:-------------|
++| ☐ | `/` opens on Desk with no sub-tab bar visible |
++| ☐ | Agent Floor shows two sub-tabs and both panes load, with no duplicate header or nav pill inside the frame |
++| ☐ | Leaving Agent Floor stops all `api/floor/live` and `api/team/status` traffic (watch DevTools Network); returning resumes it |
++| ☐ | `#market/TITAN/5y` still opens the TITAN drawer at 5y range |
++| ☐ | `#agents/floor` deep-links straight to Live Floor |
++| ☐ | Pressing Back once from a freshly loaded `/` leaves the terminal (does not trap on `#desk`) |
++| ☐ | `/team` and `/floor` still work standalone with their own chrome; no console errors on any tab across two poll cycles |
++
++:::
+diff --git a/prototype/static/desk.js b/prototype/static/desk.js
+index 3334076..3639a83 100644
+--- a/prototype/static/desk.js
++++ b/prototype/static/desk.js
+@@ -476,18 +476,20 @@
+         loadMarket();
+         var r = window.TPRouter.current().rest;
+         if (r[0]) {
+           if (r[1] && RANGES.indexOf(r[1].toLowerCase()) !== -1) curRange = r[1].toLowerCase();
+           openDrawer(r[0].toUpperCase());
+         }
+       },
+       refresh: loadMarket,
+       pollMs: 60000
+     });
+-    window.TPRouter.boot();
+-
++    // Shell furniture first: if the router fails to load, a frozen index strip
++    // beside a live clock looks like stale market data, not a broken deploy.
+     setInterval(function () {
+       if (document.hidden) return;
+       loadIndices();
+     }, 60000);
++
++    window.TPRouter.boot();
+   });
+ })();
+diff --git a/prototype/static/desk/panes.js b/prototype/static/desk/panes.js
+index c9e9e71..bd62d82 100644
+--- a/prototype/static/desk/panes.js
++++ b/prototype/static/desk/panes.js
+@@ -1,23 +1,25 @@
+ /* panes.js — the two Agent Floor consoles, framed.
+ 
+    Why iframes: /floor and /team are self-contained documents that assume they
+    own the browser. floor.html sets body{overflow:hidden}, paints scanlines via
+    body::after and sizes a canvas to the viewport; team.html styles bare
+    header/main/section selectors. All three stylesheets also define --bg,
+    --panel and --green with DIFFERENT values, so concatenating them would let
+    last-one-wins quietly restyle whichever loaded first. A frame is a document
+    boundary, which is exactly the isolation those two need.
+ 
+-   Why unmount clears src: both poll once a second. Left mounted behind a
+-   hidden tab that is ~3,600 requests an hour for a screen nobody is looking
+-   at. about:blank tears the document down and takes its timers with it. */
++   Why unmount clears src: team.html polls every 5s (POLL_MS = 5000, ~720
++   requests/hour) and floor.html every 2s (setTimeout(poll, 2000), ~1,800
++   requests/hour) -- ~2,520 requests/hour combined. Left mounted behind a
++   hidden tab, that traffic runs for a screen nobody is looking at.
++   about:blank tears the document down and takes its timers with it. */
+ (function () {
+   "use strict";
+ 
+   function pane(viewId, frameId, src) {
+     window.TPRouter.register(viewId, {
+       mount: function () {
+         var f = document.getElementById(frameId);
+         if (f && f.getAttribute("src") !== src) f.setAttribute("src", src);
+       },
+       unmount: function () {
+diff --git a/prototype/static/desk/router.js b/prototype/static/desk/router.js
+index 3c04135..4cb7ff1 100644
+--- a/prototype/static/desk/router.js
++++ b/prototype/static/desk/router.js
+@@ -1,18 +1,23 @@
+ /* router.js — nav, section/sub-tab switching, and the view lifecycle.
+    Parsing lives in route.js (pure, node-tested); this file owns the DOM.
+ 
+    Lifecycle contract:
+      mount()    once, the first time a view becomes visible
+      refresh()  on tick, only while visible and the document is not hidden
+      unmount()  on hide -- iframe panes only; ported views keep their state
+ 
++     Hooks must handle their own async failures. guard() catches synchronous
++     throws only -- a rejected promise inside mount() never reaches it, so an
++     async view that fails renders a blank pane instead of the error card.
++     Every hook that awaits anything must carry its own .catch.
++
+    Every hook is wrapped. A view that throws degrades itself to an error card
+    and never takes the shell, the nav, or a sibling view down with it. */
+ (function () {
+   "use strict";
+ 
+   var SECTIONS = [
+     { id: "desk",   label: "Desk",        subs: [] },
+     { id: "market", label: "Market",      subs: [] },
+     { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
+                                                  { id: "floor", label: "Live Floor" }] }
+@@ -101,21 +106,25 @@
+   }
+ 
+   function show(section, sub) {
+     var target = viewIdFor(section, sub);
+     Object.keys(views).forEach(function (viewId) {
+       var el = $("view-" + viewId);
+       if (!el) return;
+       var on = viewId === target;
+       el.classList.toggle("on", on);
+       if (on) {
+-        if (!mounted[viewId]) { mounted[viewId] = true; guard(viewId, "mount"); }
++        if (!mounted[viewId]) {
++          mounted[viewId] = true;
++          if (views[viewId]) views[viewId]._last = Date.now();
++          guard(viewId, "mount");
++        }
+       } else if (mounted[viewId] && views[viewId] && views[viewId].unmount) {
+         guard(viewId, "unmount");
+         mounted[viewId] = false;
+       }
+     });
+     document.querySelectorAll(".nav a[data-section]").forEach(function (a) {
+       a.classList.toggle("on", a.getAttribute("data-section") === section);
+     });
+   }
+ 
+@@ -128,20 +137,25 @@
+     var hash = window.TPRoute.build(parsed.section, parsed.sub, parsed.rest);
+     if (location.hash === hash) return;
+     /* Normalizing (boot, or reacting to a hashchange the browser already
+        recorded) must NOT create a history entry -- otherwise Back lands on the
+        un-normalized URL, we normalize again, and the user is trapped. Only a
+        deliberate click pushes. */
+     if (replace && history.replaceState) history.replaceState(null, "", hash);
+     else location.hash = hash;
+   }
+ 
++  /* Register BEFORE boot(). boot() runs the first go(), and show() only
++     iterates views registered by then -- a later registrant stays hidden
++     until the next navigation. Script order in desk.html guarantees this:
++     panes.js registers at IIFE time, desk.js registers inside its
++     DOMContentLoaded handler and calls boot() last. */
+   function register(viewId, hooks) { views[viewId] = hooks || {}; }
+   function current() { return { section: cur.section, sub: cur.sub, rest: cur.rest.slice() }; }
+ 
+   function boot() {
+     renderNav();
+     var p = window.TPRoute.parse(location.hash, SECTIONS);
+     go(p.section, p.sub, p.rest, true);
+ 
+     window.addEventListener("hashchange", function () {
+       var q = window.TPRoute.parse(location.hash, SECTIONS);
+diff --git a/tests/test_web_routes.py b/tests/test_web_routes.py
+index 8b93894..99784b9 100644
+--- a/tests/test_web_routes.py
++++ b/tests/test_web_routes.py
+@@ -118,10 +118,26 @@ def test_agent_floor_frames_ship_empty(client):
+     # Assert the behaviour, not the attribute order: no framed URL may appear
+     # in the served HTML at all. panes.js sets src at mount time.
+     assert b"/team?embed=1" not in body
+     assert b"/floor?embed=1" not in body
+     assert b'id="frameQuant"' in body
+     assert b'id="frameFloor"' in body
+ 
+ 
+ def test_panes_module_loaded(client):
+     assert b"/static/desk/panes.js" in client.get("/").data
++
++
++def test_all_terminal_modules_are_actually_served(client):
++    """Fetch every module, don't just grep for its <script src>.
++
++    A tag can reference a file that 404s — that is precisely how a tab
++    shipped blank on 2026-08-03. Asserting the string appears in the HTML
++    proves only that someone typed it.
++    """
++    for path in ("/static/desk/route.js",
++                 "/static/desk/router.js",
++                 "/static/desk/panes.js",
++                 "/static/desk.js"):
++        r = client.get(path)
++        assert r.status_code == 200, path
++        assert len(r.data) > 0, path

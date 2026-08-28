@@ -1,0 +1,474 @@
+# Review package: f63043217b652f0c62fc191c98832426945b0f99..HEAD
+
+## Commits
+9e76397 fix(terminal): keep /decisions and /classic reachable from the nav
+3425910 feat(terminal): two-level router with a view lifecycle
+
+## Files changed
+ prototype/static/desk.css       |  23 ++++++
+ prototype/static/desk.js        |  59 ++++++--------
+ prototype/static/desk/router.js | 166 ++++++++++++++++++++++++++++++++++++++++
+ prototype/templates/desk.html   |  20 +++--
+ tests/test_web_routes.py        |  42 ++++++++++
+ 5 files changed, 267 insertions(+), 43 deletions(-)
+
+## Diff
+diff --git a/prototype/static/desk.css b/prototype/static/desk.css
+index 17d9666..b07ea6e 100644
+--- a/prototype/static/desk.css
++++ b/prototype/static/desk.css
+@@ -243,10 +243,33 @@ body {
+ .tgl button {
+   font-size: 12px; color: var(--mut); background: var(--panel);
+   border: 1px solid var(--line); border-radius: 4px; width: 28px; height: 24px;
+   cursor: pointer; line-height: 1;
+ }
+ .tgl button.on { color: var(--acc); border-color: var(--acc); background: var(--acc-bg); }
+ .drawer canvas { height: 190px; }
+ .rstats { display: flex; gap: 18px; margin-bottom: 8px; }
+ .rstats div { font-size: 11px; color: var(--dim); display: flex; flex-direction: column; }
+ .rstats b { font-size: 13px; color: var(--ink); margin-top: 1px; }
++
++/* ── sub-tabs ───────────────────────────────────────────────────────────── */
++.subnav {
++  display: flex; gap: 2px; padding: 0 16px;
++  background: var(--bg); border-bottom: 1px solid var(--line);
++}
++.subnav a {
++  padding: 7px 12px 6px; font-size: 11px; font-weight: 600;
++  color: var(--dim); text-decoration: none; letter-spacing: .3px;
++  border-bottom: 2px solid transparent; cursor: pointer;
++}
++.subnav a:hover { color: var(--ink); }
++.subnav a.on { color: var(--ink); border-bottom-color: var(--acc); }
++
++/* ── iframe panes ───────────────────────────────────────────────────────── */
++/* The framed consoles set their own body height, so the frame must be given
++   an explicit one -- a percentage height against an auto-height parent
++   collapses to zero and the pane renders as a 0px sliver. */
++.view.pane.on { display: block; }
++.paneframe {
++  display: block; width: 100%; height: calc(100vh - 132px);
++  min-height: 520px; border: 0; background: var(--bg);
++}
+diff --git a/prototype/static/desk.js b/prototype/static/desk.js
+index 958714f..3334076 100644
+--- a/prototype/static/desk.js
++++ b/prototype/static/desk.js
+@@ -425,55 +425,25 @@
+         ctx.fillRect(xC - bw / 2, yTop, bw, Math.max(1 * dpr, yBot - yTop));
+       }
+       if (cd.length > maxBars) {
+         ctx.fillStyle = "#57627a";
+         ctx.fillText("showing last " + maxBars + " of " + cd.length +
+                      " — Line shows all", padL, padT + 10 * dpr);
+       }
+     }
+   }
+ 
+-  /* ── tabs ──────────────────────────────────────────────────────────── */
+-  function switchTab(name) {
+-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
+-      a.classList.toggle("on", a.getAttribute("data-tab") === name);
+-    });
+-    document.querySelectorAll(".view").forEach(function (v) {
+-      v.classList.toggle("on", v.id === "view-" + name);
+-    });
+-    if (name === "market" && !mktRows.length) loadMarket();
+-  }
+-
+   /* ── boot ──────────────────────────────────────────────────────────── */
+   document.addEventListener("DOMContentLoaded", function () {
+     tickClock(); setInterval(tickClock, 1000);
+-    loadIndices(); loadDesk();
++    loadIndices();
+ 
+-    // Deep links: /#market opens the tab, /#market/RELIANCE opens the drawer too.
+-    var h = (location.hash || "").replace(/^#/, "").split("/");
+-    if (h[0] === "market") {
+-      switchTab("market");
+-      // The drawer must NOT wait for /api/scores — the chart comes from its own
+-      // endpoint. Coupling them meant a warming score cache silently disabled
+-      // every deep link for two minutes after a restart.
+-      if (h[1]) {
+-        if (h[2] && RANGES.indexOf(h[2].toLowerCase()) !== -1)
+-          curRange = h[2].toLowerCase();   // /#market/TITAN/5y
+-        openDrawer(h[1].toUpperCase());
+-      }
+-    }
+-
+-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
+-      a.addEventListener("click", function (e) {
+-        e.preventDefault(); switchTab(a.getAttribute("data-tab"));
+-      });
+-    });
+     $("overlay").addEventListener("click", closeDrawer);
+     $("dClose").addEventListener("click", closeDrawer);
+     $("dModeCandle").addEventListener("click", function () {
+       curMode = "candle";
+       this.classList.add("on"); $("dModeLine").classList.remove("on");
+       drawChart();
+     });
+     $("dModeLine").addEventListener("click", function () {
+       curMode = "line";
+       this.classList.add("on"); $("dModeCandle").classList.remove("on");
+@@ -487,22 +457,37 @@
+     });
+     document.querySelectorAll(".fpill").forEach(function (b) {
+       b.addEventListener("click", function () {
+         document.querySelectorAll(".fpill").forEach(function (x) { x.classList.remove("on"); });
+         b.classList.add("on");
+         mktFilter = b.getAttribute("data-f");
+         renderMarket();
+       });
+     });
+ 
+-    // polling — paused while the tab is hidden
+-    setInterval(function () {
+-      if (document.hidden) return;
+-      loadDesk();
+-    }, 30000);
++    /* Navigation and polling now belong to TPRouter. This file owns two
++       views and nothing else. */
++    window.TPRouter.register("desk", {
++      mount: loadDesk,
++      refresh: loadDesk,
++      pollMs: 30000
++    });
++    window.TPRouter.register("market", {
++      mount: function () {
++        loadMarket();
++        var r = window.TPRouter.current().rest;
++        if (r[0]) {
++          if (r[1] && RANGES.indexOf(r[1].toLowerCase()) !== -1) curRange = r[1].toLowerCase();
++          openDrawer(r[0].toUpperCase());
++        }
++      },
++      refresh: loadMarket,
++      pollMs: 60000
++    });
++    window.TPRouter.boot();
++
+     setInterval(function () {
+       if (document.hidden) return;
+       loadIndices();
+-      if ($("view-market").classList.contains("on")) loadMarket();
+     }, 60000);
+   });
+ })();
+diff --git a/prototype/static/desk/router.js b/prototype/static/desk/router.js
+new file mode 100644
+index 0000000..dc18be4
+--- /dev/null
++++ b/prototype/static/desk/router.js
+@@ -0,0 +1,166 @@
++/* router.js — nav, section/sub-tab switching, and the view lifecycle.
++   Parsing lives in route.js (pure, node-tested); this file owns the DOM.
++
++   Lifecycle contract:
++     mount()    once, the first time a view becomes visible
++     refresh()  on tick, only while visible and the document is not hidden
++     unmount()  on hide -- iframe panes only; ported views keep their state
++
++   Every hook is wrapped. A view that throws degrades itself to an error card
++   and never takes the shell, the nav, or a sibling view down with it. */
++(function () {
++  "use strict";
++
++  var SECTIONS = [
++    { id: "desk",   label: "Desk",        subs: [] },
++    { id: "market", label: "Market",      subs: [] },
++    { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
++                                                 { id: "floor", label: "Live Floor" }] }
++  ];
++
++  /* External destinations. Deliberately NOT in SECTIONS: TPRoute matches by
++     section id, so an entry here would let "#classic" resolve to a section
++     with no registered view and render a blank tab. These are plain links,
++     never routed. */
++  var EXTERNAL = [
++    { label: "Decisions", href: "/decisions" },
++    { label: "Classic",   href: "/classic" }
++  ];
++
++  var views = {};     // viewId -> hooks
++  var mounted = {};   // viewId -> true
++  var cur = { section: null, sub: null, rest: [] };
++
++  function $(id) { return document.getElementById(id); }
++
++  /* A view id is "section" for flat sections, "section-sub" otherwise. */
++  function viewIdFor(section, sub) { return sub ? section + "-" + sub : section; }
++
++  function esc(s) {
++    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
++      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
++    });
++  }
++
++  function guard(viewId, hookName) {
++    var hooks = views[viewId];
++    if (!hooks || typeof hooks[hookName] !== "function") return;
++    try {
++      hooks[hookName]();
++    } catch (e) {
++      if (window.console) console.error("view " + viewId + "." + hookName, e);
++      var el = $("view-" + viewId);
++      if (el && hookName === "mount") {
++        el.innerHTML = '<div class="card"><h3>This view failed to load</h3>' +
++          '<div class="sub">' + esc(e && e.message || e) + '</div></div>';
++      }
++    }
++  }
++
++  function renderNav() {
++    var nav = document.querySelector(".nav");
++    if (!nav) return;
++    nav.innerHTML = "";
++    SECTIONS.forEach(function (s) {
++      var a = document.createElement("a");
++      a.setAttribute("data-section", s.id);
++      a.textContent = s.label;
++      a.href = "#" + s.id;
++      a.addEventListener("click", function (e) { e.preventDefault(); go(s.id, null, []); });
++      nav.appendChild(a);
++    });
++    EXTERNAL.forEach(function (x) {
++      var a = document.createElement("a");
++      a.href = x.href;
++      a.appendChild(document.createTextNode(x.label + " "));
++      var ext = document.createElement("span");
++      ext.className = "ext";
++      ext.textContent = "↗";
++      a.appendChild(ext);
++      nav.appendChild(a);
++    });
++  }
++
++  function renderSubnav(section, sub) {
++    var bar = $("subnav");
++    if (!bar) return;
++    var s = null;
++    SECTIONS.forEach(function (x) { if (x.id === section) s = x; });
++    var subs = (s && s.subs) || [];
++    bar.innerHTML = "";
++    bar.style.display = subs.length > 1 ? "flex" : "none";
++    subs.forEach(function (t) {
++      var a = document.createElement("a");
++      a.setAttribute("data-sub", t.id);
++      a.textContent = t.label;
++      a.href = "#" + section + "/" + t.id;
++      if (t.id === sub) a.className = "on";
++      a.addEventListener("click", function (e) { e.preventDefault(); go(section, t.id, []); });
++      bar.appendChild(a);
++    });
++  }
++
++  function show(section, sub) {
++    var target = viewIdFor(section, sub);
++    Object.keys(views).forEach(function (viewId) {
++      var el = $("view-" + viewId);
++      if (!el) return;
++      var on = viewId === target;
++      el.classList.toggle("on", on);
++      if (on) {
++        if (!mounted[viewId]) { mounted[viewId] = true; guard(viewId, "mount"); }
++      } else if (mounted[viewId] && views[viewId] && views[viewId].unmount) {
++        guard(viewId, "unmount");
++        mounted[viewId] = false;
++      }
++    });
++    document.querySelectorAll(".nav a[data-section]").forEach(function (a) {
++      a.classList.toggle("on", a.getAttribute("data-section") === section);
++    });
++  }
++
++  function go(section, sub, rest) {
++    var parsed = window.TPRoute.parse(
++      window.TPRoute.build(section, sub, rest || []), SECTIONS);
++    cur = parsed;
++    renderSubnav(parsed.section, parsed.sub);
++    show(parsed.section, parsed.sub);
++    var hash = window.TPRoute.build(parsed.section, parsed.sub, parsed.rest);
++    if (location.hash !== hash) location.hash = hash;
++  }
++
++  function register(viewId, hooks) { views[viewId] = hooks || {}; }
++  function current() { return { section: cur.section, sub: cur.sub, rest: cur.rest.slice() }; }
++
++  function boot() {
++    renderNav();
++    var p = window.TPRoute.parse(location.hash, SECTIONS);
++    go(p.section, p.sub, p.rest);
++
++    window.addEventListener("hashchange", function () {
++      var q = window.TPRoute.parse(location.hash, SECTIONS);
++      go(q.section, q.sub, q.rest);
++    });
++
++    /* One timer drives every view. Each hook declares its own cadence, so a
++       60s view is not woken by a 30s neighbour. */
++    setInterval(function () {
++      if (document.hidden) return;
++      var now = Date.now();
++      Object.keys(views).forEach(function (viewId) {
++        var h = views[viewId];
++        if (!mounted[viewId] || !h || typeof h.refresh !== "function") return;
++        var el = $("view-" + viewId);
++        if (!el || !el.classList.contains("on")) return;
++        var every = h.pollMs || 60000;
++        if (now - (h._last || 0) < every) return;
++        h._last = now;
++        guard(viewId, "refresh");
++      });
++    }, 5000);
++  }
++
++  window.TPRouter = {
++    SECTIONS: SECTIONS, register: register, go: go, current: current, boot: boot
++  };
++})();
+diff --git a/prototype/templates/desk.html b/prototype/templates/desk.html
+index 3adc965..da7074a 100644
+--- a/prototype/templates/desk.html
++++ b/prototype/templates/desk.html
+@@ -1,20 +1,22 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>TradePilot Terminal</title>
+ <link rel="stylesheet" href="/static/desk.css">
+ <!-- JS is a separate file BY RULE: on 2026-08-03 a tab shipped blank because its
+      logic was appended inside a <script src> tag, whose inline content the
+      browser silently discards. -->
++<script src="/static/desk/route.js" defer></script>
++<script src="/static/desk/router.js" defer></script>
+ <script src="/static/desk.js" defer></script>
+ </head>
+ <body>
+ 
+ <header class="topbar">
+   <div class="brand">
+     <svg viewBox="0 0 72 72" aria-label="TradePilot">
+       <defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse">
+         <stop offset="0%" stop-color="#4338CA"/><stop offset="100%" stop-color="#7C7FF3"/>
+       </linearGradient></defs>
+@@ -37,26 +39,24 @@
+     <div class="idx" id="idx-niftyit"><span class="n">NIFTY IT</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+     <div class="idx" id="idx-vix"><span class="n">INDIA VIX</span><span class="v num skel">00.00</span><span class="c num">--</span></div>
+   </div>
+ 
+   <div class="sess">
+     <span class="pill closed" id="sessPill">…</span>
+     <span class="clock" id="clock">--:--:--</span>
+   </div>
+ </header>
+ 
+-<nav class="nav">
+-  <a data-tab="desk" class="on">Desk</a>
+-  <a data-tab="market">Market</a>
+-  <a href="/decisions">Decisions <span class="ext">↗</span></a>
+-  <a href="/classic">Classic <span class="ext">↗</span></a>
+-</nav>
++<!-- Nav and sub-tabs are rendered from TPRouter.SECTIONS. Do not hand-edit
++     links here: a link the registry does not know about routes to nothing. -->
++<nav class="nav"></nav>
++<div class="subnav" id="subnav" style="display:none"></div>
+ 
+ <main class="main">
+ 
+   <!-- ═══ DESK ═══ -->
+   <section class="view on" id="view-desk">
+     <div class="kpis">
+       <div class="card kpi">
+         <h3>Fleet Net <span class="chip dim" id="deskStale">…</span></h3>
+         <div class="big" id="kpiNet"><span class="skel">+₹00,000</span></div>
+         <div class="sub" id="kpiNetSub">&nbsp;</div>
+@@ -112,20 +112,28 @@
+       <button class="fpill" data-f="buy">BUY signal</button>
+       <button class="fpill" data-f="held">Held</button>
+       <span class="chip dim" id="mktCount">…</span>
+       <span class="asof" id="mktAsOf">…</span>
+     </div>
+     <div class="card" style="padding:0 6px">
+       <div id="mktBody"><div class="empty skel" style="height:300px;margin:10px"></div></div>
+     </div>
+   </section>
+ 
++  <!-- ═══ AGENT FLOOR ═══ -->
++  <section class="view pane" id="view-agents-quant">
++    <iframe class="paneframe" id="frameQuant" title="Quant Desk" src=""></iframe>
++  </section>
++  <section class="view pane" id="view-agents-floor">
++    <iframe class="paneframe" id="frameFloor" title="Live Floor" src=""></iframe>
++  </section>
++
+ </main>
+ 
+ <!-- ═══ STOCK DRAWER ═══ -->
+ <div class="overlay" id="overlay"></div>
+ <aside class="drawer" id="drawer">
+   <button class="x" id="dClose" aria-label="Close">✕</button>
+   <h2 id="dTitle">—</h2>
+   <div class="price num" id="dPrice">—</div>
+   <div class="meta" id="dMeta"></div>
+   <div class="dctl">
+diff --git a/tests/test_web_routes.py b/tests/test_web_routes.py
+index 3a4a9a3..acae3cf 100644
+--- a/tests/test_web_routes.py
++++ b/tests/test_web_routes.py
+@@ -50,10 +50,52 @@ def test_team_embed_hides_header_and_pageswitch(client):
+     # "TradePilot Quant Desk" in its <title>, which embed mode keeps.
+     assert b"<h1>TradePilot Quant Desk</h1>" not in r.data
+     assert b"pageswitch.js" not in r.data
+ 
+ 
+ def test_team_without_embed_keeps_header(client):
+     """The standalone page is unchanged."""
+     r = client.get("/team")
+     assert b"<h1>TradePilot Quant Desk</h1>" in r.data
+     assert b"pageswitch.js" in r.data
++
++
++def test_router_declares_three_sections(client):
++    """The section registry is JS-rendered, so assert it in the served module.
++
++    A Flask test client executes no JavaScript — the served page carries an
++    empty <nav>. Fetching router.js verifies the real artifact through the
++    real server, which is the closest honest equivalent without a browser.
++    """
++    r = client.get("/static/desk/router.js")
++    assert r.status_code == 200
++    for section in (b'id: "desk"', b'id: "market"', b'id: "agents"'):
++        assert section in r.data
++
++
++def test_terminal_has_subtab_bar(client):
++    """The sub-tab bar element must exist even when empty."""
++    assert b'id="subnav"' in client.get("/").data
++
++
++def test_terminal_loads_router_modules(client):
++    """Every module is referenced by a src-only script tag.
++
++    This is the direct regression test for the 2026-08-03 blank tab: a
++    script referenced but never loaded, or loaded with discarded inline
++    content, is exactly how that shipped.
++    """
++    body = client.get("/").data
++    for src in (b"/static/desk/route.js",
++                b"/static/desk/router.js",
++                b"/static/desk.js"):
++        assert src in body
++
++
++def test_router_keeps_external_links(client):
++    """The nav is registry-rendered, so external destinations must be declared
++    in the module. /classic is the client-facing surface and must stay
++    reachable from the terminal until it is absorbed."""
++    r = client.get("/static/desk/router.js")
++    assert r.status_code == 200
++    assert b'href: "/decisions"' in r.data
++    assert b'href: "/classic"' in r.data

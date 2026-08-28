@@ -1,0 +1,961 @@
+# Review package: 2530cf09b4df888e2cdf75fa5e5990a9f5741970..HEAD
+
+## Commits
+b1754ac feat(terminal): mount the agent floor as lazy panes
+a38bce4 fix(terminal): stop the router trapping the back button
+9e76397 fix(terminal): keep /decisions and /classic reachable from the nav
+3425910 feat(terminal): two-level router with a view lifecycle
+f630432 chore(gitignore): exclude .superpowers plan-execution scratch
+bb451ac docs(task-3): fix round 1 — correct pytest count, document node test command substitution, clarify fail-step result
+c1b09ae feat(terminal): pure hash router, tested under node
+39897b4 feat(floor,team): embed mode for framing inside the terminal
+7957366 test(web): first coverage for the Flask surface
+
+## Files changed
+ .gitignore                      |   3 +
+ prototype/__init__.py           |   0
+ prototype/app.py                |  17 +++-
+ prototype/static/desk.css       |  23 ++++++
+ prototype/static/desk.js        |  59 +++++---------
+ prototype/static/desk/panes.js  |  32 ++++++++
+ prototype/static/desk/route.js  |  48 +++++++++++
+ prototype/static/desk/router.js | 172 ++++++++++++++++++++++++++++++++++++++++
+ prototype/templates/desk.html   |  21 +++--
+ prototype/templates/floor.html  |   2 +-
+ prototype/templates/team.html   |   7 +-
+ tests/conftest.py               |  27 +++++++
+ tests/js/route.test.js          |  76 ++++++++++++++++++
+ tests/test_web_routes.py        | 127 +++++++++++++++++++++++++++++
+ 14 files changed, 564 insertions(+), 50 deletions(-)
+
+## Diff
+diff --git a/.gitignore b/.gitignore
+index 1d816d8..fb1a9fe 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -69,10 +69,13 @@ prototype/data/us_cache/
+ 
+ # Order-book depth snapshots — ~58 MB/day raw. Local research data, never committed.
+ docs/research/orderbook/
+ 
+ # Backtest bar cache — regenerable from yfinance in minutes, 33MB+ of parquet.
+ # Same reasoning as docs/research/orderbook: derived data, not source.
+ prototype/data/waterfall/
+ 
+ # Isolated worktrees for plan execution (local scratch, never committed)
+ .worktrees/
++
++# Superpower plan-execution scratch (disposable: briefs, reports, internal process detail)
++.superpowers/
+diff --git a/prototype/__init__.py b/prototype/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/prototype/app.py b/prototype/app.py
+index 8c10486..92e5540 100644
+--- a/prototype/app.py
++++ b/prototype/app.py
+@@ -113,22 +113,27 @@ def live_view():
+ 
+ 
+ @app.route("/lab")
+ def lab_view():
+     """A/B testing lab — challenger-vs-live experiments in one place."""
+     return render_template("lab.html")
+ 
+ 
+ @app.route("/floor")
+ def floor_view():
+-    """Live console for the agent floor — what each agent is watching, right now."""
+-    return render_template("floor.html")
++    """Live console for the agent floor -- what each agent is watching, right now.
++
++    ?embed=1 strips the brand span so the console can be framed inside the
++    terminal, which supplies its own chrome. The stats strip stays: it is the
++    point of the screen.
++    """
++    return render_template("floor.html", embed=request.args.get("embed") == "1")
+ 
+ 
+ @app.route("/api/floor/live")
+ def api_floor_live():
+     """Live state for the console.
+ 
+     Read-only by design: the floor is a separate process holding real session state,
+     so this reconstructs from what it already writes rather than asking it for
+     anything. A bug in here cannot take the floor down mid-session.
+     """
+@@ -3086,22 +3091,26 @@ def _team_read_jsonl_tail(directory: Path, n: int = 60,
+                     continue
+                 out.append(r)
+         except Exception:
+             continue
+     out.sort(key=lambda r: r.get("ts", ""), reverse=True)
+     return out[:n]
+ 
+ 
+ @app.route("/team")
+ def team_dashboard():
+-    """Permanent agent team dashboard."""
+-    return render_template("team.html")
++    """Permanent agent team dashboard.
++
++    ?embed=1 strips the header and skips pageswitch.js, which must never
++    render inside a terminal pane.
++    """
++    return render_template("team.html", embed=request.args.get("embed") == "1")
+ 
+ 
+ @app.route("/team/sarathi")
+ def team_sarathi():
+     """Sarathi verification ledger — drill-down on gate decisions."""
+     return render_template("team_sarathi.html")
+ 
+ 
+ @app.route("/api/team/status")
+ def api_team_status():
+diff --git a/prototype/static/desk.css b/prototype/static/desk.css
+index 17d9666..b07ea6e 100644
+--- a/prototype/static/desk.css
++++ b/prototype/static/desk.css
+@@ -243,10 +243,33 @@ body {
+ .tgl button {
+   font-size: 12px; color: var(--mut); background: var(--panel);
+   border: 1px solid var(--line); border-radius: 4px; width: 28px; height: 24px;
+   cursor: pointer; line-height: 1;
+ }
+ .tgl button.on { color: var(--acc); border-color: var(--acc); background: var(--acc-bg); }
+ .drawer canvas { height: 190px; }
+ .rstats { display: flex; gap: 18px; margin-bottom: 8px; }
+ .rstats div { font-size: 11px; color: var(--dim); display: flex; flex-direction: column; }
+ .rstats b { font-size: 13px; color: var(--ink); margin-top: 1px; }
++
++/* ── sub-tabs ───────────────────────────────────────────────────────────── */
++.subnav {
++  display: flex; gap: 2px; padding: 0 16px;
++  background: var(--bg); border-bottom: 1px solid var(--line);
++}
++.subnav a {
++  padding: 7px 12px 6px; font-size: 11px; font-weight: 600;
++  color: var(--dim); text-decoration: none; letter-spacing: .3px;
++  border-bottom: 2px solid transparent; cursor: pointer;
++}
++.subnav a:hover { color: var(--ink); }
++.subnav a.on { color: var(--ink); border-bottom-color: var(--acc); }
++
++/* ── iframe panes ───────────────────────────────────────────────────────── */
++/* The framed consoles set their own body height, so the frame must be given
++   an explicit one -- a percentage height against an auto-height parent
++   collapses to zero and the pane renders as a 0px sliver. */
++.view.pane.on { display: block; }
++.paneframe {
++  display: block; width: 100%; height: calc(100vh - 132px);
++  min-height: 520px; border: 0; background: var(--bg);
++}
+diff --git a/prototype/static/desk.js b/prototype/static/desk.js
+index 958714f..3334076 100644
+--- a/prototype/static/desk.js
++++ b/prototype/static/desk.js
+@@ -425,55 +425,25 @@
+         ctx.fillRect(xC - bw / 2, yTop, bw, Math.max(1 * dpr, yBot - yTop));
+       }
+       if (cd.length > maxBars) {
+         ctx.fillStyle = "#57627a";
+         ctx.fillText("showing last " + maxBars + " of " + cd.length +
+                      " — Line shows all", padL, padT + 10 * dpr);
+       }
+     }
+   }
+ 
+-  /* ── tabs ──────────────────────────────────────────────────────────── */
+-  function switchTab(name) {
+-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
+-      a.classList.toggle("on", a.getAttribute("data-tab") === name);
+-    });
+-    document.querySelectorAll(".view").forEach(function (v) {
+-      v.classList.toggle("on", v.id === "view-" + name);
+-    });
+-    if (name === "market" && !mktRows.length) loadMarket();
+-  }
+-
+   /* ── boot ──────────────────────────────────────────────────────────── */
+   document.addEventListener("DOMContentLoaded", function () {
+     tickClock(); setInterval(tickClock, 1000);
+-    loadIndices(); loadDesk();
++    loadIndices();
+ 
+-    // Deep links: /#market opens the tab, /#market/RELIANCE opens the drawer too.
+-    var h = (location.hash || "").replace(/^#/, "").split("/");
+-    if (h[0] === "market") {
+-      switchTab("market");
+-      // The drawer must NOT wait for /api/scores — the chart comes from its own
+-      // endpoint. Coupling them meant a warming score cache silently disabled
+-      // every deep link for two minutes after a restart.
+-      if (h[1]) {
+-        if (h[2] && RANGES.indexOf(h[2].toLowerCase()) !== -1)
+-          curRange = h[2].toLowerCase();   // /#market/TITAN/5y
+-        openDrawer(h[1].toUpperCase());
+-      }
+-    }
+-
+-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
+-      a.addEventListener("click", function (e) {
+-        e.preventDefault(); switchTab(a.getAttribute("data-tab"));
+-      });
+-    });
+     $("overlay").addEventListener("click", closeDrawer);
+     $("dClose").addEventListener("click", closeDrawer);
+     $("dModeCandle").addEventListener("click", function () {
+       curMode = "candle";
+       this.classList.add("on"); $("dModeLine").classList.remove("on");
+       drawChart();
+     });
+     $("dModeLine").addEventListener("click", function () {
+       curMode = "line";
+       this.classList.add("on"); $("dModeCandle").classList.remove("on");
+@@ -487,22 +457,37 @@
+     });
+     document.querySelectorAll(".fpill").forEach(function (b) {
+       b.addEventListener("click", function () {
+         document.querySelectorAll(".fpill").forEach(function (x) { x.classList.remove("on"); });
+         b.classList.add("on");
+         mktFilter = b.getAttribute("data-f");
+         renderMarket();
+       });
+     });
+ 
+-    // polling — paused while the tab is hidden
+-    setInterval(function () {
+-      if (document.hidden) return;
+-      loadDesk();
+-    }, 30000);
++    /* Navigation and polling now belong to TPRouter. This file owns two
++       views and nothing else. */
++    window.TPRouter.register("desk", {
++      mount: loadDesk,
++      refresh: loadDesk,
++      pollMs: 30000
++    });
++    window.TPRouter.register("market", {
++      mount: function () {
++        loadMarket();
++        var r = window.TPRouter.current().rest;
++        if (r[0]) {
++          if (r[1] && RANGES.indexOf(r[1].toLowerCase()) !== -1) curRange = r[1].toLowerCase();
++          openDrawer(r[0].toUpperCase());
++        }
++      },
++      refresh: loadMarket,
++      pollMs: 60000
++    });
++    window.TPRouter.boot();
++
+     setInterval(function () {
+       if (document.hidden) return;
+       loadIndices();
+-      if ($("view-market").classList.contains("on")) loadMarket();
+     }, 60000);
+   });
+ })();
+diff --git a/prototype/static/desk/panes.js b/prototype/static/desk/panes.js
+new file mode 100644
+index 0000000..c9e9e71
+--- /dev/null
++++ b/prototype/static/desk/panes.js
+@@ -0,0 +1,32 @@
++/* panes.js — the two Agent Floor consoles, framed.
++
++   Why iframes: /floor and /team are self-contained documents that assume they
++   own the browser. floor.html sets body{overflow:hidden}, paints scanlines via
++   body::after and sizes a canvas to the viewport; team.html styles bare
++   header/main/section selectors. All three stylesheets also define --bg,
++   --panel and --green with DIFFERENT values, so concatenating them would let
++   last-one-wins quietly restyle whichever loaded first. A frame is a document
++   boundary, which is exactly the isolation those two need.
++
++   Why unmount clears src: both poll once a second. Left mounted behind a
++   hidden tab that is ~3,600 requests an hour for a screen nobody is looking
++   at. about:blank tears the document down and takes its timers with it. */
++(function () {
++  "use strict";
++
++  function pane(viewId, frameId, src) {
++    window.TPRouter.register(viewId, {
++      mount: function () {
++        var f = document.getElementById(frameId);
++        if (f && f.getAttribute("src") !== src) f.setAttribute("src", src);
++      },
++      unmount: function () {
++        var f = document.getElementById(frameId);
++        if (f) f.setAttribute("src", "about:blank");
++      }
++    });
++  }
++
++  pane("agents-quant", "frameQuant", "/team?embed=1");
++  pane("agents-floor", "frameFloor", "/floor?embed=1");
++})();
+diff --git a/prototype/static/desk/route.js b/prototype/static/desk/route.js
+new file mode 100644
+index 0000000..13274ba
+--- /dev/null
++++ b/prototype/static/desk/route.js
+@@ -0,0 +1,48 @@
++/* route.js — pure hash routing for the terminal. No DOM, no globals, no deps.
++   Kept separate from router.js precisely so it can be tested under Node:
++   these rules are the one place a mistake silently breaks live bookmarks.
++
++   Hash grammar:  #section[/sub][/rest...]
++   Segment 2 is a sub-tab only if it matches one of that section's sub ids.
++   Anything else is payload against the default sub — which is what keeps
++   the pre-sub-tab links (#market/TITAN/5y) working. */
++(function (root, factory) {
++  "use strict";
++  var api = factory();
++  if (typeof module === "object" && module.exports) module.exports = api;
++  else root.TPRoute = api;
++})(typeof self !== "undefined" ? self : this, function () {
++  "use strict";
++
++  function findSection(id, sections) {
++    for (var i = 0; i < sections.length; i++) {
++      if (sections[i].id === id) return sections[i];
++    }
++    return null;
++  }
++
++  function parse(hash, sections) {
++    var segs = String(hash || "").replace(/^#/, "").split("/").filter(Boolean);
++    var section = findSection(segs[0], sections) || sections[0];
++    var subs = section.subs || [];
++    var rest = segs.slice(1);
++    var sub = null;
++
++    if (subs.length) {
++      sub = subs[0].id;
++      if (rest.length && findSection(rest[0], subs)) {
++        sub = rest[0];
++        rest = rest.slice(1);
++      }
++    }
++    return { section: section.id, sub: sub, rest: rest };
++  }
++
++  function build(section, sub, rest) {
++    var parts = [section];
++    if (sub) parts.push(sub);
++    return "#" + parts.concat(rest || []).join("/");
++  }
++
++  return { parse: parse, build: build };
++});
+diff --git a/prototype/static/desk/router.js b/prototype/static/desk/router.js
+new file mode 100644
+index 0000000..3c04135
+--- /dev/null
++++ b/prototype/static/desk/router.js
+@@ -0,0 +1,172 @@
++/* router.js — nav, section/sub-tab switching, and the view lifecycle.
++   Parsing lives in route.js (pure, node-tested); this file owns the DOM.
++
++   Lifecycle contract:
++     mount()    once, the first time a view becomes visible
++     refresh()  on tick, only while visible and the document is not hidden
++     unmount()  on hide -- iframe panes only; ported views keep their state
++
++   Every hook is wrapped. A view that throws degrades itself to an error card
++   and never takes the shell, the nav, or a sibling view down with it. */
++(function () {
++  "use strict";
++
++  var SECTIONS = [
++    { id: "desk",   label: "Desk",        subs: [] },
++    { id: "market", label: "Market",      subs: [] },
++    { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
++                                                 { id: "floor", label: "Live Floor" }] }
++  ];
++
++  /* External destinations. Deliberately NOT in SECTIONS: TPRoute matches by
++     section id, so an entry here would let "#classic" resolve to a section
++     with no registered view and render a blank tab. These are plain links,
++     never routed. */
++  var EXTERNAL = [
++    { label: "Decisions", href: "/decisions" },
++    { label: "Classic",   href: "/classic" }
++  ];
++
++  var views = {};     // viewId -> hooks
++  var mounted = {};   // viewId -> true
++  var cur = { section: null, sub: null, rest: [] };
++
++  function $(id) { return document.getElementById(id); }
++
++  /* A view id is "section" for flat sections, "section-sub" otherwise. */
++  function viewIdFor(section, sub) { return sub ? section + "-" + sub : section; }
++
++  function esc(s) {
++    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
++      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
++    });
++  }
++
++  function guard(viewId, hookName) {
++    var hooks = views[viewId];
++    if (!hooks || typeof hooks[hookName] !== "function") return;
++    try {
++      hooks[hookName]();
++    } catch (e) {
++      if (window.console) console.error("view " + viewId + "." + hookName, e);
++      var el = $("view-" + viewId);
++      if (el && hookName === "mount") {
++        el.innerHTML = '<div class="card"><h3>This view failed to load</h3>' +
++          '<div class="sub">' + esc(e && e.message || e) + '</div></div>';
++      }
++    }
++  }
++
++  function renderNav() {
++    var nav = document.querySelector(".nav");
++    if (!nav) return;
++    nav.innerHTML = "";
++    SECTIONS.forEach(function (s) {
++      var a = document.createElement("a");
++      a.setAttribute("data-section", s.id);
++      a.textContent = s.label;
++      a.href = "#" + s.id;
++      a.addEventListener("click", function (e) { e.preventDefault(); go(s.id, null, []); });
++      nav.appendChild(a);
++    });
++    EXTERNAL.forEach(function (x) {
++      var a = document.createElement("a");
++      a.href = x.href;
++      a.appendChild(document.createTextNode(x.label + " "));
++      var ext = document.createElement("span");
++      ext.className = "ext";
++      ext.textContent = "↗";
++      a.appendChild(ext);
++      nav.appendChild(a);
++    });
++  }
++
++  function renderSubnav(section, sub) {
++    var bar = $("subnav");
++    if (!bar) return;
++    var s = null;
++    SECTIONS.forEach(function (x) { if (x.id === section) s = x; });
++    var subs = (s && s.subs) || [];
++    bar.innerHTML = "";
++    bar.style.display = subs.length > 1 ? "flex" : "none";
++    subs.forEach(function (t) {
++      var a = document.createElement("a");
++      a.setAttribute("data-sub", t.id);
++      a.textContent = t.label;
++      a.href = "#" + section + "/" + t.id;
++      if (t.id === sub) a.className = "on";
++      a.addEventListener("click", function (e) { e.preventDefault(); go(section, t.id, []); });
++      bar.appendChild(a);
++    });
++  }
++
++  function show(section, sub) {
++    var target = viewIdFor(section, sub);
++    Object.keys(views).forEach(function (viewId) {
++      var el = $("view-" + viewId);
++      if (!el) return;
++      var on = viewId === target;
++      el.classList.toggle("on", on);
++      if (on) {
++        if (!mounted[viewId]) { mounted[viewId] = true; guard(viewId, "mount"); }
++      } else if (mounted[viewId] && views[viewId] && views[viewId].unmount) {
++        guard(viewId, "unmount");
++        mounted[viewId] = false;
++      }
++    });
++    document.querySelectorAll(".nav a[data-section]").forEach(function (a) {
++      a.classList.toggle("on", a.getAttribute("data-section") === section);
++    });
++  }
++
++  function go(section, sub, rest, replace) {
++    var parsed = window.TPRoute.parse(
++      window.TPRoute.build(section, sub, rest || []), SECTIONS);
++    cur = parsed;
++    renderSubnav(parsed.section, parsed.sub);
++    show(parsed.section, parsed.sub);
++    var hash = window.TPRoute.build(parsed.section, parsed.sub, parsed.rest);
++    if (location.hash === hash) return;
++    /* Normalizing (boot, or reacting to a hashchange the browser already
++       recorded) must NOT create a history entry -- otherwise Back lands on the
++       un-normalized URL, we normalize again, and the user is trapped. Only a
++       deliberate click pushes. */
++    if (replace && history.replaceState) history.replaceState(null, "", hash);
++    else location.hash = hash;
++  }
++
++  function register(viewId, hooks) { views[viewId] = hooks || {}; }
++  function current() { return { section: cur.section, sub: cur.sub, rest: cur.rest.slice() }; }
++
++  function boot() {
++    renderNav();
++    var p = window.TPRoute.parse(location.hash, SECTIONS);
++    go(p.section, p.sub, p.rest, true);
++
++    window.addEventListener("hashchange", function () {
++      var q = window.TPRoute.parse(location.hash, SECTIONS);
++      go(q.section, q.sub, q.rest, true);
++    });
++
++    /* One timer drives every view. Each hook declares its own cadence, so a
++       60s view is not woken by a 30s neighbour. */
++    setInterval(function () {
++      if (document.hidden) return;
++      var now = Date.now();
++      Object.keys(views).forEach(function (viewId) {
++        var h = views[viewId];
++        if (!mounted[viewId] || !h || typeof h.refresh !== "function") return;
++        var el = $("view-" + viewId);
++        if (!el || !el.classList.contains("on")) return;
++        var every = h.pollMs || 60000;
++        if (now - (h._last || 0) < every) return;
++        h._last = now;
++        guard(viewId, "refresh");
++      });
++    }, 5000);
++  }
++
++  window.TPRouter = {
++    SECTIONS: SECTIONS, register: register, go: go, current: current, boot: boot
++  };
++})();
+diff --git a/prototype/templates/desk.html b/prototype/templates/desk.html
+index 3adc965..fcf334a 100644
+--- a/prototype/templates/desk.html
++++ b/prototype/templates/desk.html
+@@ -1,20 +1,23 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>TradePilot Terminal</title>
+ <link rel="stylesheet" href="/static/desk.css">
+ <!-- JS is a separate file BY RULE: on 2026-08-03 a tab shipped blank because its
+      logic was appended inside a <script src> tag, whose inline content the
+      browser silently discards. -->
++<script src="/static/desk/route.js" defer></script>
++<script src="/static/desk/router.js" defer></script>
++<script src="/static/desk/panes.js" defer></script>
+ <script src="/static/desk.js" defer></script>
+ </head>
+ <body>
+ 
+ <header class="topbar">
+   <div class="brand">
+     <svg viewBox="0 0 72 72" aria-label="TradePilot">
+       <defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse">
+         <stop offset="0%" stop-color="#4338CA"/><stop offset="100%" stop-color="#7C7FF3"/>
+       </linearGradient></defs>
+@@ -37,26 +40,24 @@
+     <div class="idx" id="idx-niftyit"><span class="n">NIFTY IT</span><span class="v num skel">00000.00</span><span class="c num">--</span></div>
+     <div class="idx" id="idx-vix"><span class="n">INDIA VIX</span><span class="v num skel">00.00</span><span class="c num">--</span></div>
+   </div>
+ 
+   <div class="sess">
+     <span class="pill closed" id="sessPill">…</span>
+     <span class="clock" id="clock">--:--:--</span>
+   </div>
+ </header>
+ 
+-<nav class="nav">
+-  <a data-tab="desk" class="on">Desk</a>
+-  <a data-tab="market">Market</a>
+-  <a href="/decisions">Decisions <span class="ext">↗</span></a>
+-  <a href="/classic">Classic <span class="ext">↗</span></a>
+-</nav>
++<!-- Nav and sub-tabs are rendered from TPRouter.SECTIONS. Do not hand-edit
++     links here: a link the registry does not know about routes to nothing. -->
++<nav class="nav"></nav>
++<div class="subnav" id="subnav" style="display:none"></div>
+ 
+ <main class="main">
+ 
+   <!-- ═══ DESK ═══ -->
+   <section class="view on" id="view-desk">
+     <div class="kpis">
+       <div class="card kpi">
+         <h3>Fleet Net <span class="chip dim" id="deskStale">…</span></h3>
+         <div class="big" id="kpiNet"><span class="skel">+₹00,000</span></div>
+         <div class="sub" id="kpiNetSub">&nbsp;</div>
+@@ -112,20 +113,28 @@
+       <button class="fpill" data-f="buy">BUY signal</button>
+       <button class="fpill" data-f="held">Held</button>
+       <span class="chip dim" id="mktCount">…</span>
+       <span class="asof" id="mktAsOf">…</span>
+     </div>
+     <div class="card" style="padding:0 6px">
+       <div id="mktBody"><div class="empty skel" style="height:300px;margin:10px"></div></div>
+     </div>
+   </section>
+ 
++  <!-- ═══ AGENT FLOOR ═══ -->
++  <section class="view pane" id="view-agents-quant">
++    <iframe class="paneframe" id="frameQuant" title="Quant Desk" src=""></iframe>
++  </section>
++  <section class="view pane" id="view-agents-floor">
++    <iframe class="paneframe" id="frameFloor" title="Live Floor" src=""></iframe>
++  </section>
++
+ </main>
+ 
+ <!-- ═══ STOCK DRAWER ═══ -->
+ <div class="overlay" id="overlay"></div>
+ <aside class="drawer" id="drawer">
+   <button class="x" id="dClose" aria-label="Close">✕</button>
+   <h2 id="dTitle">—</h2>
+   <div class="price num" id="dPrice">—</div>
+   <div class="meta" id="dMeta"></div>
+   <div class="dctl">
+diff --git a/prototype/templates/floor.html b/prototype/templates/floor.html
+index ab1b952..a7a3ba7 100644
+--- a/prototype/templates/floor.html
++++ b/prototype/templates/floor.html
+@@ -120,21 +120,21 @@ body::after{
+ .tot{display:flex;justify-content:space-between;padding:6px 12px;font-size:10px;
+      background:var(--panel)}
+ .tot b{font-variant-numeric:tabular-nums}
+ .decl{padding:4px 12px;font-size:9px;color:var(--faint);border-bottom:1px solid #0f1c2b}
+ </style>
+ </head>
+ <body>
+ <div class="hud">
+ 
+   <div class="bar">
+-    <span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>
++    {% if not embed %}<span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>{% endif %}
+     <span class="live" id="live"><span class="dot"></span><span id="liveTxt">CONNECTING</span></span>
+     <div class="stat"><span class="k">ticks</span><span class="v" id="sTicks">—</span></div>
+     <div class="stat"><span class="k">rate</span><span class="v" id="sRate">—</span></div>
+     <div class="stat"><span class="k">escalations</span><span class="v" id="sEsc">—</span></div>
+     <div class="stat"><span class="k">swaps</span><span class="v" id="sSwap">—</span></div>
+     <div class="stat"><span class="k">armed</span><span class="v hot" id="sArm">—</span></div>
+     <div class="stat"><span class="k">gaps</span><span class="v" id="sGap">—</span></div>
+     <span class="spacer"></span>
+     <div class="stat"><span class="k">clock</span><span class="v" id="sNow">—</span></div>
+   </div>
+diff --git a/prototype/templates/team.html b/prototype/templates/team.html
+index 5c6f94e..04677d0 100644
+--- a/prototype/templates/team.html
++++ b/prototype/templates/team.html
+@@ -71,30 +71,32 @@
+   .due-badge { display:inline-block; background:#7c2d12; color:#fed7aa;
+                font-size:9px; padding:1px 5px; border-radius:3px;
+                margin-left:6px; font-weight:600; letter-spacing:.5px; }
+   .due-panel { background:var(--panel); border:1px solid var(--border);
+                border-radius:6px; padding:10px 14px; }
+   .due-panel .row { font-size:12px; padding:4px 0; color:var(--text-dim); }
+   .due-panel .agent-name { color:#fbbf24; font-weight:600; }
+ </style>
+ </head>
+ <body>
++{% if not embed %}
+ <header>
+   <h1>TradePilot Quant Desk</h1>
+   <div class="meta">
+     <span id="ts">—</span>
+     &nbsp;·&nbsp;
+     <a class="nav-link" href="/team/sarathi">Sarathi Ledger</a>
+     &nbsp;·&nbsp;
+     <a class="nav-link" href="/live">Live Engines</a>
+   </div>
+ </header>
++{% endif %}
+ <main>
+   <section>
+     <h2>KPI · Today</h2>
+     <div class="kpi-strip" id="kpi"></div>
+   </section>
+ 
+   <section>
+     <h2>Agent Grid · 10 roles</h2>
+     <div class="agent-grid" id="agents"></div>
+   </section>
+@@ -223,29 +225,30 @@ function renderAudit(rows) {
+     const tail = `${r.action || ""} → ${r.subject || ""}${r.reason ? " · " + r.reason : ""}`;
+     row.appendChild(makeEl("div", {cls: "text", text: tail, title: tail}));
+     root.appendChild(row);
+   });
+ }
+ 
+ async function tick() {
+   try {
+     const r = await fetch("/api/team/status");
+     const j = await r.json();
+-    document.getElementById("ts").textContent = fmt(j.ts);
++    var tsEl = document.getElementById("ts");
++    if (tsEl) tsEl.textContent = fmt(j.ts);
+     const dueList = j.due || [];
+     const dueSet = new Set(dueList.map(d => d.agent));
+     renderKpi(j.kpi || {});
+     renderAgents(j.agents || [], dueSet);
+     renderDue(dueList);
+     renderActivity(j.activity || []);
+     renderAudit(j.audit || []);
+   } catch (e) {
+     console.error(e);
+   }
+ }
+ 
+ tick();
+ setInterval(tick, POLL_MS);
+ </script>
+-<script src="/static/pageswitch.js"></script>
++{% if not embed %}<script src="/static/pageswitch.js"></script>{% endif %}
+ </body>
+ </html>
+diff --git a/tests/conftest.py b/tests/conftest.py
+new file mode 100644
+index 0000000..f0e5ab6
+--- /dev/null
++++ b/tests/conftest.py
+@@ -0,0 +1,27 @@
++"""Shared fixtures for the web-layer tests.
++
++The Flask app lives in prototype/app.py and inserts its own directory onto
++sys.path at import time, so importing it requires the repo root on sys.path.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++
++@pytest.fixture(scope="session")
++def flask_app():
++    """The prototype Flask application, configured for testing."""
++    from prototype.app import app
++    app.config["TESTING"] = True
++    return app
++
++
++@pytest.fixture
++def client(flask_app):
++    """A test client. Use client.get(path) -- no network, no live server."""
++    return flask_app.test_client()
+diff --git a/tests/js/route.test.js b/tests/js/route.test.js
+new file mode 100644
+index 0000000..2725c47
+--- /dev/null
++++ b/tests/js/route.test.js
+@@ -0,0 +1,76 @@
++"use strict";
++const test = require("node:test");
++const assert = require("node:assert");
++const TPRoute = require("../../prototype/static/desk/route.js");
++
++const SECTIONS = [
++  { id: "desk",   label: "Desk",        subs: [] },
++  { id: "market", label: "Market",      subs: [{ id: "india", label: "India" },
++                                               { id: "fno",   label: "F&O" },
++                                               { id: "us",    label: "US" }] },
++  { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
++                                               { id: "floor", label: "Live Floor" }] },
++];
++
++test("empty hash falls back to the first section", () => {
++  assert.deepStrictEqual(TPRoute.parse("", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("bare section resolves to its default sub", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents", SECTIONS),
++    { section: "agents", sub: "quant", rest: [] });
++});
++
++test("explicit sub is honoured", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents/floor", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("flat section takes no sub", () => {
++  assert.deepStrictEqual(TPRoute.parse("#desk", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("legacy deep link treats an unknown segment as payload", () => {
++  // #market/TITAN/5y predates sub-tabs. TITAN is not a sub, so it is a symbol
++  // against the default sub. Breaking this breaks live bookmarks.
++  assert.deepStrictEqual(TPRoute.parse("#market/TITAN/5y", SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("known sub is not mistaken for payload", () => {
++  assert.deepStrictEqual(TPRoute.parse("#market/fno", SECTIONS),
++    { section: "market", sub: "fno", rest: [] });
++});
++
++test("sub plus payload", () => {
++  assert.deepStrictEqual(TPRoute.parse("#market/india/TITAN/5y", SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("unknown section falls back to the first", () => {
++  assert.deepStrictEqual(TPRoute.parse("#nonsense", SECTIONS),
++    { section: "desk", sub: null, rest: [] });
++});
++
++test("leading hash is optional", () => {
++  assert.deepStrictEqual(TPRoute.parse("agents/floor", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("trailing and doubled slashes are ignored", () => {
++  assert.deepStrictEqual(TPRoute.parse("#agents//floor/", SECTIONS),
++    { section: "agents", sub: "floor", rest: [] });
++});
++
++test("build round-trips through parse", () => {
++  const h = TPRoute.build("market", "india", ["TITAN", "5y"]);
++  assert.strictEqual(h, "#market/india/TITAN/5y");
++  assert.deepStrictEqual(TPRoute.parse(h, SECTIONS),
++    { section: "market", sub: "india", rest: ["TITAN", "5y"] });
++});
++
++test("build omits a null sub", () => {
++  assert.strictEqual(TPRoute.build("desk", null, []), "#desk");
++});
+diff --git a/tests/test_web_routes.py b/tests/test_web_routes.py
+new file mode 100644
+index 0000000..8b93894
+--- /dev/null
++++ b/tests/test_web_routes.py
+@@ -0,0 +1,127 @@
++"""Web-layer coverage.
++
++Before this file the entire Flask surface -- roughly 70 routes -- was
++untested. The terminal already shipped one blank tab on 2026-08-03 because a
++script was silently discarded; these tests exist so that class of bug fails
++in CI rather than in the browser.
++"""
++
++
++def test_terminal_renders(client):
++    """GET / returns the terminal shell."""
++    r = client.get("/")
++    assert r.status_code == 200
++    assert b"TRADEPILOT" in r.data
++
++
++def test_floor_renders(client):
++    """GET /floor returns the Agent Floor console."""
++    r = client.get("/floor")
++    assert r.status_code == 200
++    assert b"Market Scan" in r.data
++
++
++def test_team_renders(client):
++    """GET /team returns the Quant Desk."""
++    r = client.get("/team")
++    assert r.status_code == 200
++    assert b"<h1>TradePilot Quant Desk</h1>" in r.data
++
++
++def test_floor_embed_hides_brand(client):
++    """?embed=1 drops the brand span; the stats strip must survive."""
++    r = client.get("/floor?embed=1")
++    assert r.status_code == 200
++    assert b"AGENT FLOOR</span>" not in r.data
++    assert b'id="sTicks"' in r.data          # stats strip kept
++
++
++def test_floor_without_embed_keeps_brand(client):
++    """The standalone page is unchanged."""
++    r = client.get("/floor")
++    assert b"AGENT FLOOR</span>" in r.data
++
++
++def test_team_embed_hides_header_and_pageswitch(client):
++    """?embed=1 drops the header and must not load the operator nav."""
++    r = client.get("/team?embed=1")
++    assert r.status_code == 200
++    # Match the <h1>, not the bare string: team.html:5 also carries
++    # "TradePilot Quant Desk" in its <title>, which embed mode keeps.
++    assert b"<h1>TradePilot Quant Desk</h1>" not in r.data
++    assert b"pageswitch.js" not in r.data
++
++
++def test_team_without_embed_keeps_header(client):
++    """The standalone page is unchanged."""
++    r = client.get("/team")
++    assert b"<h1>TradePilot Quant Desk</h1>" in r.data
++    assert b"pageswitch.js" in r.data
++
++
++def test_router_declares_three_sections(client):
++    """The section registry is JS-rendered, so assert it in the served module.
++
++    A Flask test client executes no JavaScript — the served page carries an
++    empty <nav>. Fetching router.js verifies the real artifact through the
++    real server, which is the closest honest equivalent without a browser.
++    """
++    r = client.get("/static/desk/router.js")
++    assert r.status_code == 200
++    for section in (b'id: "desk"', b'id: "market"', b'id: "agents"'):
++        assert section in r.data
++
++
++def test_terminal_has_subtab_bar(client):
++    """The sub-tab bar element must exist even when empty."""
++    assert b'id="subnav"' in client.get("/").data
++
++
++def test_terminal_loads_router_modules(client):
++    """Every module is referenced by a src-only script tag.
++
++    This is the direct regression test for the 2026-08-03 blank tab: a
++    script referenced but never loaded, or loaded with discarded inline
++    content, is exactly how that shipped.
++    """
++    body = client.get("/").data
++    for src in (b"/static/desk/route.js",
++                b"/static/desk/router.js",
++                b"/static/desk.js"):
++        assert src in body
++
++
++def test_router_keeps_external_links(client):
++    """The nav is registry-rendered, so external destinations must be declared
++    in the module. /classic is the client-facing surface and must stay
++    reachable from the terminal until it is absorbed."""
++    r = client.get("/static/desk/router.js")
++    assert r.status_code == 200
++    assert b'href: "/decisions"' in r.data
++    assert b'href: "/classic"' in r.data
++
++
++def test_agent_floor_panes_exist(client):
++    """Both panes are in the shell."""
++    body = client.get("/").data
++    assert b'id="view-agents-quant"' in body
++    assert b'id="view-agents-floor"' in body
++
++
++def test_agent_floor_frames_ship_empty(client):
++    """Frames must have no src in the served HTML.
++
++    A hardcoded src would load and start polling both consoles on every
++    page load, whether or not anyone opens the section.
++    """
++    body = client.get("/").data
++    # Assert the behaviour, not the attribute order: no framed URL may appear
++    # in the served HTML at all. panes.js sets src at mount time.
++    assert b"/team?embed=1" not in body
++    assert b"/floor?embed=1" not in body
++    assert b'id="frameQuant"' in body
++    assert b'id="frameFloor"' in body
++
++
++def test_panes_module_loaded(client):
++    assert b"/static/desk/panes.js" in client.get("/").data

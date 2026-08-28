@@ -80,6 +80,23 @@ if [ -f "$LOG" ]; then
   elif [ -n "$first" ] && [ -n "$last" ] && [ "$last" -gt "$first" ]; then
     ticks_moving=1
   fi
+
+  # A counter that goes DOWN inside a single run is not a stalled socket — it is TWO
+  # PROCESSES interleaving into one log, each with its own counter. Restarting is the
+  # worst possible response: it was the restart that created the duplicate, and
+  # restarting again spawns another. Measured 2026-08-28: 7,187 ticks at 14:49:15 then
+  # 6,514 thirty seconds later, from a second instance; the watchdog burned all four
+  # restarts "fixing" a floor that was streaming fine.
+  #
+  # floor.py now holds an exclusive lock so a second instance cannot start, but the
+  # detection stays: if this ever fires again the lock has failed, and that is worth
+  # shouting about rather than silently restarting into.
+  if [ -n "$first" ] && [ -n "$last" ] && [ "$last" -lt "$first" ]; then
+    say "DUPLICATE INSTANCE — tick counter went DOWN ($first -> $last) inside one run."
+    say "  Two floors are writing to this log. NOT restarting; that is what causes it."
+    say "  Check: pgrep -fl 'agents.floor'  and kill all but one."
+    exit 0
+  fi
 fi
 
 if [ "$alive" -eq 1 ] && [ "$fresh" -eq 1 ] && [ "$ticks_moving" -eq 1 ]; then

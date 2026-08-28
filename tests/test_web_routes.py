@@ -125,3 +125,19 @@ def test_agent_floor_frames_ship_empty(client):
 
 def test_panes_module_loaded(client):
     assert b"/static/desk/panes.js" in client.get("/").data
+
+
+def test_all_terminal_modules_are_actually_served(client):
+    """Fetch every module, don't just grep for its <script src>.
+
+    A tag can reference a file that 404s — that is precisely how a tab
+    shipped blank on 2026-08-03. Asserting the string appears in the HTML
+    proves only that someone typed it.
+    """
+    for path in ("/static/desk/route.js",
+                 "/static/desk/router.js",
+                 "/static/desk/panes.js",
+                 "/static/desk.js"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert len(r.data) > 0, path

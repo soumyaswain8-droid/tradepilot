@@ -483,11 +483,13 @@
       refresh: loadMarket,
       pollMs: 60000
     });
-    window.TPRouter.boot();
-
+    // Shell furniture first: if the router fails to load, a frozen index strip
+    // beside a live clock looks like stale market data, not a broken deploy.
     setInterval(function () {
       if (document.hidden) return;
       loadIndices();
     }, 60000);
+
+    window.TPRouter.boot();
   });
 })();

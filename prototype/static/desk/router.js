@@ -6,6 +6,11 @@
      refresh()  on tick, only while visible and the document is not hidden
      unmount()  on hide -- iframe panes only; ported views keep their state
 
+     Hooks must handle their own async failures. guard() catches synchronous
+     throws only -- a rejected promise inside mount() never reaches it, so an
+     async view that fails renders a blank pane instead of the error card.
+     Every hook that awaits anything must carry its own .catch.
+
    Every hook is wrapped. A view that throws degrades itself to an error card
    and never takes the shell, the nav, or a sibling view down with it. */
 (function () {
@@ -108,7 +113,11 @@
       var on = viewId === target;
       el.classList.toggle("on", on);
       if (on) {
-        if (!mounted[viewId]) { mounted[viewId] = true; guard(viewId, "mount"); }
+        if (!mounted[viewId]) {
+          mounted[viewId] = true;
+          if (views[viewId]) views[viewId]._last = Date.now();
+          guard(viewId, "mount");
+        }
       } else if (mounted[viewId] && views[viewId] && views[viewId].unmount) {
         guard(viewId, "unmount");
         mounted[viewId] = false;
@@ -135,6 +144,11 @@
     else location.hash = hash;
   }
 
+  /* Register BEFORE boot(). boot() runs the first go(), and show() only
+     iterates views registered by then -- a later registrant stays hidden
+     until the next navigation. Script order in desk.html guarantees this:
+     panes.js registers at IIFE time, desk.js registers inside its
+     DOMContentLoaded handler and calls boot() last. */
   function register(viewId, hooks) { views[viewId] = hooks || {}; }
   function current() { return { section: cur.section, sub: cur.sub, rest: cur.rest.slice() }; }
 

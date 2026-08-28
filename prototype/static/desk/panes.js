@@ -8,9 +8,11 @@
    last-one-wins quietly restyle whichever loaded first. A frame is a document
    boundary, which is exactly the isolation those two need.
 
-   Why unmount clears src: both poll once a second. Left mounted behind a
-   hidden tab that is ~3,600 requests an hour for a screen nobody is looking
-   at. about:blank tears the document down and takes its timers with it. */
+   Why unmount clears src: team.html polls every 5s (POLL_MS = 5000, ~720
+   requests/hour) and floor.html every 2s (setTimeout(poll, 2000), ~1,800
+   requests/hour) -- ~2,520 requests/hour combined. Left mounted behind a
+   hidden tab, that traffic runs for a screen nobody is looking at.
+   about:blank tears the document down and takes its timers with it. */
 (function () {
   "use strict";
 

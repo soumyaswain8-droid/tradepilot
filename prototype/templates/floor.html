@@ -127,7 +127,7 @@ body::after{
 <div class="hud">
 
   <div class="bar">
-    <span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>
+    {% if not embed %}<span class="brand">TRADE<b>PILOT</b> · AGENT FLOOR</span>{% endif %}
     <span class="live" id="live"><span class="dot"></span><span id="liveTxt">CONNECTING</span></span>
     <div class="stat"><span class="k">ticks</span><span class="v" id="sTicks">—</span></div>
     <div class="stat"><span class="k">rate</span><span class="v" id="sRate">—</span></div>

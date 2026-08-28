@@ -432,41 +432,11 @@
     }
   }
 
-  /* ── tabs ──────────────────────────────────────────────────────────── */
-  function switchTab(name) {
-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
-      a.classList.toggle("on", a.getAttribute("data-tab") === name);
-    });
-    document.querySelectorAll(".view").forEach(function (v) {
-      v.classList.toggle("on", v.id === "view-" + name);
-    });
-    if (name === "market" && !mktRows.length) loadMarket();
-  }
-
   /* ── boot ──────────────────────────────────────────────────────────── */
   document.addEventListener("DOMContentLoaded", function () {
     tickClock(); setInterval(tickClock, 1000);
-    loadIndices(); loadDesk();
+    loadIndices();
 
-    // Deep links: /#market opens the tab, /#market/RELIANCE opens the drawer too.
-    var h = (location.hash || "").replace(/^#/, "").split("/");
-    if (h[0] === "market") {
-      switchTab("market");
-      // The drawer must NOT wait for /api/scores — the chart comes from its own
-      // endpoint. Coupling them meant a warming score cache silently disabled
-      // every deep link for two minutes after a restart.
-      if (h[1]) {
-        if (h[2] && RANGES.indexOf(h[2].toLowerCase()) !== -1)
-          curRange = h[2].toLowerCase();   // /#market/TITAN/5y
-        openDrawer(h[1].toUpperCase());
-      }
-    }
-
-    document.querySelectorAll(".nav a[data-tab]").forEach(function (a) {
-      a.addEventListener("click", function (e) {
-        e.preventDefault(); switchTab(a.getAttribute("data-tab"));
-      });
-    });
     $("overlay").addEventListener("click", closeDrawer);
     $("dClose").addEventListener("click", closeDrawer);
     $("dModeCandle").addEventListener("click", function () {
@@ -494,15 +464,32 @@
       });
     });
 
-    // polling — paused while the tab is hidden
-    setInterval(function () {
-      if (document.hidden) return;
-      loadDesk();
-    }, 30000);
+    /* Navigation and polling now belong to TPRouter. This file owns two
+       views and nothing else. */
+    window.TPRouter.register("desk", {
+      mount: loadDesk,
+      refresh: loadDesk,
+      pollMs: 30000
+    });
+    window.TPRouter.register("market", {
+      mount: function () {
+        loadMarket();
+        var r = window.TPRouter.current().rest;
+        if (r[0]) {
+          if (r[1] && RANGES.indexOf(r[1].toLowerCase()) !== -1) curRange = r[1].toLowerCase();
+          openDrawer(r[0].toUpperCase());
+        }
+      },
+      refresh: loadMarket,
+      pollMs: 60000
+    });
+    // Shell furniture first: if the router fails to load, a frozen index strip
+    // beside a live clock looks like stale market data, not a broken deploy.
     setInterval(function () {
       if (document.hidden) return;
       loadIndices();
-      if ($("view-market").classList.contains("on")) loadMarket();
     }, 60000);
+
+    window.TPRouter.boot();
   });
 })();

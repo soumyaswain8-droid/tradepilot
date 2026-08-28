@@ -1,0 +1,1052 @@
+{
+  "total": 104,
+  "by_symbol": {
+    "UTLSOLAR": 4,
+    "COHANCE": 8,
+    "BLS": 5,
+    "UNIONBANK": 6,
+    "KRISHANA": 7,
+    "SHANTIGOLD": 3,
+    "IOLCP": 7,
+    "GOODLUCK": 8,
+    "GOKULAGRO": 4,
+    "RAYMOND": 5,
+    "TI": 3,
+    "EMIL": 8,
+    "EBGNG": 6,
+    "BALRAMCHIN": 6,
+    "DECNGOLD": 7,
+    "MINDACORP": 4,
+    "WSTCSTPAPR": 5,
+    "PRICOLLTD": 2,
+    "BLACKBUCK": 3,
+    "GNA": 1,
+    "RAMRAT": 2
+  },
+  "triggers": {
+    "UTLSOLAR": [
+      "LEVEL_TOUCH:ROUND",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:DAY_LOW"
+    ],
+    "COHANCE": [
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:ROUND",
+      "SWEEP_RECLAIM:VWAP",
+      "LEVEL_TOUCH:VWAP"
+    ],
+    "BLS": [
+      "LEVEL_TOUCH:VWAP",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP"
+    ],
+    "UNIONBANK": [
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP"
+    ],
+    "KRISHANA": [
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP",
+      "FAST_MOVE"
+    ],
+    "SHANTIGOLD": [
+      "LEVEL_TOUCH:PDL",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:PDL"
+    ],
+    "IOLCP": [
+      "LEVEL_TOUCH:PDH",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:PDH",
+      "SWEEP_RECLAIM:PDH",
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:VWAP"
+    ],
+    "GOODLUCK": [
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:ROUND",
+      "SWEEP_RECLAIM:ROUND",
+      "LEVEL_TOUCH:ROUND",
+      "SWEEP_RECLAIM:ROUND",
+      "FAST_MOVE"
+    ],
+    "GOKULAGRO": [
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP"
+    ],
+    "RAYMOND": [
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP"
+    ],
+    "TI": [
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:VWAP",
+      "FAST_MOVE"
+    ],
+    "EMIL": [
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:PDL",
+      "SWEEP_RECLAIM:PDL",
+      "LEVEL_TOUCH:PDL",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:DAY_LOW",
+      "SWEEP_RECLAIM:PDL"
+    ],
+    "EBGNG": [
+      "LEVEL_TOUCH:ROUND",
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:ROUND"
+    ],
+    "BALRAMCHIN": [
+      "FAST_MOVE",
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP",
+      "FAST_MOVE",
+      "FAST_MOVE",
+      "FAST_MOVE"
+    ],
+    "DECNGOLD": [
+      "FAST_MOVE",
+      "LEVEL_TOUCH:DAY_LOW",
+      "LEVEL_TOUCH:DAY_LOW",
+      "SWEEP_RECLAIM:DAY_LOW",
+      "LEVEL_TOUCH:DAY_LOW",
+      "LEVEL_TOUCH:DAY_LOW",
+      "SWEEP_RECLAIM:DAY_LOW"
+    ],
+    "MINDACORP": [
+      "LEVEL_TOUCH:VWAP",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:VWAP",
+      "SWEEP_RECLAIM:VWAP"
+    ],
+    "WSTCSTPAPR": [
+      "LEVEL_TOUCH:VWAP",
+      "FAST_MOVE",
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:ROUND",
+      "SWEEP_RECLAIM:VWAP"
+    ],
+    "PRICOLLTD": [
+      "LEVEL_TOUCH:ROUND",
+      "LEVEL_TOUCH:ROUND"
+    ],
+    "BLACKBUCK": [
+      "LEVEL_TOUCH:VWAP",
+      "LEVEL_TOUCH:ROUND",
+      "SWEEP_RECLAIM:VWAP"
+    ],
+    "GNA": [
+      "LEVEL_TOUCH:PDL"
+    ],
+    "RAMRAT": [
+      "LEVEL_TOUCH:ROUND",
+      "FAST_MOVE"
+    ]
+  },
+  "reassignments": [
+    {
+      "at": "15:25:21",
+      "out": "KOTAKBANK",
+      "out_score": 0.763,
+      "out_agree": 2,
+      "in": "PRICOLLTD",
+      "in_score": 1.0,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "TREND: uptrend +14.0%/20d, today -0.7%, at 20SMA | REVERSAL: -3.4%/5d, today -0.7% | LEVEL: 23bps from VWAP 772.9",
+      "in_px": 771.1,
+      "out_px": 423.6
+    },
+    {
+      "at": "15:25:21",
+      "out": "IOLCP",
+      "out_score": 0.771,
+      "out_agree": 2,
+      "in": "WSTCSTPAPR",
+      "in_score": 1.0,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "TREND: uptrend +7.9%/20d, today +0.7%, at 20SMA | REVERSAL: -4.6%/5d, today +0.7% | LEVEL: 11bps from VWAP 611.9, coiled",
+      "in_px": 611.2,
+      "out_px": 193.8
+    },
+    {
+      "at": "15:25:21",
+      "out": "GOKULAGRO",
+      "out_score": 0.772,
+      "out_agree": 2,
+      "in": "BLACKBUCK",
+      "in_score": 1.0,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "TREND: uptrend +8.0%/20d, today -0.0%, at 20SMA | LEVEL: 3bps from prev close 588.2, coiled | REVERSAL: -6.8%/5d, today -0.0%",
+      "in_px": 588.0,
+      "out_px": 244.0
+    },
+    {
+      "at": "15:25:21",
+      "out": "SAMBHV",
+      "out_score": 0.81,
+      "out_agree": 2,
+      "in": "NRBBEARING",
+      "in_score": 1.0,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "TREND: uptrend +12.1%/20d, today +0.4%, at 20SMA | REVERSAL: -3.4%/5d, today +0.4% | LEVEL: 42bps from VWAP 470.5, coiled",
+      "in_px": 468.55,
+      "out_px": 127.51
+    },
+    {
+      "at": "15:27:22",
+      "out": "RAYMOND",
+      "out_score": 0.81,
+      "out_agree": 2,
+      "in": "BAJAJCON",
+      "in_score": 0.992,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "REVERSAL: -7.5%/5d, today +6.3% | FLOW: 2.1x normal volume (14.0L by 15:27) | LEVEL: 13bps from day HIGH 479.5",
+      "in_px": 478.9,
+      "out_px": 625.15
+    },
+    {
+      "at": "15:27:22",
+      "out": "DLF",
+      "out_score": 0.818,
+      "out_agree": 2,
+      "in": "RAMRAT",
+      "in_score": 0.973,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "FLOW: 2.7x normal volume (13.1L by 15:27) | TREND: uptrend +23.8%/20d, today +3.5% | LEVEL: 9bps from VWAP 590.0",
+      "in_px": 589.45,
+      "out_px": 676.0
+    },
+    {
+      "at": "15:27:22",
+      "out": "SHANTIGOLD",
+      "out_score": 0.818,
+      "out_agree": 2,
+      "in": "GNA",
+      "in_score": 0.928,
+      "agree": 3,
+      "rule": "more scouts agree (3 vs 2)",
+      "why": "REVERSAL: -3.4%/5d, today -0.9% | TREND: uptrend +3.0%/20d, today -0.9%, at 20SMA | LEVEL: 21bps from VWAP 540.9",
+      "in_px": 542.05,
+      "out_px": 242.16
+    }
+  ],
+  "data_gaps": [],
+  "blind_seconds": 0,
+  "near_misses": [
+    {
+      "cand": "SAMBHV",
+      "cand_score": 0.81,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.158
+    },
+    {
+      "cand": "IFCI",
+      "cand_score": 0.79,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.178
+    },
+    {
+      "cand": "INDSWFTLAB",
+      "cand_score": 0.783,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.185
+    },
+    {
+      "cand": "GOKULAGRO",
+      "cand_score": 0.773,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.195
+    },
+    {
+      "cand": "KOTAKBANK",
+      "cand_score": 0.763,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.205
+    },
+    {
+      "cand": "THELEELA",
+      "cand_score": 0.759,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.209
+    },
+    {
+      "cand": "TRIVENI",
+      "cand_score": 0.759,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.209
+    },
+    {
+      "cand": "LTFOODS",
+      "cand_score": 0.756,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.212
+    },
+    {
+      "cand": "ELECON",
+      "cand_score": 0.754,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.214
+    },
+    {
+      "cand": "SGFIN",
+      "cand_score": 0.75,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.218
+    },
+    {
+      "cand": "MAYURUNIQ",
+      "cand_score": 0.75,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.218
+    },
+    {
+      "cand": "GCSL",
+      "cand_score": 0.743,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.225
+    },
+    {
+      "cand": "GENUSPOWER",
+      "cand_score": 0.739,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.229
+    },
+    {
+      "cand": "NORTHARC",
+      "cand_score": 0.738,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.23
+    },
+    {
+      "cand": "AEQUS",
+      "cand_score": 0.733,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.235
+    },
+    {
+      "cand": "PETRONET",
+      "cand_score": 0.731,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.237
+    },
+    {
+      "cand": "GRAPHITE",
+      "cand_score": 0.731,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.237
+    },
+    {
+      "cand": "HINDCOPPER",
+      "cand_score": 0.73,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.238
+    },
+    {
+      "cand": "GPPL",
+      "cand_score": 0.724,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.244
+    },
+    {
+      "cand": "ZAGGLE",
+      "cand_score": 0.722,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.246
+    },
+    {
+      "cand": "LEMONTREE",
+      "cand_score": 0.721,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.247
+    },
+    {
+      "cand": "ETERNAL",
+      "cand_score": 0.717,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.251
+    },
+    {
+      "cand": "LENSKART",
+      "cand_score": 0.715,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.253
+    },
+    {
+      "cand": "MANINDS",
+      "cand_score": 0.713,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.255
+    },
+    {
+      "cand": "TDPOWERSYS",
+      "cand_score": 0.711,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.257
+    },
+    {
+      "cand": "BSOFT",
+      "cand_score": 0.71,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.258
+    },
+    {
+      "cand": "SUVEN",
+      "cand_score": 0.709,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.259
+    },
+    {
+      "cand": "KTKBANK",
+      "cand_score": 0.705,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.263
+    },
+    {
+      "cand": "KRBL",
+      "cand_score": 0.702,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.266
+    },
+    {
+      "cand": "MANINFRA",
+      "cand_score": 0.702,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.266
+    },
+    {
+      "cand": "METROPOLIS",
+      "cand_score": 0.694,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.274
+    },
+    {
+      "cand": "PCBL",
+      "cand_score": 0.684,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.284
+    },
+    {
+      "cand": "JKPAPER",
+      "cand_score": 0.682,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.286
+    },
+    {
+      "cand": "ASKAUTOLTD",
+      "cand_score": 0.677,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.291
+    },
+    {
+      "cand": "SUNTV",
+      "cand_score": 0.675,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.293
+    },
+    {
+      "cand": "INDGN",
+      "cand_score": 0.668,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.3
+    },
+    {
+      "cand": "HSCL",
+      "cand_score": 0.667,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.301
+    },
+    {
+      "cand": "AARTIIND",
+      "cand_score": 0.654,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.314
+    },
+    {
+      "cand": "MEESHO",
+      "cand_score": 0.652,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.316
+    },
+    {
+      "cand": "CAMLINFINE",
+      "cand_score": 0.65,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.318
+    },
+    {
+      "cand": "JTLIND",
+      "cand_score": 0.833,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.135
+    },
+    {
+      "cand": "RAYMOND",
+      "cand_score": 0.833,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.135
+    },
+    {
+      "cand": "SHANTIGOLD",
+      "cand_score": 0.818,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.15
+    },
+    {
+      "cand": "SAMBHV",
+      "cand_score": 0.81,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.158
+    },
+    {
+      "cand": "IFCI",
+      "cand_score": 0.788,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.18
+    },
+    {
+      "cand": "GPPL",
+      "cand_score": 0.786,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.182
+    },
+    {
+      "cand": "GOKULAGRO",
+      "cand_score": 0.772,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.196
+    },
+    {
+      "cand": "KOTAKBANK",
+      "cand_score": 0.765,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.203
+    },
+    {
+      "cand": "NATIONALUM",
+      "cand_score": 0.764,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.204
+    },
+    {
+      "cand": "ICICIPRULI",
+      "cand_score": 0.763,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.205
+    },
+    {
+      "cand": "THELEELA",
+      "cand_score": 0.761,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.207
+    },
+    {
+      "cand": "CONCOR",
+      "cand_score": 0.756,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.212
+    },
+    {
+      "cand": "LTFOODS",
+      "cand_score": 0.753,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.215
+    },
+    {
+      "cand": "MOTHERSON",
+      "cand_score": 0.744,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.224
+    },
+    {
+      "cand": "ASHOKLEY",
+      "cand_score": 0.742,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.226
+    },
+    {
+      "cand": "PETRONET",
+      "cand_score": 0.733,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.235
+    },
+    {
+      "cand": "GRAPHITE",
+      "cand_score": 0.727,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.241
+    },
+    {
+      "cand": "TDPOWERSYS",
+      "cand_score": 0.726,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.242
+    },
+    {
+      "cand": "LEMONTREE",
+      "cand_score": 0.72,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.248
+    },
+    {
+      "cand": "GCSL",
+      "cand_score": 0.719,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.249
+    },
+    {
+      "cand": "KRBL",
+      "cand_score": 0.718,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.25
+    },
+    {
+      "cand": "LENSKART",
+      "cand_score": 0.717,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.251
+    },
+    {
+      "cand": "MEESHO",
+      "cand_score": 0.716,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.252
+    },
+    {
+      "cand": "MANINDS",
+      "cand_score": 0.714,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.254
+    },
+    {
+      "cand": "BSOFT",
+      "cand_score": 0.71,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.258
+    },
+    {
+      "cand": "KTKBANK",
+      "cand_score": 0.708,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.26
+    },
+    {
+      "cand": "ETERNAL",
+      "cand_score": 0.706,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.262
+    },
+    {
+      "cand": "MANINFRA",
+      "cand_score": 0.706,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.262
+    },
+    {
+      "cand": "TRIVENI",
+      "cand_score": 0.705,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.263
+    },
+    {
+      "cand": "CAMS",
+      "cand_score": 0.703,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.265
+    },
+    {
+      "cand": "BHEL",
+      "cand_score": 0.701,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.267
+    },
+    {
+      "cand": "RELIGARE",
+      "cand_score": 0.699,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.269
+    },
+    {
+      "cand": "HINDCOPPER",
+      "cand_score": 0.696,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.272
+    },
+    {
+      "cand": "METROPOLIS",
+      "cand_score": 0.693,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.275
+    },
+    {
+      "cand": "GAEL",
+      "cand_score": 0.69,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.278
+    },
+    {
+      "cand": "AGI",
+      "cand_score": 0.686,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.282
+    },
+    {
+      "cand": "NYKAA",
+      "cand_score": 0.679,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.289
+    },
+    {
+      "cand": "ZAGGLE",
+      "cand_score": 0.677,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.291
+    },
+    {
+      "cand": "AEQUS",
+      "cand_score": 0.676,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.292
+    },
+    {
+      "cand": "PCBL",
+      "cand_score": 0.675,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.293
+    },
+    {
+      "cand": "HSCL",
+      "cand_score": 0.67,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.298
+    },
+    {
+      "cand": "ASKAUTOLTD",
+      "cand_score": 0.669,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.299
+    },
+    {
+      "cand": "INDGN",
+      "cand_score": 0.661,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.307
+    },
+    {
+      "cand": "TATAPOWER",
+      "cand_score": 0.658,
+      "cand_agree": 2,
+      "vs": "DECNGOLD",
+      "inc_score": 0.818,
+      "inc_agree": 2,
+      "short_by": 0.31
+    }
+  ],
+  "near_miss_total": 84,
+  "watched_at_close": [
+    "BAJAJCON",
+    "BALRAMCHIN",
+    "BLACKBUCK",
+    "BLS",
+    "COALINDIA",
+    "COHANCE",
+    "DECNGOLD",
+    "EBGNG",
+    "EMIL",
+    "GNA",
+    "GOODLUCK",
+    "KRISHANA",
+    "MINDACORP",
+    "NRBBEARING",
+    "PRICOLLTD",
+    "RAMRAT",
+    "TI",
+    "UNIONBANK",
+    "UTLSOLAR",
+    "WSTCSTPAPR"
+  ],
+  "positions": [],
+  "declined_total": 80
+}

@@ -40,6 +40,7 @@ def install_guard(app):
 
     @app.before_request
     def _guard_client_api():
+        """Refuse a gated client endpoint when nobody is signed in."""
         endpoint = request.endpoint
         if endpoint in GATED_ENDPOINTS and current_user() is None:
             return jsonify({"error": "sign in to see this"}), 401

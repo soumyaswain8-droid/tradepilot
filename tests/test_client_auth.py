@@ -18,9 +18,13 @@ from prototype import client_auth
 
 
 def _app_endpoints(flask_app):
-    """Every blueprint endpoint mounted under /api/app."""
+    """Every blueprint endpoint mounted under /api/app.
+
+    Matched on a path boundary, not a substring: a future operator route
+    called /api/apply must not be dragged into the client registry.
+    """
     return {r.endpoint for r in flask_app.url_map.iter_rules()
-            if str(r.rule).startswith("/api/app")}
+            if str(r.rule) == "/api/app" or str(r.rule).startswith("/api/app/")}
 
 
 def test_every_client_route_is_classified(flask_app):
@@ -45,6 +49,28 @@ def test_registries_name_only_real_endpoints(flask_app):
     """A registry entry with no matching route is a stale name protecting nothing."""
     declared = client_auth.PUBLIC_ENDPOINTS | client_auth.GATED_ENDPOINTS
     assert declared - _app_endpoints(flask_app) == set()
+
+
+def test_a_route_merely_starting_with_the_same_letters_is_not_swept_in(flask_app):
+    """/api/apply is an operator route, not a client one.
+
+    A substring match would drag it into the client registry and fail the
+    enumeration against a route that has nothing to do with this API.
+    """
+    from flask import Flask
+    probe = Flask("probe")
+
+    @probe.route("/api/apply")
+    def _apply():
+        return ""
+
+    @probe.route("/api/app/thing")
+    def _thing():
+        return ""
+
+    found = _app_endpoints(probe)
+    assert "_thing" in found
+    assert "_apply" not in found
 
 
 def test_gated_endpoint_401s_without_a_user(client, monkeypatch):
@@ -72,3 +98,15 @@ def test_401_body_leaks_nothing_internal(client, monkeypatch):
 def test_the_operator_surface_is_untouched(client):
     """The guard must apply to /api/app only, never to the existing app."""
     assert client.get("/api/indices").status_code == 200
+
+
+def test_the_operator_surface_stays_open_to_a_signed_out_caller(client, monkeypatch):
+    """The guard must scope to /api/app, never to the whole app.
+
+    Without patching current_user to None, the guard's `and` short-circuits
+    and this check proves nothing -- it would pass even if every endpoint in
+    the app were gated.
+    """
+    monkeypatch.setattr(client_auth, "current_user", lambda: None)
+    assert client.get("/api/indices").status_code == 200
+    assert client.get("/api/app/me").status_code == 401

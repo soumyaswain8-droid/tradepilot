@@ -1,0 +1,731 @@
+# Review package: 4bd948c..91f8e48
+
+## Commits
+91f8e48 fix: multi-engine payload shapes, ungraded targets, silent failures, overdue alerting
+
+## Files changed
+ docs/CALLS_PIPELINE.md      | 14 ++++++--
+ scripts/calls-status.py     | 48 ++++++++++++++++++++++---
+ scripts/publish-calls.py    | 24 ++++++++++---
+ scripts/resolve-calls.py    | 46 +++++++++++++++---------
+ tests/test_calls_status.py  | 47 +++++++++++++++++++++++++
+ tests/test_publish_calls.py | 85 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_resolve_calls.py | 49 ++++++++++++++++++++------
+ 7 files changed, 275 insertions(+), 38 deletions(-)
+
+## Diff
+diff --git a/docs/CALLS_PIPELINE.md b/docs/CALLS_PIPELINE.md
+index ad25a9e..5e55eee 100644
+--- a/docs/CALLS_PIPELINE.md
++++ b/docs/CALLS_PIPELINE.md
+@@ -6,33 +6,35 @@ shown to clients is a query over this and nothing else.
+ **This is time-sensitive.** Every day the publish job does not run is a day of
+ proof that cannot be recovered — the record cannot be backfilled without
+ retroactively labelling engine history as calls, which the design rejects.
+ 
+ ## The jobs
+ 
+ | Job | When | What it does |
+ |:--|:--|:--|
+ | `scripts/publish-calls.py` | 09:20 IST, weekdays | Fetches `/api/picks?category=stocks` and writes one row per pick |
+ | `scripts/resolve-calls.py` | 18:30 IST, weekdays | Fills the outcome for calls whose horizon has elapsed |
+-| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays |
++| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays or open calls stuck past their horizon |
+ 
+ Both jobs require `prototype/app.py` to be running — they read the same HTTP
+ endpoints the product serves, so the record is by construction what was
+ published rather than a recomputation that might differ.
+ 
+ ## Checking it is alive
+ 
+ ```bash
+ python3 scripts/calls-status.py
+ ```
+ 
+-Non-zero exit means missing weekdays. Investigate before they accumulate.
++Non-zero exit means missing weekdays, or open calls stuck past their horizon
++(a sign the resolver has stopped working — quote endpoint down, app not
++running). Investigate before either accumulates.
+ 
+ ### What a clean exit does and does not mean
+ 
+ - An empty database — the publish job has never once written a row — exits 1
+   with an explicit `NO CALLS EVER RECORDED` message, not a silent `gaps none`.
+   This is deliberate: a pipeline that ran and then died self-corrects (the
+   next weekday shows up as a gap and the next run flags it), but a pipeline
+   that has never run has no first call to anchor the gap check against, so
+   without this branch it would report clean forever — indistinguishable from
+   a year of flawless running.
+@@ -84,12 +86,18 @@ rm ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist \
+    ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
+ ```
+ 
+ ## Rules that must not be relaxed
+ 
+ - The publish job is the **only** writer of `calls`.
+ - **Stocks only.** `/api/picks?category=etfs` and `?category=mf` return
+   hardcoded literal arrays with invented recommendation strings. They are not
+   model output and must never be recorded as calls.
+ - A call inside its horizon stays `open` and is never counted in a hit rate.
+-- A hit requires reaching the target published with the call.
++- A hit is decided by the price **at resolution time** against the published
++  target — a single spot-price sample, not an intraday high/low. A call that
++  touched the target intraday and gave it back before resolution is graded a
++  miss. This is deliberately conservative: it can understate the hit rate but
++  never overstate it.
++- A call published with no target cannot be graded against one. It is marked
++  `ungraded` and excluded from the hit rate, never graded by a softer rule.
+ - A missing price leaves a call open rather than recording a miss it did not earn.
+diff --git a/scripts/calls-status.py b/scripts/calls-status.py
+index d4d0129..77a3daf 100755
+--- a/scripts/calls-status.py
++++ b/scripts/calls-status.py
+@@ -8,45 +8,68 @@ recovered. Run this whenever you want to know the record is alive.
+ import os
+ import sys
+ from datetime import datetime, timedelta
+ 
+ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ if REPO_ROOT not in sys.path:
+     sys.path.insert(0, REPO_ROOT)
+ 
+ from prototype import app_store
+ 
++# Mirrors resolve-calls.py's HORIZON_DAYS. Defined locally (not imported from
++# the hyphenated resolve-calls.py filename) so this stays a plain module
++# import. An unrecognised horizon falls back to the LONGEST known window, for
++# the same reason resolve-calls.py does: erring long just delays when a call
++# is flagged overdue, erring short would flag calls that are still legitimately
++# open.
++HORIZON_DAYS = {"intraday": 1, "swing": 7, "investment": 30}
++_FALLBACK_DAYS = max(HORIZON_DAYS.values())
++
+ 
+ def summarise(conn, now):
+     """Aggregate the record. `now` is supplied so this stays testable."""
+-    rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
++    rows = conn.execute(
++        "SELECT published_at, outcome, horizon FROM calls").fetchall()
+     total = len(rows)
+     hit = sum(1 for r in rows if r["outcome"] == "hit")
+     miss = sum(1 for r in rows if r["outcome"] == "miss")
+     open_ = sum(1 for r in rows if r["outcome"] == "open")
++    # Published without a target -- excluded from the hit rate rather than
++    # graded by a softer rule. See resolve-calls.py's classify().
++    ungraded = sum(1 for r in rows if r["outcome"] == "ungraded")
+     resolved = hit + miss
+ 
++    now_dt = datetime.fromisoformat(now)
++    overdue = 0
++    for r in rows:
++        if r["outcome"] != "open":
++            continue
++        days = HORIZON_DAYS.get(r["horizon"] or "intraday", _FALLBACK_DAYS)
++        due = datetime.fromisoformat(r["published_at"]) + timedelta(days=days)
++        if due <= now_dt:
++            overdue += 1
++
+     days = sorted({r["published_at"][:10] for r in rows})
+     gaps = []
+     if days:
+         cur = datetime.fromisoformat(days[0]).date()
+         end = datetime.fromisoformat(now[:10]).date()
+         have = set(days)
+         while cur <= end:
+             # Monday is 0, Saturday 5, Sunday 6. A closed market is not a gap.
+             if cur.weekday() < 5 and cur.isoformat() not in have:
+                 gaps.append(cur.isoformat())
+             cur += timedelta(days=1)
+ 
+     return {
+         "total": total, "open": open_, "resolved": resolved,
+-        "hit": hit, "miss": miss,
++        "hit": hit, "miss": miss, "ungraded": ungraded, "overdue": overdue,
+         # None, never 0.0 -- an unresolved record is not a record of failure.
+         "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
+         "first_call": days[0] if days else None,
+         "last_call": days[-1] if days else None,
+         "days_covered": len(days),
+         "gaps": gaps,
+     }
+ 
+ 
+ def main():
+@@ -66,22 +89,37 @@ def main():
+               "successfully even once.")
+         print("Check that prototype/app.py is running, then run "
+               "scripts/publish-calls.py by hand.")
+         return 1
+ 
+     print("calls recorded    %d  (%d open, %d resolved)"
+           % (s["total"], s["open"], s["resolved"]))
+     print("hit rate          %s"
+           % ("%.1f%% of %d resolved" % (s["hit_rate"], s["resolved"])
+              if s["hit_rate"] is not None else "-- (nothing resolved yet)"))
++    if s["ungraded"]:
++        print("ungraded          %d  (published without a target -- not counted)"
++              % s["ungraded"])
+     print("covering          %s to %s  (%d day%s with calls)"
+           % (s["first_call"] or "--", s["last_call"] or "--",
+              s["days_covered"], "" if s["days_covered"] == 1 else "s"))
++
++    rc = 0
+     if s["gaps"]:
+         print("MISSING DAYS      %d: %s" % (len(s["gaps"]), ", ".join(s["gaps"][:10])))
+-        return 1
+-    print("gaps              none")
+-    return 0
++        rc = 1
++    else:
++        print("gaps              none")
++
++    if s["overdue"]:
++        # calls-status is the only alerting mechanism for this: a resolver
++        # that is permanently broken otherwise leaves calls stuck 'open'
++        # forever with no other signal that anything is wrong.
++        print("OVERDUE           %d call(s) past their horizon still open --"
++              " is the resolver running?" % s["overdue"])
++        rc = 1
++
++    return rc
+ 
+ 
+ if __name__ == "__main__":
+     sys.exit(main())
+diff --git a/scripts/publish-calls.py b/scripts/publish-calls.py
+index fd6caac..dc27972 100644
+--- a/scripts/publish-calls.py
++++ b/scripts/publish-calls.py
+@@ -27,25 +27,31 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ if REPO_ROOT not in sys.path:
+     sys.path.insert(0, REPO_ROOT)
+ 
+ from prototype import app_store
+ 
+ PICKS_URL = os.environ.get(
+     "TP_PICKS_URL", "http://127.0.0.1:5050/api/picks?category=stocks&count=10")
+ 
+ 
+ def fetch_picks(url):
+-    """GET the picks payload. Raises on any non-200 or unparseable body."""
++    """GET the picks payload. Raises on any non-200, unparseable, or error body."""
+     with urllib.request.urlopen(url, timeout=30) as r:
+         if r.status != 200:
+             raise RuntimeError("picks endpoint returned HTTP %s" % r.status)
+-        return json.loads(r.read().decode("utf-8"))
++        payload = json.loads(r.read().decode("utf-8"))
++        # The picks endpoint returns HTTP 200 with an "error" key when scoring
++        # fails, so a 200 alone does not mean success. Treated as a failure here
++        # because a silently empty day is indistinguishable from a real one.
++        if payload.get("error"):
++            raise RuntimeError("picks endpoint reported: %s" % payload["error"])
++        return payload
+ 
+ 
+ def build_rows(payload, published_at):
+     """Map a picks payload to `calls` rows. Pure -- no I/O, no clock."""
+     category = payload.get("category", "stocks")
+     if category != "stocks":
+         raise ValueError(
+             "refusing category %r: only 'stocks' is model output. etfs and mf "
+             "are hardcoded literals and must never become calls." % category)
+ 
+@@ -58,22 +64,32 @@ def build_rows(payload, published_at):
+             continue
+         price = float(p.get("price") or 0)
+         if price <= 0:
+             continue
+         side = str(p.get("direction", "")).upper()
+         if side not in ("BUY", "SELL"):
+             # HOLD / AVOID are not actionable calls. Recording one so a
+             # resolver can later grade it would manufacture a hit rate out
+             # of non-advice.
+             continue
+-        sl_pct = abs(float(p.get("stopLoss") or 0))
+-        tgt_pct = abs(float(p.get("target") or 0))
++        sl_raw = p.get("stopLoss")
++        if sl_raw is None:
++            sl_raw = p.get("stop_loss_pct")
++        tgt_raw = p.get("target")
++        if tgt_raw is None:
++            tgt_raw = p.get("target_pct")
++        # v4's composite_scorer emits stopLoss/target; the v2 and v1 engines emit
++        # stop_loss_pct/target_pct. app.py falls back between them on ImportError,
++        # so both spellings are live. Reading only one silently captures every
++        # call with no levels at all.
++        sl_pct = abs(float(sl_raw or 0))
++        tgt_pct = abs(float(tgt_raw or 0))
+         # target and stopLoss are unsigned magnitudes -- composite_scorer derives
+         # them from a volatility multiplier with no reference to direction. Which
+         # side of the entry they land on is decided HERE, by the trade's side.
+         # Applying the BUY arithmetic to a SELL would put a short's target above
+         # its entry, and the resolver would then grade that short a hit whenever
+         # the stock rose.
+         sign = -1.0 if side == "SELL" else 1.0
+         reasons = p.get("reasons") or []
+         # reasons entries are dicts like {"text": ..., "type": "positive"|
+         # "negative"}; join their plain text, positives and negatives alike,
+diff --git a/scripts/resolve-calls.py b/scripts/resolve-calls.py
+index 19f3e4b..ac6005b 100644
+--- a/scripts/resolve-calls.py
++++ b/scripts/resolve-calls.py
+@@ -1,20 +1,27 @@
+ #!/usr/bin/env python3
+ """Fill in what actually happened to each published call.
+ 
+ One rule matters above the others: a call still inside its horizon stays
+ `open` and is never counted in a hit rate. Resolving early is how a track
+ record quietly starts overstating itself.
+ 
+-A call is a `hit` only if it reached the target that was published with it.
+-A favourable-but-short move is a miss. Grading on anything softer would make
+-the published target decorative.
++A call is a `hit` if the price AT RESOLUTION TIME is at or beyond the published
++target. This is a spot-price comparison, not an intraday high/low check: a
++stock that touched the target and gave it back before resolution grades a
++miss. That is deliberately conservative -- it can understate the hit rate but
++never overstate it.
++
++A call published with no target cannot be graded against one. Such calls are
++marked `ungraded` and excluded from the hit rate, rather than graded by a
++softer rule that would pool two different standards into one published
++number.
+ 
+ Exit code 0 on success, 1 on any failure.
+ """
+ import json
+ import os
+ import sys
+ import urllib.request
+ from datetime import datetime, timedelta
+ 
+ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+@@ -45,34 +52,34 @@ def is_elapsed(published_at, horizon, now):
+     offset-aware string for one and not the other raises TypeError.
+     """
+     days = HORIZON_DAYS.get(horizon or "intraday", _FALLBACK_DAYS)
+     due = datetime.fromisoformat(published_at) + timedelta(days=days)
+     return datetime.fromisoformat(now) >= due
+ 
+ 
+ def classify(side, price_at_call, outcome_price, target):
+     """hit only if the published target was reached. Everything else is a miss.
+ 
+-    When no target was published -- the scorer can return target_pct = 0, and
+-    build_rows stores None -- the bar falls back to the call price and requires
+-    a strict move, so flat is not a win. Without that fallback every
+-    target-less call would score a miss and bias the record downward for a
+-    reason that has nothing to do with the calls being wrong.
++    A target is required. A call published without one cannot be graded
++    against one, and grading it by a softer rule would pool two different
++    standards into a single published percentage. Such calls are marked
++    'ungraded' by main() and excluded from the hit rate instead.
+ 
+     There is deliberately no `stop` parameter. A stop bounds a loss; it does
+     not grade whether the call was right.
+     """
+-    if target is not None:
+-        return "hit" if (outcome_price <= target if side == "SELL"
+-                         else outcome_price >= target) else "miss"
+-    return "hit" if (outcome_price < price_at_call if side == "SELL"
+-                     else outcome_price > price_at_call) else "miss"
++    if target is None:
++        raise ValueError("classify requires a target; ungraded calls are "
++                         "handled by main()")
++    if side == "SELL":
++        return "hit" if outcome_price <= target else "miss"
++    return "hit" if outcome_price >= target else "miss"
+ 
+ 
+ def due_calls(conn, now):
+     """Open calls whose horizon has elapsed."""
+     rows = conn.execute(
+         "SELECT * FROM calls WHERE outcome = 'open' ORDER BY published_at").fetchall()
+     return [r for r in rows if is_elapsed(r["published_at"], r["horizon"], now)]
+ 
+ 
+ def apply_outcome(conn, call_id, outcome_price, outcome, now):
+@@ -86,45 +93,52 @@ def apply_outcome(conn, call_id, outcome_price, outcome, now):
+ def fetch_price(symbol):
+     """Current price for a symbol, or None if unavailable."""
+     with urllib.request.urlopen(QUOTE_URL % symbol, timeout=30) as r:
+         data = json.loads(r.read().decode("utf-8"))
+     price = data.get("price") or data.get("current_price")
+     return float(price) if price else None
+ 
+ 
+ def main():
+     now = datetime.now().isoformat(timespec="seconds")
+-    resolved, skipped, failed = 0, 0, 0
++    resolved, skipped, failed, ungraded = 0, 0, 0, 0
+     try:
+         conn = app_store.get_db()
+         app_store.init_db(conn)
+         for row in due_calls(conn, now):
+             try:
+                 price = fetch_price(row["symbol"])
+             except Exception as e:
+                 # One bad quote must not cost the other due calls their cycle.
+                 # The call stays open and is retried tomorrow -- an unresolved
+                 # call is never counted, so nothing downstream is wrong.
+                 print("  %s: price fetch failed (%s: %s)"
+                       % (row["symbol"], type(e).__name__, e), file=sys.stderr)
+                 failed += 1
+                 continue
+             if price is None:
+                 # No price is not a miss. Leave it open and try again tomorrow.
+                 skipped += 1
+                 continue
++            if row["target"] is None:
++                # No published target means no standard to grade against. Record
++                # what happened and exclude it, rather than grading it by a
++                # softer rule that would inflate the hit rate.
++                apply_outcome(conn, row["id"], price, "ungraded", now)
++                ungraded += 1
++                continue
+             outcome = classify(row["side"], row["price_at_call"], price,
+                                row["target"])
+             apply_outcome(conn, row["id"], price, outcome, now)
+             resolved += 1
+         conn.close()
+     except Exception as e:
+         print("RESOLVE FAILED %s: %s: %s" % (now, type(e).__name__, e),
+               file=sys.stderr)
+         return 1
+-    print("resolved %d call(s), %d left open for want of a price, %d failed"
+-          % (resolved, skipped, failed))
++    print("resolved %d call(s), %d ungraded (no target), %d left open for want"
++          " of a price, %d failed" % (resolved, ungraded, skipped, failed))
+     return 1 if failed else 0
+ 
+ 
+ if __name__ == "__main__":
+     sys.exit(main())
+diff --git a/tests/test_calls_status.py b/tests/test_calls_status.py
+index a80745a..bce1e58 100644
+--- a/tests/test_calls_status.py
++++ b/tests/test_calls_status.py
+@@ -1,14 +1,15 @@
+ """Tests for the pipeline status summary."""
+ import importlib.util
+ import os
+ import sys
++from datetime import datetime, timedelta
+ 
+ import pytest
+ 
+ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ if REPO_ROOT not in sys.path:
+     sys.path.insert(0, REPO_ROOT)
+ 
+ from prototype import app_store
+ 
+ 
+@@ -32,20 +33,28 @@ def conn(tmp_path):
+ 
+ 
+ def _add(conn, cid, symbol, day, outcome="open"):
+     conn.execute(
+         "INSERT INTO calls (id, symbol, side, published_at, price_at_call, outcome)"
+         " VALUES (?,?,?,?,?,?)",
+         (cid, symbol, "BUY", day + "T09:20:00", 1000.0, outcome))
+     conn.commit()
+ 
+ 
++def _add_with_horizon(conn, cid, symbol, published_at, horizon, outcome="open"):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " horizon, outcome) VALUES (?,?,?,?,?,?,?)",
++        (cid, symbol, "BUY", published_at, 1000.0, horizon, outcome))
++    conn.commit()
++
++
+ def test_empty_store_reports_zero_not_an_error(conn):
+     """An empty table summarises cleanly rather than raising."""
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert s["total"] == 0
+     assert s["hit_rate"] is None
+ 
+ 
+ def test_hit_rate_is_none_when_nothing_resolved(conn):
+     """None, never 0.0 -- zero would read as 'we get everything wrong'."""
+     _add(conn, "c1", "CIPLA", "2026-08-28")
+@@ -58,20 +67,32 @@ def test_hit_rate_is_none_when_nothing_resolved(conn):
+ def test_hit_rate_counts_only_resolved_calls(conn):
+     """Open calls do not dilute or inflate the hit rate."""
+     _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
+     _add(conn, "c2", "TITAN", "2026-08-26", "miss")
+     _add(conn, "c3", "SUNTV", "2026-08-28", "open")
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert s["resolved"] == 2
+     assert s["hit_rate"] == 50.0
+ 
+ 
++def test_summarise_excludes_ungraded_rows_from_hit_rate(conn):
++    """A call published without a target is graded 'ungraded', not folded into
++    the hit rate under either a hit or a miss. resolved stays hit + miss."""
++    _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
++    _add(conn, "c2", "TITAN", "2026-08-26", "miss")
++    _add(conn, "c3", "SUNTV", "2026-08-26", "ungraded")
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["resolved"] == 2
++    assert s["hit_rate"] == 50.0
++    assert s["ungraded"] == 1
++
++
+ def test_gaps_lists_weekdays_with_no_calls(conn):
+     """A day the job did not run is the failure this whole script exists to show."""
+     _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
+     _add(conn, "c2", "TITAN", "2026-08-28")   # Friday
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert "2026-08-27" in s["gaps"]
+ 
+ 
+ def test_weekends_are_not_gaps(conn):
+     """The market is shut on Saturday and Sunday -- that is not a missed run."""
+@@ -98,10 +119,36 @@ def test_main_on_empty_store_is_loud_and_exits_nonzero(conn, monkeypatch, capsys
+ 
+ def test_main_with_a_missing_weekday_exits_nonzero(conn, monkeypatch, capsys):
+     """The non-zero exit IS the alerting mechanism -- assert it, not just gaps."""
+     _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
+     _add(conn, "c2", "TITAN", "2026-08-28")   # Friday -- Thursday is missing
+     monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
+     monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
+     rc = calls_status.main()
+     assert rc == 1
+     assert "MISSING DAYS" in capsys.readouterr().out
++
++
++def test_main_flags_overdue_open_call_and_exits_nonzero(conn, monkeypatch, capsys):
++    """A resolver that is permanently broken must not look like a clean
++    pipeline -- calls stuck 'open' well past their horizon are the only
++    visible trace of that failure, and this alert IS the safety net several
++    earlier design decisions on this branch relied on existing."""
++    published = (datetime.now() - timedelta(days=3)).isoformat(timespec="seconds")
++    _add_with_horizon(conn, "c1", "STUCK", published, "intraday")
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    out = capsys.readouterr().out
++    assert rc == 1
++    assert "OVERDUE" in out
++
++
++def test_main_does_not_flag_open_call_still_inside_its_horizon(conn, monkeypatch, capsys):
++    published = datetime.now().isoformat(timespec="seconds")
++    _add_with_horizon(conn, "c1", "FRESH", published, "investment")  # 30 days
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    out = capsys.readouterr().out
++    assert rc == 0
++    assert "OVERDUE" not in out
+diff --git a/tests/test_publish_calls.py b/tests/test_publish_calls.py
+index 9360c6f..a6a104a 100644
+--- a/tests/test_publish_calls.py
++++ b/tests/test_publish_calls.py
+@@ -74,20 +74,56 @@ def test_symbol_is_stripped_of_exchange_suffix():
+     assert rows[0]["symbol"] == "CIPLA"
+ 
+ 
+ def test_target_and_stop_are_absolute_prices_not_percentages():
+     """The scorer gives percentages; a call must record the actual levels."""
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
+     assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
+ 
+ 
++def test_v2_shaped_pick_produces_the_same_levels_via_pct_suffixed_keys():
++    """app.py falls back to the v2/v1 engines on ImportError from v4.
++
++    Those engines emit stop_loss_pct/target_pct instead of v4's
++    stopLoss/target. Reading only the v4 spelling silently captures every
++    such call with no levels at all.
++    """
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "CIPLA.NS", "price": 1420.0, "score": 73,
++             "direction": "BUY", "reasons": [],
++             "stop_loss_pct": 1.5, "target_pct": 2.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
++    assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
++
++
++def test_both_spellings_present_prefers_the_v4_names():
++    """If a pick somehow carries both, stopLoss/target (v4) wins."""
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "CIPLA.NS", "price": 1420.0, "score": 73,
++             "direction": "BUY", "reasons": [],
++             "stopLoss": 1.5, "target": 2.0,
++             "stop_loss_pct": 9.0, "target_pct": 9.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
++    assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
++
++
+ def test_signal_is_plain_english_joined_reasons():
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert rows[0]["signal"] == (
+         "Reclaimed VWAP; Volume 2.1x average; FII selling (-5040 Cr)")
+ 
+ 
+ def test_signal_contains_negative_reason_text_no_dict_reprs():
+     """Negative reasons are part of why the call looks the way it does and
+     must survive the mapping as plain text, not a stringified dict."""
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+@@ -178,20 +214,69 @@ def test_avoid_direction_is_skipped():
+ 
+ 
+ def test_rejects_non_stock_categories():
+     """/api/picks?category=etfs returns hardcoded literal arrays with invented
+     recommendation strings. Those must never become calls shown to a client."""
+     with pytest.raises(ValueError, match="stocks"):
+         publish_calls.build_rows({"category": "etfs", "picks": []},
+                                  "2026-08-28T09:20:00")
+ 
+ 
++def test_fetch_picks_raises_when_payload_carries_an_error_key(monkeypatch):
++    """app.py:2839-2840 returns HTTP 200 with {"picks": [], "error": str(e)}
++    when scoring fails. A 200 status alone does not mean success -- treating
++    it as one would silently publish an empty day and exit 0, defeating this
++    pipeline's own loud-failure contract at its most likely failure point.
++    """
++    import json as _json
++
++    class FakeResponse:
++        status = 200
++
++        def read(self):
++            return _json.dumps(
++                {"picks": [], "error": "scorer timed out"}).encode("utf-8")
++
++        def __enter__(self):
++            return self
++
++        def __exit__(self, *a):
++            return False
++
++    monkeypatch.setattr(publish_calls.urllib.request, "urlopen",
++                         lambda url, timeout=30: FakeResponse())
++    with pytest.raises(RuntimeError, match="scorer timed out"):
++        publish_calls.fetch_picks("http://fake/api/picks")
++
++
++def test_fetch_picks_does_not_raise_on_an_honest_empty_picks_list(monkeypatch):
++    """A genuinely empty picks list with no error key is not a failure."""
++    import json as _json
++
++    class FakeResponse:
++        status = 200
++
++        def read(self):
++            return _json.dumps({"category": "stocks", "picks": []}).encode("utf-8")
++
++        def __enter__(self):
++            return self
++
++        def __exit__(self, *a):
++            return False
++
++    monkeypatch.setattr(publish_calls.urllib.request, "urlopen",
++                         lambda url, timeout=30: FakeResponse())
++    payload = publish_calls.fetch_picks("http://fake/api/picks")
++    assert payload["picks"] == []
++
++
+ def test_insert_is_idempotent(conn):
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert publish_calls.insert_rows(conn, rows) == 2
+     assert publish_calls.insert_rows(conn, rows) == 0
+     assert conn.execute("SELECT COUNT(*) FROM calls").fetchone()[0] == 2
+ 
+ 
+ def test_inserted_calls_start_open(conn):
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     publish_calls.insert_rows(conn, rows)
+diff --git a/tests/test_resolve_calls.py b/tests/test_resolve_calls.py
+index 6eb8b9f..b5072f8 100644
+--- a/tests/test_resolve_calls.py
++++ b/tests/test_resolve_calls.py
+@@ -77,34 +77,63 @@ def test_buy_below_entry_is_a_miss():
+ 
+ def test_buy_up_but_short_of_target_is_a_miss():
+     """Only reaching the published target counts. Partial moves are not wins."""
+     assert resolve_calls.classify("BUY", 1000.0, 1010.0, 1020.0) == "miss"
+ 
+ 
+ def test_sell_below_target_is_a_hit():
+     assert resolve_calls.classify("SELL", 1000.0, 975.0, 980.0) == "hit"
+ 
+ 
+-def test_call_with_no_target_grades_against_the_call_price():
+-    """build_rows sets target=None when the scorer returns target_pct = 0.
++def test_classify_raises_when_target_is_none():
++    """A call published without a target cannot be graded against one.
+ 
+-    Without a fallback every such call scores a miss, biasing the whole record
+-    downward for a reason that has nothing to do with the calls being wrong.
++    Grading it by a softer rule (e.g. against the call price) would pool two
++    different standards into a single published hit rate. main() handles the
++    None-target case itself by marking the call 'ungraded' and excluding it,
++    rather than calling classify() at all.
+     """
+-    assert resolve_calls.classify("BUY", 1000.0, 1030.0, None) == "hit"
+-    assert resolve_calls.classify("BUY", 1000.0, 970.0, None) == "miss"
+-    assert resolve_calls.classify("SELL", 1000.0, 970.0, None) == "hit"
++    with pytest.raises(ValueError, match="target"):
++        resolve_calls.classify("BUY", 1000.0, 1030.0, None)
++    with pytest.raises(ValueError, match="target"):
++        resolve_calls.classify("SELL", 1000.0, 970.0, None)
+ 
+ 
+-def test_flat_is_never_a_hit_when_there_was_no_target():
+-    """Going nowhere is not a win."""
+-    assert resolve_calls.classify("BUY", 1000.0, 1000.0, None) == "miss"
++def test_due_call_with_no_target_is_marked_ungraded(conn, tmp_path, monkeypatch):
++    """main() must exclude a target-less call, not grade it by a softer rule.
++
++    main() closes its connection on the way out, so reopen the same on-disk
++    db afterward to read back what it wrote.
++    """
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " horizon, target, stop) VALUES (?,?,?,?,?,?,?,?)",
++        ("c1", "NOTARGET", "BUY", "2026-08-28T09:20:00", 1000.0, "intraday",
++         None, None))
++    conn.commit()
++
++    db_path = str(tmp_path / "test_app.db")
++    orig_get_db = app_store.get_db
++    monkeypatch.setattr(resolve_calls, "fetch_price", lambda symbol: 1030.0)
++    monkeypatch.setattr(resolve_calls.app_store, "get_db",
++                         lambda path=None: orig_get_db(db_path))
++    monkeypatch.setattr(resolve_calls.app_store, "init_db", lambda c: None)
++
++    rc = resolve_calls.main()
++    assert rc == 0
++
++    check = orig_get_db(db_path)
++    row = check.execute(
++        "SELECT outcome, outcome_price FROM calls WHERE id='c1'").fetchone()
++    check.close()
++    assert row["outcome"] == "ungraded"
++    assert row["outcome_price"] == 1030.0
+ 
+ 
+ def test_apply_outcome_writes_all_three_fields(conn):
+     _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "intraday")
+     resolve_calls.apply_outcome(conn, "c1", 1050.0, "hit", "2026-08-30T18:00:00")
+     r = conn.execute("SELECT outcome, outcome_price, outcome_at FROM calls"
+                      " WHERE id='c1'").fetchone()
+     assert r["outcome"] == "hit"
+     assert r["outcome_price"] == 1050.0
+     assert r["outcome_at"] == "2026-08-30T18:00:00"

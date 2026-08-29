@@ -1,0 +1,311 @@
+# Review package: 257f73e..0d37551
+
+## Commits
+0d37551 feat(calls): make the pipeline observable, and schedule it
+
+## Files changed
+ deploy/launchd/co.tradepilot.publish-calls.plist | 18 ++++++
+ deploy/launchd/co.tradepilot.resolve-calls.plist | 18 ++++++
+ docs/CALLS_PIPELINE.md                           | 79 ++++++++++++++++++++++++
+ scripts/calls-status.py                          | 73 ++++++++++++++++++++++
+ tests/test_calls_status.py                       | 79 ++++++++++++++++++++++++
+ 5 files changed, 267 insertions(+)
+
+## Diff
+diff --git a/deploy/launchd/co.tradepilot.publish-calls.plist b/deploy/launchd/co.tradepilot.publish-calls.plist
+new file mode 100644
+index 0000000..44b5919
+--- /dev/null
++++ b/deploy/launchd/co.tradepilot.publish-calls.plist
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0"><dict>
++  <key>Label</key><string>co.tradepilot.publish-calls</string>
++  <key>ProgramArguments</key><array>
++    <string>/usr/bin/python3</string>
++    <string>/Users/YOURNAME/Documents/tinker/projects/tradepilot/scripts/publish-calls.py</string>
++  </array>
++  <key>StartCalendarInterval</key><array>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>1</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>2</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>3</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>4</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>5</integer></dict>
++  </array>
++  <key>StandardOutPath</key><string>/tmp/tradepilot-publish-calls.log</string>
++  <key>StandardErrorPath</key><string>/tmp/tradepilot-publish-calls.log</string>
++</dict></plist>
+diff --git a/deploy/launchd/co.tradepilot.resolve-calls.plist b/deploy/launchd/co.tradepilot.resolve-calls.plist
+new file mode 100644
+index 0000000..b8b7b36
+--- /dev/null
++++ b/deploy/launchd/co.tradepilot.resolve-calls.plist
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0"><dict>
++  <key>Label</key><string>co.tradepilot.resolve-calls</string>
++  <key>ProgramArguments</key><array>
++    <string>/usr/bin/python3</string>
++    <string>/Users/YOURNAME/Documents/tinker/projects/tradepilot/scripts/resolve-calls.py</string>
++  </array>
++  <key>StartCalendarInterval</key><array>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>1</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>2</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>3</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>4</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>5</integer></dict>
++  </array>
++  <key>StandardOutPath</key><string>/tmp/tradepilot-resolve-calls.log</string>
++  <key>StandardErrorPath</key><string>/tmp/tradepilot-resolve-calls.log</string>
++</dict></plist>
+diff --git a/docs/CALLS_PIPELINE.md b/docs/CALLS_PIPELINE.md
+new file mode 100644
+index 0000000..3b35ba3
+--- /dev/null
++++ b/docs/CALLS_PIPELINE.md
+@@ -0,0 +1,79 @@
++# Calls capture pipeline
++
++Records what TradePilot published, and what happened to it. The track record
++shown to clients is a query over this and nothing else.
++
++**This is time-sensitive.** Every day the publish job does not run is a day of
++proof that cannot be recovered — the record cannot be backfilled without
++retroactively labelling engine history as calls, which the design rejects.
++
++## The jobs
++
++| Job | When | What it does |
++|:--|:--|:--|
++| `scripts/publish-calls.py` | 09:20 IST, weekdays | Fetches `/api/picks?category=stocks` and writes one row per pick |
++| `scripts/resolve-calls.py` | 18:30 IST, weekdays | Fills the outcome for calls whose horizon has elapsed |
++| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays |
++
++Both jobs require `prototype/app.py` to be running — they read the same HTTP
++endpoints the product serves, so the record is by construction what was
++published rather than a recomputation that might differ.
++
++## Checking it is alive
++
++```bash
++python3 scripts/calls-status.py
++```
++
++Non-zero exit means missing weekdays. Investigate before they accumulate.
++
++## Installing the schedule
++
++The two launchd agents are checked into this repo as templates, not installed
++automatically — writing into `~/Library/LaunchAgents` and scheduling a
++recurring background job is a decision for whoever runs this on their own
++machine, not something a task should do on their behalf.
++
++Templates: `deploy/launchd/co.tradepilot.publish-calls.plist` and
++`deploy/launchd/co.tradepilot.resolve-calls.plist`. Both contain the literal
++placeholder `/Users/YOURNAME/...` in `ProgramArguments` — substitute your own
++home directory before loading them.
++
++```bash
++# From the repo root. Substitutes YOURNAME with your actual home directory
++# in a copy of each template, then installs the copies.
++sed "s#/Users/YOURNAME#$HOME#" deploy/launchd/co.tradepilot.publish-calls.plist \
++  > ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++sed "s#/Users/YOURNAME#$HOME#" deploy/launchd/co.tradepilot.resolve-calls.plist \
++  > ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++
++launchctl load ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++launchctl load ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++
++launchctl list | grep tradepilot   # expect both labels listed
++```
++
++Both jobs will fail at their scheduled time unless `prototype/app.py` is
++already running — they read `/api/picks` and the other HTTP endpoints the
++product serves, not a direct DB or engine call. Make sure the app server is
++up (or itself scheduled to start before 09:20 IST) before relying on the
++schedule.
++
++To remove the schedule later:
++
++```bash
++launchctl unload ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++launchctl unload ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++rm ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist \
++   ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++```
++
++## Rules that must not be relaxed
++
++- The publish job is the **only** writer of `calls`.
++- **Stocks only.** `/api/picks?category=etfs` and `?category=mf` return
++  hardcoded literal arrays with invented recommendation strings. They are not
++  model output and must never be recorded as calls.
++- A call inside its horizon stays `open` and is never counted in a hit rate.
++- A hit requires reaching the target published with the call.
++- A missing price leaves a call open rather than recording a miss it did not earn.
+diff --git a/scripts/calls-status.py b/scripts/calls-status.py
+new file mode 100755
+index 0000000..aa5fd3c
+--- /dev/null
++++ b/scripts/calls-status.py
+@@ -0,0 +1,73 @@
++#!/usr/bin/env python3
++"""Print the state of the calls record.
++
++A capture pipeline nobody can see is a pipeline that stops without anyone
++noticing -- and every day it is stopped is a day of proof that cannot be
++recovered. Run this whenever you want to know the record is alive.
++"""
++import os
++import sys
++from datetime import datetime, timedelta
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def summarise(conn, now):
++    """Aggregate the record. `now` is supplied so this stays testable."""
++    rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
++    total = len(rows)
++    hit = sum(1 for r in rows if r["outcome"] == "hit")
++    miss = sum(1 for r in rows if r["outcome"] == "miss")
++    open_ = sum(1 for r in rows if r["outcome"] == "open")
++    resolved = hit + miss
++
++    days = sorted({r["published_at"][:10] for r in rows})
++    gaps = []
++    if days:
++        cur = datetime.fromisoformat(days[0]).date()
++        end = datetime.fromisoformat(now[:10]).date()
++        have = set(days)
++        while cur <= end:
++            # Monday is 0, Saturday 5, Sunday 6. A closed market is not a gap.
++            if cur.weekday() < 5 and cur.isoformat() not in have:
++                gaps.append(cur.isoformat())
++            cur += timedelta(days=1)
++
++    return {
++        "total": total, "open": open_, "resolved": resolved,
++        "hit": hit, "miss": miss,
++        # None, never 0.0 -- an unresolved record is not a record of failure.
++        "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
++        "first_call": days[0] if days else None,
++        "last_call": days[-1] if days else None,
++        "days_covered": len(days),
++        "gaps": gaps,
++    }
++
++
++def main():
++    conn = app_store.get_db()
++    app_store.init_db(conn)
++    s = summarise(conn, datetime.now().isoformat(timespec="seconds"))
++    conn.close()
++
++    print("calls recorded    %d  (%d open, %d resolved)"
++          % (s["total"], s["open"], s["resolved"]))
++    print("hit rate          %s"
++          % ("%.1f%% of %d resolved" % (s["hit_rate"], s["resolved"])
++             if s["hit_rate"] is not None else "-- (nothing resolved yet)"))
++    print("covering          %s to %s  (%d trading days)"
++          % (s["first_call"] or "--", s["last_call"] or "--", s["days_covered"]))
++    if s["gaps"]:
++        print("MISSING DAYS      %d: %s" % (len(s["gaps"]), ", ".join(s["gaps"][:10])))
++        return 1
++    print("gaps              none")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/tests/test_calls_status.py b/tests/test_calls_status.py
+new file mode 100644
+index 0000000..3b067d0
+--- /dev/null
++++ b/tests/test_calls_status.py
+@@ -0,0 +1,79 @@
++"""Tests for the pipeline status summary."""
++import importlib.util
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def _load(name, relpath):
++    spec = importlib.util.spec_from_file_location(
++        name, os.path.join(REPO_ROOT, relpath))
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++calls_status = _load("calls_status", "scripts/calls-status.py")
++
++
++@pytest.fixture
++def conn(tmp_path):
++    c = app_store.get_db(str(tmp_path / "test_app.db"))
++    app_store.init_db(c)
++    yield c
++    c.close()
++
++
++def _add(conn, cid, symbol, day, outcome="open"):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call, outcome)"
++        " VALUES (?,?,?,?,?,?)",
++        (cid, symbol, "BUY", day + "T09:20:00", 1000.0, outcome))
++    conn.commit()
++
++
++def test_empty_store_reports_zero_not_an_error(conn):
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["total"] == 0
++    assert s["hit_rate"] is None
++
++
++def test_hit_rate_is_none_when_nothing_resolved(conn):
++    """None, never 0.0 -- zero would read as 'we get everything wrong'."""
++    _add(conn, "c1", "CIPLA", "2026-08-28")
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["open"] == 1
++    assert s["resolved"] == 0
++    assert s["hit_rate"] is None
++
++
++def test_hit_rate_counts_only_resolved_calls(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
++    _add(conn, "c2", "TITAN", "2026-08-26", "miss")
++    _add(conn, "c3", "SUNTV", "2026-08-28", "open")
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["resolved"] == 2
++    assert s["hit_rate"] == 50.0
++
++
++def test_gaps_lists_weekdays_with_no_calls(conn):
++    """A day the job did not run is the failure this whole script exists to show."""
++    _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
++    _add(conn, "c2", "TITAN", "2026-08-28")   # Friday
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert "2026-08-27" in s["gaps"]
++
++
++def test_weekends_are_not_gaps(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-28")   # Friday
++    _add(conn, "c2", "TITAN", "2026-08-31")   # Monday
++    s = calls_status.summarise(conn, "2026-08-31T18:00:00")
++    assert "2026-08-29" not in s["gaps"]      # Saturday
++    assert "2026-08-30" not in s["gaps"]      # Sunday

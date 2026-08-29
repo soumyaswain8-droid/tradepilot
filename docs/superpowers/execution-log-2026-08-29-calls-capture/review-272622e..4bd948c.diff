@@ -1,0 +1,1218 @@
+# Review package: 272622eebe0a0425af1eca2ef7cff6d214b75567..4bd948c
+
+## Commits
+4bd948c fix(calls): status must fail loud on a pipeline that never ran
+0d37551 feat(calls): make the pipeline observable, and schedule it
+257f73e fix(calls): unknown horizon errs long, one bad quote doesn't abort the batch
+d1cd47d feat(calls): resolve outcomes, and only when the horizon has passed
+d9f3a29 fix(calls): sign the target/stop offset by side, not by input
+16453da fix(calls): map build_rows to what /api/picks actually serves
+83f1686 feat(calls): capture what was published, once per symbol per day
+b25c764 feat(store): the calls and positions store
+
+## Files changed
+ deploy/launchd/co.tradepilot.publish-calls.plist |  18 ++
+ deploy/launchd/co.tradepilot.resolve-calls.plist |  18 ++
+ docs/CALLS_PIPELINE.md                           |  95 +++++++++++
+ prototype/app_store.py                           |  74 ++++++++
+ scripts/calls-status.py                          |  87 ++++++++++
+ scripts/publish-calls.py                         | 135 +++++++++++++++
+ scripts/resolve-calls.py                         | 130 ++++++++++++++
+ tests/test_app_store.py                          |  89 ++++++++++
+ tests/test_calls_status.py                       | 107 ++++++++++++
+ tests/test_publish_calls.py                      | 205 +++++++++++++++++++++++
+ tests/test_resolve_calls.py                      | 167 ++++++++++++++++++
+ 11 files changed, 1125 insertions(+)
+
+## Diff
+diff --git a/deploy/launchd/co.tradepilot.publish-calls.plist b/deploy/launchd/co.tradepilot.publish-calls.plist
+new file mode 100644
+index 0000000..44b5919
+--- /dev/null
++++ b/deploy/launchd/co.tradepilot.publish-calls.plist
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0"><dict>
++  <key>Label</key><string>co.tradepilot.publish-calls</string>
++  <key>ProgramArguments</key><array>
++    <string>/usr/bin/python3</string>
++    <string>/Users/YOURNAME/Documents/tinker/projects/tradepilot/scripts/publish-calls.py</string>
++  </array>
++  <key>StartCalendarInterval</key><array>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>1</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>2</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>3</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>4</integer></dict>
++    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer><key>Weekday</key><integer>5</integer></dict>
++  </array>
++  <key>StandardOutPath</key><string>/tmp/tradepilot-publish-calls.log</string>
++  <key>StandardErrorPath</key><string>/tmp/tradepilot-publish-calls.log</string>
++</dict></plist>
+diff --git a/deploy/launchd/co.tradepilot.resolve-calls.plist b/deploy/launchd/co.tradepilot.resolve-calls.plist
+new file mode 100644
+index 0000000..b8b7b36
+--- /dev/null
++++ b/deploy/launchd/co.tradepilot.resolve-calls.plist
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0"><dict>
++  <key>Label</key><string>co.tradepilot.resolve-calls</string>
++  <key>ProgramArguments</key><array>
++    <string>/usr/bin/python3</string>
++    <string>/Users/YOURNAME/Documents/tinker/projects/tradepilot/scripts/resolve-calls.py</string>
++  </array>
++  <key>StartCalendarInterval</key><array>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>1</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>2</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>3</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>4</integer></dict>
++    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer><key>Weekday</key><integer>5</integer></dict>
++  </array>
++  <key>StandardOutPath</key><string>/tmp/tradepilot-resolve-calls.log</string>
++  <key>StandardErrorPath</key><string>/tmp/tradepilot-resolve-calls.log</string>
++</dict></plist>
+diff --git a/docs/CALLS_PIPELINE.md b/docs/CALLS_PIPELINE.md
+new file mode 100644
+index 0000000..ad25a9e
+--- /dev/null
++++ b/docs/CALLS_PIPELINE.md
+@@ -0,0 +1,95 @@
++# Calls capture pipeline
++
++Records what TradePilot published, and what happened to it. The track record
++shown to clients is a query over this and nothing else.
++
++**This is time-sensitive.** Every day the publish job does not run is a day of
++proof that cannot be recovered — the record cannot be backfilled without
++retroactively labelling engine history as calls, which the design rejects.
++
++## The jobs
++
++| Job | When | What it does |
++|:--|:--|:--|
++| `scripts/publish-calls.py` | 09:20 IST, weekdays | Fetches `/api/picks?category=stocks` and writes one row per pick |
++| `scripts/resolve-calls.py` | 18:30 IST, weekdays | Fills the outcome for calls whose horizon has elapsed |
++| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays |
++
++Both jobs require `prototype/app.py` to be running — they read the same HTTP
++endpoints the product serves, so the record is by construction what was
++published rather than a recomputation that might differ.
++
++## Checking it is alive
++
++```bash
++python3 scripts/calls-status.py
++```
++
++Non-zero exit means missing weekdays. Investigate before they accumulate.
++
++### What a clean exit does and does not mean
++
++- An empty database — the publish job has never once written a row — exits 1
++  with an explicit `NO CALLS EVER RECORDED` message, not a silent `gaps none`.
++  This is deliberate: a pipeline that ran and then died self-corrects (the
++  next weekday shows up as a gap and the next run flags it), but a pipeline
++  that has never run has no first call to anchor the gap check against, so
++  without this branch it would report clean forever — indistinguishable from
++  a year of flawless running.
++- A clean (exit 0) run only proves no weekday is missing **between the first
++  and last recorded call**. If every call so far landed on a weekend — as
++  happened during development on Saturday 2026-08-29 — that window contains
++  no weekday to check at all, so a clean exit does not yet prove the
++  scheduled job has actually fired. The check becomes meaningful once at
++  least one weekday falls inside the observed window.
++
++## Installing the schedule
++
++The two launchd agents are checked into this repo as templates, not installed
++automatically — writing into `~/Library/LaunchAgents` and scheduling a
++recurring background job is a decision for whoever runs this on their own
++machine, not something a task should do on their behalf.
++
++Templates: `deploy/launchd/co.tradepilot.publish-calls.plist` and
++`deploy/launchd/co.tradepilot.resolve-calls.plist`. Both contain the literal
++placeholder `/Users/YOURNAME/...` in `ProgramArguments` — substitute your own
++home directory before loading them.
++
++```bash
++# From the repo root. Substitutes YOURNAME with your actual home directory
++# in a copy of each template, then installs the copies.
++sed "s#/Users/YOURNAME#$HOME#" deploy/launchd/co.tradepilot.publish-calls.plist \
++  > ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++sed "s#/Users/YOURNAME#$HOME#" deploy/launchd/co.tradepilot.resolve-calls.plist \
++  > ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++
++launchctl load ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++launchctl load ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++
++launchctl list | grep tradepilot   # expect both labels listed
++```
++
++Both jobs will fail at their scheduled time unless `prototype/app.py` is
++already running — they read `/api/picks` and the other HTTP endpoints the
++product serves, not a direct DB or engine call. Make sure the app server is
++up (or itself scheduled to start before 09:20 IST) before relying on the
++schedule.
++
++To remove the schedule later:
++
++```bash
++launchctl unload ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist
++launchctl unload ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++rm ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist \
++   ~/Library/LaunchAgents/co.tradepilot.resolve-calls.plist
++```
++
++## Rules that must not be relaxed
++
++- The publish job is the **only** writer of `calls`.
++- **Stocks only.** `/api/picks?category=etfs` and `?category=mf` return
++  hardcoded literal arrays with invented recommendation strings. They are not
++  model output and must never be recorded as calls.
++- A call inside its horizon stays `open` and is never counted in a hit rate.
++- A hit requires reaching the target published with the call.
++- A missing price leaves a call open rather than recording a miss it did not earn.
+diff --git a/prototype/app_store.py b/prototype/app_store.py
+new file mode 100644
+index 0000000..86da6cd
+--- /dev/null
++++ b/prototype/app_store.py
+@@ -0,0 +1,74 @@
++"""Store for the client product's own data -- published calls and client positions.
++
++Deliberately a SEPARATE database file from tradepilot_analytics.db. Analytics is
++behavioural tracking: disposable and rebuildable. `calls` is the product record --
++if it is lost, the track record is lost, and it cannot be reconstructed without
++retroactively labelling engine history as calls, which the design rejects.
++
++Connection settings mirror prototype/analytics.py, which has run in production
++here for months: WAL for concurrent readers, a busy timeout so a writer does not
++fail instantly under contention, and Row so callers get mappings not tuples.
++"""
++import os
++import sqlite3
++
++DB_PATH = os.path.join(os.path.dirname(__file__), "tradepilot_app.db")
++
++SCHEMA = """
++CREATE TABLE IF NOT EXISTS calls (
++    id             TEXT PRIMARY KEY,
++    symbol         TEXT NOT NULL,
++    side           TEXT NOT NULL,
++    published_at   TEXT NOT NULL,
++    price_at_call  REAL NOT NULL,
++    score          REAL,
++    signal         TEXT,
++    horizon        TEXT,
++    target         REAL,
++    stop           REAL,
++    outcome_price  REAL,
++    outcome_at     TEXT,
++    outcome        TEXT NOT NULL DEFAULT 'open'
++);
++
++-- Idempotency is a constraint, not a convention: re-running the publish job
++-- cannot double-count a day.
++CREATE UNIQUE INDEX IF NOT EXISTS ux_calls_symbol_day
++    ON calls (symbol, date(published_at));
++
++CREATE INDEX IF NOT EXISTS ix_calls_outcome
++    ON calls (outcome, published_at);
++
++CREATE TABLE IF NOT EXISTS positions (
++    id          TEXT PRIMARY KEY,
++    user_id     TEXT NOT NULL,
++    symbol      TEXT NOT NULL,
++    qty         REAL NOT NULL,
++    avg_price   REAL NOT NULL,
++    opened_at   TEXT NOT NULL,
++    closed_at   TEXT,
++    exit_price  REAL,
++    source      TEXT NOT NULL DEFAULT 'manual',
++    broker_ref  TEXT,
++    call_id     TEXT REFERENCES calls(id)
++);
++
++CREATE INDEX IF NOT EXISTS ix_positions_user
++    ON positions (user_id, closed_at);
++"""
++
++
++def get_db(path=None):
++    """Open the store. Pass `path` to point at a throwaway file in tests."""
++    conn = sqlite3.connect(path or DB_PATH)
++    conn.execute("PRAGMA journal_mode=WAL")
++    conn.execute("PRAGMA busy_timeout=5000")
++    conn.execute("PRAGMA foreign_keys=ON")
++    conn.row_factory = sqlite3.Row
++    return conn
++
++
++def init_db(conn):
++    """Create tables and indexes. Safe to run on every boot."""
++    conn.executescript(SCHEMA)
++    conn.commit()
+diff --git a/scripts/calls-status.py b/scripts/calls-status.py
+new file mode 100755
+index 0000000..d4d0129
+--- /dev/null
++++ b/scripts/calls-status.py
+@@ -0,0 +1,87 @@
++#!/usr/bin/env python3
++"""Print the state of the calls record.
++
++A capture pipeline nobody can see is a pipeline that stops without anyone
++noticing -- and every day it is stopped is a day of proof that cannot be
++recovered. Run this whenever you want to know the record is alive.
++"""
++import os
++import sys
++from datetime import datetime, timedelta
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def summarise(conn, now):
++    """Aggregate the record. `now` is supplied so this stays testable."""
++    rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
++    total = len(rows)
++    hit = sum(1 for r in rows if r["outcome"] == "hit")
++    miss = sum(1 for r in rows if r["outcome"] == "miss")
++    open_ = sum(1 for r in rows if r["outcome"] == "open")
++    resolved = hit + miss
++
++    days = sorted({r["published_at"][:10] for r in rows})
++    gaps = []
++    if days:
++        cur = datetime.fromisoformat(days[0]).date()
++        end = datetime.fromisoformat(now[:10]).date()
++        have = set(days)
++        while cur <= end:
++            # Monday is 0, Saturday 5, Sunday 6. A closed market is not a gap.
++            if cur.weekday() < 5 and cur.isoformat() not in have:
++                gaps.append(cur.isoformat())
++            cur += timedelta(days=1)
++
++    return {
++        "total": total, "open": open_, "resolved": resolved,
++        "hit": hit, "miss": miss,
++        # None, never 0.0 -- an unresolved record is not a record of failure.
++        "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
++        "first_call": days[0] if days else None,
++        "last_call": days[-1] if days else None,
++        "days_covered": len(days),
++        "gaps": gaps,
++    }
++
++
++def main():
++    """Print the record's state to stdout and return the process exit code."""
++    conn = app_store.get_db()
++    app_store.init_db(conn)
++    s = summarise(conn, datetime.now().isoformat(timespec="seconds"))
++    conn.close()
++
++    if s["total"] == 0:
++        # A dead pipeline that once ran self-corrects: first_call is fixed, the
++        # gap loop marches forward from it, and the next weekday shows up as a
++        # gap. A pipeline that has NEVER run has no such anchor -- days is
++        # empty, the loop is skipped, and "gaps none" would be reported forever.
++        # A fresh install and a year of flawless running must not look alike.
++        print("NO CALLS EVER RECORDED -- the publish job has not run "
++              "successfully even once.")
++        print("Check that prototype/app.py is running, then run "
++              "scripts/publish-calls.py by hand.")
++        return 1
++
++    print("calls recorded    %d  (%d open, %d resolved)"
++          % (s["total"], s["open"], s["resolved"]))
++    print("hit rate          %s"
++          % ("%.1f%% of %d resolved" % (s["hit_rate"], s["resolved"])
++             if s["hit_rate"] is not None else "-- (nothing resolved yet)"))
++    print("covering          %s to %s  (%d day%s with calls)"
++          % (s["first_call"] or "--", s["last_call"] or "--",
++             s["days_covered"], "" if s["days_covered"] == 1 else "s"))
++    if s["gaps"]:
++        print("MISSING DAYS      %d: %s" % (len(s["gaps"]), ", ".join(s["gaps"][:10])))
++        return 1
++    print("gaps              none")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/publish-calls.py b/scripts/publish-calls.py
+new file mode 100644
+index 0000000..fd6caac
+--- /dev/null
++++ b/scripts/publish-calls.py
+@@ -0,0 +1,135 @@
++#!/usr/bin/env python3
++"""Capture today's published calls into the `calls` table.
++
++This job is the ONLY writer of `calls`. Everything the track record later
++claims rests on it: if calls could be written from anywhere, "we called this"
++stops being falsifiable.
++
++It reads the SAME HTTP endpoint the product serves rather than calling the
++scorer directly, so what is recorded is by construction what was published --
++not a recomputation that might differ.
++
++STOCKS ONLY. /api/picks?category=etfs and ?category=mf return hardcoded literal
++arrays with invented recommendation strings; they are not model output and must
++never enter the record.
++
++Exit code 0 on success, 1 on any failure. Failure must be loud: a missing day
++in the record is worse than a visible gap.
++"""
++import json
++import os
++import sqlite3
++import sys
++import urllib.request
++from datetime import datetime
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++PICKS_URL = os.environ.get(
++    "TP_PICKS_URL", "http://127.0.0.1:5050/api/picks?category=stocks&count=10")
++
++
++def fetch_picks(url):
++    """GET the picks payload. Raises on any non-200 or unparseable body."""
++    with urllib.request.urlopen(url, timeout=30) as r:
++        if r.status != 200:
++            raise RuntimeError("picks endpoint returned HTTP %s" % r.status)
++        return json.loads(r.read().decode("utf-8"))
++
++
++def build_rows(payload, published_at):
++    """Map a picks payload to `calls` rows. Pure -- no I/O, no clock."""
++    category = payload.get("category", "stocks")
++    if category != "stocks":
++        raise ValueError(
++            "refusing category %r: only 'stocks' is model output. etfs and mf "
++            "are hardcoded literals and must never become calls." % category)
++
++    day = published_at[:10]
++    horizon = payload.get("horizon", "intraday")
++    rows = []
++    for p in payload.get("picks", []):
++        symbol = str(p.get("symbol", "")).replace(".NS", "").replace(".BO", "")
++        if not symbol:
++            continue
++        price = float(p.get("price") or 0)
++        if price <= 0:
++            continue
++        side = str(p.get("direction", "")).upper()
++        if side not in ("BUY", "SELL"):
++            # HOLD / AVOID are not actionable calls. Recording one so a
++            # resolver can later grade it would manufacture a hit rate out
++            # of non-advice.
++            continue
++        sl_pct = abs(float(p.get("stopLoss") or 0))
++        tgt_pct = abs(float(p.get("target") or 0))
++        # target and stopLoss are unsigned magnitudes -- composite_scorer derives
++        # them from a volatility multiplier with no reference to direction. Which
++        # side of the entry they land on is decided HERE, by the trade's side.
++        # Applying the BUY arithmetic to a SELL would put a short's target above
++        # its entry, and the resolver would then grade that short a hit whenever
++        # the stock rose.
++        sign = -1.0 if side == "SELL" else 1.0
++        reasons = p.get("reasons") or []
++        # reasons entries are dicts like {"text": ..., "type": "positive"|
++        # "negative"}; join their plain text, positives and negatives alike,
++        # in order. Be defensive: a plain-string entry still works.
++        parts = [r.get("text") if isinstance(r, dict) else str(r) for r in reasons]
++        rows.append({
++            # Deterministic: a re-run on the same day produces the same id, so
++            # the unique index collides instead of inserting a near-duplicate.
++            "id": "call-%s-%s" % (symbol, day),
++            "symbol": symbol,
++            "side": side,
++            "published_at": published_at,
++            "price_at_call": price,
++            "score": float(p.get("score") or 0),
++            "signal": "; ".join(part for part in parts if part) or None,
++            "horizon": horizon,
++            "target": round(price * (1 + sign * tgt_pct / 100.0), 2) if tgt_pct else None,
++            "stop": round(price * (1 - sign * sl_pct / 100.0), 2) if sl_pct else None,
++        })
++    return rows
++
++
++def insert_rows(conn, rows):
++    """Insert rows, skipping any that already exist. Returns the insert count."""
++    inserted = 0
++    for r in rows:
++        try:
++            conn.execute(
++                "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++                " score, signal, horizon, target, stop)"
++                " VALUES (:id, :symbol, :side, :published_at, :price_at_call,"
++                " :score, :signal, :horizon, :target, :stop)", r)
++            inserted += 1
++        except sqlite3.IntegrityError:
++            # Already recorded today. Expected on a re-run; not an error.
++            pass
++    conn.commit()
++    return inserted
++
++
++def main():
++    published_at = datetime.now().isoformat(timespec="seconds")
++    try:
++        payload = fetch_picks(PICKS_URL)
++        rows = build_rows(payload, published_at)
++        conn = app_store.get_db()
++        app_store.init_db(conn)
++        n = insert_rows(conn, rows)
++        conn.close()
++    except Exception as e:
++        print("PUBLISH FAILED %s: %s: %s" % (published_at, type(e).__name__, e),
++              file=sys.stderr)
++        return 1
++    print("published %d call(s) of %d pick(s) at %s" % (n, len(rows), published_at))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/resolve-calls.py b/scripts/resolve-calls.py
+new file mode 100644
+index 0000000..19f3e4b
+--- /dev/null
++++ b/scripts/resolve-calls.py
+@@ -0,0 +1,130 @@
++#!/usr/bin/env python3
++"""Fill in what actually happened to each published call.
++
++One rule matters above the others: a call still inside its horizon stays
++`open` and is never counted in a hit rate. Resolving early is how a track
++record quietly starts overstating itself.
++
++A call is a `hit` only if it reached the target that was published with it.
++A favourable-but-short move is a miss. Grading on anything softer would make
++the published target decorative.
++
++Exit code 0 on success, 1 on any failure.
++"""
++import json
++import os
++import sys
++import urllib.request
++from datetime import datetime, timedelta
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++HORIZON_DAYS = {"intraday": 1, "swing": 7, "investment": 30}
++
++# An unrecognised horizon falls back to the LONGEST known window, not the
++# shortest. publish-calls writes whatever horizon the payload carries, with no
++# whitelist, so a horizon added to the scorer and not mirrored here would
++# otherwise be graded after one day instead of thirty -- resolving a call 29
++# days early while reporting success. Erring long makes an unknown horizon
++# resolve late or never, which surfaces as calls stuck 'open' in calls-status.
++# Erring short corrupts the hit rate silently. Only one of those is recoverable.
++_FALLBACK_DAYS = max(HORIZON_DAYS.values())
++
++QUOTE_URL = os.environ.get("TP_QUOTE_URL", "http://127.0.0.1:5050/api/stock/%s")
++
++
++def is_elapsed(published_at, horizon, now):
++    """Has this call's horizon passed? Pure -- `now` is supplied, never read.
++
++    `now` and `published_at` must both be naive local ISO-8601, exactly as
++    datetime.now().isoformat(timespec="seconds") produces. Passing an
++    offset-aware string for one and not the other raises TypeError.
++    """
++    days = HORIZON_DAYS.get(horizon or "intraday", _FALLBACK_DAYS)
++    due = datetime.fromisoformat(published_at) + timedelta(days=days)
++    return datetime.fromisoformat(now) >= due
++
++
++def classify(side, price_at_call, outcome_price, target):
++    """hit only if the published target was reached. Everything else is a miss.
++
++    When no target was published -- the scorer can return target_pct = 0, and
++    build_rows stores None -- the bar falls back to the call price and requires
++    a strict move, so flat is not a win. Without that fallback every
++    target-less call would score a miss and bias the record downward for a
++    reason that has nothing to do with the calls being wrong.
++
++    There is deliberately no `stop` parameter. A stop bounds a loss; it does
++    not grade whether the call was right.
++    """
++    if target is not None:
++        return "hit" if (outcome_price <= target if side == "SELL"
++                         else outcome_price >= target) else "miss"
++    return "hit" if (outcome_price < price_at_call if side == "SELL"
++                     else outcome_price > price_at_call) else "miss"
++
++
++def due_calls(conn, now):
++    """Open calls whose horizon has elapsed."""
++    rows = conn.execute(
++        "SELECT * FROM calls WHERE outcome = 'open' ORDER BY published_at").fetchall()
++    return [r for r in rows if is_elapsed(r["published_at"], r["horizon"], now)]
++
++
++def apply_outcome(conn, call_id, outcome_price, outcome, now):
++    """Record the result. Writes all three outcome fields together."""
++    conn.execute(
++        "UPDATE calls SET outcome_price = ?, outcome = ?, outcome_at = ?"
++        " WHERE id = ?", (outcome_price, outcome, now, call_id))
++    conn.commit()
++
++
++def fetch_price(symbol):
++    """Current price for a symbol, or None if unavailable."""
++    with urllib.request.urlopen(QUOTE_URL % symbol, timeout=30) as r:
++        data = json.loads(r.read().decode("utf-8"))
++    price = data.get("price") or data.get("current_price")
++    return float(price) if price else None
++
++
++def main():
++    now = datetime.now().isoformat(timespec="seconds")
++    resolved, skipped, failed = 0, 0, 0
++    try:
++        conn = app_store.get_db()
++        app_store.init_db(conn)
++        for row in due_calls(conn, now):
++            try:
++                price = fetch_price(row["symbol"])
++            except Exception as e:
++                # One bad quote must not cost the other due calls their cycle.
++                # The call stays open and is retried tomorrow -- an unresolved
++                # call is never counted, so nothing downstream is wrong.
++                print("  %s: price fetch failed (%s: %s)"
++                      % (row["symbol"], type(e).__name__, e), file=sys.stderr)
++                failed += 1
++                continue
++            if price is None:
++                # No price is not a miss. Leave it open and try again tomorrow.
++                skipped += 1
++                continue
++            outcome = classify(row["side"], row["price_at_call"], price,
++                               row["target"])
++            apply_outcome(conn, row["id"], price, outcome, now)
++            resolved += 1
++        conn.close()
++    except Exception as e:
++        print("RESOLVE FAILED %s: %s: %s" % (now, type(e).__name__, e),
++              file=sys.stderr)
++        return 1
++    print("resolved %d call(s), %d left open for want of a price, %d failed"
++          % (resolved, skipped, failed))
++    return 1 if failed else 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/tests/test_app_store.py b/tests/test_app_store.py
+new file mode 100644
+index 0000000..451004a
+--- /dev/null
++++ b/tests/test_app_store.py
+@@ -0,0 +1,89 @@
++"""Schema tests for the calls/positions store.
++
++`calls` is the product record -- if it is lost the track record cannot be
++rebuilt. These tests pin the two properties that protect it: the schema is
++idempotent, and the publish job physically cannot write the same call twice.
++"""
++import os
++import sqlite3
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++@pytest.fixture
++def conn(tmp_path):
++    """A store backed by a throwaway file, never the real database."""
++    c = app_store.get_db(str(tmp_path / "test_app.db"))
++    app_store.init_db(c)
++    yield c
++    c.close()
++
++
++def test_both_tables_exist(conn):
++    names = {r["name"] for r in conn.execute(
++        "SELECT name FROM sqlite_master WHERE type='table'")}
++    assert "calls" in names
++    assert "positions" in names
++
++
++def test_init_db_is_idempotent(conn):
++    """Running it twice must not raise -- migrations re-run on every boot."""
++    app_store.init_db(conn)
++    app_store.init_db(conn)
++
++
++def test_foreign_keys_are_enforced(conn):
++    """SQLite ignores foreign keys unless the pragma is set per connection."""
++    assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
++    with pytest.raises(sqlite3.IntegrityError):
++        conn.execute(
++            "INSERT INTO positions (id, user_id, symbol, qty, avg_price, "
++            "opened_at, call_id) VALUES (?,?,?,?,?,?,?)",
++            ("p1", "u1", "CIPLA", 10, 1420.0, "2026-08-28T09:30:00", "no-such-call"))
++        conn.commit()
++
++
++def test_duplicate_call_same_symbol_same_day_is_rejected(conn):
++    """The idempotency guarantee is a database constraint, not a convention."""
++    row = ("c1", "CIPLA", "BUY", "2026-08-28T09:20:00", 1420.0, 73.0,
++           "VWAP reclaim", "intraday", 1448.0, 1399.0)
++    cols = ("INSERT INTO calls (id, symbol, side, published_at, price_at_call, "
++            "score, signal, horizon, target, stop) VALUES (?,?,?,?,?,?,?,?,?,?)")
++    conn.execute(cols, row)
++    conn.commit()
++    with pytest.raises(sqlite3.IntegrityError):
++        conn.execute(cols, ("c2", "CIPLA", "BUY", "2026-08-28T15:10:00", 1431.0,
++                            71.0, "VWAP reclaim", "intraday", 1460.0, 1410.0))
++        conn.commit()
++
++
++def test_same_symbol_next_day_is_allowed(conn):
++    """A stock called on consecutive days is two calls, not a duplicate."""
++    cols = ("INSERT INTO calls (id, symbol, side, published_at, price_at_call) "
++            "VALUES (?,?,?,?,?)")
++    conn.execute(cols, ("c1", "CIPLA", "BUY", "2026-08-28T09:20:00", 1420.0))
++    conn.execute(cols, ("c2", "CIPLA", "BUY", "2026-08-29T09:20:00", 1431.0))
++    conn.commit()
++    assert conn.execute("SELECT COUNT(*) FROM calls").fetchone()[0] == 2
++
++
++def test_outcome_defaults_to_open(conn):
++    """An unresolved call must never look resolved."""
++    conn.execute("INSERT INTO calls (id, symbol, side, published_at, price_at_call) "
++                 "VALUES (?,?,?,?,?)",
++                 ("c1", "CIPLA", "BUY", "2026-08-28T09:20:00", 1420.0))
++    conn.commit()
++    assert conn.execute("SELECT outcome FROM calls WHERE id='c1'").fetchone()[0] == "open"
++
++
++def test_real_db_path_is_not_the_analytics_db():
++    """The product record must not share a file with disposable analytics."""
++    assert app_store.DB_PATH.endswith("tradepilot_app.db")
++    assert "analytics" not in app_store.DB_PATH
+diff --git a/tests/test_calls_status.py b/tests/test_calls_status.py
+new file mode 100644
+index 0000000..a80745a
+--- /dev/null
++++ b/tests/test_calls_status.py
+@@ -0,0 +1,107 @@
++"""Tests for the pipeline status summary."""
++import importlib.util
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def _load(name, relpath):
++    spec = importlib.util.spec_from_file_location(
++        name, os.path.join(REPO_ROOT, relpath))
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++calls_status = _load("calls_status", "scripts/calls-status.py")
++
++
++@pytest.fixture
++def conn(tmp_path):
++    c = app_store.get_db(str(tmp_path / "test_app.db"))
++    app_store.init_db(c)
++    yield c
++    c.close()
++
++
++def _add(conn, cid, symbol, day, outcome="open"):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call, outcome)"
++        " VALUES (?,?,?,?,?,?)",
++        (cid, symbol, "BUY", day + "T09:20:00", 1000.0, outcome))
++    conn.commit()
++
++
++def test_empty_store_reports_zero_not_an_error(conn):
++    """An empty table summarises cleanly rather than raising."""
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["total"] == 0
++    assert s["hit_rate"] is None
++
++
++def test_hit_rate_is_none_when_nothing_resolved(conn):
++    """None, never 0.0 -- zero would read as 'we get everything wrong'."""
++    _add(conn, "c1", "CIPLA", "2026-08-28")
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["open"] == 1
++    assert s["resolved"] == 0
++    assert s["hit_rate"] is None
++
++
++def test_hit_rate_counts_only_resolved_calls(conn):
++    """Open calls do not dilute or inflate the hit rate."""
++    _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
++    _add(conn, "c2", "TITAN", "2026-08-26", "miss")
++    _add(conn, "c3", "SUNTV", "2026-08-28", "open")
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert s["resolved"] == 2
++    assert s["hit_rate"] == 50.0
++
++
++def test_gaps_lists_weekdays_with_no_calls(conn):
++    """A day the job did not run is the failure this whole script exists to show."""
++    _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
++    _add(conn, "c2", "TITAN", "2026-08-28")   # Friday
++    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
++    assert "2026-08-27" in s["gaps"]
++
++
++def test_weekends_are_not_gaps(conn):
++    """The market is shut on Saturday and Sunday -- that is not a missed run."""
++    _add(conn, "c1", "CIPLA", "2026-08-28")   # Friday
++    _add(conn, "c2", "TITAN", "2026-08-31")   # Monday
++    s = calls_status.summarise(conn, "2026-08-31T18:00:00")
++    assert "2026-08-29" not in s["gaps"]      # Saturday
++    assert "2026-08-30" not in s["gaps"]      # Sunday
++
++
++def test_main_on_empty_store_is_loud_and_exits_nonzero(conn, monkeypatch, capsys):
++    """A pipeline that never ran must not look like one running perfectly.
++
++    This is the only failure mode with no time bound -- there is no future
++    date at which an empty store starts reporting gaps on its own.
++    """
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    out = capsys.readouterr().out
++    assert rc == 1
++    assert "NO CALLS EVER RECORDED" in out
++
++
++def test_main_with_a_missing_weekday_exits_nonzero(conn, monkeypatch, capsys):
++    """The non-zero exit IS the alerting mechanism -- assert it, not just gaps."""
++    _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
++    _add(conn, "c2", "TITAN", "2026-08-28")   # Friday -- Thursday is missing
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    assert rc == 1
++    assert "MISSING DAYS" in capsys.readouterr().out
+diff --git a/tests/test_publish_calls.py b/tests/test_publish_calls.py
+new file mode 100644
+index 0000000..9360c6f
+--- /dev/null
++++ b/tests/test_publish_calls.py
+@@ -0,0 +1,205 @@
++"""Tests for the publish job.
++
++The job is the ONLY writer of `calls`. Everything the track record later claims
++rests on it recording exactly what was published, once per symbol per day.
++
++The PAYLOAD fixture mirrors the SHAPE actually served by /api/picks (verified
++against the live endpoint), not the internal scorer record it is built from:
++direction is BUY/HOLD/AVOID (not UP/DOWN), target and stopLoss are percentage
++keys (not target_pct/stop_loss_pct), and reasons is a list of {"text", "type"}
++dicts (not plain strings).
++"""
++import importlib.util
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def _load(name, relpath):
++    """Import a hyphenated script file as a module."""
++    spec = importlib.util.spec_from_file_location(
++        name, os.path.join(REPO_ROOT, relpath))
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++publish_calls = _load("publish_calls", "scripts/publish-calls.py")
++
++
++PAYLOAD = {
++    "category": "stocks",
++    "horizon": "intraday",
++    "engine": "v4",
++    "picks": [
++        {"symbol": "CIPLA.NS", "name": "CIPLA", "price": 1420.0, "score": 73,
++         "direction": "BUY", "recommendation": "Strong Buy",
++         "reasons": [
++             {"text": "Reclaimed VWAP", "type": "positive"},
++             {"text": "Volume 2.1x average", "type": "positive"},
++             {"text": "FII selling (-5040 Cr)", "type": "negative"},
++         ],
++         "stopLoss": 1.5, "target": 2.0},
++        {"symbol": "ADANIPORTS.NS", "name": "ADANIPORTS", "price": 1714.0,
++         "score": 66, "direction": "BUY", "recommendation": "Buy",
++         "reasons": [{"text": "Broke previous-day high", "type": "positive"}],
++         "stopLoss": 2.0, "target": 3.0},
++    ],
++}
++
++
++@pytest.fixture
++def conn(tmp_path):
++    c = app_store.get_db(str(tmp_path / "test_app.db"))
++    app_store.init_db(c)
++    yield c
++    c.close()
++
++
++def test_builds_one_row_per_pick():
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert len(rows) == 2
++
++
++def test_symbol_is_stripped_of_exchange_suffix():
++    """Clients see CIPLA, never CIPLA.NS."""
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert rows[0]["symbol"] == "CIPLA"
++
++
++def test_target_and_stop_are_absolute_prices_not_percentages():
++    """The scorer gives percentages; a call must record the actual levels."""
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
++    assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
++
++
++def test_signal_is_plain_english_joined_reasons():
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert rows[0]["signal"] == (
++        "Reclaimed VWAP; Volume 2.1x average; FII selling (-5040 Cr)")
++
++
++def test_signal_contains_negative_reason_text_no_dict_reprs():
++    """Negative reasons are part of why the call looks the way it does and
++    must survive the mapping as plain text, not a stringified dict."""
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert "FII selling (-5040 Cr)" in rows[0]["signal"]
++    assert "{" not in rows[0]["signal"]
++
++
++def test_id_is_stable_for_symbol_and_day():
++    """Same symbol, same day, same id -- so a re-run collides deterministically."""
++    a = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")[0]["id"]
++    b = publish_calls.build_rows(PAYLOAD, "2026-08-28T15:10:00")[0]["id"]
++    assert a == b
++
++
++def test_side_comes_from_direction():
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert rows[0]["side"] == "BUY"
++
++
++def test_sell_direction_has_target_below_and_stop_above_price():
++    payload = {
++        "category": "stocks",
++        "picks": [
++            # target/stopLoss are UNSIGNED magnitudes exactly as composite_scorer
++            # produces them (a volatility multiplier with no reference to
++            # direction) -- do not "helpfully" re-sign these to make a SELL
++            # test pass. The sign that decides which side of the entry the
++            # levels land on comes from build_rows reading `side`, not from
++            # the input data.
++            {"symbol": "XYZ.NS", "price": 500.0, "score": 70,
++             "direction": "SELL",
++             "reasons": [{"text": "Bearish RSI divergence", "type": "negative"}],
++             "target": 2.0, "stopLoss": 1.5},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows[0]["side"] == "SELL"
++    assert rows[0]["target"] < 500.0
++    assert rows[0]["stop"] > 500.0
++
++
++def test_same_magnitudes_produce_mirrored_levels_for_buy_and_sell():
++    """The side decides which way the levels go -- not the sign of the input.
++
++    composite_scorer emits unsigned magnitudes, so BUY and SELL picks with
++    identical target/stopLoss values must produce mirrored levels around the
++    entry. If this fails, a short's target sits above its entry and the
++    resolver grades it a hit whenever the stock rises.
++    """
++    base = {"symbol": "X.NS", "price": 1000.0, "score": 70,
++            "target": 3.0, "stopLoss": 1.0, "reasons": []}
++    buy = publish_calls.build_rows(
++        {"category": "stocks", "picks": [dict(base, direction="BUY")]},
++        "2026-08-28T09:20:00")[0]
++    sell = publish_calls.build_rows(
++        {"category": "stocks", "picks": [dict(base, direction="SELL")]},
++        "2026-08-28T09:20:00")[0]
++    assert buy["stop"] < 1000.0 < buy["target"]
++    assert sell["target"] < 1000.0 < sell["stop"]
++    assert buy["target"] == pytest.approx(1030.0)
++    assert sell["target"] == pytest.approx(970.0)
++
++
++def test_hold_direction_is_skipped():
++    """HOLD is not an actionable call -- recording one so a resolver can later
++    grade it would manufacture a hit rate out of non-advice."""
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "PARKED.NS", "price": 100.0, "score": 40,
++             "direction": "HOLD", "reasons": [], "target": 1.0, "stopLoss": 1.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows == []
++
++
++def test_avoid_direction_is_skipped():
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "AVOIDED.NS", "price": 100.0, "score": 20,
++             "direction": "AVOID", "reasons": [], "target": 1.0, "stopLoss": 1.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows == []
++
++
++def test_rejects_non_stock_categories():
++    """/api/picks?category=etfs returns hardcoded literal arrays with invented
++    recommendation strings. Those must never become calls shown to a client."""
++    with pytest.raises(ValueError, match="stocks"):
++        publish_calls.build_rows({"category": "etfs", "picks": []},
++                                 "2026-08-28T09:20:00")
++
++
++def test_insert_is_idempotent(conn):
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert publish_calls.insert_rows(conn, rows) == 2
++    assert publish_calls.insert_rows(conn, rows) == 0
++    assert conn.execute("SELECT COUNT(*) FROM calls").fetchone()[0] == 2
++
++
++def test_inserted_calls_start_open(conn):
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    publish_calls.insert_rows(conn, rows)
++    outcomes = {r["outcome"] for r in conn.execute("SELECT outcome FROM calls")}
++    assert outcomes == {"open"}
++
++
++def test_empty_picks_inserts_nothing_and_does_not_raise(conn):
++    rows = publish_calls.build_rows({"category": "stocks", "picks": []},
++                                    "2026-08-28T09:20:00")
++    assert publish_calls.insert_rows(conn, rows) == 0
+diff --git a/tests/test_resolve_calls.py b/tests/test_resolve_calls.py
+new file mode 100644
+index 0000000..6eb8b9f
+--- /dev/null
++++ b/tests/test_resolve_calls.py
+@@ -0,0 +1,167 @@
++"""Tests for the resolver.
++
++The single rule that protects the track record from overstating itself: a call
++still inside its horizon stays `open` and is never counted.
++"""
++import importlib.util
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store
++
++
++def _load(name, relpath):
++    spec = importlib.util.spec_from_file_location(
++        name, os.path.join(REPO_ROOT, relpath))
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++resolve_calls = _load("resolve_calls", "scripts/resolve-calls.py")
++
++
++@pytest.fixture
++def conn(tmp_path):
++    c = app_store.get_db(str(tmp_path / "test_app.db"))
++    app_store.init_db(c)
++    yield c
++    c.close()
++
++
++def _add(conn, cid, symbol, published_at, horizon="intraday", price=1000.0):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " horizon, target, stop) VALUES (?,?,?,?,?,?,?,?)",
++        (cid, symbol, "BUY", published_at, price, horizon, price * 1.02, price * 0.985))
++    conn.commit()
++
++
++def test_call_inside_its_horizon_is_not_due(conn):
++    """The property that stops the record overstating itself."""
++    _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "intraday")
++    assert resolve_calls.due_calls(conn, "2026-08-28T15:00:00") == []
++
++
++def test_call_past_its_horizon_is_due(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "intraday")
++    due = resolve_calls.due_calls(conn, "2026-08-30T09:20:00")
++    assert [r["id"] for r in due] == ["c1"]
++
++
++def test_swing_horizon_is_longer_than_intraday(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "swing")
++    assert resolve_calls.due_calls(conn, "2026-08-30T09:20:00") == []
++    assert len(resolve_calls.due_calls(conn, "2026-09-05T09:20:00")) == 1
++
++
++def test_already_resolved_call_is_not_due_again(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "intraday")
++    resolve_calls.apply_outcome(conn, "c1", 1050.0, "hit", "2026-08-30T18:00:00")
++    assert resolve_calls.due_calls(conn, "2026-09-30T09:20:00") == []
++
++
++def test_buy_above_target_is_a_hit():
++    assert resolve_calls.classify("BUY", 1000.0, 1025.0, 1020.0) == "hit"
++
++
++def test_buy_below_entry_is_a_miss():
++    assert resolve_calls.classify("BUY", 1000.0, 980.0, 1020.0) == "miss"
++
++
++def test_buy_up_but_short_of_target_is_a_miss():
++    """Only reaching the published target counts. Partial moves are not wins."""
++    assert resolve_calls.classify("BUY", 1000.0, 1010.0, 1020.0) == "miss"
++
++
++def test_sell_below_target_is_a_hit():
++    assert resolve_calls.classify("SELL", 1000.0, 975.0, 980.0) == "hit"
++
++
++def test_call_with_no_target_grades_against_the_call_price():
++    """build_rows sets target=None when the scorer returns target_pct = 0.
++
++    Without a fallback every such call scores a miss, biasing the whole record
++    downward for a reason that has nothing to do with the calls being wrong.
++    """
++    assert resolve_calls.classify("BUY", 1000.0, 1030.0, None) == "hit"
++    assert resolve_calls.classify("BUY", 1000.0, 970.0, None) == "miss"
++    assert resolve_calls.classify("SELL", 1000.0, 970.0, None) == "hit"
++
++
++def test_flat_is_never_a_hit_when_there_was_no_target():
++    """Going nowhere is not a win."""
++    assert resolve_calls.classify("BUY", 1000.0, 1000.0, None) == "miss"
++
++
++def test_apply_outcome_writes_all_three_fields(conn):
++    _add(conn, "c1", "CIPLA", "2026-08-28T09:20:00", "intraday")
++    resolve_calls.apply_outcome(conn, "c1", 1050.0, "hit", "2026-08-30T18:00:00")
++    r = conn.execute("SELECT outcome, outcome_price, outcome_at FROM calls"
++                     " WHERE id='c1'").fetchone()
++    assert r["outcome"] == "hit"
++    assert r["outcome_price"] == 1050.0
++    assert r["outcome_at"] == "2026-08-30T18:00:00"
++
++
++def test_is_elapsed_is_pure_and_boundary_inclusive():
++    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "intraday",
++                                    "2026-08-29T09:20:00") is True
++    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "intraday",
++                                    "2026-08-28T23:59:00") is False
++
++
++def test_unknown_horizon_falls_back_to_the_longest_window():
++    """An unrecognised horizon must resolve LATE, never early.
++
++    publish-calls writes whatever horizon the payload carries. If a new
++    horizon type is added to the scorer and not mirrored into HORIZON_DAYS,
++    falling back to intraday would grade a 30-day call after one day and
++    report success. Erring long leaves it open and visible instead.
++    """
++    # Two days on: intraday would already be due. The fallback must not be.
++    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
++                                    "2026-08-30T09:20:00") is False
++    # Thirty-one days on: past even the longest window, so now it is due.
++    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
++                                    "2026-09-28T09:20:00") is True
++
++
++def test_one_failing_quote_does_not_abandon_the_rest(conn, tmp_path, monkeypatch, capsys):
++    """A flaky quote for one symbol must not cost the others their cycle.
++
++    main() closes its connection on the way out (by design, for the real CLI
++    path), so `conn` from the fixture is unusable for assertions afterward.
++    Reopen the same on-disk db to read back what main() actually wrote.
++    """
++    for i, sym in enumerate(("AAA", "BBB", "CCC")):
++        _add(conn, "c%d" % i, sym, "2026-08-28T09:20:00", "intraday", 1000.0)
++
++    def flaky(symbol):
++        if symbol == "BBB":
++            raise RuntimeError("quote endpoint down")
++        return 1030.0
++
++    db_path = str(tmp_path / "test_app.db")
++    orig_get_db = app_store.get_db
++    monkeypatch.setattr(resolve_calls, "fetch_price", flaky)
++    monkeypatch.setattr(resolve_calls.app_store, "get_db",
++                         lambda path=None: orig_get_db(db_path))
++    monkeypatch.setattr(resolve_calls.app_store, "init_db", lambda c: None)
++
++    rc = resolve_calls.main()
++
++    check = orig_get_db(db_path)
++    outcomes = {r["symbol"]: r["outcome"]
++                for r in check.execute("SELECT symbol, outcome FROM calls")}
++    check.close()
++    assert outcomes["AAA"] == "hit"
++    assert outcomes["CCC"] == "hit"
++    assert outcomes["BBB"] == "open"   # left for tomorrow, not graded a miss
++    assert rc == 1                      # still loud about the failure

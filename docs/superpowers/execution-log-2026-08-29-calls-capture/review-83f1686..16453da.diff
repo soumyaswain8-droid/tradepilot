@@ -1,0 +1,214 @@
+# Review package: 83f1686..16453da
+
+## Commits
+16453da fix(calls): map build_rows to what /api/picks actually serves
+
+## Files changed
+ scripts/publish-calls.py    | 18 ++++++++---
+ tests/test_publish_calls.py | 75 ++++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 82 insertions(+), 11 deletions(-)
+
+## Diff
+diff --git a/scripts/publish-calls.py b/scripts/publish-calls.py
+index 5d55961..9aee7c4 100644
+--- a/scripts/publish-calls.py
++++ b/scripts/publish-calls.py
+@@ -52,33 +52,43 @@ def build_rows(payload, published_at):
+     day = published_at[:10]
+     horizon = payload.get("horizon", "intraday")
+     rows = []
+     for p in payload.get("picks", []):
+         symbol = str(p.get("symbol", "")).replace(".NS", "").replace(".BO", "")
+         if not symbol:
+             continue
+         price = float(p.get("price") or 0)
+         if price <= 0:
+             continue
+-        sl_pct = float(p.get("stop_loss_pct") or 0)
+-        tgt_pct = float(p.get("target_pct") or 0)
++        side = str(p.get("direction", "")).upper()
++        if side not in ("BUY", "SELL"):
++            # HOLD / AVOID are not actionable calls. Recording one so a
++            # resolver can later grade it would manufacture a hit rate out
++            # of non-advice.
++            continue
++        sl_pct = float(p.get("stopLoss") or 0)
++        tgt_pct = float(p.get("target") or 0)
+         reasons = p.get("reasons") or []
++        # reasons entries are dicts like {"text": ..., "type": "positive"|
++        # "negative"}; join their plain text, positives and negatives alike,
++        # in order. Be defensive: a plain-string entry still works.
++        parts = [r.get("text") if isinstance(r, dict) else str(r) for r in reasons]
+         rows.append({
+             # Deterministic: a re-run on the same day produces the same id, so
+             # the unique index collides instead of inserting a near-duplicate.
+             "id": "call-%s-%s" % (symbol, day),
+             "symbol": symbol,
+-            "side": "BUY" if str(p.get("direction", "UP")).upper() == "UP" else "SELL",
++            "side": side,
+             "published_at": published_at,
+             "price_at_call": price,
+             "score": float(p.get("score") or 0),
+-            "signal": "; ".join(str(r) for r in reasons) or None,
++            "signal": "; ".join(part for part in parts if part) or None,
+             "horizon": horizon,
+             "target": round(price * (1 + tgt_pct / 100.0), 2) if tgt_pct else None,
+             "stop": round(price * (1 - sl_pct / 100.0), 2) if sl_pct else None,
+         })
+     return rows
+ 
+ 
+ def insert_rows(conn, rows):
+     """Insert rows, skipping any that already exist. Returns the insert count."""
+     inserted = 0
+diff --git a/tests/test_publish_calls.py b/tests/test_publish_calls.py
+index 1ac805b..32e1d1b 100644
+--- a/tests/test_publish_calls.py
++++ b/tests/test_publish_calls.py
+@@ -1,14 +1,20 @@
+ """Tests for the publish job.
+ 
+ The job is the ONLY writer of `calls`. Everything the track record later claims
+ rests on it recording exactly what was published, once per symbol per day.
++
++The PAYLOAD fixture mirrors the SHAPE actually served by /api/picks (verified
++against the live endpoint), not the internal scorer record it is built from:
++direction is BUY/HOLD/AVOID (not UP/DOWN), target and stopLoss are percentage
++keys (not target_pct/stop_loss_pct), and reasons is a list of {"text", "type"}
++dicts (not plain strings).
+ """
+ import importlib.util
+ import os
+ import sys
+ 
+ import pytest
+ 
+ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ if REPO_ROOT not in sys.path:
+     sys.path.insert(0, REPO_ROOT)
+@@ -27,27 +33,31 @@ def _load(name, relpath):
+ 
+ publish_calls = _load("publish_calls", "scripts/publish-calls.py")
+ 
+ 
+ PAYLOAD = {
+     "category": "stocks",
+     "horizon": "intraday",
+     "engine": "v4",
+     "picks": [
+         {"symbol": "CIPLA.NS", "name": "CIPLA", "price": 1420.0, "score": 73,
+-         "direction": "UP", "recommendation": "Strong Buy",
+-         "reasons": ["Reclaimed VWAP", "Volume 2.1x average"],
+-         "stop_loss_pct": 1.5, "target_pct": 2.0},
++         "direction": "BUY", "recommendation": "Strong Buy",
++         "reasons": [
++             {"text": "Reclaimed VWAP", "type": "positive"},
++             {"text": "Volume 2.1x average", "type": "positive"},
++             {"text": "FII selling (-5040 Cr)", "type": "negative"},
++         ],
++         "stopLoss": 1.5, "target": 2.0},
+         {"symbol": "ADANIPORTS.NS", "name": "ADANIPORTS", "price": 1714.0,
+-         "score": 66, "direction": "UP", "recommendation": "Buy",
+-         "reasons": ["Broke previous-day high"],
+-         "stop_loss_pct": 2.0, "target_pct": 3.0},
++         "score": 66, "direction": "BUY", "recommendation": "Buy",
++         "reasons": [{"text": "Broke previous-day high", "type": "positive"}],
++         "stopLoss": 2.0, "target": 3.0},
+     ],
+ }
+ 
+ 
+ @pytest.fixture
+ def conn(tmp_path):
+     c = app_store.get_db(str(tmp_path / "test_app.db"))
+     app_store.init_db(c)
+     yield c
+     c.close()
+@@ -66,35 +76,86 @@ def test_symbol_is_stripped_of_exchange_suffix():
+ 
+ def test_target_and_stop_are_absolute_prices_not_percentages():
+     """The scorer gives percentages; a call must record the actual levels."""
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
+     assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
+ 
+ 
+ def test_signal_is_plain_english_joined_reasons():
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+-    assert rows[0]["signal"] == "Reclaimed VWAP; Volume 2.1x average"
++    assert rows[0]["signal"] == (
++        "Reclaimed VWAP; Volume 2.1x average; FII selling (-5040 Cr)")
++
++
++def test_signal_contains_negative_reason_text_no_dict_reprs():
++    """Negative reasons are part of why the call looks the way it does and
++    must survive the mapping as plain text, not a stringified dict."""
++    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
++    assert "FII selling (-5040 Cr)" in rows[0]["signal"]
++    assert "{" not in rows[0]["signal"]
+ 
+ 
+ def test_id_is_stable_for_symbol_and_day():
+     """Same symbol, same day, same id -- so a re-run collides deterministically."""
+     a = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")[0]["id"]
+     b = publish_calls.build_rows(PAYLOAD, "2026-08-28T15:10:00")[0]["id"]
+     assert a == b
+ 
+ 
+ def test_side_comes_from_direction():
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert rows[0]["side"] == "BUY"
+ 
+ 
++def test_sell_direction_has_target_below_and_stop_above_price():
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "XYZ.NS", "price": 500.0, "score": 70,
++             "direction": "SELL",
++             "reasons": [{"text": "Bearish RSI divergence", "type": "negative"}],
++             "target": -2.0, "stopLoss": -1.5},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows[0]["side"] == "SELL"
++    assert rows[0]["target"] < 500.0
++    assert rows[0]["stop"] > 500.0
++
++
++def test_hold_direction_is_skipped():
++    """HOLD is not an actionable call -- recording one so a resolver can later
++    grade it would manufacture a hit rate out of non-advice."""
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "PARKED.NS", "price": 100.0, "score": 40,
++             "direction": "HOLD", "reasons": [], "target": 1.0, "stopLoss": 1.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows == []
++
++
++def test_avoid_direction_is_skipped():
++    payload = {
++        "category": "stocks",
++        "picks": [
++            {"symbol": "AVOIDED.NS", "price": 100.0, "score": 20,
++             "direction": "AVOID", "reasons": [], "target": 1.0, "stopLoss": 1.0},
++        ],
++    }
++    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
++    assert rows == []
++
++
+ def test_rejects_non_stock_categories():
+     """/api/picks?category=etfs returns hardcoded literal arrays with invented
+     recommendation strings. Those must never become calls shown to a client."""
+     with pytest.raises(ValueError, match="stocks"):
+         publish_calls.build_rows({"category": "etfs", "picks": []},
+                                  "2026-08-28T09:20:00")
+ 
+ 
+ def test_insert_is_idempotent(conn):
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")

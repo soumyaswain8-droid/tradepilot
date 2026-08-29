@@ -62,29 +62,41 @@ MA50_C = "#ea580c"
 # ── data ────────────────────────────────────────────────────────────────────
 
 def fetch_daily(symbol: str, start, end) -> pd.DataFrame:
-    """Daily OHLCV from Kite for [start-WARMUP, end]. Raises if the symbol is unknown.
+    """Daily OHLCV for [start-WARMUP, end], offline first.
 
-    Returns a frame indexed by naive date with columns open/high/low/close/volume.
+    Charting historical bars needs no network and no credential, and the natural time
+    to redraw a chart is a weekend when the Kite token has expired. quant.bars serves
+    these from the bhavcopy store; a cross-check on 2026-08-29 found it agrees with
+    Kite to the decimal on OHLC and volume, so this is the same data, not a proxy.
+
+    Kite is still used when the range runs past what the offline store holds, which is
+    the one case it is genuinely needed. The frame carries .attrs["source"] and callers
+    should surface it — an offline run must announce itself rather than quietly
+    resembling a live one.
     """
-    os.environ.setdefault("NSE_DATA_SOURCE", "kite")
-    from prototype.v4 import kite_data as kd
-
     start = pd.Timestamp(start).date()
     end = pd.Timestamp(end).date()
+    warm = start - timedelta(days=WARMUP_DAYS)
 
-    tok = kd.token_for(symbol)
-    if not tok:
-        raise LookupError(f"{symbol}: no NSE instrument token on Kite")
+    from quant.bars import daily as _daily
+    try:
+        df = _daily(symbol, warm, end, allow_kite=False)
+        src = "bhavcopy (offline)"
+    except LookupError:
+        # not covered offline — this is what the credential is actually for
+        os.environ.setdefault("NSE_DATA_SOURCE", "kite")
+        df = _daily(symbol, warm, end, allow_kite=True)
+        src = df.attrs.get("source", "kite (live)")
 
-    rows = kd.client().historical_data(
-        tok, start - timedelta(days=WARMUP_DAYS), end, "day")
-    if not rows:
-        raise LookupError(f"{symbol}: Kite returned no daily bars for the range")
+    if df is None or df.empty:
+        raise LookupError(f"{symbol}: no daily bars for {warm} to {end}")
 
-    df = pd.DataFrame(rows)
+    df = df.copy()
     df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None).dt.normalize()
     df = df.set_index("date").sort_index()
-    return df[["open", "high", "low", "close", "volume"]]
+    out = df[["open", "high", "low", "close", "volume"]]
+    out.attrs["source"] = src
+    return out
 
 
 # ── drawing ─────────────────────────────────────────────────────────────────

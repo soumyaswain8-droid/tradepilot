@@ -117,6 +117,51 @@ def test_is_elapsed_is_pure_and_boundary_inclusive():
                                     "2026-08-28T23:59:00") is False
 
 
-def test_unknown_horizon_falls_back_to_intraday():
+def test_unknown_horizon_falls_back_to_the_longest_window():
+    """An unrecognised horizon must resolve LATE, never early.
+
+    publish-calls writes whatever horizon the payload carries. If a new
+    horizon type is added to the scorer and not mirrored into HORIZON_DAYS,
+    falling back to intraday would grade a 30-day call after one day and
+    report success. Erring long leaves it open and visible instead.
+    """
+    # Two days on: intraday would already be due. The fallback must not be.
     assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
-                                    "2026-08-30T09:20:00") is True
+                                    "2026-08-30T09:20:00") is False
+    # Thirty-one days on: past even the longest window, so now it is due.
+    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
+                                    "2026-09-28T09:20:00") is True
+
+
+def test_one_failing_quote_does_not_abandon_the_rest(conn, tmp_path, monkeypatch, capsys):
+    """A flaky quote for one symbol must not cost the others their cycle.
+
+    main() closes its connection on the way out (by design, for the real CLI
+    path), so `conn` from the fixture is unusable for assertions afterward.
+    Reopen the same on-disk db to read back what main() actually wrote.
+    """
+    for i, sym in enumerate(("AAA", "BBB", "CCC")):
+        _add(conn, "c%d" % i, sym, "2026-08-28T09:20:00", "intraday", 1000.0)
+
+    def flaky(symbol):
+        if symbol == "BBB":
+            raise RuntimeError("quote endpoint down")
+        return 1030.0
+
+    db_path = str(tmp_path / "test_app.db")
+    orig_get_db = app_store.get_db
+    monkeypatch.setattr(resolve_calls, "fetch_price", flaky)
+    monkeypatch.setattr(resolve_calls.app_store, "get_db",
+                         lambda path=None: orig_get_db(db_path))
+    monkeypatch.setattr(resolve_calls.app_store, "init_db", lambda c: None)
+
+    rc = resolve_calls.main()
+
+    check = orig_get_db(db_path)
+    outcomes = {r["symbol"]: r["outcome"]
+                for r in check.execute("SELECT symbol, outcome FROM calls")}
+    check.close()
+    assert outcomes["AAA"] == "hit"
+    assert outcomes["CCC"] == "hit"
+    assert outcomes["BBB"] == "open"   # left for tomorrow, not graded a miss
+    assert rc == 1                      # still loud about the failure

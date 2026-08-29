@@ -25,12 +25,26 @@ from prototype import app_store
 
 HORIZON_DAYS = {"intraday": 1, "swing": 7, "investment": 30}
 
+# An unrecognised horizon falls back to the LONGEST known window, not the
+# shortest. publish-calls writes whatever horizon the payload carries, with no
+# whitelist, so a horizon added to the scorer and not mirrored here would
+# otherwise be graded after one day instead of thirty -- resolving a call 29
+# days early while reporting success. Erring long makes an unknown horizon
+# resolve late or never, which surfaces as calls stuck 'open' in calls-status.
+# Erring short corrupts the hit rate silently. Only one of those is recoverable.
+_FALLBACK_DAYS = max(HORIZON_DAYS.values())
+
 QUOTE_URL = os.environ.get("TP_QUOTE_URL", "http://127.0.0.1:5050/api/stock/%s")
 
 
 def is_elapsed(published_at, horizon, now):
-    """Has this call's horizon passed? Pure -- `now` is supplied, never read."""
-    days = HORIZON_DAYS.get(horizon or "intraday", HORIZON_DAYS["intraday"])
+    """Has this call's horizon passed? Pure -- `now` is supplied, never read.
+
+    `now` and `published_at` must both be naive local ISO-8601, exactly as
+    datetime.now().isoformat(timespec="seconds") produces. Passing an
+    offset-aware string for one and not the other raises TypeError.
+    """
+    days = HORIZON_DAYS.get(horizon or "intraday", _FALLBACK_DAYS)
     due = datetime.fromisoformat(published_at) + timedelta(days=days)
     return datetime.fromisoformat(now) >= due
 
@@ -79,12 +93,21 @@ def fetch_price(symbol):
 
 def main():
     now = datetime.now().isoformat(timespec="seconds")
-    resolved, skipped = 0, 0
+    resolved, skipped, failed = 0, 0, 0
     try:
         conn = app_store.get_db()
         app_store.init_db(conn)
         for row in due_calls(conn, now):
-            price = fetch_price(row["symbol"])
+            try:
+                price = fetch_price(row["symbol"])
+            except Exception as e:
+                # One bad quote must not cost the other due calls their cycle.
+                # The call stays open and is retried tomorrow -- an unresolved
+                # call is never counted, so nothing downstream is wrong.
+                print("  %s: price fetch failed (%s: %s)"
+                      % (row["symbol"], type(e).__name__, e), file=sys.stderr)
+                failed += 1
+                continue
             if price is None:
                 # No price is not a miss. Leave it open and try again tomorrow.
                 skipped += 1
@@ -98,8 +121,9 @@ def main():
         print("RESOLVE FAILED %s: %s: %s" % (now, type(e).__name__, e),
               file=sys.stderr)
         return 1
-    print("resolved %d call(s), %d left open for want of a price" % (resolved, skipped))
-    return 0
+    print("resolved %d call(s), %d left open for want of a price, %d failed"
+          % (resolved, skipped, failed))
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

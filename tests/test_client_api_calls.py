@@ -117,3 +117,36 @@ def test_calls_endpoint_is_public(client, store, monkeypatch):
     from prototype import client_auth
     monkeypatch.setattr(client_auth, "current_user", lambda: None)
     assert client.get("/api/app/calls").status_code == 200
+
+
+def test_a_column_added_later_cannot_leak_through_shape_call(client, store):
+    """The allowlist is the guarantee, not the fixture's contents.
+
+    shape_call names its fields explicitly rather than returning dict(row).
+    Against today's schema those are identical, so nothing proves the
+    allowlist is load-bearing -- until a column exists that is not on it.
+    This adds one to a THROWAWAY database and checks it never reaches a
+    client. Swap shape_call for dict(row) and this test fails.
+    """
+    store.execute("ALTER TABLE calls ADD COLUMN engine TEXT")
+    store.execute(
+        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
+        " signal, engine) VALUES (?,?,?,?,?,?,?)",
+        ("c1", "CIPLA", "BUY", "2026-08-28T09:20:00", 1000.0,
+         "Reclaimed VWAP", "v4-composite_scorer"))
+    store.commit()
+
+    listing = client.get("/api/app/calls").get_data(as_text=True)
+    detail = client.get("/api/app/calls/c1").get_data(as_text=True)
+
+    assert "v4-composite_scorer" not in listing
+    assert "v4-composite_scorer" not in detail
+    assert "engine" not in client.get("/api/app/calls/c1").get_json()
+
+
+def test_limit_edges_cannot_produce_an_empty_or_reversed_page(client, store):
+    """max(1, min(limit, MAX)) -- zero and negative must floor to 1, not 0."""
+    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
+    assert client.get("/api/app/calls?limit=0").get_json()["limit"] == 1
+    assert client.get("/api/app/calls?limit=-5").get_json()["limit"] == 1
+    assert client.get("/api/app/calls?limit=10.5").get_json()["limit"] == 50

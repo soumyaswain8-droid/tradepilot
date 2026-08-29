@@ -27,7 +27,14 @@ def open_store():
     a throwaway file without touching the real record.
     """
     conn = app_store.get_db()
-    app_store.init_db(conn)
+    try:
+        app_store.init_db(conn)
+    except Exception:
+        # The caller's try/finally has not been entered yet, so nothing else
+        # will close this handle. init_db runs on every request; a recurring
+        # leak here would exhaust descriptors far from the cause.
+        conn.close()
+        raise
     return conn
 
 

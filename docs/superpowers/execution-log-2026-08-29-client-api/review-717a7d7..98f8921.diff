@@ -1,0 +1,198 @@
+# Review package: 717a7d7..98f8921
+
+## Commits
+98f8921 feat(client-api): the auth boundary, and a test that enumerates it
+
+## Files changed
+ prototype/app.py          |  4 +++
+ prototype/client_api.py   | 18 ++++++++++++
+ prototype/client_auth.py  | 46 +++++++++++++++++++++++++++++
+ tests/test_client_auth.py | 74 +++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 142 insertions(+)
+
+## Diff
+diff --git a/prototype/app.py b/prototype/app.py
+index 92e5540..3d3c6a4 100644
+--- a/prototype/app.py
++++ b/prototype/app.py
+@@ -46,20 +46,24 @@ try:
+ except ImportError:
+     HAS_V4 = False
+     print("[ENGINE] v4 not available")
+ 
+ app = Flask(__name__,
+             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
+             static_folder=os.path.join(os.path.dirname(__file__), "static"))
+ CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
+ app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)
+ 
++from prototype import client_auth                        # noqa: E402
++from prototype.client_api import bp as _client_api_bp    # noqa: E402
++app.register_blueprint(_client_api_bp)
++client_auth.install_guard(app)
+ 
+ def get_model_meta():
+     # Prefer v2 meta
+     v2_path = os.path.join(os.path.dirname(__file__), "models", "model_meta_v2.json")
+     v1_path = os.path.join(os.path.dirname(__file__), "models", "model_meta.json")
+     for path in [v2_path, v1_path]:
+         if os.path.exists(path):
+             with open(path) as f:
+                 return json.load(f)
+     return None
+diff --git a/prototype/client_api.py b/prototype/client_api.py
+new file mode 100644
+index 0000000..34ad103
+--- /dev/null
++++ b/prototype/client_api.py
+@@ -0,0 +1,18 @@
++"""The client dashboard's API. Eight endpoints, one prefix, one guard.
++
++Everything here is client-facing, which sets rules the operator surface does
++not have: no engine names, no strategy internals, no agent vocabulary, and no
++internal detail in any error message. A client sees what was called and what
++happened -- never which engine said so.
++"""
++from flask import Blueprint, jsonify
++
++from prototype import client_auth
++
++bp = Blueprint("client_api", __name__, url_prefix="/api/app")
++
++
++@bp.route("/me")
++def me():
++    """The signed-in user and their plan. Project B owns this shape later."""
++    return jsonify({"user_id": client_auth.current_user(), "plan": "none"})
+diff --git a/prototype/client_auth.py b/prototype/client_auth.py
+new file mode 100644
+index 0000000..aaa7e74
+--- /dev/null
++++ b/prototype/client_auth.py
+@@ -0,0 +1,46 @@
++"""The auth seam for the client API.
++
++Project B (accounts) does not exist yet. Everything the client API assumes
++about identity is in this file, and it is three things: current_user() returns
++an id or None, gated endpoints are protected, and positions.user_id is stable.
++Swapping the stub for real sessions is a one-function change.
++
++The registries are the point. This app has roughly seventy unprotected routes;
++scattering client endpoints among them would make auth a per-route audit where
++one missed decorator is a data leak. One prefix plus two explicit lists makes
++"is everything classified?" a question the test suite answers by enumeration.
++
++Each task adds its own endpoints here as it adds them. That is deliberate:
++it keeps both enumeration tests green at every commit, and it makes
++classification an active step rather than a list written once and trusted.
++"""
++from flask import jsonify, request
++
++# Blueprint endpoint names, not URL paths -- Flask dispatches on endpoints, and
++# a path string would silently stop matching if a route were reworded.
++PUBLIC_ENDPOINTS = frozenset()
++
++GATED_ENDPOINTS = frozenset({
++    "client_api.me",
++})
++
++
++def current_user():
++    """The signed-in user's id, or None.
++
++    STUB. Returns a fixed id until project B lands. Every gated endpoint reads
++    identity through this one function, so replacing it with a real session
++    lookup is the entire integration.
++    """
++    return "demo-user"
++
++
++def install_guard(app):
++    """Refuse gated client endpoints when nobody is signed in."""
++
++    @app.before_request
++    def _guard_client_api():
++        endpoint = request.endpoint
++        if endpoint in GATED_ENDPOINTS and current_user() is None:
++            return jsonify({"error": "sign in to see this"}), 401
++        return None
+diff --git a/tests/test_client_auth.py b/tests/test_client_auth.py
+new file mode 100644
+index 0000000..90109cd
+--- /dev/null
++++ b/tests/test_client_auth.py
+@@ -0,0 +1,74 @@
++"""The auth boundary, and the test that keeps it honest.
++
++This app has roughly seventy routes and none of them are protected. The whole
++argument for putting client endpoints under one prefix is that protection
++becomes a property a test can enumerate, rather than a decorator someone has
++to remember. That enumeration is the most important test in this file.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import client_auth
++
++
++def _app_endpoints(flask_app):
++    """Every blueprint endpoint mounted under /api/app."""
++    return {r.endpoint for r in flask_app.url_map.iter_rules()
++            if str(r.rule).startswith("/api/app")}
++
++
++def test_every_client_route_is_classified(flask_app):
++    """A new endpoint in neither list fails the suite.
++
++    This is the whole payoff of the shared prefix: "did we forget to protect
++    something?" stops being a review question and becomes a test result.
++    """
++    classified = client_auth.PUBLIC_ENDPOINTS | client_auth.GATED_ENDPOINTS
++    unclassified = _app_endpoints(flask_app) - classified
++    assert unclassified == set(), (
++        "these /api/app routes are in neither PUBLIC_ENDPOINTS nor "
++        "GATED_ENDPOINTS: %s" % sorted(unclassified))
++
++
++def test_no_endpoint_is_both_public_and_gated(flask_app):
++    """An endpoint in both lists has an ambiguous policy."""
++    assert client_auth.PUBLIC_ENDPOINTS & client_auth.GATED_ENDPOINTS == frozenset()
++
++
++def test_registries_name_only_real_endpoints(flask_app):
++    """A registry entry with no matching route is a stale name protecting nothing."""
++    declared = client_auth.PUBLIC_ENDPOINTS | client_auth.GATED_ENDPOINTS
++    assert declared - _app_endpoints(flask_app) == set()
++
++
++def test_gated_endpoint_401s_without_a_user(client, monkeypatch):
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/app/me").status_code == 401
++
++
++def test_gated_endpoint_allows_a_user(client):
++    assert client.get("/api/app/me").status_code == 200
++
++
++def test_me_returns_the_current_user(client):
++    body = client.get("/api/app/me").get_json()
++    assert body["user_id"] == "demo-user"
++    assert body["plan"] == "none"
++
++
++def test_401_body_leaks_nothing_internal(client, monkeypatch):
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    body = client.get("/api/app/me").get_data(as_text=True).lower()
++    for leak in ("sqlite", "traceback", "prototype/", "select ", "/users/"):
++        assert leak not in body
++
++
++def test_the_operator_surface_is_untouched(client):
++    """The guard must apply to /api/app only, never to the existing app."""
++    assert client.get("/api/indices").status_code == 200

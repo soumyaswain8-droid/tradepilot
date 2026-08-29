@@ -1,0 +1,120 @@
+# Review package: 3a243c9..a5da6f1
+
+## Commits
+a5da6f1 fix(client-api): POST rejects infinite qty/avg_price, matching PATCH
+
+## Files changed
+ prototype/client_api.py            | 21 ++++++++++++++++-----
+ tests/test_client_api_positions.py | 17 +++++++++++++++++
+ 2 files changed, 33 insertions(+), 5 deletions(-)
+
+## Diff
+diff --git a/prototype/client_api.py b/prototype/client_api.py
+index 3d406af..0d7dff1 100644
+--- a/prototype/client_api.py
++++ b/prototype/client_api.py
+@@ -223,34 +223,45 @@ def positions_list():
+             "value": round(sum(p["value"] for p in priced), 2) if priced else 0,
+             "pnl": round(sum(p["pnl"] for p in priced), 2) if priced else 0,
+             "priced": len(priced),
+             # Surfaced, never silently dropped: a total that omits a holding
+             # without saying so understates the book.
+             "unpriced": len(shaped) - len(priced),
+         },
+     })
+ 
+ 
++def _bad_number(value):
++    """NaN and infinity both slip past a `<= 0` check.
++
++    float("nan") <= 0 and float("inf") <= 0 are both False, so neither is
++    caught by the positivity guard -- and either one propagates into value,
++    pnl and the portfolio totals. PATCH rejects both; POST must agree.
++    """
++    return value != value or value in (float("inf"), float("-inf"))
++
++
+ @bp.route("/positions", methods=["POST"])
+ def position_create():
+     """Log a trade the client placed at their own broker."""
+     body = request.get_json(silent=True) or {}
+     symbol = str(body.get("symbol", "")).upper().replace(".NS", "").strip()
+     try:
+         qty = float(body.get("qty"))
+         avg_price = float(body.get("avg_price"))
+     except (TypeError, ValueError):
+         return jsonify({"error": "qty and avg_price must be numbers"}), 400
+-    # NaN passes `<= 0` as False (NaN comparisons are always False), so it
+-    # would otherwise slip past the positivity check and poison every later
+-    # P&L figure computed from this row.
+-    if qty != qty or avg_price != avg_price:
++    # NaN and infinity both pass `<= 0` as False, so either would otherwise
++    # slip past the positivity check and poison every later P&L figure
++    # computed from this row. PATCH rejects the same values -- see
++    # _bad_number -- so this must match it exactly.
++    if _bad_number(qty) or _bad_number(avg_price):
+         return jsonify({"error": "qty and avg_price must be real numbers"}), 400
+     if not symbol or qty <= 0 or avg_price <= 0:
+         return jsonify({"error": "symbol, a positive qty and a positive "
+                                  "avg_price are required"}), 400
+ 
+     call_id = body.get("call_id") or None
+     conn = open_store()
+     try:
+         if call_id is not None:
+             exists = conn.execute("SELECT 1 FROM calls WHERE id = ?",
+@@ -292,21 +303,21 @@ def position_update(pid):
+             # POST already rejects a non-positive qty or price. PATCH writes to
+             # the same columns, so it must reject the same values -- otherwise a
+             # client can put their book into a state the API refuses to create.
+             # A string here is worse than wrong: it stores fine, then raises in
+             # shape_position on every later list request, so the client's whole
+             # book 500s until someone edits the database by hand.
+             try:
+                 value = float(value)
+             except (TypeError, ValueError):
+                 return jsonify({"error": "%s must be a number" % key}), 400
+-            if value != value or value in (float("inf"), float("-inf")):
++            if _bad_number(value):
+                 return jsonify({"error": "%s must be a real number" % key}), 400
+             if key in ("qty", "avg_price") and value <= 0:
+                 return jsonify({"error": "%s must be positive" % key}), 400
+             if key == "exit_price" and value <= 0:
+                 return jsonify({"error": "exit_price must be positive"}), 400
+         elif value is not None and not isinstance(value, str):
+             return jsonify({"error": "%s must be a string" % key}), 400
+         sets.append((key, value))
+ 
+     if not sets:
+diff --git a/tests/test_client_api_positions.py b/tests/test_client_api_positions.py
+index 6d735ff..7f8e47c 100644
+--- a/tests/test_client_api_positions.py
++++ b/tests/test_client_api_positions.py
+@@ -170,10 +170,27 @@ def test_patch_rejects_values_post_would_refuse(client, store):
+         assert client.patch("/api/app/positions/" + pid, json=bad).status_code == 400, bad
+ 
+ 
+ def test_patch_still_accepts_a_legitimate_close(client, store):
+     """The validation must not break the normal path."""
+     pid = _post(client).get_json()["id"]
+     r = client.patch("/api/app/positions/" + pid,
+                      json={"closed_at": "2026-08-29T15:30:00", "exit_price": 1120.0})
+     assert r.status_code == 200
+     assert r.get_json()["exit_price"] == 1120.0
++
++
++def test_both_write_paths_reject_the_same_unreal_numbers(client, store):
++    """One door into the table must not accept what the other rejects.
++
++    float("inf") <= 0 is False, so infinity slips past the positivity check
++    exactly as NaN does -- and either one propagates into value, pnl and the
++    portfolio totals.
++    """
++    for bad in (float("inf"), float("-inf"), float("nan")):
++        assert _post(client, qty=bad).status_code == 400, ("POST qty", bad)
++        assert _post(client, avg_price=bad).status_code == 400, ("POST avg_price", bad)
++
++    pid = _post(client).get_json()["id"]
++    for bad in (float("inf"), float("-inf"), float("nan")):
++        assert client.patch("/api/app/positions/" + pid,
++                            json={"qty": bad}).status_code == 400, ("PATCH qty", bad)

@@ -84,20 +84,49 @@ def test_sell_below_target_is_a_hit():
     assert resolve_calls.classify("SELL", 1000.0, 975.0, 980.0) == "hit"
 
 
-def test_call_with_no_target_grades_against_the_call_price():
-    """build_rows sets target=None when the scorer returns target_pct = 0.
+def test_classify_raises_when_target_is_none():
+    """A call published without a target cannot be graded against one.
 
-    Without a fallback every such call scores a miss, biasing the whole record
-    downward for a reason that has nothing to do with the calls being wrong.
+    Grading it by a softer rule (e.g. against the call price) would pool two
+    different standards into a single published hit rate. main() handles the
+    None-target case itself by marking the call 'ungraded' and excluding it,
+    rather than calling classify() at all.
     """
-    assert resolve_calls.classify("BUY", 1000.0, 1030.0, None) == "hit"
-    assert resolve_calls.classify("BUY", 1000.0, 970.0, None) == "miss"
-    assert resolve_calls.classify("SELL", 1000.0, 970.0, None) == "hit"
+    with pytest.raises(ValueError, match="target"):
+        resolve_calls.classify("BUY", 1000.0, 1030.0, None)
+    with pytest.raises(ValueError, match="target"):
+        resolve_calls.classify("SELL", 1000.0, 970.0, None)
 
 
-def test_flat_is_never_a_hit_when_there_was_no_target():
-    """Going nowhere is not a win."""
-    assert resolve_calls.classify("BUY", 1000.0, 1000.0, None) == "miss"
+def test_due_call_with_no_target_is_marked_ungraded(conn, tmp_path, monkeypatch):
+    """main() must exclude a target-less call, not grade it by a softer rule.
+
+    main() closes its connection on the way out, so reopen the same on-disk
+    db afterward to read back what it wrote.
+    """
+    conn.execute(
+        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
+        " horizon, target, stop) VALUES (?,?,?,?,?,?,?,?)",
+        ("c1", "NOTARGET", "BUY", "2026-08-28T09:20:00", 1000.0, "intraday",
+         None, None))
+    conn.commit()
+
+    db_path = str(tmp_path / "test_app.db")
+    orig_get_db = app_store.get_db
+    monkeypatch.setattr(resolve_calls, "fetch_price", lambda symbol: 1030.0)
+    monkeypatch.setattr(resolve_calls.app_store, "get_db",
+                         lambda path=None: orig_get_db(db_path))
+    monkeypatch.setattr(resolve_calls.app_store, "init_db", lambda c: None)
+
+    rc = resolve_calls.main()
+    assert rc == 0
+
+    check = orig_get_db(db_path)
+    row = check.execute(
+        "SELECT outcome, outcome_price FROM calls WHERE id='c1'").fetchone()
+    check.close()
+    assert row["outcome"] == "ungraded"
+    assert row["outcome_price"] == 1030.0
 
 
 def test_apply_outcome_writes_all_three_fields(conn):

@@ -2,6 +2,7 @@
 import importlib.util
 import os
 import sys
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -39,6 +40,14 @@ def _add(conn, cid, symbol, day, outcome="open"):
     conn.commit()
 
 
+def _add_with_horizon(conn, cid, symbol, published_at, horizon, outcome="open"):
+    conn.execute(
+        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
+        " horizon, outcome) VALUES (?,?,?,?,?,?,?)",
+        (cid, symbol, "BUY", published_at, 1000.0, horizon, outcome))
+    conn.commit()
+
+
 def test_empty_store_reports_zero_not_an_error(conn):
     """An empty table summarises cleanly rather than raising."""
     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
@@ -63,6 +72,18 @@ def test_hit_rate_counts_only_resolved_calls(conn):
     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
     assert s["resolved"] == 2
     assert s["hit_rate"] == 50.0
+
+
+def test_summarise_excludes_ungraded_rows_from_hit_rate(conn):
+    """A call published without a target is graded 'ungraded', not folded into
+    the hit rate under either a hit or a miss. resolved stays hit + miss."""
+    _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
+    _add(conn, "c2", "TITAN", "2026-08-26", "miss")
+    _add(conn, "c3", "SUNTV", "2026-08-26", "ungraded")
+    s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+    assert s["resolved"] == 2
+    assert s["hit_rate"] == 50.0
+    assert s["ungraded"] == 1
 
 
 def test_gaps_lists_weekdays_with_no_calls(conn):
@@ -105,3 +126,29 @@ def test_main_with_a_missing_weekday_exits_nonzero(conn, monkeypatch, capsys):
     rc = calls_status.main()
     assert rc == 1
     assert "MISSING DAYS" in capsys.readouterr().out
+
+
+def test_main_flags_overdue_open_call_and_exits_nonzero(conn, monkeypatch, capsys):
+    """A resolver that is permanently broken must not look like a clean
+    pipeline -- calls stuck 'open' well past their horizon are the only
+    visible trace of that failure, and this alert IS the safety net several
+    earlier design decisions on this branch relied on existing."""
+    published = (datetime.now() - timedelta(days=3)).isoformat(timespec="seconds")
+    _add_with_horizon(conn, "c1", "STUCK", published, "intraday")
+    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
+    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
+    rc = calls_status.main()
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "OVERDUE" in out
+
+
+def test_main_does_not_flag_open_call_still_inside_its_horizon(conn, monkeypatch, capsys):
+    published = datetime.now().isoformat(timespec="seconds")
+    _add_with_horizon(conn, "c1", "FRESH", published, "investment")  # 30 days
+    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
+    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
+    rc = calls_status.main()
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "OVERDUE" not in out

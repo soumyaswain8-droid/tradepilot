@@ -13,7 +13,7 @@ retroactively labelling engine history as calls, which the design rejects.
 |:--|:--|:--|
 | `scripts/publish-calls.py` | 09:20 IST, weekdays | Fetches `/api/picks?category=stocks` and writes one row per pick |
 | `scripts/resolve-calls.py` | 18:30 IST, weekdays | Fills the outcome for calls whose horizon has elapsed |
-| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays |
+| `scripts/calls-status.py` | on demand | Prints the state of the record; exits 1 if there are missing weekdays or open calls stuck past their horizon |
 
 Both jobs require `prototype/app.py` to be running — they read the same HTTP
 endpoints the product serves, so the record is by construction what was
@@ -25,7 +25,9 @@ published rather than a recomputation that might differ.
 python3 scripts/calls-status.py
 ```
 
-Non-zero exit means missing weekdays. Investigate before they accumulate.
+Non-zero exit means missing weekdays, or open calls stuck past their horizon
+(a sign the resolver has stopped working — quote endpoint down, app not
+running). Investigate before either accumulates.
 
 ### What a clean exit does and does not mean
 
@@ -91,5 +93,11 @@ rm ~/Library/LaunchAgents/co.tradepilot.publish-calls.plist \
   hardcoded literal arrays with invented recommendation strings. They are not
   model output and must never be recorded as calls.
 - A call inside its horizon stays `open` and is never counted in a hit rate.
-- A hit requires reaching the target published with the call.
+- A hit is decided by the price **at resolution time** against the published
+  target — a single spot-price sample, not an intraday high/low. A call that
+  touched the target intraday and gave it back before resolution is graded a
+  miss. This is deliberately conservative: it can understate the hit rate but
+  never overstate it.
+- A call published with no target cannot be graded against one. It is marked
+  `ungraded` and excluded from the hit rate, never graded by a softer rule.
 - A missing price leaves a call open rather than recording a miss it did not earn.

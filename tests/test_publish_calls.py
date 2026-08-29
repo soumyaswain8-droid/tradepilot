@@ -81,6 +81,42 @@ def test_target_and_stop_are_absolute_prices_not_percentages():
     assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
 
 
+def test_v2_shaped_pick_produces_the_same_levels_via_pct_suffixed_keys():
+    """app.py falls back to the v2/v1 engines on ImportError from v4.
+
+    Those engines emit stop_loss_pct/target_pct instead of v4's
+    stopLoss/target. Reading only the v4 spelling silently captures every
+    such call with no levels at all.
+    """
+    payload = {
+        "category": "stocks",
+        "picks": [
+            {"symbol": "CIPLA.NS", "price": 1420.0, "score": 73,
+             "direction": "BUY", "reasons": [],
+             "stop_loss_pct": 1.5, "target_pct": 2.0},
+        ],
+    }
+    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+    assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
+    assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
+
+
+def test_both_spellings_present_prefers_the_v4_names():
+    """If a pick somehow carries both, stopLoss/target (v4) wins."""
+    payload = {
+        "category": "stocks",
+        "picks": [
+            {"symbol": "CIPLA.NS", "price": 1420.0, "score": 73,
+             "direction": "BUY", "reasons": [],
+             "stopLoss": 1.5, "target": 2.0,
+             "stop_loss_pct": 9.0, "target_pct": 9.0},
+        ],
+    }
+    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+    assert rows[0]["target"] == pytest.approx(1420.0 * 1.02)
+    assert rows[0]["stop"] == pytest.approx(1420.0 * 0.985)
+
+
 def test_signal_is_plain_english_joined_reasons():
     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
     assert rows[0]["signal"] == (
@@ -183,6 +219,55 @@ def test_rejects_non_stock_categories():
     with pytest.raises(ValueError, match="stocks"):
         publish_calls.build_rows({"category": "etfs", "picks": []},
                                  "2026-08-28T09:20:00")
+
+
+def test_fetch_picks_raises_when_payload_carries_an_error_key(monkeypatch):
+    """app.py:2839-2840 returns HTTP 200 with {"picks": [], "error": str(e)}
+    when scoring fails. A 200 status alone does not mean success -- treating
+    it as one would silently publish an empty day and exit 0, defeating this
+    pipeline's own loud-failure contract at its most likely failure point.
+    """
+    import json as _json
+
+    class FakeResponse:
+        status = 200
+
+        def read(self):
+            return _json.dumps(
+                {"picks": [], "error": "scorer timed out"}).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr(publish_calls.urllib.request, "urlopen",
+                         lambda url, timeout=30: FakeResponse())
+    with pytest.raises(RuntimeError, match="scorer timed out"):
+        publish_calls.fetch_picks("http://fake/api/picks")
+
+
+def test_fetch_picks_does_not_raise_on_an_honest_empty_picks_list(monkeypatch):
+    """A genuinely empty picks list with no error key is not a failure."""
+    import json as _json
+
+    class FakeResponse:
+        status = 200
+
+        def read(self):
+            return _json.dumps({"category": "stocks", "picks": []}).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr(publish_calls.urllib.request, "urlopen",
+                         lambda url, timeout=30: FakeResponse())
+    payload = publish_calls.fetch_picks("http://fake/api/picks")
+    assert payload["picks"] == []
 
 
 def test_insert_is_idempotent(conn):

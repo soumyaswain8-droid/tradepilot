@@ -34,11 +34,17 @@ PICKS_URL = os.environ.get(
 
 
 def fetch_picks(url):
-    """GET the picks payload. Raises on any non-200 or unparseable body."""
+    """GET the picks payload. Raises on any non-200, unparseable, or error body."""
     with urllib.request.urlopen(url, timeout=30) as r:
         if r.status != 200:
             raise RuntimeError("picks endpoint returned HTTP %s" % r.status)
-        return json.loads(r.read().decode("utf-8"))
+        payload = json.loads(r.read().decode("utf-8"))
+        # The picks endpoint returns HTTP 200 with an "error" key when scoring
+        # fails, so a 200 alone does not mean success. Treated as a failure here
+        # because a silently empty day is indistinguishable from a real one.
+        if payload.get("error"):
+            raise RuntimeError("picks endpoint reported: %s" % payload["error"])
+        return payload
 
 
 def build_rows(payload, published_at):
@@ -65,8 +71,18 @@ def build_rows(payload, published_at):
             # resolver can later grade it would manufacture a hit rate out
             # of non-advice.
             continue
-        sl_pct = abs(float(p.get("stopLoss") or 0))
-        tgt_pct = abs(float(p.get("target") or 0))
+        sl_raw = p.get("stopLoss")
+        if sl_raw is None:
+            sl_raw = p.get("stop_loss_pct")
+        tgt_raw = p.get("target")
+        if tgt_raw is None:
+            tgt_raw = p.get("target_pct")
+        # v4's composite_scorer emits stopLoss/target; the v2 and v1 engines emit
+        # stop_loss_pct/target_pct. app.py falls back between them on ImportError,
+        # so both spellings are live. Reading only one silently captures every
+        # call with no levels at all.
+        sl_pct = abs(float(sl_raw or 0))
+        tgt_pct = abs(float(tgt_raw or 0))
         # target and stopLoss are unsigned magnitudes -- composite_scorer derives
         # them from a volatility multiplier with no reference to direction. Which
         # side of the entry they land on is decided HERE, by the trade's side.

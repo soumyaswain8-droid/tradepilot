@@ -5,9 +5,16 @@ One rule matters above the others: a call still inside its horizon stays
 `open` and is never counted in a hit rate. Resolving early is how a track
 record quietly starts overstating itself.
 
-A call is a `hit` only if it reached the target that was published with it.
-A favourable-but-short move is a miss. Grading on anything softer would make
-the published target decorative.
+A call is a `hit` if the price AT RESOLUTION TIME is at or beyond the published
+target. This is a spot-price comparison, not an intraday high/low check: a
+stock that touched the target and gave it back before resolution grades a
+miss. That is deliberately conservative -- it can understate the hit rate but
+never overstate it.
+
+A call published with no target cannot be graded against one. Such calls are
+marked `ungraded` and excluded from the hit rate, rather than graded by a
+softer rule that would pool two different standards into one published
+number.
 
 Exit code 0 on success, 1 on any failure.
 """
@@ -52,20 +59,20 @@ def is_elapsed(published_at, horizon, now):
 def classify(side, price_at_call, outcome_price, target):
     """hit only if the published target was reached. Everything else is a miss.
 
-    When no target was published -- the scorer can return target_pct = 0, and
-    build_rows stores None -- the bar falls back to the call price and requires
-    a strict move, so flat is not a win. Without that fallback every
-    target-less call would score a miss and bias the record downward for a
-    reason that has nothing to do with the calls being wrong.
+    A target is required. A call published without one cannot be graded
+    against one, and grading it by a softer rule would pool two different
+    standards into a single published percentage. Such calls are marked
+    'ungraded' by main() and excluded from the hit rate instead.
 
     There is deliberately no `stop` parameter. A stop bounds a loss; it does
     not grade whether the call was right.
     """
-    if target is not None:
-        return "hit" if (outcome_price <= target if side == "SELL"
-                         else outcome_price >= target) else "miss"
-    return "hit" if (outcome_price < price_at_call if side == "SELL"
-                     else outcome_price > price_at_call) else "miss"
+    if target is None:
+        raise ValueError("classify requires a target; ungraded calls are "
+                         "handled by main()")
+    if side == "SELL":
+        return "hit" if outcome_price <= target else "miss"
+    return "hit" if outcome_price >= target else "miss"
 
 
 def due_calls(conn, now):
@@ -93,7 +100,7 @@ def fetch_price(symbol):
 
 def main():
     now = datetime.now().isoformat(timespec="seconds")
-    resolved, skipped, failed = 0, 0, 0
+    resolved, skipped, failed, ungraded = 0, 0, 0, 0
     try:
         conn = app_store.get_db()
         app_store.init_db(conn)
@@ -112,6 +119,13 @@ def main():
                 # No price is not a miss. Leave it open and try again tomorrow.
                 skipped += 1
                 continue
+            if row["target"] is None:
+                # No published target means no standard to grade against. Record
+                # what happened and exclude it, rather than grading it by a
+                # softer rule that would inflate the hit rate.
+                apply_outcome(conn, row["id"], price, "ungraded", now)
+                ungraded += 1
+                continue
             outcome = classify(row["side"], row["price_at_call"], price,
                                row["target"])
             apply_outcome(conn, row["id"], price, outcome, now)
@@ -121,8 +135,8 @@ def main():
         print("RESOLVE FAILED %s: %s: %s" % (now, type(e).__name__, e),
               file=sys.stderr)
         return 1
-    print("resolved %d call(s), %d left open for want of a price, %d failed"
-          % (resolved, skipped, failed))
+    print("resolved %d call(s), %d ungraded (no target), %d left open for want"
+          " of a price, %d failed" % (resolved, ungraded, skipped, failed))
     return 1 if failed else 0
 
 

@@ -977,6 +977,12 @@ class Floor:
 
 
 LOCK_FILE = KNOW / "floor.lock"
+# Module-level so the file object cannot be garbage collected. flock lives on an open
+# FILE DESCRIPTOR, not on the process, so if the handle is collected CPython closes the
+# fd and the lock silently disappears — a second floor then starts and we are back to
+# the duplicate-instance corruption this exists to prevent. Caught by a smoke test on
+# 2026-08-29 where a caller that did not keep the return value was let straight in.
+_LOCK_FH = None
 
 
 def acquire_single_instance():
@@ -998,8 +1004,14 @@ def acquire_single_instance():
     not a PID file.
     """
     import fcntl
+    global _LOCK_FH
+    if _LOCK_FH is not None:                 # already held by this process
+        return _LOCK_FH
     LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
-    fh = open(LOCK_FILE, "w")
+    # "a+", not "w": "w" truncates on OPEN, which wipes the holder's pid line before we
+    # even reach the lock check — so the refusal message could never name the process
+    # you actually need to kill. Truncate only after the lock is ours.
+    fh = open(LOCK_FILE, "a+")
     try:
         fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -1013,9 +1025,12 @@ def acquire_single_instance():
         print("  Two instances corrupt the day's book and confuse the watchdog; "
               "stop the running one first.", flush=True)
         raise SystemExit(3)
+    fh.seek(0)
+    fh.truncate()
     fh.write(f"pid {os.getpid()} started {datetime.now():%Y-%m-%d %H:%M:%S}\n")
     fh.flush()
-    return fh                      # keep the handle alive for the process lifetime
+    _LOCK_FH = fh                  # the module reference is what actually holds the lock
+    return fh
 
 
 def main():

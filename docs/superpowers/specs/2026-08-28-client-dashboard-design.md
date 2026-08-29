@@ -209,7 +209,9 @@ GATED (requires current_user())
 
 Reused unchanged: `/api/indices` (market header),
 `/api/stock/<sym>/chart` and `/spark` (call detail),
-`/api/stock/<sym>/info` (metadata), `/api/scores` (mark-to-market prices).
+`/api/stock/<sym>/info` (metadata), `kite_data.get_quotes` (mark-to-market prices,
+in-process, batched -- not `/api/scores`, which returns an empty list on a cold
+cache by design).
 
 Two deliberate exclusions:
 
@@ -292,3 +294,41 @@ Nothing in this spec is blocked by it while the app remains local.
 - **Delayed public calls** for non-members. The boundary is designed; the delay
   window is not built.
 - **Notifications and alerts.** Out of scope for v1.
+
+## Deferred from the API layer
+
+Recorded here because the execution workspace that held them is disposable.
+The first two are constraints on the screens plan, not observations.
+
+**A close action must not ship without a way back.** `PATCH {"closed_at": ...}`
+is currently a one-way door: `/api/app/positions` filters `closed_at IS NULL`
+and is the only way to discover a position id, so once a position is closed the
+client cannot obtain the id needed to reopen or delete it. Reopening works --
+the API accepts `closed_at: null` -- but only for a caller who kept the id. The
+Book screen must therefore ship either a closed-positions view, an undo, or no
+close button at all. Adding a retrieval endpoint was ruled out of the API layer
+deliberately: no screen in this spec needs it, and inventing a fifth endpoint
+inside a fix round skips the design step.
+
+**`since` means "recording since", not "grading since".** `/api/app/record`
+derives `since` from the first call ever recorded, not the first resolved one.
+A page rendering "Track record since January — 62%" where the first call
+resolved in June overstates the record's age. The response ships `resolved`,
+`is_meaningful` and `meaningful_from` alongside `since` precisely so a screen
+can be honest; a screen that renders `since` and `hit_rate` without `resolved`
+is the misleading case, and the rule belongs here rather than in the API.
+
+**Mark-to-market does not use `/api/scores`.** This spec's reused-endpoints
+table names `/api/scores`, which is wrong: it returns an empty list on a cold
+cache by design (its NEVER-BLOCK behaviour), so it cannot price a book. The
+implementation uses `kite_data.get_quotes` instead, which is batched, runs
+in-process, and omits symbols it cannot fetch rather than zero-filling them.
+Do not "correct" the code back toward the table.
+
+**CORS is app-wide and now covers private endpoints.** `prototype/app.py`
+applies `CORS(app, origins=[...])` to the whole app, including `/api/app/*`.
+`supports_credentials` is unset and therefore `False`, so this is not
+exploitable today. But the accounts project will need the dashboard origin to
+send cookies, and the obvious change -- `supports_credentials=True` -- would make
+`http://localhost:*` a credentialed wildcard over a client's private book.
+Scope the CORS rule before making that change.

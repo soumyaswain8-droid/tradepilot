@@ -30,18 +30,12 @@ def open_store():
     """Open the calls/positions database.
 
     A named function rather than an inline call so tests can point the API at
-    a throwaway file without touching the real record.
+    a throwaway file without touching the real record. Deliberately does NOT
+    run init_db: schema execution belongs at boot, not on every request --
+    least of all on the anonymous public endpoints, against the one database
+    whose loss cannot be recovered.
     """
-    conn = app_store.get_db()
-    try:
-        app_store.init_db(conn)
-    except Exception:
-        # The caller's try/finally has not been entered yet, so nothing else
-        # will close this handle. init_db runs on every request; a recurring
-        # leak here would exhaust descriptors far from the cause.
-        conn.close()
-        raise
-    return conn
+    return app_store.get_db()
 
 
 CALL_FIELDS = ("id", "symbol", "side", "published_at", "price_at_call",
@@ -260,6 +254,14 @@ def position_create():
         return jsonify({"error": "symbol, a positive qty and a positive "
                                  "avg_price are required"}), 400
 
+    opened_at = body.get("opened_at")
+    if opened_at is not None and not isinstance(opened_at, str):
+        # PATCH validates closed_at this way; POST must agree. A dict or list
+        # here reaches sqlite as a bound parameter and raises ProgrammingError,
+        # which the IntegrityError handler below does not catch -- an unhandled
+        # 500 on a gated endpoint.
+        return jsonify({"error": "opened_at must be a string"}), 400
+
     call_id = body.get("call_id") or None
     conn = open_store()
     try:
@@ -274,7 +276,7 @@ def position_create():
                 "INSERT INTO positions (id, user_id, symbol, qty, avg_price,"
                 " opened_at, source, call_id) VALUES (?,?,?,?,?,?,?,?)",
                 (pid, client_auth.current_user(), symbol, qty, avg_price,
-                 body.get("opened_at") or datetime.now().isoformat(timespec="seconds"),
+                 opened_at or datetime.now().isoformat(timespec="seconds"),
                  "manual", call_id))
         except sqlite3.IntegrityError:
             # The call existed when we checked and does not now. A clean 400
@@ -333,7 +335,8 @@ def position_update(pid):
         conn.commit()
         if cur.rowcount == 0:
             return jsonify({"error": "no such position"}), 404
-        row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
+        row = conn.execute("SELECT * FROM positions WHERE id = ? AND user_id = ?",
+                           (pid, client_auth.current_user())).fetchone()
         return jsonify(shape_position(row, None))
     finally:
         conn.close()

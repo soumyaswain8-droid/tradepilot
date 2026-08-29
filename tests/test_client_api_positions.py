@@ -114,6 +114,16 @@ def test_a_non_positive_quantity_is_rejected(client, store):
     assert _post(client, qty=-5).status_code == 400
 
 
+def test_create_rejects_a_non_string_opened_at(client, store):
+    """A dict here raises ProgrammingError, which the IntegrityError handler misses."""
+    for bad in ({"a": 1}, [1, 2], 12345):
+        r = client.post("/api/app/positions",
+                        json={"symbol": "CIPLA", "qty": 10, "avg_price": 1000,
+                              "opened_at": bad})
+        assert r.status_code == 400, bad
+    assert client.get("/api/app/positions").status_code == 200
+
+
 def test_closing_a_position_records_the_exit(client, store):
     pid = _post(client).get_json()["id"]
     r = client.patch("/api/app/positions/" + pid,
@@ -138,6 +148,25 @@ def test_one_user_never_sees_anothers_book(client, store, monkeypatch):
     _post(client)
     monkeypatch.setattr(client_auth, "current_user", lambda: "someone-else")
     assert client.get("/api/app/positions").get_json()["positions"] == []
+
+
+def test_another_user_cannot_patch_your_position(client, store, monkeypatch):
+    """Scoping is a property of the SQL, and it must stay one."""
+    from prototype import client_auth
+    pid = _post(client).get_json()["id"]
+    monkeypatch.setattr(client_auth, "current_user", lambda: "someone-else")
+    r = client.patch("/api/app/positions/" + pid, json={"qty": 999})
+    assert r.status_code == 404
+
+
+def test_another_user_cannot_delete_your_position(client, store, monkeypatch):
+    """A real id belonging to someone else, not a made-up one."""
+    from prototype import client_auth
+    pid = _post(client).get_json()["id"]
+    monkeypatch.setattr(client_auth, "current_user", lambda: "someone-else")
+    assert client.delete("/api/app/positions/" + pid).status_code == 404
+    monkeypatch.setattr(client_auth, "current_user", lambda: "demo-user")
+    assert len(client.get("/api/app/positions").get_json()["positions"]) == 1
 
 
 def test_positions_are_gated(client, store, monkeypatch):

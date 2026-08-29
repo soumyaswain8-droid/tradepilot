@@ -258,6 +258,19 @@ def board():
             max(_CACHE["board_backoff"] * 2, BOARD_TTL), BOARD_RETRY_MAX)
         _CACHE["board_err"] = str(e)[:80]
 
+        # An auth-shaped failure in a long-running process is the TP-FLOOR-BLANK
+        # signature: on 2026-08-29 this process kept rejecting every sweep with
+        # "Incorrect `api_key` or `access_token`" for hours after a fresh token was
+        # written, while a newly started process read the same .env and worked. Force
+        # a rebuild rather than trusting the cache — the underlying mechanism is still
+        # unidentified, so treat the cached client as the suspect and discard it.
+        try:
+            kd = _kite()
+            if kd.is_auth_error(e):
+                kd.invalidate()
+        except Exception:
+            pass                       # diagnosis must never break the console
+
         # same rule as quotes: a board old enough to be misleading is worse than an
         # empty one, because an empty board reads as "nothing qualifies" while a
         # stale board reads as live conviction about prices that have moved on.

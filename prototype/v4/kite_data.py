@@ -120,6 +120,39 @@ def client():
         return k
 
 
+def invalidate() -> None:
+    """Drop the cached client so the next client() call rebuilds it from .env.
+
+    Defensive, and deliberately blunt. client() already re-keys on the token and that
+    logic is verified correct against a controlled rotation — yet on 2026-08-29 a Flask
+    process that had been running across a token refresh kept failing every sweep with
+    "Incorrect `api_key` or `access_token`" while a freshly started process, reading the
+    same .env, succeeded. Five candidate mechanisms were tested and eliminated
+    (os.environ override, duplicate kite_data modules, module identity, the re-key
+    comparison itself, duplicate Flask processes). The cause is still UNKNOWN.
+
+    Rather than guess, callers that see an auth-shaped failure can call this and get a
+    guaranteed rebuild on the next attempt. It costs one wasted client construction in
+    the rare case the token really is dead, and it removes a class of failure that
+    otherwise needs a human to restart a process.
+    """
+    global _kite, _kite_day, _kite_tok
+    with _lock:
+        _kite, _kite_day, _kite_tok = None, None, None
+
+
+def is_auth_error(e: BaseException) -> bool:
+    """Does this exception look like Kite rejecting our credentials?
+
+    Matched on message text because kiteconnect raises TokenException for several
+    unrelated conditions and a bare class check would also catch a genuinely expired
+    session, which a rebuild cannot fix and should not retry aggressively.
+    """
+    s = str(e).lower()
+    return ("api_key" in s or "access_token" in s or "incorrect" in s
+            or "token" in s and "expired" in s)
+
+
 def _call(fn, what: str):
     """Run a Kite call, classifying failures. A dead token is not the same event as
     a bad symbol, and conflating them is how 'TOKEN DEAD' got printed for a margins

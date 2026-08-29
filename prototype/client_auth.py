@@ -21,6 +21,7 @@ from flask import jsonify, request
 PUBLIC_ENDPOINTS = frozenset({
     "client_api.calls_list",
     "client_api.call_detail",
+    "client_api.record",
 })
 
 GATED_ENDPOINTS = frozenset({

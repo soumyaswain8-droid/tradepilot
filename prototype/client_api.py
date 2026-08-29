@@ -92,3 +92,40 @@ def call_detail(call_id):
     if row is None:
         return jsonify({"error": "no such call"}), 404
     return jsonify(shape_call(row))
+
+
+# A hit rate over a handful of calls is the easiest way to mislead a customer
+# without lying to them. The response always carries the sample size and says
+# plainly whether it is meaningful yet.
+MEANINGFUL_FROM = 100
+
+
+@bp.route("/record")
+def record():
+    """Aggregate outcomes. Ungraded calls are excluded, never counted softly."""
+    conn = open_store()
+    try:
+        rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
+    finally:
+        conn.close()
+
+    hit = sum(1 for r in rows if r["outcome"] == "hit")
+    miss = sum(1 for r in rows if r["outcome"] == "miss")
+    ungraded = sum(1 for r in rows if r["outcome"] == "ungraded")
+    open_ = sum(1 for r in rows if r["outcome"] == "open")
+    resolved = hit + miss
+    days = sorted({r["published_at"][:10] for r in rows})
+
+    return jsonify({
+        "total": len(rows),
+        "resolved": resolved,
+        "hit": hit,
+        "miss": miss,
+        "ungraded": ungraded,
+        "open": open_,
+        # None, never 0.0 -- an unresolved record is not a record of failure.
+        "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
+        "since": days[0] if days else None,
+        "meaningful_from": MEANINGFUL_FROM,
+        "is_meaningful": resolved >= MEANINGFUL_FROM,
+    })

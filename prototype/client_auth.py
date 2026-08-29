@@ -18,7 +18,10 @@ from flask import jsonify, request
 
 # Blueprint endpoint names, not URL paths -- Flask dispatches on endpoints, and
 # a path string would silently stop matching if a route were reworded.
-PUBLIC_ENDPOINTS = frozenset()
+PUBLIC_ENDPOINTS = frozenset({
+    "client_api.calls_list",
+    "client_api.call_detail",
+})
 
 GATED_ENDPOINTS = frozenset({
     "client_api.me",

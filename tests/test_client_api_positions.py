@@ -177,3 +177,20 @@ def test_patch_still_accepts_a_legitimate_close(client, store):
                      json={"closed_at": "2026-08-29T15:30:00", "exit_price": 1120.0})
     assert r.status_code == 200
     assert r.get_json()["exit_price"] == 1120.0
+
+
+def test_both_write_paths_reject_the_same_unreal_numbers(client, store):
+    """One door into the table must not accept what the other rejects.
+
+    float("inf") <= 0 is False, so infinity slips past the positivity check
+    exactly as NaN does -- and either one propagates into value, pnl and the
+    portfolio totals.
+    """
+    for bad in (float("inf"), float("-inf"), float("nan")):
+        assert _post(client, qty=bad).status_code == 400, ("POST qty", bad)
+        assert _post(client, avg_price=bad).status_code == 400, ("POST avg_price", bad)
+
+    pid = _post(client).get_json()["id"]
+    for bad in (float("inf"), float("-inf"), float("nan")):
+        assert client.patch("/api/app/positions/" + pid,
+                            json={"qty": bad}).status_code == 400, ("PATCH qty", bad)

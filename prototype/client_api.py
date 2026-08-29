@@ -230,6 +230,16 @@ def positions_list():
     })
 
 
+def _bad_number(value):
+    """NaN and infinity both slip past a `<= 0` check.
+
+    float("nan") <= 0 and float("inf") <= 0 are both False, so neither is
+    caught by the positivity guard -- and either one propagates into value,
+    pnl and the portfolio totals. PATCH rejects both; POST must agree.
+    """
+    return value != value or value in (float("inf"), float("-inf"))
+
+
 @bp.route("/positions", methods=["POST"])
 def position_create():
     """Log a trade the client placed at their own broker."""
@@ -240,10 +250,11 @@ def position_create():
         avg_price = float(body.get("avg_price"))
     except (TypeError, ValueError):
         return jsonify({"error": "qty and avg_price must be numbers"}), 400
-    # NaN passes `<= 0` as False (NaN comparisons are always False), so it
-    # would otherwise slip past the positivity check and poison every later
-    # P&L figure computed from this row.
-    if qty != qty or avg_price != avg_price:
+    # NaN and infinity both pass `<= 0` as False, so either would otherwise
+    # slip past the positivity check and poison every later P&L figure
+    # computed from this row. PATCH rejects the same values -- see
+    # _bad_number -- so this must match it exactly.
+    if _bad_number(qty) or _bad_number(avg_price):
         return jsonify({"error": "qty and avg_price must be real numbers"}), 400
     if not symbol or qty <= 0 or avg_price <= 0:
         return jsonify({"error": "symbol, a positive qty and a positive "
@@ -299,7 +310,7 @@ def position_update(pid):
                 value = float(value)
             except (TypeError, ValueError):
                 return jsonify({"error": "%s must be a number" % key}), 400
-            if value != value or value in (float("inf"), float("-inf")):
+            if _bad_number(value):
                 return jsonify({"error": "%s must be a real number" % key}), 400
             if key in ("qty", "avg_price") and value <= 0:
                 return jsonify({"error": "%s must be positive" % key}), 400

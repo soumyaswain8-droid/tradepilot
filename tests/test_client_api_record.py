@@ -92,3 +92,41 @@ def test_record_is_public(client, store, monkeypatch):
     from prototype import client_auth
     monkeypatch.setattr(client_auth, "current_user", lambda: None)
     assert client.get("/api/app/record").status_code == 200
+
+
+def test_hit_rate_rounds_half_up_like_a_calculator(client, store):
+    """round() is round-half-to-even: round(6.25, 1) is 6.2, not 6.3.
+
+    A customer with 16 graded calls and 1 win checks the arithmetic on a
+    phone and gets 6.3. The number the product is sold on must agree.
+    """
+    _add(store, "c0", "hit")
+    for i in range(1, 16):
+        _add(store, "c%d" % i, "miss")
+    assert client.get("/api/app/record").get_json()["hit_rate"] == 6.3
+
+
+def test_hit_rate_is_still_none_when_nothing_resolved(client, store):
+    """The helper must not turn the no-data case into 0.0."""
+    _add(store, "c1", "open")
+    assert client.get("/api/app/record").get_json()["hit_rate"] is None
+
+
+def test_a_large_but_mostly_unresolved_record_is_not_meaningful(client, store):
+    """The threshold counts RESOLVED calls, not total.
+
+    A record of 120 calls of which 3 are graded must not read as meaningful
+    just because the table is large. Without this test, switching the
+    threshold to len(rows) would pass every other test in this file.
+    """
+    for i in range(117):
+        _add(store, "o%d" % i, "open")
+    _add(store, "h1", "hit")
+    _add(store, "h2", "hit")
+    _add(store, "m1", "miss")
+
+    body = client.get("/api/app/record").get_json()
+    assert body["total"] == 120
+    assert body["resolved"] == 3
+    assert body["is_meaningful"] is False
+    assert body["meaningful_from"] == 100

@@ -6,6 +6,7 @@ internal detail in any error message. A client sees what was called and what
 happened -- never which engine said so.
 """
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 
 from flask import Blueprint, jsonify, request
 
@@ -100,6 +101,18 @@ def call_detail(call_id):
 MEANINGFUL_FROM = 100
 
 
+def _rate(hit, resolved):
+    """Hit rate to one decimal, rounded half-UP so it matches a calculator.
+
+    None when nothing is resolved -- 0.0 would render as "0%" and read as
+    "we get everything wrong" rather than "nothing has resolved yet".
+    """
+    if not resolved:
+        return None
+    exact = Decimal(100 * hit) / Decimal(resolved)
+    return float(exact.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+
+
 @bp.route("/record")
 def record():
     """Aggregate outcomes. Ungraded calls are excluded, never counted softly."""
@@ -123,8 +136,12 @@ def record():
         "miss": miss,
         "ungraded": ungraded,
         "open": open_,
-        # None, never 0.0 -- an unresolved record is not a record of failure.
-        "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
+        # Explicit half-up, NOT round(). Python's round() is round-half-to-even,
+        # so round(6.25, 1) gives 6.2 while a customer's calculator gives 6.3 --
+        # and 1 hit of 16 resolved is exactly that case. The early record lives
+        # at these denominators, which is when a sceptic is most likely to check
+        # the arithmetic by hand on the number the product is sold on.
+        "hit_rate": _rate(hit, resolved),
         "since": days[0] if days else None,
         "meaningful_from": MEANINGFUL_FROM,
         "is_meaningful": resolved >= MEANINGFUL_FROM,

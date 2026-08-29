@@ -111,16 +111,44 @@ def test_sell_direction_has_target_below_and_stop_above_price():
     payload = {
         "category": "stocks",
         "picks": [
+            # target/stopLoss are UNSIGNED magnitudes exactly as composite_scorer
+            # produces them (a volatility multiplier with no reference to
+            # direction) -- do not "helpfully" re-sign these to make a SELL
+            # test pass. The sign that decides which side of the entry the
+            # levels land on comes from build_rows reading `side`, not from
+            # the input data.
             {"symbol": "XYZ.NS", "price": 500.0, "score": 70,
              "direction": "SELL",
              "reasons": [{"text": "Bearish RSI divergence", "type": "negative"}],
-             "target": -2.0, "stopLoss": -1.5},
+             "target": 2.0, "stopLoss": 1.5},
         ],
     }
     rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
     assert rows[0]["side"] == "SELL"
     assert rows[0]["target"] < 500.0
     assert rows[0]["stop"] > 500.0
+
+
+def test_same_magnitudes_produce_mirrored_levels_for_buy_and_sell():
+    """The side decides which way the levels go -- not the sign of the input.
+
+    composite_scorer emits unsigned magnitudes, so BUY and SELL picks with
+    identical target/stopLoss values must produce mirrored levels around the
+    entry. If this fails, a short's target sits above its entry and the
+    resolver grades it a hit whenever the stock rises.
+    """
+    base = {"symbol": "X.NS", "price": 1000.0, "score": 70,
+            "target": 3.0, "stopLoss": 1.0, "reasons": []}
+    buy = publish_calls.build_rows(
+        {"category": "stocks", "picks": [dict(base, direction="BUY")]},
+        "2026-08-28T09:20:00")[0]
+    sell = publish_calls.build_rows(
+        {"category": "stocks", "picks": [dict(base, direction="SELL")]},
+        "2026-08-28T09:20:00")[0]
+    assert buy["stop"] < 1000.0 < buy["target"]
+    assert sell["target"] < 1000.0 < sell["stop"]
+    assert buy["target"] == pytest.approx(1030.0)
+    assert sell["target"] == pytest.approx(970.0)
 
 
 def test_hold_direction_is_skipped():

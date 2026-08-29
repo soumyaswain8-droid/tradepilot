@@ -65,8 +65,15 @@ def build_rows(payload, published_at):
             # resolver can later grade it would manufacture a hit rate out
             # of non-advice.
             continue
-        sl_pct = float(p.get("stopLoss") or 0)
-        tgt_pct = float(p.get("target") or 0)
+        sl_pct = abs(float(p.get("stopLoss") or 0))
+        tgt_pct = abs(float(p.get("target") or 0))
+        # target and stopLoss are unsigned magnitudes -- composite_scorer derives
+        # them from a volatility multiplier with no reference to direction. Which
+        # side of the entry they land on is decided HERE, by the trade's side.
+        # Applying the BUY arithmetic to a SELL would put a short's target above
+        # its entry, and the resolver would then grade that short a hit whenever
+        # the stock rose.
+        sign = -1.0 if side == "SELL" else 1.0
         reasons = p.get("reasons") or []
         # reasons entries are dicts like {"text": ..., "type": "positive"|
         # "negative"}; join their plain text, positives and negatives alike,
@@ -83,8 +90,8 @@ def build_rows(payload, published_at):
             "score": float(p.get("score") or 0),
             "signal": "; ".join(part for part in parts if part) or None,
             "horizon": horizon,
-            "target": round(price * (1 + tgt_pct / 100.0), 2) if tgt_pct else None,
-            "stop": round(price * (1 - sl_pct / 100.0), 2) if sl_pct else None,
+            "target": round(price * (1 + sign * tgt_pct / 100.0), 2) if tgt_pct else None,
+            "stop": round(price * (1 - sign * sl_pct / 100.0), 2) if sl_pct else None,
         })
     return rows
 

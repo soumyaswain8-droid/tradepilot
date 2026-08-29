@@ -59,19 +59,29 @@ def build_rows(payload, published_at):
         price = float(p.get("price") or 0)
         if price <= 0:
             continue
-        sl_pct = float(p.get("stop_loss_pct") or 0)
-        tgt_pct = float(p.get("target_pct") or 0)
+        side = str(p.get("direction", "")).upper()
+        if side not in ("BUY", "SELL"):
+            # HOLD / AVOID are not actionable calls. Recording one so a
+            # resolver can later grade it would manufacture a hit rate out
+            # of non-advice.
+            continue
+        sl_pct = float(p.get("stopLoss") or 0)
+        tgt_pct = float(p.get("target") or 0)
         reasons = p.get("reasons") or []
+        # reasons entries are dicts like {"text": ..., "type": "positive"|
+        # "negative"}; join their plain text, positives and negatives alike,
+        # in order. Be defensive: a plain-string entry still works.
+        parts = [r.get("text") if isinstance(r, dict) else str(r) for r in reasons]
         rows.append({
             # Deterministic: a re-run on the same day produces the same id, so
             # the unique index collides instead of inserting a near-duplicate.
             "id": "call-%s-%s" % (symbol, day),
             "symbol": symbol,
-            "side": "BUY" if str(p.get("direction", "UP")).upper() == "UP" else "SELL",
+            "side": side,
             "published_at": published_at,
             "price_at_call": price,
             "score": float(p.get("score") or 0),
-            "signal": "; ".join(str(r) for r in reasons) or None,
+            "signal": "; ".join(part for part in parts if part) or None,
             "horizon": horizon,
             "target": round(price * (1 + tgt_pct / 100.0), 2) if tgt_pct else None,
             "stop": round(price * (1 - sl_pct / 100.0), 2) if sl_pct else None,

@@ -2,6 +2,12 @@
 
 The job is the ONLY writer of `calls`. Everything the track record later claims
 rests on it recording exactly what was published, once per symbol per day.
+
+The PAYLOAD fixture mirrors the SHAPE actually served by /api/picks (verified
+against the live endpoint), not the internal scorer record it is built from:
+direction is BUY/HOLD/AVOID (not UP/DOWN), target and stopLoss are percentage
+keys (not target_pct/stop_loss_pct), and reasons is a list of {"text", "type"}
+dicts (not plain strings).
 """
 import importlib.util
 import os
@@ -34,13 +40,17 @@ PAYLOAD = {
     "engine": "v4",
     "picks": [
         {"symbol": "CIPLA.NS", "name": "CIPLA", "price": 1420.0, "score": 73,
-         "direction": "UP", "recommendation": "Strong Buy",
-         "reasons": ["Reclaimed VWAP", "Volume 2.1x average"],
-         "stop_loss_pct": 1.5, "target_pct": 2.0},
+         "direction": "BUY", "recommendation": "Strong Buy",
+         "reasons": [
+             {"text": "Reclaimed VWAP", "type": "positive"},
+             {"text": "Volume 2.1x average", "type": "positive"},
+             {"text": "FII selling (-5040 Cr)", "type": "negative"},
+         ],
+         "stopLoss": 1.5, "target": 2.0},
         {"symbol": "ADANIPORTS.NS", "name": "ADANIPORTS", "price": 1714.0,
-         "score": 66, "direction": "UP", "recommendation": "Buy",
-         "reasons": ["Broke previous-day high"],
-         "stop_loss_pct": 2.0, "target_pct": 3.0},
+         "score": 66, "direction": "BUY", "recommendation": "Buy",
+         "reasons": [{"text": "Broke previous-day high", "type": "positive"}],
+         "stopLoss": 2.0, "target": 3.0},
     ],
 }
 
@@ -73,7 +83,16 @@ def test_target_and_stop_are_absolute_prices_not_percentages():
 
 def test_signal_is_plain_english_joined_reasons():
     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
-    assert rows[0]["signal"] == "Reclaimed VWAP; Volume 2.1x average"
+    assert rows[0]["signal"] == (
+        "Reclaimed VWAP; Volume 2.1x average; FII selling (-5040 Cr)")
+
+
+def test_signal_contains_negative_reason_text_no_dict_reprs():
+    """Negative reasons are part of why the call looks the way it does and
+    must survive the mapping as plain text, not a stringified dict."""
+    rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+    assert "FII selling (-5040 Cr)" in rows[0]["signal"]
+    assert "{" not in rows[0]["signal"]
 
 
 def test_id_is_stable_for_symbol_and_day():
@@ -86,6 +105,48 @@ def test_id_is_stable_for_symbol_and_day():
 def test_side_comes_from_direction():
     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
     assert rows[0]["side"] == "BUY"
+
+
+def test_sell_direction_has_target_below_and_stop_above_price():
+    payload = {
+        "category": "stocks",
+        "picks": [
+            {"symbol": "XYZ.NS", "price": 500.0, "score": 70,
+             "direction": "SELL",
+             "reasons": [{"text": "Bearish RSI divergence", "type": "negative"}],
+             "target": -2.0, "stopLoss": -1.5},
+        ],
+    }
+    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+    assert rows[0]["side"] == "SELL"
+    assert rows[0]["target"] < 500.0
+    assert rows[0]["stop"] > 500.0
+
+
+def test_hold_direction_is_skipped():
+    """HOLD is not an actionable call -- recording one so a resolver can later
+    grade it would manufacture a hit rate out of non-advice."""
+    payload = {
+        "category": "stocks",
+        "picks": [
+            {"symbol": "PARKED.NS", "price": 100.0, "score": 40,
+             "direction": "HOLD", "reasons": [], "target": 1.0, "stopLoss": 1.0},
+        ],
+    }
+    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+    assert rows == []
+
+
+def test_avoid_direction_is_skipped():
+    payload = {
+        "category": "stocks",
+        "picks": [
+            {"symbol": "AVOIDED.NS", "price": 100.0, "score": 20,
+             "direction": "AVOID", "reasons": [], "target": 1.0, "stopLoss": 1.0},
+        ],
+    }
+    rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+    assert rows == []
 
 
 def test_rejects_non_stock_categories():

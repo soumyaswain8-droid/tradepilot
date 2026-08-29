@@ -1,0 +1,133 @@
+# Review package: 16453da..d9f3a29
+
+## Commits
+d9f3a29 fix(calls): sign the target/stop offset by side, not by input
+
+## Files changed
+ scripts/publish-calls.py    | 15 +++++++++++----
+ tests/test_publish_calls.py | 30 +++++++++++++++++++++++++++++-
+ 2 files changed, 40 insertions(+), 5 deletions(-)
+
+## Diff
+diff --git a/scripts/publish-calls.py b/scripts/publish-calls.py
+index 9aee7c4..fd6caac 100644
+--- a/scripts/publish-calls.py
++++ b/scripts/publish-calls.py
+@@ -58,40 +58,47 @@ def build_rows(payload, published_at):
+             continue
+         price = float(p.get("price") or 0)
+         if price <= 0:
+             continue
+         side = str(p.get("direction", "")).upper()
+         if side not in ("BUY", "SELL"):
+             # HOLD / AVOID are not actionable calls. Recording one so a
+             # resolver can later grade it would manufacture a hit rate out
+             # of non-advice.
+             continue
+-        sl_pct = float(p.get("stopLoss") or 0)
+-        tgt_pct = float(p.get("target") or 0)
++        sl_pct = abs(float(p.get("stopLoss") or 0))
++        tgt_pct = abs(float(p.get("target") or 0))
++        # target and stopLoss are unsigned magnitudes -- composite_scorer derives
++        # them from a volatility multiplier with no reference to direction. Which
++        # side of the entry they land on is decided HERE, by the trade's side.
++        # Applying the BUY arithmetic to a SELL would put a short's target above
++        # its entry, and the resolver would then grade that short a hit whenever
++        # the stock rose.
++        sign = -1.0 if side == "SELL" else 1.0
+         reasons = p.get("reasons") or []
+         # reasons entries are dicts like {"text": ..., "type": "positive"|
+         # "negative"}; join their plain text, positives and negatives alike,
+         # in order. Be defensive: a plain-string entry still works.
+         parts = [r.get("text") if isinstance(r, dict) else str(r) for r in reasons]
+         rows.append({
+             # Deterministic: a re-run on the same day produces the same id, so
+             # the unique index collides instead of inserting a near-duplicate.
+             "id": "call-%s-%s" % (symbol, day),
+             "symbol": symbol,
+             "side": side,
+             "published_at": published_at,
+             "price_at_call": price,
+             "score": float(p.get("score") or 0),
+             "signal": "; ".join(part for part in parts if part) or None,
+             "horizon": horizon,
+-            "target": round(price * (1 + tgt_pct / 100.0), 2) if tgt_pct else None,
+-            "stop": round(price * (1 - sl_pct / 100.0), 2) if sl_pct else None,
++            "target": round(price * (1 + sign * tgt_pct / 100.0), 2) if tgt_pct else None,
++            "stop": round(price * (1 - sign * sl_pct / 100.0), 2) if sl_pct else None,
+         })
+     return rows
+ 
+ 
+ def insert_rows(conn, rows):
+     """Insert rows, skipping any that already exist. Returns the insert count."""
+     inserted = 0
+     for r in rows:
+         try:
+             conn.execute(
+diff --git a/tests/test_publish_calls.py b/tests/test_publish_calls.py
+index 32e1d1b..9360c6f 100644
+--- a/tests/test_publish_calls.py
++++ b/tests/test_publish_calls.py
+@@ -104,32 +104,60 @@ def test_id_is_stable_for_symbol_and_day():
+ 
+ def test_side_comes_from_direction():
+     rows = publish_calls.build_rows(PAYLOAD, "2026-08-28T09:20:00")
+     assert rows[0]["side"] == "BUY"
+ 
+ 
+ def test_sell_direction_has_target_below_and_stop_above_price():
+     payload = {
+         "category": "stocks",
+         "picks": [
++            # target/stopLoss are UNSIGNED magnitudes exactly as composite_scorer
++            # produces them (a volatility multiplier with no reference to
++            # direction) -- do not "helpfully" re-sign these to make a SELL
++            # test pass. The sign that decides which side of the entry the
++            # levels land on comes from build_rows reading `side`, not from
++            # the input data.
+             {"symbol": "XYZ.NS", "price": 500.0, "score": 70,
+              "direction": "SELL",
+              "reasons": [{"text": "Bearish RSI divergence", "type": "negative"}],
+-             "target": -2.0, "stopLoss": -1.5},
++             "target": 2.0, "stopLoss": 1.5},
+         ],
+     }
+     rows = publish_calls.build_rows(payload, "2026-08-28T09:20:00")
+     assert rows[0]["side"] == "SELL"
+     assert rows[0]["target"] < 500.0
+     assert rows[0]["stop"] > 500.0
+ 
+ 
++def test_same_magnitudes_produce_mirrored_levels_for_buy_and_sell():
++    """The side decides which way the levels go -- not the sign of the input.
++
++    composite_scorer emits unsigned magnitudes, so BUY and SELL picks with
++    identical target/stopLoss values must produce mirrored levels around the
++    entry. If this fails, a short's target sits above its entry and the
++    resolver grades it a hit whenever the stock rises.
++    """
++    base = {"symbol": "X.NS", "price": 1000.0, "score": 70,
++            "target": 3.0, "stopLoss": 1.0, "reasons": []}
++    buy = publish_calls.build_rows(
++        {"category": "stocks", "picks": [dict(base, direction="BUY")]},
++        "2026-08-28T09:20:00")[0]
++    sell = publish_calls.build_rows(
++        {"category": "stocks", "picks": [dict(base, direction="SELL")]},
++        "2026-08-28T09:20:00")[0]
++    assert buy["stop"] < 1000.0 < buy["target"]
++    assert sell["target"] < 1000.0 < sell["stop"]
++    assert buy["target"] == pytest.approx(1030.0)
++    assert sell["target"] == pytest.approx(970.0)
++
++
+ def test_hold_direction_is_skipped():
+     """HOLD is not an actionable call -- recording one so a resolver can later
+     grade it would manufacture a hit rate out of non-advice."""
+     payload = {
+         "category": "stocks",
+         "picks": [
+             {"symbol": "PARKED.NS", "price": 100.0, "score": 40,
+              "direction": "HOLD", "reasons": [], "target": 1.0, "stopLoss": 1.0},
+         ],
+     }

@@ -1,0 +1,173 @@
+# Review package: d1cd47d..257f73e
+
+## Commits
+257f73e fix(calls): unknown horizon errs long, one bad quote doesn't abort the batch
+
+## Files changed
+ scripts/resolve-calls.py    | 36 +++++++++++++++++++++++++++------
+ tests/test_resolve_calls.py | 49 +++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 77 insertions(+), 8 deletions(-)
+
+## Diff
+diff --git a/scripts/resolve-calls.py b/scripts/resolve-calls.py
+index e3671f0..19f3e4b 100644
+--- a/scripts/resolve-calls.py
++++ b/scripts/resolve-calls.py
+@@ -18,26 +18,40 @@ import urllib.request
+ from datetime import datetime, timedelta
+ 
+ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ if REPO_ROOT not in sys.path:
+     sys.path.insert(0, REPO_ROOT)
+ 
+ from prototype import app_store
+ 
+ HORIZON_DAYS = {"intraday": 1, "swing": 7, "investment": 30}
+ 
++# An unrecognised horizon falls back to the LONGEST known window, not the
++# shortest. publish-calls writes whatever horizon the payload carries, with no
++# whitelist, so a horizon added to the scorer and not mirrored here would
++# otherwise be graded after one day instead of thirty -- resolving a call 29
++# days early while reporting success. Erring long makes an unknown horizon
++# resolve late or never, which surfaces as calls stuck 'open' in calls-status.
++# Erring short corrupts the hit rate silently. Only one of those is recoverable.
++_FALLBACK_DAYS = max(HORIZON_DAYS.values())
++
+ QUOTE_URL = os.environ.get("TP_QUOTE_URL", "http://127.0.0.1:5050/api/stock/%s")
+ 
+ 
+ def is_elapsed(published_at, horizon, now):
+-    """Has this call's horizon passed? Pure -- `now` is supplied, never read."""
+-    days = HORIZON_DAYS.get(horizon or "intraday", HORIZON_DAYS["intraday"])
++    """Has this call's horizon passed? Pure -- `now` is supplied, never read.
++
++    `now` and `published_at` must both be naive local ISO-8601, exactly as
++    datetime.now().isoformat(timespec="seconds") produces. Passing an
++    offset-aware string for one and not the other raises TypeError.
++    """
++    days = HORIZON_DAYS.get(horizon or "intraday", _FALLBACK_DAYS)
+     due = datetime.fromisoformat(published_at) + timedelta(days=days)
+     return datetime.fromisoformat(now) >= due
+ 
+ 
+ def classify(side, price_at_call, outcome_price, target):
+     """hit only if the published target was reached. Everything else is a miss.
+ 
+     When no target was published -- the scorer can return target_pct = 0, and
+     build_rows stores None -- the bar falls back to the call price and requires
+     a strict move, so flat is not a win. Without that fallback every
+@@ -72,35 +86,45 @@ def apply_outcome(conn, call_id, outcome_price, outcome, now):
+ def fetch_price(symbol):
+     """Current price for a symbol, or None if unavailable."""
+     with urllib.request.urlopen(QUOTE_URL % symbol, timeout=30) as r:
+         data = json.loads(r.read().decode("utf-8"))
+     price = data.get("price") or data.get("current_price")
+     return float(price) if price else None
+ 
+ 
+ def main():
+     now = datetime.now().isoformat(timespec="seconds")
+-    resolved, skipped = 0, 0
++    resolved, skipped, failed = 0, 0, 0
+     try:
+         conn = app_store.get_db()
+         app_store.init_db(conn)
+         for row in due_calls(conn, now):
+-            price = fetch_price(row["symbol"])
++            try:
++                price = fetch_price(row["symbol"])
++            except Exception as e:
++                # One bad quote must not cost the other due calls their cycle.
++                # The call stays open and is retried tomorrow -- an unresolved
++                # call is never counted, so nothing downstream is wrong.
++                print("  %s: price fetch failed (%s: %s)"
++                      % (row["symbol"], type(e).__name__, e), file=sys.stderr)
++                failed += 1
++                continue
+             if price is None:
+                 # No price is not a miss. Leave it open and try again tomorrow.
+                 skipped += 1
+                 continue
+             outcome = classify(row["side"], row["price_at_call"], price,
+                                row["target"])
+             apply_outcome(conn, row["id"], price, outcome, now)
+             resolved += 1
+         conn.close()
+     except Exception as e:
+         print("RESOLVE FAILED %s: %s: %s" % (now, type(e).__name__, e),
+               file=sys.stderr)
+         return 1
+-    print("resolved %d call(s), %d left open for want of a price" % (resolved, skipped))
+-    return 0
++    print("resolved %d call(s), %d left open for want of a price, %d failed"
++          % (resolved, skipped, failed))
++    return 1 if failed else 0
+ 
+ 
+ if __name__ == "__main__":
+     sys.exit(main())
+diff --git a/tests/test_resolve_calls.py b/tests/test_resolve_calls.py
+index 41a1134..6eb8b9f 100644
+--- a/tests/test_resolve_calls.py
++++ b/tests/test_resolve_calls.py
+@@ -110,13 +110,58 @@ def test_apply_outcome_writes_all_three_fields(conn):
+     assert r["outcome_at"] == "2026-08-30T18:00:00"
+ 
+ 
+ def test_is_elapsed_is_pure_and_boundary_inclusive():
+     assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "intraday",
+                                     "2026-08-29T09:20:00") is True
+     assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "intraday",
+                                     "2026-08-28T23:59:00") is False
+ 
+ 
+-def test_unknown_horizon_falls_back_to_intraday():
++def test_unknown_horizon_falls_back_to_the_longest_window():
++    """An unrecognised horizon must resolve LATE, never early.
++
++    publish-calls writes whatever horizon the payload carries. If a new
++    horizon type is added to the scorer and not mirrored into HORIZON_DAYS,
++    falling back to intraday would grade a 30-day call after one day and
++    report success. Erring long leaves it open and visible instead.
++    """
++    # Two days on: intraday would already be due. The fallback must not be.
+     assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
+-                                    "2026-08-30T09:20:00") is True
++                                    "2026-08-30T09:20:00") is False
++    # Thirty-one days on: past even the longest window, so now it is due.
++    assert resolve_calls.is_elapsed("2026-08-28T09:20:00", "nonsense",
++                                    "2026-09-28T09:20:00") is True
++
++
++def test_one_failing_quote_does_not_abandon_the_rest(conn, tmp_path, monkeypatch, capsys):
++    """A flaky quote for one symbol must not cost the others their cycle.
++
++    main() closes its connection on the way out (by design, for the real CLI
++    path), so `conn` from the fixture is unusable for assertions afterward.
++    Reopen the same on-disk db to read back what main() actually wrote.
++    """
++    for i, sym in enumerate(("AAA", "BBB", "CCC")):
++        _add(conn, "c%d" % i, sym, "2026-08-28T09:20:00", "intraday", 1000.0)
++
++    def flaky(symbol):
++        if symbol == "BBB":
++            raise RuntimeError("quote endpoint down")
++        return 1030.0
++
++    db_path = str(tmp_path / "test_app.db")
++    orig_get_db = app_store.get_db
++    monkeypatch.setattr(resolve_calls, "fetch_price", flaky)
++    monkeypatch.setattr(resolve_calls.app_store, "get_db",
++                         lambda path=None: orig_get_db(db_path))
++    monkeypatch.setattr(resolve_calls.app_store, "init_db", lambda c: None)
++
++    rc = resolve_calls.main()
++
++    check = orig_get_db(db_path)
++    outcomes = {r["symbol"]: r["outcome"]
++                for r in check.execute("SELECT symbol, outcome FROM calls")}
++    check.close()
++    assert outcomes["AAA"] == "hit"
++    assert outcomes["CCC"] == "hit"
++    assert outcomes["BBB"] == "open"   # left for tomorrow, not graded a miss
++    assert rc == 1                      # still loud about the failure

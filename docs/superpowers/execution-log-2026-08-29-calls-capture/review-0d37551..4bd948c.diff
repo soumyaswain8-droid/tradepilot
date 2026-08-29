@@ -1,0 +1,185 @@
+# Review package: 0d37551..4bd948c
+
+## Commits
+4bd948c fix(calls): status must fail loud on a pipeline that never ran
+
+## Files changed
+ docs/CALLS_PIPELINE.md     | 16 ++++++++++++++++
+ scripts/calls-status.py    | 18 ++++++++++++++++--
+ tests/test_calls_status.py | 28 ++++++++++++++++++++++++++++
+ 3 files changed, 60 insertions(+), 2 deletions(-)
+
+## Diff
+diff --git a/docs/CALLS_PIPELINE.md b/docs/CALLS_PIPELINE.md
+index 3b35ba3..ad25a9e 100644
+--- a/docs/CALLS_PIPELINE.md
++++ b/docs/CALLS_PIPELINE.md
+@@ -20,20 +20,36 @@ endpoints the product serves, so the record is by construction what was
+ published rather than a recomputation that might differ.
+ 
+ ## Checking it is alive
+ 
+ ```bash
+ python3 scripts/calls-status.py
+ ```
+ 
+ Non-zero exit means missing weekdays. Investigate before they accumulate.
+ 
++### What a clean exit does and does not mean
++
++- An empty database — the publish job has never once written a row — exits 1
++  with an explicit `NO CALLS EVER RECORDED` message, not a silent `gaps none`.
++  This is deliberate: a pipeline that ran and then died self-corrects (the
++  next weekday shows up as a gap and the next run flags it), but a pipeline
++  that has never run has no first call to anchor the gap check against, so
++  without this branch it would report clean forever — indistinguishable from
++  a year of flawless running.
++- A clean (exit 0) run only proves no weekday is missing **between the first
++  and last recorded call**. If every call so far landed on a weekend — as
++  happened during development on Saturday 2026-08-29 — that window contains
++  no weekday to check at all, so a clean exit does not yet prove the
++  scheduled job has actually fired. The check becomes meaningful once at
++  least one weekday falls inside the observed window.
++
+ ## Installing the schedule
+ 
+ The two launchd agents are checked into this repo as templates, not installed
+ automatically — writing into `~/Library/LaunchAgents` and scheduling a
+ recurring background job is a decision for whoever runs this on their own
+ machine, not something a task should do on their behalf.
+ 
+ Templates: `deploy/launchd/co.tradepilot.publish-calls.plist` and
+ `deploy/launchd/co.tradepilot.resolve-calls.plist`. Both contain the literal
+ placeholder `/Users/YOURNAME/...` in `ProgramArguments` — substitute your own
+diff --git a/scripts/calls-status.py b/scripts/calls-status.py
+index aa5fd3c..d4d0129 100755
+--- a/scripts/calls-status.py
++++ b/scripts/calls-status.py
+@@ -43,31 +43,45 @@ def summarise(conn, now):
+         # None, never 0.0 -- an unresolved record is not a record of failure.
+         "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
+         "first_call": days[0] if days else None,
+         "last_call": days[-1] if days else None,
+         "days_covered": len(days),
+         "gaps": gaps,
+     }
+ 
+ 
+ def main():
++    """Print the record's state to stdout and return the process exit code."""
+     conn = app_store.get_db()
+     app_store.init_db(conn)
+     s = summarise(conn, datetime.now().isoformat(timespec="seconds"))
+     conn.close()
+ 
++    if s["total"] == 0:
++        # A dead pipeline that once ran self-corrects: first_call is fixed, the
++        # gap loop marches forward from it, and the next weekday shows up as a
++        # gap. A pipeline that has NEVER run has no such anchor -- days is
++        # empty, the loop is skipped, and "gaps none" would be reported forever.
++        # A fresh install and a year of flawless running must not look alike.
++        print("NO CALLS EVER RECORDED -- the publish job has not run "
++              "successfully even once.")
++        print("Check that prototype/app.py is running, then run "
++              "scripts/publish-calls.py by hand.")
++        return 1
++
+     print("calls recorded    %d  (%d open, %d resolved)"
+           % (s["total"], s["open"], s["resolved"]))
+     print("hit rate          %s"
+           % ("%.1f%% of %d resolved" % (s["hit_rate"], s["resolved"])
+              if s["hit_rate"] is not None else "-- (nothing resolved yet)"))
+-    print("covering          %s to %s  (%d trading days)"
+-          % (s["first_call"] or "--", s["last_call"] or "--", s["days_covered"]))
++    print("covering          %s to %s  (%d day%s with calls)"
++          % (s["first_call"] or "--", s["last_call"] or "--",
++             s["days_covered"], "" if s["days_covered"] == 1 else "s"))
+     if s["gaps"]:
+         print("MISSING DAYS      %d: %s" % (len(s["gaps"]), ", ".join(s["gaps"][:10])))
+         return 1
+     print("gaps              none")
+     return 0
+ 
+ 
+ if __name__ == "__main__":
+     sys.exit(main())
+diff --git a/tests/test_calls_status.py b/tests/test_calls_status.py
+index 3b067d0..a80745a 100644
+--- a/tests/test_calls_status.py
++++ b/tests/test_calls_status.py
+@@ -33,47 +33,75 @@ def conn(tmp_path):
+ 
+ def _add(conn, cid, symbol, day, outcome="open"):
+     conn.execute(
+         "INSERT INTO calls (id, symbol, side, published_at, price_at_call, outcome)"
+         " VALUES (?,?,?,?,?,?)",
+         (cid, symbol, "BUY", day + "T09:20:00", 1000.0, outcome))
+     conn.commit()
+ 
+ 
+ def test_empty_store_reports_zero_not_an_error(conn):
++    """An empty table summarises cleanly rather than raising."""
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert s["total"] == 0
+     assert s["hit_rate"] is None
+ 
+ 
+ def test_hit_rate_is_none_when_nothing_resolved(conn):
+     """None, never 0.0 -- zero would read as 'we get everything wrong'."""
+     _add(conn, "c1", "CIPLA", "2026-08-28")
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert s["open"] == 1
+     assert s["resolved"] == 0
+     assert s["hit_rate"] is None
+ 
+ 
+ def test_hit_rate_counts_only_resolved_calls(conn):
++    """Open calls do not dilute or inflate the hit rate."""
+     _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
+     _add(conn, "c2", "TITAN", "2026-08-26", "miss")
+     _add(conn, "c3", "SUNTV", "2026-08-28", "open")
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert s["resolved"] == 2
+     assert s["hit_rate"] == 50.0
+ 
+ 
+ def test_gaps_lists_weekdays_with_no_calls(conn):
+     """A day the job did not run is the failure this whole script exists to show."""
+     _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
+     _add(conn, "c2", "TITAN", "2026-08-28")   # Friday
+     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
+     assert "2026-08-27" in s["gaps"]
+ 
+ 
+ def test_weekends_are_not_gaps(conn):
++    """The market is shut on Saturday and Sunday -- that is not a missed run."""
+     _add(conn, "c1", "CIPLA", "2026-08-28")   # Friday
+     _add(conn, "c2", "TITAN", "2026-08-31")   # Monday
+     s = calls_status.summarise(conn, "2026-08-31T18:00:00")
+     assert "2026-08-29" not in s["gaps"]      # Saturday
+     assert "2026-08-30" not in s["gaps"]      # Sunday
++
++
++def test_main_on_empty_store_is_loud_and_exits_nonzero(conn, monkeypatch, capsys):
++    """A pipeline that never ran must not look like one running perfectly.
++
++    This is the only failure mode with no time bound -- there is no future
++    date at which an empty store starts reporting gaps on its own.
++    """
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    out = capsys.readouterr().out
++    assert rc == 1
++    assert "NO CALLS EVER RECORDED" in out
++
++
++def test_main_with_a_missing_weekday_exits_nonzero(conn, monkeypatch, capsys):
++    """The non-zero exit IS the alerting mechanism -- assert it, not just gaps."""
++    _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
++    _add(conn, "c2", "TITAN", "2026-08-28")   # Friday -- Thursday is missing
++    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
++    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
++    rc = calls_status.main()
++    assert rc == 1
++    assert "MISSING DAYS" in capsys.readouterr().out

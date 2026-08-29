@@ -144,3 +144,36 @@ def test_positions_are_gated(client, store, monkeypatch):
     from prototype import client_auth
     monkeypatch.setattr(client_auth, "current_user", lambda: None)
     assert client.get("/api/app/positions").status_code == 401
+
+
+def test_patch_rejects_a_non_numeric_quantity(client, store):
+    """The delayed-failure case: this used to store, then 500 the whole book.
+
+    A string in qty passes SQLite's REAL affinity untouched, and then
+    shape_position raises ValueError on every later list request -- so the
+    client bricks their own portfolio page with no way to undo it.
+    """
+    pid = _post(client).get_json()["id"]
+    assert client.patch("/api/app/positions/" + pid, json={"qty": "abc"}).status_code == 400
+    assert client.get("/api/app/positions").status_code == 200
+
+
+def test_patch_rejects_null_in_a_not_null_column(client, store):
+    pid = _post(client).get_json()["id"]
+    assert client.patch("/api/app/positions/" + pid, json={"qty": None}).status_code == 400
+
+
+def test_patch_rejects_values_post_would_refuse(client, store):
+    """One door into the table must not accept what the other rejects."""
+    pid = _post(client).get_json()["id"]
+    for bad in ({"qty": 0}, {"qty": -5}, {"avg_price": 0}, {"avg_price": -50}):
+        assert client.patch("/api/app/positions/" + pid, json=bad).status_code == 400, bad
+
+
+def test_patch_still_accepts_a_legitimate_close(client, store):
+    """The validation must not break the normal path."""
+    pid = _post(client).get_json()["id"]
+    r = client.patch("/api/app/positions/" + pid,
+                     json={"closed_at": "2026-08-29T15:30:00", "exit_price": 1120.0})
+    assert r.status_code == 200
+    assert r.get_json()["exit_price"] == 1120.0

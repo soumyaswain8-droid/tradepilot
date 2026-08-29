@@ -5,6 +5,8 @@ not have: no engine names, no strategy internals, no agent vocabulary, and no
 internal detail in any error message. A client sees what was called and what
 happened -- never which engine said so.
 """
+import logging
+import sqlite3
 import uuid
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
@@ -12,6 +14,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from flask import Blueprint, jsonify, request
 
 from prototype import app_store, client_auth
+
+log = logging.getLogger(__name__)
 
 bp = Blueprint("client_api", __name__, url_prefix="/api/app")
 
@@ -165,7 +169,12 @@ def fetch_quotes(symbols):
     try:
         from prototype.v4 import kite_data
         return kite_data.get_quotes(sorted(set(symbols))) or {}
-    except Exception:
+    except Exception as e:
+        # Returning {} is deliberate -- a book still renders its cost basis when
+        # prices are down. But a permanently broken feed would otherwise be
+        # invisible: every position reads price_unavailable with nothing to grep.
+        log.warning("quote feed unavailable (%s: %s); positions will render "
+                    "without prices", type(e).__name__, e)
         return {}
 
 
@@ -231,6 +240,11 @@ def position_create():
         avg_price = float(body.get("avg_price"))
     except (TypeError, ValueError):
         return jsonify({"error": "qty and avg_price must be numbers"}), 400
+    # NaN passes `<= 0` as False (NaN comparisons are always False), so it
+    # would otherwise slip past the positivity check and poison every later
+    # P&L figure computed from this row.
+    if qty != qty or avg_price != avg_price:
+        return jsonify({"error": "qty and avg_price must be real numbers"}), 400
     if not symbol or qty <= 0 or avg_price <= 0:
         return jsonify({"error": "symbol, a positive qty and a positive "
                                  "avg_price are required"}), 400
@@ -244,12 +258,17 @@ def position_create():
             if exists is None:
                 return jsonify({"error": "no such call"}), 400
         pid = "pos-" + uuid.uuid4().hex[:12]
-        conn.execute(
-            "INSERT INTO positions (id, user_id, symbol, qty, avg_price,"
-            " opened_at, source, call_id) VALUES (?,?,?,?,?,?,?,?)",
-            (pid, client_auth.current_user(), symbol, qty, avg_price,
-             body.get("opened_at") or datetime.now().isoformat(timespec="seconds"),
-             "manual", call_id))
+        try:
+            conn.execute(
+                "INSERT INTO positions (id, user_id, symbol, qty, avg_price,"
+                " opened_at, source, call_id) VALUES (?,?,?,?,?,?,?,?)",
+                (pid, client_auth.current_user(), symbol, qty, avg_price,
+                 body.get("opened_at") or datetime.now().isoformat(timespec="seconds"),
+                 "manual", call_id))
+        except sqlite3.IntegrityError:
+            # The call existed when we checked and does not now. A clean 400
+            # beats an unhandled 500 for a condition the client can act on.
+            return jsonify({"error": "no such call"}), 400
         conn.commit()
         row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
         return jsonify(shape_position(row, None)), 201
@@ -262,7 +281,34 @@ def position_update(pid):
     """Edit or close a position. Only the owner's rows are reachable."""
     body = request.get_json(silent=True) or {}
     allowed = ("qty", "avg_price", "closed_at", "exit_price")
-    sets = [(k, body[k]) for k in allowed if k in body]
+    numeric = ("qty", "avg_price", "exit_price")
+
+    sets = []
+    for key in allowed:
+        if key not in body:
+            continue
+        value = body[key]
+        if key in numeric:
+            # POST already rejects a non-positive qty or price. PATCH writes to
+            # the same columns, so it must reject the same values -- otherwise a
+            # client can put their book into a state the API refuses to create.
+            # A string here is worse than wrong: it stores fine, then raises in
+            # shape_position on every later list request, so the client's whole
+            # book 500s until someone edits the database by hand.
+            try:
+                value = float(value)
+            except (TypeError, ValueError):
+                return jsonify({"error": "%s must be a number" % key}), 400
+            if value != value or value in (float("inf"), float("-inf")):
+                return jsonify({"error": "%s must be a real number" % key}), 400
+            if key in ("qty", "avg_price") and value <= 0:
+                return jsonify({"error": "%s must be positive" % key}), 400
+            if key == "exit_price" and value <= 0:
+                return jsonify({"error": "exit_price must be positive"}), 400
+        elif value is not None and not isinstance(value, str):
+            return jsonify({"error": "%s must be a string" % key}), 400
+        sets.append((key, value))
+
     if not sets:
         return jsonify({"error": "nothing to update"}), 400
 

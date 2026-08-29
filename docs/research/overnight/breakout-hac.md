@@ -201,7 +201,22 @@ Daily cross-sectional Fama-MacBeth over the full holdout cross-section (488,828 
 
 Momentum absorbs **17% of the h=5 coefficient, 21% at h=10, 32% at h=21** — a real but partial overlap. So the parent report's claim that BREAKOUT *is* `mom_12_1` is too strong: they are correlated (+0.23), not identical, and a residual remains.
 
-**But the residual is not significant** — NW t of 1.46 / 1.37 / 0.87, worse at every horizon than the uncontrolled figure and nowhere near 3.0. And the momentum factor itself behaves identically in the same window: `mom_12_1` slope at h=21 reads naive t = +5.72 correcting to **NW +1.49**, i.e. it is *also* a holdout-only regime number, consistent with the factor's known on-book range of t = 0.91–1.82. Both are being lifted by the same nine months.
+**But the residual is not significant** — NW t of 1.46 / 1.37 / 0.87, worse at every horizon than the uncontrolled figure and nowhere near 3.0. That is the finding, and it stands.
+
+> **STRUCK 2026-08-29 (see `hac-audit.md`).** This paragraph originally continued: "the momentum
+> factor itself behaves identically in the same window: `mom_12_1` slope at h=21 reads naive
+> t = +5.72 correcting to NW +1.49, i.e. it is *also* a holdout-only regime number, consistent
+> with the factor's known on-book range of t = 0.91–1.82. Both are being lifted by the same nine
+> months."
+>
+> Two errors. It compared a **daily Fama-MacBeth regression slope** to a **net-of-cost portfolio
+> t-statistic** as though they were the same quantity — they are not, and the "consistent with"
+> is meaningless. And the 1.49 is an artifact of the 323-session holdout window: extended to the
+> full sample the same slope reads **naive 10.97 → NW 2.92**, with 21 of 21 disjoint subsamples
+> clearing 1.96. The momentum slope survives HAC comfortably.
+>
+> BREAKOUT's verdict is unaffected — the residual after controlling for momentum is still
+> NW t ≤ 1.46.
 
 **Answer to the decisive question: nothing survives.** What is left after removing momentum is a statistically absent quantity that exists only in the final third of the sample.
 

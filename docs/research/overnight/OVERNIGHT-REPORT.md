@@ -183,10 +183,25 @@ Raw BREAKOUT at h=21 was **t = 5.79**; corrected it is **1.76**. Any multi-week 
 this codebase computed on overlapping windows without a HAC correction should be assumed
 inflated by that factor until checked.
 
-The immediate casualty is a number already on our books: **`mom_12_1` corrects from a naive
-5.72 to NW 1.49** over the same window. The momentum factor and BREAKOUT are not two findings —
-they are the same nine months, counted twice, and neither is significant once the overlap is
-paid for.
+> **CORRECTED 2026-08-29 — the original wording here was wrong twice.** It said "the immediate
+> casualty is a number already on our books: `mom_12_1` corrects from a naive 5.72 to NW 1.49."
+> The audit in `hac-audit.md` establishes that **`mom_12_1` is two different measurements** and
+> they were conflated:
+>
+> - **What is on our books** is `validate_mom121.py`: a monthly rebalance, month *t* to month
+>   *t+1*, each month used once. It is **genuinely non-overlapping and needs no correction** —
+>   applying NW at L=1/3/6 moves it 0.28 → 0.31 → 0.34, nothing past the third decimal. It was
+>   already dead, of having no excess over buy-and-hold-everything, not of overlap.
+> - **The 5.72 was never ours.** It is a daily Fama-MacBeth regression slope created on 08-28
+>   as a control variable inside the breakout lane.
+>
+> And the 1.49 is itself misleading: it is holdout-only, 323 sessions. Extended to the full
+> sample the same slope reads **naive 10.97 → NW 2.92**, with 21 of 21 disjoint subsamples
+> clearing 1.96. **The momentum slope survives HAC comfortably** — 1.49 is what a short window
+> can resolve, not a verdict.
+>
+> None of this rescues BREAKOUT: its residual after controlling for momentum is still NW
+> t ≤ 1.46.
 
 **4. Options STT is 0.15%, not 0.1%.** Budget 2026 raised it from 0.10% effective 1 April 2026,
 alongside the futures hike to 0.05%. Verified live against zerodha.com/charges, not recalled.

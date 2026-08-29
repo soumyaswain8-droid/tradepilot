@@ -172,7 +172,24 @@ def backtest():
     print(f"    setups: {n} across {len(per_day)} scan days (avg {st.mean(per_day):.1f}/day)")
     print(f"    breakout hit rate (target touched in 3d): {hits}/{n} = {hits/n*100:.0f}%")
     print(f"    win rate: {win:.0f}%  |  net/trade after {FEE_PCT}%: {m:+.4f}%  |  t={t:+.2f}")
-    print(f"    {'RULE HAS HISTORICAL SUPPORT' if m>0 and t>2 else 'NO significant edge in-sample — deploy as EXPERIMENT ONLY'}")
+    # This t is NOT trustworthy as printed, and the audit of 2026-08-29 (see
+    # docs/research/overnight/hac-audit.md) says so explicitly. Two independent
+    # violations of the independence the formula assumes:
+    #   1. it pools ~8 setups per day as if they were iid, when same-day setups share
+    #      the market factor — the same error that inflated a per-trade t 6.3x elsewhere
+    #   2. the 3-day hold overlaps across consecutive scan days
+    # The two errors were measured pointing in OPPOSITE directions here, so the printed
+    # number cannot even be assumed too high. It is simply uninterpretable.
+    #
+    # Harmless today only because the result is negative (net -0.35%/trade on 74
+    # sessions / 93 setups, which is near-powerless either way). If this ever prints
+    # t > 2, DO NOT promote on it — recompute with date-clustered errors and a HAC lag
+    # of the holding period first.
+    if m > 0 and t > 2:
+        print("    t>2 BUT UNVERIFIED — pooled same-day setups + overlapping 3d holds.")
+        print("    Do NOT promote on this number; recompute clustered + HAC. (hac-audit.md)")
+    else:
+        print("    NO significant edge in-sample — deploy as EXPERIMENT ONLY")
 
 
 # ── live: scan + deploy ─────────────────────────────────────────────────────

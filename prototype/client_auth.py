@@ -26,6 +26,10 @@ PUBLIC_ENDPOINTS = frozenset({
 
 GATED_ENDPOINTS = frozenset({
     "client_api.me",
+    "client_api.positions_list",
+    "client_api.position_create",
+    "client_api.position_update",
+    "client_api.position_delete",
 })
 
 

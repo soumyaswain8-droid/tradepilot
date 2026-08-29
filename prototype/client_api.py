@@ -5,6 +5,7 @@ not have: no engine names, no strategy internals, no agent vocabulary, and no
 internal detail in any error message. A client sees what was called and what
 happened -- never which engine said so.
 """
+import uuid
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -146,3 +147,151 @@ def record():
         "meaningful_from": MEANINGFUL_FROM,
         "is_meaningful": resolved >= MEANINGFUL_FROM,
     })
+
+
+def fetch_quotes(symbols):
+    """Live prices for a set of symbols.
+
+    Wraps kite_data.get_quotes, which OMITS symbols it cannot fetch rather
+    than zero-filling them -- a silent 0.0 would render a real holding as
+    worthless. That omission is preserved here on purpose: callers must handle
+    a missing symbol, not receive a fake price for it.
+
+    Returns {} rather than raising if the quote feed is unavailable, so a book
+    still renders with its cost basis when prices are down.
+    """
+    if not symbols:
+        return {}
+    try:
+        from prototype.v4 import kite_data
+        return kite_data.get_quotes(sorted(set(symbols))) or {}
+    except Exception:
+        return {}
+
+
+POSITION_FIELDS = ("id", "user_id", "symbol", "qty", "avg_price", "opened_at",
+                   "closed_at", "exit_price", "source", "broker_ref", "call_id")
+
+
+def shape_position(row, quote):
+    """One position, marked to market where a price is available."""
+    out = {k: row[k] for k in POSITION_FIELDS}
+    last = (quote or {}).get("last_price")
+    if last is None:
+        out.update({"last_price": None, "value": None, "pnl": None,
+                    "pnl_pct": None, "price_unavailable": True})
+        return out
+    value = round(float(last) * float(row["qty"]), 2)
+    cost = float(row["avg_price"]) * float(row["qty"])
+    out.update({
+        "last_price": float(last),
+        "value": value,
+        "pnl": round(value - cost, 2),
+        "pnl_pct": round(100.0 * (value - cost) / cost, 2) if cost else None,
+        "price_unavailable": False,
+    })
+    return out
+
+
+@bp.route("/positions")
+def positions_list():
+    """The signed-in user's open book, marked to market."""
+    user = client_auth.current_user()
+    conn = open_store()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM positions WHERE user_id = ? AND closed_at IS NULL"
+            " ORDER BY opened_at DESC", (user,)).fetchall()
+    finally:
+        conn.close()
+
+    quotes = fetch_quotes([r["symbol"] for r in rows])
+    shaped = [shape_position(r, quotes.get(r["symbol"])) for r in rows]
+    priced = [p for p in shaped if not p["price_unavailable"]]
+    return jsonify({
+        "positions": shaped,
+        "totals": {
+            "value": round(sum(p["value"] for p in priced), 2) if priced else 0,
+            "pnl": round(sum(p["pnl"] for p in priced), 2) if priced else 0,
+            "priced": len(priced),
+            # Surfaced, never silently dropped: a total that omits a holding
+            # without saying so understates the book.
+            "unpriced": len(shaped) - len(priced),
+        },
+    })
+
+
+@bp.route("/positions", methods=["POST"])
+def position_create():
+    """Log a trade the client placed at their own broker."""
+    body = request.get_json(silent=True) or {}
+    symbol = str(body.get("symbol", "")).upper().replace(".NS", "").strip()
+    try:
+        qty = float(body.get("qty"))
+        avg_price = float(body.get("avg_price"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "qty and avg_price must be numbers"}), 400
+    if not symbol or qty <= 0 or avg_price <= 0:
+        return jsonify({"error": "symbol, a positive qty and a positive "
+                                 "avg_price are required"}), 400
+
+    call_id = body.get("call_id") or None
+    conn = open_store()
+    try:
+        if call_id is not None:
+            exists = conn.execute("SELECT 1 FROM calls WHERE id = ?",
+                                  (call_id,)).fetchone()
+            if exists is None:
+                return jsonify({"error": "no such call"}), 400
+        pid = "pos-" + uuid.uuid4().hex[:12]
+        conn.execute(
+            "INSERT INTO positions (id, user_id, symbol, qty, avg_price,"
+            " opened_at, source, call_id) VALUES (?,?,?,?,?,?,?,?)",
+            (pid, client_auth.current_user(), symbol, qty, avg_price,
+             body.get("opened_at") or datetime.now().isoformat(timespec="seconds"),
+             "manual", call_id))
+        conn.commit()
+        row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
+        return jsonify(shape_position(row, None)), 201
+    finally:
+        conn.close()
+
+
+@bp.route("/positions/<pid>", methods=["PATCH"])
+def position_update(pid):
+    """Edit or close a position. Only the owner's rows are reachable."""
+    body = request.get_json(silent=True) or {}
+    allowed = ("qty", "avg_price", "closed_at", "exit_price")
+    sets = [(k, body[k]) for k in allowed if k in body]
+    if not sets:
+        return jsonify({"error": "nothing to update"}), 400
+
+    conn = open_store()
+    try:
+        clause = ", ".join("%s = ?" % k for k, _ in sets)
+        params = [v for _, v in sets] + [pid, client_auth.current_user()]
+        cur = conn.execute(
+            "UPDATE positions SET " + clause + " WHERE id = ? AND user_id = ?",
+            params)
+        conn.commit()
+        if cur.rowcount == 0:
+            return jsonify({"error": "no such position"}), 404
+        row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
+        return jsonify(shape_position(row, None))
+    finally:
+        conn.close()
+
+
+@bp.route("/positions/<pid>", methods=["DELETE"])
+def position_delete(pid):
+    """Remove a mistaken entry. Scoped to the owner."""
+    conn = open_store()
+    try:
+        cur = conn.execute("DELETE FROM positions WHERE id = ? AND user_id = ?",
+                           (pid, client_auth.current_user()))
+        conn.commit()
+    finally:
+        conn.close()
+    if cur.rowcount == 0:
+        return jsonify({"error": "no such position"}), 404
+    return "", 204

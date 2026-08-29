@@ -333,11 +333,13 @@ function render(s){
   if(blank || err.board || err.quotes){
     kn.style.display='block';
     kn.innerHTML = blank
-      ? `<b>KNOWN ISSUE · TP-FLOOR-BLANK</b> — ticks are arriving but the screen returned
-         nothing. This is a broken quote client in the dashboard process, <u>not</u> an
-         empty market. Restart Flask to clear it.
-         <span class="why">Seen 2026-08-27 and 2026-08-28 · root cause still open ·
-         scheduled for the weekend${err.board?' · '+err.board:''}</span>`
+      ? `<b>TP-FLOOR-BLANK</b> — ticks are arriving but the screen returned nothing.
+         This is the dashboard's sweep failing, <u>not</u> an empty market.
+         <span class="why">Root-caused 2026-08-28: a failed sweep used to clear the
+         cache and remove its own 25s throttle, so every 2s poll re-swept 889 symbols
+         until Kite refused everything. It now backs off and recovers on its own —
+         this strip should clear within a minute or
+         two${err.board?' · '+err.board:''}</span>`
       : `<b>DEGRADED</b> — ${err.board||err.quotes}
          <span class="why">the board below may be incomplete</span>`;
   } else { kn.style.display='none'; }

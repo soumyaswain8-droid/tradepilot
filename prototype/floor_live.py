@@ -37,7 +37,16 @@ LOGS = ROOT / "logs"
 ESC = ROOT / "docs" / "sarathi" / "knowledge" / "escalations"
 POS = ROOT / "docs" / "sarathi" / "knowledge" / "positions"
 
-_CACHE = {"board": None, "board_at": 0, "quotes": None, "quotes_at": 0}
+_CACHE = {"board": None, "board_at": 0, "quotes": None, "quotes_at": 0,
+          # failure pacing — see board(). Kept separate from board_at because that
+          # one records SUCCESS, and a retry gate driven by success times cannot
+          # slow anything down once nothing is succeeding.
+          "board_try_at": 0, "board_backoff": 0.0}
+
+# How long to wait after a failed sweep before trying again, and the ceiling on
+# that wait. The floor of BOARD_TTL matters: a failing board must never sweep MORE
+# often than a healthy one.
+BOARD_RETRY_MAX = 120.0
 BOARD_TTL = 25.0          # the scouts themselves only re-rank every 120s
 QUOTE_TTL = 2.0           # 20 symbols per call; 0.5 req/s is well inside the limit
 
@@ -209,14 +218,46 @@ def board():
     now = time.time()
     if _CACHE["board"] and now - _CACHE["board_at"] < BOARD_TTL:
         return _CACHE["board"]
+
+    # BACK OFF AFTER A FAILURE — the fix for TP-FLOOR-BLANK, root-caused 2026-08-28.
+    #
+    # The 25-second gate above is a side effect of the SUCCESS cache: it only skips
+    # work while _CACHE["board"] holds something. So the instant a sweep failed and
+    # the cache was cleared, the gate vanished and every 2-second console poll ran a
+    # full 889-symbol sweep — two quote() calls each, against a ~1 req/s endpoint,
+    # doubled per open browser tab, while the floor process swept independently.
+    # Measured: 15 polls produced 15 sweeps when failing versus 1 when healthy.
+    #
+    # A transient failure therefore escalated into a request storm that kept itself
+    # alive, and only a restart could break it, because the first call after a
+    # restart succeeded and re-armed the cache. It blanked the console on 08-27 and
+    # again on 08-28.
+    #
+    # The protection has to be driven by ATTEMPTS, not successes. Floor of BOARD_TTL:
+    # a failing board must never sweep more often than a healthy one.
+    if _CACHE["board_backoff"] and now - _CACHE["board_try_at"] < _CACHE["board_backoff"]:
+        b = _CACHE["board"] or {"rows": [], "universe": 0, "screened": 0}
+        wait = _CACHE["board_backoff"] - (now - _CACHE["board_try_at"])
+        return {**b, "error": f"{_CACHE.get('board_err', 'sweep failed')} "
+                              f"(retry in {wait:.0f}s)"}
+
+    _CACHE["board_try_at"] = now
     try:
         ScoutTeam = _scouts()
         t = ScoutTeam(verbose=False)
         b = {"rows": t.scan(top=40), "universe": len(t.universe),
              "screened": len(t.sweep()), "at": datetime.now().strftime("%H:%M:%S")}
         _CACHE["board"], _CACHE["board_at"] = b, now
+        _CACHE["board_backoff"], _CACHE["board_err"] = 0.0, None   # recovered
         return b
     except Exception as e:
+        # Grow the wait on each consecutive failure, starting at BOARD_TTL so a
+        # failing board can never sweep more often than a healthy one, and capping so
+        # it still recovers on its own once the cause clears.
+        _CACHE["board_backoff"] = min(
+            max(_CACHE["board_backoff"] * 2, BOARD_TTL), BOARD_RETRY_MAX)
+        _CACHE["board_err"] = str(e)[:80]
+
         # same rule as quotes: a board old enough to be misleading is worse than an
         # empty one, because an empty board reads as "nothing qualifies" while a
         # stale board reads as live conviction about prices that have moved on.

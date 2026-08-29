@@ -50,18 +50,32 @@ def summarise(conn, now):
 
 
 def main():
+    """Print the record's state to stdout and return the process exit code."""
     conn = app_store.get_db()
     app_store.init_db(conn)
     s = summarise(conn, datetime.now().isoformat(timespec="seconds"))
     conn.close()
+
+    if s["total"] == 0:
+        # A dead pipeline that once ran self-corrects: first_call is fixed, the
+        # gap loop marches forward from it, and the next weekday shows up as a
+        # gap. A pipeline that has NEVER run has no such anchor -- days is
+        # empty, the loop is skipped, and "gaps none" would be reported forever.
+        # A fresh install and a year of flawless running must not look alike.
+        print("NO CALLS EVER RECORDED -- the publish job has not run "
+              "successfully even once.")
+        print("Check that prototype/app.py is running, then run "
+              "scripts/publish-calls.py by hand.")
+        return 1
 
     print("calls recorded    %d  (%d open, %d resolved)"
           % (s["total"], s["open"], s["resolved"]))
     print("hit rate          %s"
           % ("%.1f%% of %d resolved" % (s["hit_rate"], s["resolved"])
              if s["hit_rate"] is not None else "-- (nothing resolved yet)"))
-    print("covering          %s to %s  (%d trading days)"
-          % (s["first_call"] or "--", s["last_call"] or "--", s["days_covered"]))
+    print("covering          %s to %s  (%d day%s with calls)"
+          % (s["first_call"] or "--", s["last_call"] or "--",
+             s["days_covered"], "" if s["days_covered"] == 1 else "s"))
     if s["gaps"]:
         print("MISSING DAYS      %d: %s" % (len(s["gaps"]), ", ".join(s["gaps"][:10])))
         return 1

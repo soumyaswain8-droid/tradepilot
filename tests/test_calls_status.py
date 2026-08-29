@@ -40,6 +40,7 @@ def _add(conn, cid, symbol, day, outcome="open"):
 
 
 def test_empty_store_reports_zero_not_an_error(conn):
+    """An empty table summarises cleanly rather than raising."""
     s = calls_status.summarise(conn, "2026-08-28T18:00:00")
     assert s["total"] == 0
     assert s["hit_rate"] is None
@@ -55,6 +56,7 @@ def test_hit_rate_is_none_when_nothing_resolved(conn):
 
 
 def test_hit_rate_counts_only_resolved_calls(conn):
+    """Open calls do not dilute or inflate the hit rate."""
     _add(conn, "c1", "CIPLA", "2026-08-26", "hit")
     _add(conn, "c2", "TITAN", "2026-08-26", "miss")
     _add(conn, "c3", "SUNTV", "2026-08-28", "open")
@@ -72,8 +74,34 @@ def test_gaps_lists_weekdays_with_no_calls(conn):
 
 
 def test_weekends_are_not_gaps(conn):
+    """The market is shut on Saturday and Sunday -- that is not a missed run."""
     _add(conn, "c1", "CIPLA", "2026-08-28")   # Friday
     _add(conn, "c2", "TITAN", "2026-08-31")   # Monday
     s = calls_status.summarise(conn, "2026-08-31T18:00:00")
     assert "2026-08-29" not in s["gaps"]      # Saturday
     assert "2026-08-30" not in s["gaps"]      # Sunday
+
+
+def test_main_on_empty_store_is_loud_and_exits_nonzero(conn, monkeypatch, capsys):
+    """A pipeline that never ran must not look like one running perfectly.
+
+    This is the only failure mode with no time bound -- there is no future
+    date at which an empty store starts reporting gaps on its own.
+    """
+    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
+    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
+    rc = calls_status.main()
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "NO CALLS EVER RECORDED" in out
+
+
+def test_main_with_a_missing_weekday_exits_nonzero(conn, monkeypatch, capsys):
+    """The non-zero exit IS the alerting mechanism -- assert it, not just gaps."""
+    _add(conn, "c1", "CIPLA", "2026-08-26")   # Wednesday
+    _add(conn, "c2", "TITAN", "2026-08-28")   # Friday -- Thursday is missing
+    monkeypatch.setattr(calls_status.app_store, "get_db", lambda path=None: conn)
+    monkeypatch.setattr(calls_status.app_store, "init_db", lambda c: None)
+    rc = calls_status.main()
+    assert rc == 1
+    assert "MISSING DAYS" in capsys.readouterr().out

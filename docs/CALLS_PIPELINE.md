@@ -27,6 +27,22 @@ python3 scripts/calls-status.py
 
 Non-zero exit means missing weekdays. Investigate before they accumulate.
 
+### What a clean exit does and does not mean
+
+- An empty database — the publish job has never once written a row — exits 1
+  with an explicit `NO CALLS EVER RECORDED` message, not a silent `gaps none`.
+  This is deliberate: a pipeline that ran and then died self-corrects (the
+  next weekday shows up as a gap and the next run flags it), but a pipeline
+  that has never run has no first call to anchor the gap check against, so
+  without this branch it would report clean forever — indistinguishable from
+  a year of flawless running.
+- A clean (exit 0) run only proves no weekday is missing **between the first
+  and last recorded call**. If every call so far landed on a weekend — as
+  happened during development on Saturday 2026-08-29 — that window contains
+  no weekday to check at all, so a clean exit does not yet prove the
+  scheduled job has actually fired. The check becomes meaningful once at
+  least one weekday falls inside the observed window.
+
 ## Installing the schedule
 
 The two launchd agents are checked into this repo as templates, not installed

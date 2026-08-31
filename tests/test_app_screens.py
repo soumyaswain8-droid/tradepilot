@@ -99,3 +99,31 @@ def test_no_inline_script_in_the_template(client):
     for chunk in body.split("<script")[1:]:
         head = chunk.split(">")[0]
         assert "src=" in head, "inline <script> found: " + head[:60]
+
+
+def test_api_module_names_every_endpoint_it_needs(client):
+    """A screen that calls a path the module never defines fails silently."""
+    js = client.get("/static/app/api.js").get_data(as_text=True)
+    for path in ("/api/app/calls", "/api/app/record", "/api/app/positions"):
+        assert path in js, path
+
+
+def test_api_module_is_the_only_place_fetch_appears(client):
+    """Keeping fetch out of the renderers is what makes them inspectable."""
+    screens = client.get("/static/app/screens.js").get_data(as_text=True)
+    main = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "fetch(" not in screens
+    assert "fetch(" not in main
+
+
+def test_screens_module_handles_the_unavailable_price_flag(client):
+    """A missing quote must never render as zero."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "price_unavailable" in js
+
+
+def test_screens_module_never_prints_a_bare_hit_rate(client):
+    """The spec forbids a rate without its sample size."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "resolved" in js
+    assert "is_meaningful" in js

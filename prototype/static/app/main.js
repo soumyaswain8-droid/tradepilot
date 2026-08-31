@@ -95,7 +95,35 @@
     });
   }
 
-  window.TPApp = { SECTIONS: SECTIONS, go: go, boot: boot, onShow: null };
+  function loadHome() {
+    var node = el("view-home");
+    if (!node) return;
+    node.innerHTML = "<div class='empty'>Loading…</div>";
+    Promise.all([
+      window.TPApi.record(),
+      window.TPApi.calls(5),
+      window.TPApi.positions().then(
+        function (b) { return { book: b, signedOut: false }; },
+        function (e) { return { book: null, signedOut: e && e.status === 401 }; })
+    ]).then(function (r) {
+      window.TPScreens.home(node, {
+        record: r[0], calls: r[1], book: r[2].book,
+        signedOut: r[2].signedOut,
+        onOpenCall: function (id) { window.TPApp.go("call", [id]); }
+      });
+    }, function () {
+      node.innerHTML = "";
+      node.appendChild(window.TPScreens.el(
+        "div", "empty", "Could not load. Reload the page."));
+    });
+  }
+
+  window.TPApp = {
+    SECTIONS: SECTIONS, go: go, boot: boot,
+    onShow: function (section) {
+      if (section === "home") loadHome();
+    }
+  };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {

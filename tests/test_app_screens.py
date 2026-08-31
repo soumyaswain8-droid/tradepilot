@@ -137,6 +137,11 @@ def test_record_screen_labels_since_as_recording_not_grading(client):
     "Track record since January -- 62%" where the first call resolved in June
     overstates the record's age. The spec's Deferred section makes this a
     constraint on this screen, not on the API.
+
+    Asserts the template form -- opening quote and trailing space -- so that a
+    comment merely discussing the rule cannot satisfy it. A comment quoting
+    the phrase is exactly how this test was passing before.
     """
-    js = client.get("/static/app/screens.js").get_data(as_text=True).lower()
-    assert "recording since" in js
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert '"Recording since "' in js
+    assert '"Since "' not in js

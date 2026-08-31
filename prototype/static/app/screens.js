@@ -234,6 +234,16 @@
       r.appendChild(el("div", null, rows[i][1]));
       split.appendChild(r);
     }
+    var counted = rec.hit + rec.miss + rec.open + rec.ungraded;
+    if (counted !== rec.total) {
+      /* Stays invisible unless the sums disagree. If they ever do, the screen
+         says so rather than quietly showing four numbers that do not add up
+         to the total printed above them. */
+      var gap = el("div", "row");
+      gap.appendChild(el("div", "grow muted", "Not accounted for"));
+      gap.appendChild(el("div", null, rec.total - counted));
+      split.appendChild(gap);
+    }
     split.appendChild(el("div", "thin",
       "Ungraded calls are excluded from the rate -- a call published without " +
       "a target has no standard to be graded against."));
@@ -247,6 +257,7 @@
       var k0 = window.TPOutcome.outcomeKind(list[j]);
       if (k0 === "up" || k0 === "down") resolved.push(list[j]);
     }
+    var graded = rec.hit + rec.miss;
     var recent = card("Resolved calls");
     if (!resolved.length) {
       recent.appendChild(el("div", "empty", "Nothing has resolved yet."));
@@ -262,6 +273,13 @@
         row.appendChild(el("div", "muted " + kind, kind === "up" ? "Hit" : "Missed"));
         recent.appendChild(row);
       }
+      /* The tally above counts every call ever recorded; this list is drawn
+         from the most recent fifty. Saying which is which costs one line and
+         stops the heading implying completeness it does not have. */
+      recent.appendChild(el("div", "thin", resolved.length < graded
+        ? "Showing the " + resolved.length + " most recent of " + graded +
+          " resolved calls."
+        : "All " + graded + " resolved calls."));
     }
     node.appendChild(recent);
   }

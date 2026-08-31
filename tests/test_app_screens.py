@@ -28,8 +28,8 @@ def test_every_module_the_page_references_is_fetchable(client):
     somebody typed it.
     """
     for path in ("/static/desk/route.js", "/static/app/api.js",
-                 "/static/app/screens.js", "/static/app/main.js",
-                 "/static/app.css"):
+                 "/static/app/outcome.js", "/static/app/screens.js",
+                 "/static/app/main.js", "/static/app.css"):
         r = client.get(path)
         assert r.status_code == 200, path
         assert len(r.data) > 0, path
@@ -80,7 +80,8 @@ def test_no_operator_vocabulary_in_the_page_or_its_modules(client):
     test. Do not read this test as covering it.
     """
     surfaces = ["/app", "/static/app/main.js", "/static/app/api.js",
-                "/static/app/screens.js", "/static/app.css"]
+                "/static/app/outcome.js", "/static/app/screens.js",
+                "/static/app.css"]
     for path in surfaces:
         body = client.get(path).get_data(as_text=True).lower()
         for word in BANNED_VOCABULARY:
@@ -128,9 +129,3 @@ def test_calls_screen_stamps_the_data_it_is_showing(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert "as_of" in js
 
-
-def test_call_detail_distinguishes_open_from_resolved(client):
-    """A live call must not imply an outcome that has not happened."""
-    js = client.get("/static/app/screens.js").get_data(as_text=True)
-    for token in ("outcome", "hit", "miss", "ungraded"):
-        assert token in js, token

@@ -158,20 +158,14 @@
   }
 
   function outcomeLine(c) {
-    if (c.outcome === "open") {
-      return el("div", "muted", "Still open -- no outcome yet.");
-    }
-    if (c.outcome === "ungraded") {
-      return el("div", "muted",
-        "Published without a target, so it is not graded and not counted.");
-    }
+    var text = window.TPOutcome.outcomeText(c);
+    var kind = window.TPOutcome.outcomeKind(c);
+    if (!kind) return el("div", "muted", text);
     var moved = (c.outcome_price !== null && c.price_at_call)
       ? ((c.outcome_price - c.price_at_call) / c.price_at_call) * 100 : null;
-    var line = el("div", "muted " + (c.outcome === "hit" ? "up" : "down"),
-      (c.outcome === "hit" ? "Hit" : "Missed") +
-      (c.outcome_price !== null ? " at " + money(c.outcome_price) : "") +
+    return el("div", "muted " + kind,
+      text + (c.outcome_price !== null ? " at " + money(c.outcome_price) : "") +
       (moved !== null ? " (" + pct(moved) + ")" : ""));
-    return line;
   }
 
   function call(node, data) {

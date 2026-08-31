@@ -177,7 +177,11 @@ ENTRY_LEVELS = {"PDH", "PDL", "DAY_HIGH", "DAY_LOW", "ROUND"}
 MAX_CONCURRENT = 8
 ENTRY_WINDOW = ("09:30", "14:30")   # not the open (noise), not near the close
 FORCE_EXIT_AT = "15:15"
-NOTIONAL = 6000.0            # matches the equity lane's per-slot size
+# Sized to deploy a Rs25,000 book in full: 8 concurrent slots x Rs3,125 = Rs25,000.
+# Was 6000, which at MAX_CONCURRENT 8 implied Rs48,000 of peak exposure — nearly twice
+# the account. Per-slot size and the concurrency cap have to be set together or the
+# book silently sizes itself to a capital base that does not exist.
+NOTIONAL = 3125.0
 TARGET_R = 1.5               # reward per unit of risk; below this the toll eats it
 POSITIONS_FILE = KNOW / "positions"
 

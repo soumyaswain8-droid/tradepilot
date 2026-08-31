@@ -48,9 +48,29 @@ ROOT = Path(__file__).resolve().parents[2]
 KILL_SWITCH = ROOT / "KILL_SWITCH"
 
 # ── safety rails (rupees) ───────────────────────────────────────────────────
-MAX_ORDER_VALUE = float(os.environ.get("KITE_MAX_ORDER_VALUE", "5000"))
-MAX_DAILY_LOSS = float(os.environ.get("KITE_MAX_DAILY_LOSS", "1000"))
-MAX_OPEN_POSITIONS = int(os.environ.get("KITE_MAX_OPEN_POSITIONS", "5"))
+# Read .env as well as the process environment. These were os.environ-only until
+# 2026-08-31, and NOTHING in this codebase loads .env into the environment — so a rail
+# written to .env was silently inert and the hardcoded defaults stayed in force. The
+# caps are the last thing standing between a bug and the account, and a cap that
+# quietly ignores its own configuration is worse than no cap, because it reports a
+# number it is not enforcing. Found while sizing a Rs25,000 book: .env said 3200/1250/8
+# and the broker was still reporting 5000/1000/5.
+#
+# os.environ wins over the file, so an operator can still override for one run.
+def _rail(name: str, default: str) -> str:
+    if os.environ.get(name):
+        return os.environ[name]
+    envf = ROOT / ".env"
+    if envf.exists():
+        for ln in envf.read_text().splitlines():
+            if ln.startswith(f"{name}=") and "=" in ln:
+                return ln.split("=", 1)[1].strip().strip('"').strip("'")
+    return default
+
+
+MAX_ORDER_VALUE = float(_rail("KITE_MAX_ORDER_VALUE", "5000"))
+MAX_DAILY_LOSS = float(_rail("KITE_MAX_DAILY_LOSS", "1000"))
+MAX_OPEN_POSITIONS = int(_rail("KITE_MAX_OPEN_POSITIONS", "5"))
 
 
 class KillSwitchActive(Exception):

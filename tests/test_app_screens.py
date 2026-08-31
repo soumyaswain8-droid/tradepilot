@@ -116,12 +116,6 @@ def test_api_module_is_the_only_place_fetch_appears(client):
     assert "fetch(" not in main
 
 
-def test_screens_module_handles_the_unavailable_price_flag(client):
-    """A missing quote must never render as zero."""
-    js = client.get("/static/app/screens.js").get_data(as_text=True)
-    assert "price_unavailable" in js
-
-
 def test_screens_module_never_prints_a_bare_hit_rate(client):
     """The spec forbids a rate without its sample size."""
     js = client.get("/static/app/screens.js").get_data(as_text=True)

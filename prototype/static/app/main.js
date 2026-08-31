@@ -95,20 +95,34 @@
     });
   }
 
+  /* A rejected promise loses its value. Swallow the rejection here and hand
+     home() null instead, so one bad endpoint cannot take the whole page down
+     -- a signed-out visitor must still see the calls and the rate, since
+     that half is the entire acquisition surface. */
+  function soft(p) {
+    return p.then(function (v) { return v; }, function () { return null; });
+  }
+
   function loadHome() {
     var node = el("view-home");
     if (!node) return;
     node.innerHTML = "<div class='empty'>Loading…</div>";
     Promise.all([
-      window.TPApi.record(),
-      window.TPApi.calls(5),
+      soft(window.TPApi.record()),
+      soft(window.TPApi.calls(5)),
       window.TPApi.positions().then(
-        function (b) { return { book: b, signedOut: false }; },
-        function (e) { return { book: null, signedOut: e && e.status === 401 }; })
+        function (b) { return { book: b, signedOut: false, failed: false }; },
+        function (e) {
+          /* A 401 means signed out. Anything else means we could not tell --
+             and "log your first trade" is a claim about their account we have
+             no right to make when the request simply failed. */
+          return { book: null, signedOut: !!(e && e.status === 401),
+                   failed: !(e && e.status === 401) };
+        })
     ]).then(function (r) {
       window.TPScreens.home(node, {
         record: r[0], calls: r[1], book: r[2].book,
-        signedOut: r[2].signedOut,
+        signedOut: r[2].signedOut, bookFailed: r[2].failed,
         onOpenCall: function (id) { window.TPApp.go("call", [id]); }
       });
     }, function () {

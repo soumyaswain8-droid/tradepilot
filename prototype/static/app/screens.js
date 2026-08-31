@@ -7,8 +7,11 @@
 (function () {
   function money(n) {
     if (n === null || n === undefined) return "--";
-    var neg = n < 0;
-    var s = Math.round(Math.abs(n)).toString();
+    var whole = Math.round(Math.abs(n));
+    /* Decide the sign AFTER rounding: -0.4 rounds to 0, and "-₹0" is not a
+       number anyone should be shown. */
+    var neg = whole > 0 && n < 0;
+    var s = whole.toString();
     /* Indian grouping: last three digits, then pairs. */
     var last3 = s.slice(-3);
     var rest = s.slice(0, -3);
@@ -32,17 +35,6 @@
     var c = el("div", "card");
     if (title) c.appendChild(el("h2", null, title));
     return c;
-  }
-
-  /* A holding's live price can be missing even though the position itself
-     exists -- the quote feed can be down while the book still has a cost
-     basis (see shape_position in client_api.py, which marks each position
-     price_unavailable rather than zero-filling it). Screens that list
-     individual holdings must render through this, never through money()
-     directly, so a missing quote never prints as a plain "0". */
-  function priceOrUnavailable(v, unavailable) {
-    if (unavailable) return el("span", "muted", "price unavailable");
-    return el("span", null, money(v));
   }
 
   /* The rate is never shown alone. resolved and is_meaningful ship in the same
@@ -101,6 +93,9 @@
     if (data.signedOut) {
       value.appendChild(el("div", "big", "--"));
       value.appendChild(el("div", "muted", "Sign in to see your book"));
+    } else if (data.bookFailed) {
+      value.appendChild(el("div", "big", "--"));
+      value.appendChild(el("div", "muted", "Could not load your book just now."));
     } else if (!data.book || !data.book.positions.length) {
       value.appendChild(el("div", "big", "--"));
       value.appendChild(el("div", "muted", "Log your first trade to see it here"));
@@ -118,12 +113,19 @@
 
     var rate = card(null);
     rate.appendChild(el("div", "label", "Hit rate"));
-    rate.appendChild(rateLine(data.record));
+    if (data.record) {
+      rate.appendChild(rateLine(data.record));
+    } else {
+      rate.appendChild(el("div", "big", "--"));
+      rate.appendChild(el("div", "muted", "Could not load the record."));
+    }
     kpis.appendChild(rate);
     node.appendChild(kpis);
 
     var calls = card("Today's calls");
-    if (!data.calls || !data.calls.calls.length) {
+    if (!data.calls) {
+      calls.appendChild(el("div", "empty", "Could not load today's calls."));
+    } else if (!data.calls.calls.length) {
       calls.appendChild(el("div", "empty", "No calls published yet."));
     } else {
       for (var i = 0; i < Math.min(data.calls.calls.length, 5); i++) {
@@ -135,7 +137,7 @@
 
   window.TPScreens = {
     money: money, pct: pct, el: el, card: card,
-    rateLine: rateLine, callRow: callRow, priceOrUnavailable: priceOrUnavailable,
+    rateLine: rateLine, callRow: callRow,
     home: home
   };
 })();

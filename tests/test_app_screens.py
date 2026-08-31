@@ -179,3 +179,16 @@ def test_neither_screen_shows_a_zero_total_for_an_unpriced_book(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert "totals.priced" in js or "anyPriced" in js
     assert "No live prices right now." in js
+
+
+def test_the_manual_checklist_exists_and_is_tracked(client):
+    """The rendering is unverifiable here; the checklist is the backstop.
+
+    A backstop nobody can find is not a backstop, so its existence is pinned
+    by a test rather than left to memory.
+    """
+    path = os.path.join(REPO_ROOT, "docs", "APP_MANUAL_CHECKS.md")
+    assert os.path.exists(path)
+    body = open(path, encoding="utf-8").read()
+    assert "☐" in body
+    assert "/app" in body

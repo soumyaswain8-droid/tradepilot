@@ -44,6 +44,15 @@
      the failed request never actually disproved. */
   var BOOK_LOAD_FAILED_TEXT = "Could not load your book just now.";
 
+  /* Record's "Resolved calls" card renders this when calls(50) failed. NOT
+     unified with Home's "Could not load today's calls." -- that string names
+     Home's own card (today's live/published calls, a different endpoint
+     call, a different meaning) and would read as a category error sitting
+     under a heading about resolved history. Kept as its own constant for the
+     same reason BOOK_LOAD_FAILED_TEXT exists: one string, so this card and
+     any future caller cannot drift into saying it two ways. */
+  var CALLS_LOAD_FAILED_TEXT = "Could not load the resolved calls list just now.";
+
   /* The rate is never shown alone. resolved and is_meaningful ship in the same
      payload precisely so a page cannot honestly print 62% without also
      printing that it is eleven calls. */
@@ -273,7 +282,13 @@
     }
     var graded = rec.hit + rec.miss;
     var recent = card("Resolved calls");
-    if (!resolved.length) {
+    if (data.callsFailed) {
+      /* The tally above (rec.hit / rec.miss) already loaded successfully --
+         this card must not claim "Nothing has resolved yet." underneath it
+         just because ITS fetch failed. That claim would contradict the tally
+         a few pixels above it. */
+      recent.appendChild(el("div", "empty", CALLS_LOAD_FAILED_TEXT));
+    } else if (!resolved.length) {
       recent.appendChild(el("div", "empty", "Nothing has resolved yet."));
     } else {
       for (var k = 0; k < resolved.length; k++) {

@@ -205,11 +205,22 @@
     node.innerHTML = "<div class='empty'>Loading…</div>";
     /* The record itself is this screen's entire purpose; a failed calls(50)
        must not take the whole screen down over the "Resolved calls" list
-       underneath it -- soft() the same way loadHome softens record/calls
-       around a failing positions() fetch. */
-    Promise.all([window.TPApi.record(), soft(window.TPApi.calls(50))])
-      .then(function (r) {
-        window.TPScreens.record(node, { record: r[0], calls: r[1] });
+       underneath it. Plain soft() is not enough here: it collapses "the
+       fetch failed" and "the fetch succeeded with nothing" to the same
+       null, and record() cannot tell a real empty resolved-list from a
+       broken fetch -- it would print "Nothing has resolved yet." next to a
+       tally that says otherwise. Convert the rejection into a resolved
+       value that carries which case it is, the same shape loadBook already
+       gives book(). */
+    Promise.all([
+      window.TPApi.record(),
+      window.TPApi.calls(50).then(
+        function (c) { return { calls: c, failed: false }; },
+        function () { return { calls: null, failed: true }; })
+    ]).then(function (r) {
+        window.TPScreens.record(node, {
+          record: r[0], calls: r[1].calls, callsFailed: r[1].failed
+        });
       }, function () {
         node.innerHTML = "";
         node.appendChild(window.TPScreens.el(

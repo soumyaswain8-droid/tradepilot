@@ -155,6 +155,25 @@ def test_record_screen_labels_since_as_recording_not_grading(client):
     assert '"Since "' not in js
 
 
+def test_record_screen_distinguishes_a_failed_calls_fetch_from_an_empty_one(client):
+    """The Resolved calls card must not say "Nothing has resolved yet." when
+    calls(50) failed and the tally above it (rec.hit / rec.miss) loaded fine.
+
+    That would repeat Critical 1 one screen over: a positive claim about the
+    user's own record, made from a request that failed, sitting directly
+    under a tally that contradicts it.
+
+    Pins the template form the way the `since` test above does -- the literal
+    `if (data.callsFailed)` guard on the Resolved calls branch -- so a revert
+    that folds the failure case back into the empty-list branch (deleting
+    this guard, leaving `if (!resolved.length)` to catch both cases again)
+    fails this test instead of passing silently.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "if (data.callsFailed)" in js
+    assert "Could not load the resolved calls list just now." in js
+
+
 def test_book_never_renders_a_missing_price_as_zero(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert "price unavailable" in js.lower()

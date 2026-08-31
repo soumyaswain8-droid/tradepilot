@@ -44,6 +44,8 @@ def test_all_five_mount_points_exist(client):
 def test_module_order_is_load_bearing(client):
     """route.js defines TPRoute; main.js uses it. Order is not cosmetic."""
     body = client.get("/app").get_data(as_text=True)
+    for tag in ("desk/route.js", "app/api.js", "app/screens.js", "app/main.js"):
+        assert tag in body, "missing script tag: " + tag
     assert body.index("desk/route.js") < body.index("app/main.js")
     assert body.index("app/api.js") < body.index("app/main.js")
     assert body.index("app/screens.js") < body.index("app/main.js")
@@ -61,12 +63,28 @@ def test_the_router_is_reused_not_reimplemented(client):
     assert "TPRoute.build" in js
 
 
-def test_no_operator_vocabulary_reaches_the_page(client):
-    """A client sees what was called, never which engine said so."""
-    body = client.get("/app").get_data(as_text=True).lower()
-    for word in ("v4", "v5_size", "composite_scorer", "alpha-hunter",
-                 "regime", "orchestrator", "sprint"):
-        assert word not in body, word
+BANNED_VOCABULARY = ("v4", "v5_size", "composite_scorer", "alpha-hunter",
+                     "regime", "orchestrator", "sprint")
+
+
+def test_no_operator_vocabulary_in_the_page_or_its_modules(client):
+    """A client sees what was called, never which engine said so.
+
+    The served HTML is static, so scanning it alone can only catch a banned
+    word typed into the markup. The modules are where a renderer could label
+    something "v4 score", so they are scanned too.
+
+    What this CANNOT cover: a banned word arriving inside API data and being
+    rendered client-side. That is guarded a layer down by shape_call's
+    explicit field allowlist in prototype/client_api.py, which has its own
+    test. Do not read this test as covering it.
+    """
+    surfaces = ["/app", "/static/app/main.js", "/static/app/api.js",
+                "/static/app/screens.js", "/static/app.css"]
+    for path in surfaces:
+        body = client.get(path).get_data(as_text=True).lower()
+        for word in BANNED_VOCABULARY:
+            assert word not in body, (path, word)
 
 
 def test_the_terminal_and_classic_are_untouched(client):

@@ -53,6 +53,11 @@ app = Flask(__name__,
 CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)
 
+from prototype import client_auth                        # noqa: E402
+from prototype.client_api import bp as _client_api_bp    # noqa: E402
+from prototype import app_store; app_store.init_db(app_store.get_db())  # noqa: E402,E702
+app.register_blueprint(_client_api_bp)
+client_auth.install_guard(app)
 
 def get_model_meta():
     # Prefer v2 meta

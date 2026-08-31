@@ -1,0 +1,1090 @@
+# Review package: 717a7d7a793c8ae2e7eeb8a0797ef7d5349b4e74..a5da6f1
+
+## Commits
+a5da6f1 fix(client-api): POST rejects infinite qty/avg_price, matching PATCH
+3a243c9 fix(client-api): PATCH validates numeric columns, quote feed failures are logged
+f3aeba1 feat(client-api): the client's book, marked to market
+1baa9a1 fix(client-api): half-up rounding for hit_rate, pin is_meaningful to resolved
+d89ef13 feat(client-api): the track record, honest about its own sample size
+9598874 fix(client-api): close leaked handle on init failure, test the allowlist and clamp edges
+f9c4c78 feat(client-api): serve published calls from the record
+2b0f4f2 fix(client-api): path-boundary endpoint match, real scoping proof, docstring
+98f8921 feat(client-api): the auth boundary, and a test that enumerates it
+
+## Files changed
+ prototype/app.py                   |   4 +
+ prototype/client_api.py            | 354 +++++++++++++++++++++++++++++++++++++
+ prototype/client_auth.py           |  55 ++++++
+ tests/test_client_api_calls.py     | 152 ++++++++++++++++
+ tests/test_client_api_positions.py | 196 ++++++++++++++++++++
+ tests/test_client_api_record.py    | 132 ++++++++++++++
+ tests/test_client_auth.py          | 112 ++++++++++++
+ 7 files changed, 1005 insertions(+)
+
+## Diff
+diff --git a/prototype/app.py b/prototype/app.py
+index 92e5540..3d3c6a4 100644
+--- a/prototype/app.py
++++ b/prototype/app.py
+@@ -46,20 +46,24 @@ try:
+ except ImportError:
+     HAS_V4 = False
+     print("[ENGINE] v4 not available")
+ 
+ app = Flask(__name__,
+             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
+             static_folder=os.path.join(os.path.dirname(__file__), "static"))
+ CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
+ app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)
+ 
++from prototype import client_auth                        # noqa: E402
++from prototype.client_api import bp as _client_api_bp    # noqa: E402
++app.register_blueprint(_client_api_bp)
++client_auth.install_guard(app)
+ 
+ def get_model_meta():
+     # Prefer v2 meta
+     v2_path = os.path.join(os.path.dirname(__file__), "models", "model_meta_v2.json")
+     v1_path = os.path.join(os.path.dirname(__file__), "models", "model_meta.json")
+     for path in [v2_path, v1_path]:
+         if os.path.exists(path):
+             with open(path) as f:
+                 return json.load(f)
+     return None
+diff --git a/prototype/client_api.py b/prototype/client_api.py
+new file mode 100644
+index 0000000..0d7dff1
+--- /dev/null
++++ b/prototype/client_api.py
+@@ -0,0 +1,354 @@
++"""The client dashboard's API. Eight endpoints, one prefix, one guard.
++
++Everything here is client-facing, which sets rules the operator surface does
++not have: no engine names, no strategy internals, no agent vocabulary, and no
++internal detail in any error message. A client sees what was called and what
++happened -- never which engine said so.
++"""
++import logging
++import sqlite3
++import uuid
++from datetime import datetime
++from decimal import Decimal, ROUND_HALF_UP
++
++from flask import Blueprint, jsonify, request
++
++from prototype import app_store, client_auth
++
++log = logging.getLogger(__name__)
++
++bp = Blueprint("client_api", __name__, url_prefix="/api/app")
++
++
++@bp.route("/me")
++def me():
++    """The signed-in user and their plan. Project B owns this shape later."""
++    return jsonify({"user_id": client_auth.current_user(), "plan": "none"})
++
++
++def open_store():
++    """Open the calls/positions database.
++
++    A named function rather than an inline call so tests can point the API at
++    a throwaway file without touching the real record.
++    """
++    conn = app_store.get_db()
++    try:
++        app_store.init_db(conn)
++    except Exception:
++        # The caller's try/finally has not been entered yet, so nothing else
++        # will close this handle. init_db runs on every request; a recurring
++        # leak here would exhaust descriptors far from the cause.
++        conn.close()
++        raise
++    return conn
++
++
++CALL_FIELDS = ("id", "symbol", "side", "published_at", "price_at_call",
++               "score", "signal", "horizon", "target", "stop",
++               "outcome", "outcome_price", "outcome_at")
++
++
++def shape_call(row):
++    """One `calls` row as the client sees it.
++
++    An explicit field list rather than dict(row): it keeps internal columns
++    from leaking into a client payload by accident when the schema grows.
++    """
++    return {k: row[k] for k in CALL_FIELDS}
++
++
++# The record grows by roughly ten rows every trading day, so an unbounded
++# response would be thousands of calls within a year while the Home screen
++# shows a handful. Bounded by default, raisable by the caller, hard-capped so
++# a client cannot ask for the whole table.
++DEFAULT_CALL_LIMIT = 50
++MAX_CALL_LIMIT = 500
++
++
++@bp.route("/calls")
++def calls_list():
++    """Published calls, newest first. Reads the record -- never /api/picks."""
++    try:
++        limit = int(request.args.get("limit", DEFAULT_CALL_LIMIT))
++    except (TypeError, ValueError):
++        limit = DEFAULT_CALL_LIMIT
++    limit = max(1, min(limit, MAX_CALL_LIMIT))
++
++    conn = open_store()
++    try:
++        rows = conn.execute(
++            "SELECT * FROM calls ORDER BY published_at DESC, symbol ASC"
++            " LIMIT ?", (limit,)).fetchall()
++        return jsonify({"calls": [shape_call(r) for r in rows],
++                        "limit": limit,
++                        "as_of": datetime.now().isoformat(timespec="seconds")})
++    finally:
++        conn.close()
++
++
++@bp.route("/calls/<call_id>")
++def call_detail(call_id):
++    """One call, with the reasoning that was published alongside it."""
++    conn = open_store()
++    try:
++        row = conn.execute("SELECT * FROM calls WHERE id = ?", (call_id,)).fetchone()
++    finally:
++        conn.close()
++    if row is None:
++        return jsonify({"error": "no such call"}), 404
++    return jsonify(shape_call(row))
++
++
++# A hit rate over a handful of calls is the easiest way to mislead a customer
++# without lying to them. The response always carries the sample size and says
++# plainly whether it is meaningful yet.
++MEANINGFUL_FROM = 100
++
++
++def _rate(hit, resolved):
++    """Hit rate to one decimal, rounded half-UP so it matches a calculator.
++
++    None when nothing is resolved -- 0.0 would render as "0%" and read as
++    "we get everything wrong" rather than "nothing has resolved yet".
++    """
++    if not resolved:
++        return None
++    exact = Decimal(100 * hit) / Decimal(resolved)
++    return float(exact.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
++
++
++@bp.route("/record")
++def record():
++    """Aggregate outcomes. Ungraded calls are excluded, never counted softly."""
++    conn = open_store()
++    try:
++        rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
++    finally:
++        conn.close()
++
++    hit = sum(1 for r in rows if r["outcome"] == "hit")
++    miss = sum(1 for r in rows if r["outcome"] == "miss")
++    ungraded = sum(1 for r in rows if r["outcome"] == "ungraded")
++    open_ = sum(1 for r in rows if r["outcome"] == "open")
++    resolved = hit + miss
++    days = sorted({r["published_at"][:10] for r in rows})
++
++    return jsonify({
++        "total": len(rows),
++        "resolved": resolved,
++        "hit": hit,
++        "miss": miss,
++        "ungraded": ungraded,
++        "open": open_,
++        # Explicit half-up, NOT round(). Python's round() is round-half-to-even,
++        # so round(6.25, 1) gives 6.2 while a customer's calculator gives 6.3 --
++        # and 1 hit of 16 resolved is exactly that case. The early record lives
++        # at these denominators, which is when a sceptic is most likely to check
++        # the arithmetic by hand on the number the product is sold on.
++        "hit_rate": _rate(hit, resolved),
++        "since": days[0] if days else None,
++        "meaningful_from": MEANINGFUL_FROM,
++        "is_meaningful": resolved >= MEANINGFUL_FROM,
++    })
++
++
++def fetch_quotes(symbols):
++    """Live prices for a set of symbols.
++
++    Wraps kite_data.get_quotes, which OMITS symbols it cannot fetch rather
++    than zero-filling them -- a silent 0.0 would render a real holding as
++    worthless. That omission is preserved here on purpose: callers must handle
++    a missing symbol, not receive a fake price for it.
++
++    Returns {} rather than raising if the quote feed is unavailable, so a book
++    still renders with its cost basis when prices are down.
++    """
++    if not symbols:
++        return {}
++    try:
++        from prototype.v4 import kite_data
++        return kite_data.get_quotes(sorted(set(symbols))) or {}
++    except Exception as e:
++        # Returning {} is deliberate -- a book still renders its cost basis when
++        # prices are down. But a permanently broken feed would otherwise be
++        # invisible: every position reads price_unavailable with nothing to grep.
++        log.warning("quote feed unavailable (%s: %s); positions will render "
++                    "without prices", type(e).__name__, e)
++        return {}
++
++
++POSITION_FIELDS = ("id", "user_id", "symbol", "qty", "avg_price", "opened_at",
++                   "closed_at", "exit_price", "source", "broker_ref", "call_id")
++
++
++def shape_position(row, quote):
++    """One position, marked to market where a price is available."""
++    out = {k: row[k] for k in POSITION_FIELDS}
++    last = (quote or {}).get("last_price")
++    if last is None:
++        out.update({"last_price": None, "value": None, "pnl": None,
++                    "pnl_pct": None, "price_unavailable": True})
++        return out
++    value = round(float(last) * float(row["qty"]), 2)
++    cost = float(row["avg_price"]) * float(row["qty"])
++    out.update({
++        "last_price": float(last),
++        "value": value,
++        "pnl": round(value - cost, 2),
++        "pnl_pct": round(100.0 * (value - cost) / cost, 2) if cost else None,
++        "price_unavailable": False,
++    })
++    return out
++
++
++@bp.route("/positions")
++def positions_list():
++    """The signed-in user's open book, marked to market."""
++    user = client_auth.current_user()
++    conn = open_store()
++    try:
++        rows = conn.execute(
++            "SELECT * FROM positions WHERE user_id = ? AND closed_at IS NULL"
++            " ORDER BY opened_at DESC", (user,)).fetchall()
++    finally:
++        conn.close()
++
++    quotes = fetch_quotes([r["symbol"] for r in rows])
++    shaped = [shape_position(r, quotes.get(r["symbol"])) for r in rows]
++    priced = [p for p in shaped if not p["price_unavailable"]]
++    return jsonify({
++        "positions": shaped,
++        "totals": {
++            "value": round(sum(p["value"] for p in priced), 2) if priced else 0,
++            "pnl": round(sum(p["pnl"] for p in priced), 2) if priced else 0,
++            "priced": len(priced),
++            # Surfaced, never silently dropped: a total that omits a holding
++            # without saying so understates the book.
++            "unpriced": len(shaped) - len(priced),
++        },
++    })
++
++
++def _bad_number(value):
++    """NaN and infinity both slip past a `<= 0` check.
++
++    float("nan") <= 0 and float("inf") <= 0 are both False, so neither is
++    caught by the positivity guard -- and either one propagates into value,
++    pnl and the portfolio totals. PATCH rejects both; POST must agree.
++    """
++    return value != value or value in (float("inf"), float("-inf"))
++
++
++@bp.route("/positions", methods=["POST"])
++def position_create():
++    """Log a trade the client placed at their own broker."""
++    body = request.get_json(silent=True) or {}
++    symbol = str(body.get("symbol", "")).upper().replace(".NS", "").strip()
++    try:
++        qty = float(body.get("qty"))
++        avg_price = float(body.get("avg_price"))
++    except (TypeError, ValueError):
++        return jsonify({"error": "qty and avg_price must be numbers"}), 400
++    # NaN and infinity both pass `<= 0` as False, so either would otherwise
++    # slip past the positivity check and poison every later P&L figure
++    # computed from this row. PATCH rejects the same values -- see
++    # _bad_number -- so this must match it exactly.
++    if _bad_number(qty) or _bad_number(avg_price):
++        return jsonify({"error": "qty and avg_price must be real numbers"}), 400
++    if not symbol or qty <= 0 or avg_price <= 0:
++        return jsonify({"error": "symbol, a positive qty and a positive "
++                                 "avg_price are required"}), 400
++
++    call_id = body.get("call_id") or None
++    conn = open_store()
++    try:
++        if call_id is not None:
++            exists = conn.execute("SELECT 1 FROM calls WHERE id = ?",
++                                  (call_id,)).fetchone()
++            if exists is None:
++                return jsonify({"error": "no such call"}), 400
++        pid = "pos-" + uuid.uuid4().hex[:12]
++        try:
++            conn.execute(
++                "INSERT INTO positions (id, user_id, symbol, qty, avg_price,"
++                " opened_at, source, call_id) VALUES (?,?,?,?,?,?,?,?)",
++                (pid, client_auth.current_user(), symbol, qty, avg_price,
++                 body.get("opened_at") or datetime.now().isoformat(timespec="seconds"),
++                 "manual", call_id))
++        except sqlite3.IntegrityError:
++            # The call existed when we checked and does not now. A clean 400
++            # beats an unhandled 500 for a condition the client can act on.
++            return jsonify({"error": "no such call"}), 400
++        conn.commit()
++        row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
++        return jsonify(shape_position(row, None)), 201
++    finally:
++        conn.close()
++
++
++@bp.route("/positions/<pid>", methods=["PATCH"])
++def position_update(pid):
++    """Edit or close a position. Only the owner's rows are reachable."""
++    body = request.get_json(silent=True) or {}
++    allowed = ("qty", "avg_price", "closed_at", "exit_price")
++    numeric = ("qty", "avg_price", "exit_price")
++
++    sets = []
++    for key in allowed:
++        if key not in body:
++            continue
++        value = body[key]
++        if key in numeric:
++            # POST already rejects a non-positive qty or price. PATCH writes to
++            # the same columns, so it must reject the same values -- otherwise a
++            # client can put their book into a state the API refuses to create.
++            # A string here is worse than wrong: it stores fine, then raises in
++            # shape_position on every later list request, so the client's whole
++            # book 500s until someone edits the database by hand.
++            try:
++                value = float(value)
++            except (TypeError, ValueError):
++                return jsonify({"error": "%s must be a number" % key}), 400
++            if _bad_number(value):
++                return jsonify({"error": "%s must be a real number" % key}), 400
++            if key in ("qty", "avg_price") and value <= 0:
++                return jsonify({"error": "%s must be positive" % key}), 400
++            if key == "exit_price" and value <= 0:
++                return jsonify({"error": "exit_price must be positive"}), 400
++        elif value is not None and not isinstance(value, str):
++            return jsonify({"error": "%s must be a string" % key}), 400
++        sets.append((key, value))
++
++    if not sets:
++        return jsonify({"error": "nothing to update"}), 400
++
++    conn = open_store()
++    try:
++        clause = ", ".join("%s = ?" % k for k, _ in sets)
++        params = [v for _, v in sets] + [pid, client_auth.current_user()]
++        cur = conn.execute(
++            "UPDATE positions SET " + clause + " WHERE id = ? AND user_id = ?",
++            params)
++        conn.commit()
++        if cur.rowcount == 0:
++            return jsonify({"error": "no such position"}), 404
++        row = conn.execute("SELECT * FROM positions WHERE id = ?", (pid,)).fetchone()
++        return jsonify(shape_position(row, None))
++    finally:
++        conn.close()
++
++
++@bp.route("/positions/<pid>", methods=["DELETE"])
++def position_delete(pid):
++    """Remove a mistaken entry. Scoped to the owner."""
++    conn = open_store()
++    try:
++        cur = conn.execute("DELETE FROM positions WHERE id = ? AND user_id = ?",
++                           (pid, client_auth.current_user()))
++        conn.commit()
++    finally:
++        conn.close()
++    if cur.rowcount == 0:
++        return jsonify({"error": "no such position"}), 404
++    return "", 204
+diff --git a/prototype/client_auth.py b/prototype/client_auth.py
+new file mode 100644
+index 0000000..fbd4a2c
+--- /dev/null
++++ b/prototype/client_auth.py
+@@ -0,0 +1,55 @@
++"""The auth seam for the client API.
++
++Project B (accounts) does not exist yet. Everything the client API assumes
++about identity is in this file, and it is three things: current_user() returns
++an id or None, gated endpoints are protected, and positions.user_id is stable.
++Swapping the stub for real sessions is a one-function change.
++
++The registries are the point. This app has roughly seventy unprotected routes;
++scattering client endpoints among them would make auth a per-route audit where
++one missed decorator is a data leak. One prefix plus two explicit lists makes
++"is everything classified?" a question the test suite answers by enumeration.
++
++Each task adds its own endpoints here as it adds them. That is deliberate:
++it keeps both enumeration tests green at every commit, and it makes
++classification an active step rather than a list written once and trusted.
++"""
++from flask import jsonify, request
++
++# Blueprint endpoint names, not URL paths -- Flask dispatches on endpoints, and
++# a path string would silently stop matching if a route were reworded.
++PUBLIC_ENDPOINTS = frozenset({
++    "client_api.calls_list",
++    "client_api.call_detail",
++    "client_api.record",
++})
++
++GATED_ENDPOINTS = frozenset({
++    "client_api.me",
++    "client_api.positions_list",
++    "client_api.position_create",
++    "client_api.position_update",
++    "client_api.position_delete",
++})
++
++
++def current_user():
++    """The signed-in user's id, or None.
++
++    STUB. Returns a fixed id until project B lands. Every gated endpoint reads
++    identity through this one function, so replacing it with a real session
++    lookup is the entire integration.
++    """
++    return "demo-user"
++
++
++def install_guard(app):
++    """Refuse gated client endpoints when nobody is signed in."""
++
++    @app.before_request
++    def _guard_client_api():
++        """Refuse a gated client endpoint when nobody is signed in."""
++        endpoint = request.endpoint
++        if endpoint in GATED_ENDPOINTS and current_user() is None:
++            return jsonify({"error": "sign in to see this"}), 401
++        return None
+diff --git a/tests/test_client_api_calls.py b/tests/test_client_api_calls.py
+new file mode 100644
+index 0000000..eceedb8
+--- /dev/null
++++ b/tests/test_client_api_calls.py
+@@ -0,0 +1,152 @@
++"""Client-facing call data.
++
++These endpoints read the `calls` table and nothing else. /api/picks computes
++live and stores nothing, so serving it would show a client a call that was
++never published and never recorded -- the distinction the whole track record
++rests on.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store, client_api
++
++
++@pytest.fixture
++def store(tmp_path, monkeypatch):
++    """A throwaway database wired into the API, never the real record."""
++    path = str(tmp_path / "api.db")
++    conn = app_store.get_db(path)
++    app_store.init_db(conn)
++    monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
++    yield conn
++    conn.close()
++
++
++def _add_call(conn, cid, symbol, published_at, outcome="open", **kw):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " score, signal, horizon, target, stop, outcome, outcome_price)"
++        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
++        (cid, symbol, kw.get("side", "BUY"), published_at,
++         kw.get("price_at_call", 1000.0), kw.get("score", 73.0),
++         kw.get("signal", "Reclaimed VWAP; volume 2.1x"),
++         kw.get("horizon", "intraday"), kw.get("target", 1020.0),
++         kw.get("stop", 985.0), outcome, kw.get("outcome_price")))
++    conn.commit()
++
++
++def test_empty_table_returns_an_empty_list_not_an_error(client, store):
++    r = client.get("/api/app/calls")
++    assert r.status_code == 200
++    assert r.get_json()["calls"] == []
++
++
++def test_calls_are_returned_newest_first(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-26T09:20:00")
++    _add_call(store, "c2", "TITAN", "2026-08-28T09:20:00")
++    symbols = [c["symbol"] for c in client.get("/api/app/calls").get_json()["calls"]]
++    assert symbols == ["TITAN", "CIPLA"]
++
++
++def test_a_call_carries_its_plain_english_reason(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
++    call = client.get("/api/app/calls").get_json()["calls"][0]
++    assert call["signal"] == "Reclaimed VWAP; volume 2.1x"
++
++
++def test_no_engine_vocabulary_leaks_to_a_client(client, store):
++    """A client sees what was called, never which engine said so."""
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
++    body = client.get("/api/app/calls").get_data(as_text=True).lower()
++    for word in ("v4", "v5_size", "composite_scorer", "alpha-hunter", "engine"):
++        assert word not in body
++
++
++def test_call_detail_returns_one_call(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
++    body = client.get("/api/app/calls/c1").get_json()
++    assert body["id"] == "c1"
++    assert body["target"] == 1020.0
++
++
++def test_unknown_call_id_404s_without_leaking(client, store):
++    r = client.get("/api/app/calls/nope")
++    assert r.status_code == 404
++    body = r.get_data(as_text=True).lower()
++    for leak in ("sqlite", "select ", "traceback", "prototype/"):
++        assert leak not in body
++
++
++def test_an_open_call_reports_no_outcome(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00", outcome="open")
++    call = client.get("/api/app/calls/c1").get_json()
++    assert call["outcome"] == "open"
++    assert call["outcome_price"] is None
++
++
++def test_a_resolved_call_reports_its_outcome(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-26T09:20:00",
++              outcome="hit", outcome_price=1030.0)
++    call = client.get("/api/app/calls/c1").get_json()
++    assert call["outcome"] == "hit"
++    assert call["outcome_price"] == 1030.0
++
++
++def test_calls_response_is_bounded_by_default(client, store):
++    """The record grows every trading day; the response must not grow with it."""
++    for i in range(60):
++        _add_call(store, "c%02d" % i, "S%02d" % i, "2026-08-28T09:20:00")
++    body = client.get("/api/app/calls").get_json()
++    assert body["limit"] == 50
++    assert len(body["calls"]) == 50
++
++
++def test_a_client_cannot_request_the_whole_table(client, store):
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
++    assert client.get("/api/app/calls?limit=999999").get_json()["limit"] == 500
++
++
++def test_calls_endpoint_is_public(client, store, monkeypatch):
++    """Proof, not policy -- the acquisition surface must work signed out."""
++    from prototype import client_auth
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/app/calls").status_code == 200
++
++
++def test_a_column_added_later_cannot_leak_through_shape_call(client, store):
++    """The allowlist is the guarantee, not the fixture's contents.
++
++    shape_call names its fields explicitly rather than returning dict(row).
++    Against today's schema those are identical, so nothing proves the
++    allowlist is load-bearing -- until a column exists that is not on it.
++    This adds one to a THROWAWAY database and checks it never reaches a
++    client. Swap shape_call for dict(row) and this test fails.
++    """
++    store.execute("ALTER TABLE calls ADD COLUMN engine TEXT")
++    store.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " signal, engine) VALUES (?,?,?,?,?,?,?)",
++        ("c1", "CIPLA", "BUY", "2026-08-28T09:20:00", 1000.0,
++         "Reclaimed VWAP", "v4-composite_scorer"))
++    store.commit()
++
++    listing = client.get("/api/app/calls").get_data(as_text=True)
++    detail = client.get("/api/app/calls/c1").get_data(as_text=True)
++
++    assert "v4-composite_scorer" not in listing
++    assert "v4-composite_scorer" not in detail
++    assert "engine" not in client.get("/api/app/calls/c1").get_json()
++
++
++def test_limit_edges_cannot_produce_an_empty_or_reversed_page(client, store):
++    """max(1, min(limit, MAX)) -- zero and negative must floor to 1, not 0."""
++    _add_call(store, "c1", "CIPLA", "2026-08-28T09:20:00")
++    assert client.get("/api/app/calls?limit=0").get_json()["limit"] == 1
++    assert client.get("/api/app/calls?limit=-5").get_json()["limit"] == 1
++    assert client.get("/api/app/calls?limit=10.5").get_json()["limit"] == 50
+diff --git a/tests/test_client_api_positions.py b/tests/test_client_api_positions.py
+new file mode 100644
+index 0000000..7f8e47c
+--- /dev/null
++++ b/tests/test_client_api_positions.py
+@@ -0,0 +1,196 @@
++"""The client's own book.
++
++One rule dominates: never zero-fill a missing price. kite_data.get_quotes
++omits symbols it cannot fetch, deliberately -- "a silent 0.0 price is how bad
++fills happen". A position whose quote is missing must say so, not report a
++portfolio worth nothing.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store, client_api
++
++
++@pytest.fixture
++def store(tmp_path, monkeypatch):
++    path = str(tmp_path / "api.db")
++    conn = app_store.get_db(path)
++    app_store.init_db(conn)
++    monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
++    monkeypatch.setattr(client_api, "fetch_quotes",
++                        lambda syms: {s: {"last_price": 1100.0, "change_pct": 1.0}
++                                      for s in syms})
++    yield conn
++    conn.close()
++
++
++def _post(client, **kw):
++    payload = {"symbol": "CIPLA", "qty": 10, "avg_price": 1000.0}
++    payload.update(kw)
++    return client.post("/api/app/positions", json=payload)
++
++
++def test_empty_book_returns_an_empty_list(client, store):
++    body = client.get("/api/app/positions").get_json()
++    assert body["positions"] == []
++    assert body["totals"]["value"] == 0
++
++
++def test_logging_a_trade_returns_201_and_the_position(client, store):
++    r = _post(client)
++    assert r.status_code == 201
++    assert r.get_json()["symbol"] == "CIPLA"
++
++
++def test_a_logged_position_appears_in_the_book(client, store):
++    _post(client)
++    assert len(client.get("/api/app/positions").get_json()["positions"]) == 1
++
++
++def test_positions_are_marked_to_market(client, store):
++    _post(client)                       # 10 @ 1000, quote 1100
++    pos = client.get("/api/app/positions").get_json()["positions"][0]
++    assert pos["last_price"] == 1100.0
++    assert pos["value"] == 11000.0
++    assert pos["pnl"] == 1000.0
++    assert pos["pnl_pct"] == 10.0
++
++
++def test_a_missing_quote_is_reported_not_zero_filled(client, store, monkeypatch):
++    """A silent 0.0 would show a real holding as worthless."""
++    monkeypatch.setattr(client_api, "fetch_quotes", lambda syms: {})
++    _post(client)
++    pos = client.get("/api/app/positions").get_json()["positions"][0]
++    assert pos["price_unavailable"] is True
++    assert pos["last_price"] is None
++    assert pos["value"] is None
++    assert pos["pnl"] is None
++
++
++def test_totals_exclude_positions_with_no_price(client, store, monkeypatch):
++    """A portfolio total must never silently omit a holding's cost basis."""
++    monkeypatch.setattr(client_api, "fetch_quotes",
++                        lambda syms: {"CIPLA": {"last_price": 1100.0, "change_pct": 1.0}})
++    _post(client, symbol="CIPLA")
++    _post(client, symbol="TITAN")
++    totals = client.get("/api/app/positions").get_json()["totals"]
++    assert totals["value"] == 11000.0
++    assert totals["priced"] == 1
++    assert totals["unpriced"] == 1
++
++
++def test_provenance_defaults_to_the_clients_own_idea(client, store):
++    pos = _post(client).get_json()
++    assert pos["call_id"] is None
++    assert pos["source"] == "manual"
++
++
++def test_a_position_can_cite_the_call_that_triggered_it(client, store):
++    store.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call)"
++        " VALUES ('c1','CIPLA','BUY','2026-08-28T09:20:00',1000.0)")
++    store.commit()
++    pos = _post(client, call_id="c1").get_json()
++    assert pos["call_id"] == "c1"
++
++
++def test_a_position_citing_an_unknown_call_is_rejected(client, store):
++    r = _post(client, call_id="nope")
++    assert r.status_code == 400
++
++
++def test_missing_required_fields_are_rejected(client, store):
++    assert client.post("/api/app/positions", json={"symbol": "CIPLA"}).status_code == 400
++
++
++def test_a_non_positive_quantity_is_rejected(client, store):
++    assert _post(client, qty=0).status_code == 400
++    assert _post(client, qty=-5).status_code == 400
++
++
++def test_closing_a_position_records_the_exit(client, store):
++    pid = _post(client).get_json()["id"]
++    r = client.patch("/api/app/positions/" + pid,
++                     json={"closed_at": "2026-08-29T15:30:00", "exit_price": 1120.0})
++    assert r.status_code == 200
++    assert r.get_json()["exit_price"] == 1120.0
++
++
++def test_deleting_a_position_removes_it(client, store):
++    pid = _post(client).get_json()["id"]
++    assert client.delete("/api/app/positions/" + pid).status_code == 204
++    assert client.get("/api/app/positions").get_json()["positions"] == []
++
++
++def test_deleting_an_unknown_position_404s(client, store):
++    assert client.delete("/api/app/positions/nope").status_code == 404
++
++
++def test_one_user_never_sees_anothers_book(client, store, monkeypatch):
++    """The single most important property in this file."""
++    from prototype import client_auth
++    _post(client)
++    monkeypatch.setattr(client_auth, "current_user", lambda: "someone-else")
++    assert client.get("/api/app/positions").get_json()["positions"] == []
++
++
++def test_positions_are_gated(client, store, monkeypatch):
++    from prototype import client_auth
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/app/positions").status_code == 401
++
++
++def test_patch_rejects_a_non_numeric_quantity(client, store):
++    """The delayed-failure case: this used to store, then 500 the whole book.
++
++    A string in qty passes SQLite's REAL affinity untouched, and then
++    shape_position raises ValueError on every later list request -- so the
++    client bricks their own portfolio page with no way to undo it.
++    """
++    pid = _post(client).get_json()["id"]
++    assert client.patch("/api/app/positions/" + pid, json={"qty": "abc"}).status_code == 400
++    assert client.get("/api/app/positions").status_code == 200
++
++
++def test_patch_rejects_null_in_a_not_null_column(client, store):
++    pid = _post(client).get_json()["id"]
++    assert client.patch("/api/app/positions/" + pid, json={"qty": None}).status_code == 400
++
++
++def test_patch_rejects_values_post_would_refuse(client, store):
++    """One door into the table must not accept what the other rejects."""
++    pid = _post(client).get_json()["id"]
++    for bad in ({"qty": 0}, {"qty": -5}, {"avg_price": 0}, {"avg_price": -50}):
++        assert client.patch("/api/app/positions/" + pid, json=bad).status_code == 400, bad
++
++
++def test_patch_still_accepts_a_legitimate_close(client, store):
++    """The validation must not break the normal path."""
++    pid = _post(client).get_json()["id"]
++    r = client.patch("/api/app/positions/" + pid,
++                     json={"closed_at": "2026-08-29T15:30:00", "exit_price": 1120.0})
++    assert r.status_code == 200
++    assert r.get_json()["exit_price"] == 1120.0
++
++
++def test_both_write_paths_reject_the_same_unreal_numbers(client, store):
++    """One door into the table must not accept what the other rejects.
++
++    float("inf") <= 0 is False, so infinity slips past the positivity check
++    exactly as NaN does -- and either one propagates into value, pnl and the
++    portfolio totals.
++    """
++    for bad in (float("inf"), float("-inf"), float("nan")):
++        assert _post(client, qty=bad).status_code == 400, ("POST qty", bad)
++        assert _post(client, avg_price=bad).status_code == 400, ("POST avg_price", bad)
++
++    pid = _post(client).get_json()["id"]
++    for bad in (float("inf"), float("-inf"), float("nan")):
++        assert client.patch("/api/app/positions/" + pid,
++                            json={"qty": bad}).status_code == 400, ("PATCH qty", bad)
+diff --git a/tests/test_client_api_record.py b/tests/test_client_api_record.py
+new file mode 100644
+index 0000000..a532ae7
+--- /dev/null
++++ b/tests/test_client_api_record.py
+@@ -0,0 +1,132 @@
++"""The track record -- the number this product is sold on.
++
++Two rules matter more than the arithmetic. A hit rate over a small sample is
++the easiest way to mislead a customer without lying, so the response always
++carries the sample size and whether it is meaningful yet. And an `ungraded`
++call -- one published without a target -- has no standard to be graded
++against, so it is excluded rather than counted leniently.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import app_store, client_api
++
++
++@pytest.fixture
++def store(tmp_path, monkeypatch):
++    path = str(tmp_path / "api.db")
++    conn = app_store.get_db(path)
++    app_store.init_db(conn)
++    monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
++    yield conn
++    conn.close()
++
++
++def _add(conn, cid, outcome, day="2026-08-28"):
++    conn.execute(
++        "INSERT INTO calls (id, symbol, side, published_at, price_at_call,"
++        " target, outcome) VALUES (?,?,?,?,?,?,?)",
++        (cid, "S" + cid, "BUY", day + "T09:20:00", 1000.0, 1020.0, outcome))
++    conn.commit()
++
++
++def test_empty_record_is_not_an_error(client, store):
++    body = client.get("/api/app/record").get_json()
++    assert body["total"] == 0
++    assert body["hit_rate"] is None
++
++
++def test_hit_rate_is_none_not_zero_when_nothing_resolved(client, store):
++    """Zero reads as 'we get everything wrong'. None reads as 'not yet'."""
++    _add(store, "c1", "open")
++    body = client.get("/api/app/record").get_json()
++    assert body["open"] == 1
++    assert body["resolved"] == 0
++    assert body["hit_rate"] is None
++
++
++def test_hit_rate_counts_only_hits_and_misses(client, store):
++    _add(store, "c1", "hit")
++    _add(store, "c2", "miss")
++    _add(store, "c3", "open")
++    body = client.get("/api/app/record").get_json()
++    assert body["resolved"] == 2
++    assert body["hit_rate"] == 50.0
++
++
++def test_ungraded_calls_are_excluded_from_the_rate(client, store):
++    """A call with no published target has no standard to be graded against."""
++    _add(store, "c1", "hit")
++    _add(store, "c2", "miss")
++    _add(store, "c3", "ungraded")
++    body = client.get("/api/app/record").get_json()
++    assert body["ungraded"] == 1
++    assert body["resolved"] == 2
++    assert body["hit_rate"] == 50.0
++
++
++def test_small_samples_are_flagged_as_not_yet_meaningful(client, store):
++    _add(store, "c1", "hit")
++    body = client.get("/api/app/record").get_json()
++    assert body["is_meaningful"] is False
++    assert body["meaningful_from"] == 100
++
++
++def test_since_reports_the_first_recorded_day(client, store):
++    _add(store, "c1", "hit", day="2026-08-26")
++    _add(store, "c2", "miss", day="2026-08-28")
++    assert client.get("/api/app/record").get_json()["since"] == "2026-08-26"
++
++
++def test_empty_record_reports_since_as_none(client, store):
++    assert client.get("/api/app/record").get_json()["since"] is None
++
++
++def test_record_is_public(client, store, monkeypatch):
++    from prototype import client_auth
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/app/record").status_code == 200
++
++
++def test_hit_rate_rounds_half_up_like_a_calculator(client, store):
++    """round() is round-half-to-even: round(6.25, 1) is 6.2, not 6.3.
++
++    A customer with 16 graded calls and 1 win checks the arithmetic on a
++    phone and gets 6.3. The number the product is sold on must agree.
++    """
++    _add(store, "c0", "hit")
++    for i in range(1, 16):
++        _add(store, "c%d" % i, "miss")
++    assert client.get("/api/app/record").get_json()["hit_rate"] == 6.3
++
++
++def test_hit_rate_is_still_none_when_nothing_resolved(client, store):
++    """The helper must not turn the no-data case into 0.0."""
++    _add(store, "c1", "open")
++    assert client.get("/api/app/record").get_json()["hit_rate"] is None
++
++
++def test_a_large_but_mostly_unresolved_record_is_not_meaningful(client, store):
++    """The threshold counts RESOLVED calls, not total.
++
++    A record of 120 calls of which 3 are graded must not read as meaningful
++    just because the table is large. Without this test, switching the
++    threshold to len(rows) would pass every other test in this file.
++    """
++    for i in range(117):
++        _add(store, "o%d" % i, "open")
++    _add(store, "h1", "hit")
++    _add(store, "h2", "hit")
++    _add(store, "m1", "miss")
++
++    body = client.get("/api/app/record").get_json()
++    assert body["total"] == 120
++    assert body["resolved"] == 3
++    assert body["is_meaningful"] is False
++    assert body["meaningful_from"] == 100
+diff --git a/tests/test_client_auth.py b/tests/test_client_auth.py
+new file mode 100644
+index 0000000..e8e5eef
+--- /dev/null
++++ b/tests/test_client_auth.py
+@@ -0,0 +1,112 @@
++"""The auth boundary, and the test that keeps it honest.
++
++This app has roughly seventy routes and none of them are protected. The whole
++argument for putting client endpoints under one prefix is that protection
++becomes a property a test can enumerate, rather than a decorator someone has
++to remember. That enumeration is the most important test in this file.
++"""
++import os
++import sys
++
++import pytest
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if REPO_ROOT not in sys.path:
++    sys.path.insert(0, REPO_ROOT)
++
++from prototype import client_auth
++
++
++def _app_endpoints(flask_app):
++    """Every blueprint endpoint mounted under /api/app.
++
++    Matched on a path boundary, not a substring: a future operator route
++    called /api/apply must not be dragged into the client registry.
++    """
++    return {r.endpoint for r in flask_app.url_map.iter_rules()
++            if str(r.rule) == "/api/app" or str(r.rule).startswith("/api/app/")}
++
++
++def test_every_client_route_is_classified(flask_app):
++    """A new endpoint in neither list fails the suite.
++
++    This is the whole payoff of the shared prefix: "did we forget to protect
++    something?" stops being a review question and becomes a test result.
++    """
++    classified = client_auth.PUBLIC_ENDPOINTS | client_auth.GATED_ENDPOINTS
++    unclassified = _app_endpoints(flask_app) - classified
++    assert unclassified == set(), (
++        "these /api/app routes are in neither PUBLIC_ENDPOINTS nor "
++        "GATED_ENDPOINTS: %s" % sorted(unclassified))
++
++
++def test_no_endpoint_is_both_public_and_gated(flask_app):
++    """An endpoint in both lists has an ambiguous policy."""
++    assert client_auth.PUBLIC_ENDPOINTS & client_auth.GATED_ENDPOINTS == frozenset()
++
++
++def test_registries_name_only_real_endpoints(flask_app):
++    """A registry entry with no matching route is a stale name protecting nothing."""
++    declared = client_auth.PUBLIC_ENDPOINTS | client_auth.GATED_ENDPOINTS
++    assert declared - _app_endpoints(flask_app) == set()
++
++
++def test_a_route_merely_starting_with_the_same_letters_is_not_swept_in(flask_app):
++    """/api/apply is an operator route, not a client one.
++
++    A substring match would drag it into the client registry and fail the
++    enumeration against a route that has nothing to do with this API.
++    """
++    from flask import Flask
++    probe = Flask("probe")
++
++    @probe.route("/api/apply")
++    def _apply():
++        return ""
++
++    @probe.route("/api/app/thing")
++    def _thing():
++        return ""
++
++    found = _app_endpoints(probe)
++    assert "_thing" in found
++    assert "_apply" not in found
++
++
++def test_gated_endpoint_401s_without_a_user(client, monkeypatch):
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/app/me").status_code == 401
++
++
++def test_gated_endpoint_allows_a_user(client):
++    assert client.get("/api/app/me").status_code == 200
++
++
++def test_me_returns_the_current_user(client):
++    body = client.get("/api/app/me").get_json()
++    assert body["user_id"] == "demo-user"
++    assert body["plan"] == "none"
++
++
++def test_401_body_leaks_nothing_internal(client, monkeypatch):
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    body = client.get("/api/app/me").get_data(as_text=True).lower()
++    for leak in ("sqlite", "traceback", "prototype/", "select ", "/users/"):
++        assert leak not in body
++
++
++def test_the_operator_surface_is_untouched(client):
++    """The guard must apply to /api/app only, never to the existing app."""
++    assert client.get("/api/indices").status_code == 200
++
++
++def test_the_operator_surface_stays_open_to_a_signed_out_caller(client, monkeypatch):
++    """The guard must scope to /api/app, never to the whole app.
++
++    Without patching current_user to None, the guard's `and` short-circuits
++    and this check proves nothing -- it would pass even if every endpoint in
++    the app were gated.
++    """
++    monkeypatch.setattr(client_auth, "current_user", lambda: None)
++    assert client.get("/api/indices").status_code == 200
++    assert client.get("/api/app/me").status_code == 401

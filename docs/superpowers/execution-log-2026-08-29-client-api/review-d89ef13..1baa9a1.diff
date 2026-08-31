@@ -1,0 +1,144 @@
+# Review package: d89ef13..1baa9a1
+
+## Commits
+1baa9a1 fix(client-api): half-up rounding for hit_rate, pin is_meaningful to resolved
+
+## Files changed
+ prototype/client_api.py         | 21 +++++++++++++++++++--
+ tests/test_client_api_record.py | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 2 deletions(-)
+
+## Diff
+diff --git a/prototype/client_api.py b/prototype/client_api.py
+index 9374b63..b7e72f7 100644
+--- a/prototype/client_api.py
++++ b/prototype/client_api.py
+@@ -1,18 +1,19 @@
+ """The client dashboard's API. Eight endpoints, one prefix, one guard.
+ 
+ Everything here is client-facing, which sets rules the operator surface does
+ not have: no engine names, no strategy internals, no agent vocabulary, and no
+ internal detail in any error message. A client sees what was called and what
+ happened -- never which engine said so.
+ """
+ from datetime import datetime
++from decimal import Decimal, ROUND_HALF_UP
+ 
+ from flask import Blueprint, jsonify, request
+ 
+ from prototype import app_store, client_auth
+ 
+ bp = Blueprint("client_api", __name__, url_prefix="/api/app")
+ 
+ 
+ @bp.route("/me")
+ def me():
+@@ -93,20 +94,32 @@ def call_detail(call_id):
+         return jsonify({"error": "no such call"}), 404
+     return jsonify(shape_call(row))
+ 
+ 
+ # A hit rate over a handful of calls is the easiest way to mislead a customer
+ # without lying to them. The response always carries the sample size and says
+ # plainly whether it is meaningful yet.
+ MEANINGFUL_FROM = 100
+ 
+ 
++def _rate(hit, resolved):
++    """Hit rate to one decimal, rounded half-UP so it matches a calculator.
++
++    None when nothing is resolved -- 0.0 would render as "0%" and read as
++    "we get everything wrong" rather than "nothing has resolved yet".
++    """
++    if not resolved:
++        return None
++    exact = Decimal(100 * hit) / Decimal(resolved)
++    return float(exact.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
++
++
+ @bp.route("/record")
+ def record():
+     """Aggregate outcomes. Ungraded calls are excluded, never counted softly."""
+     conn = open_store()
+     try:
+         rows = conn.execute("SELECT published_at, outcome FROM calls").fetchall()
+     finally:
+         conn.close()
+ 
+     hit = sum(1 for r in rows if r["outcome"] == "hit")
+@@ -116,16 +129,20 @@ def record():
+     resolved = hit + miss
+     days = sorted({r["published_at"][:10] for r in rows})
+ 
+     return jsonify({
+         "total": len(rows),
+         "resolved": resolved,
+         "hit": hit,
+         "miss": miss,
+         "ungraded": ungraded,
+         "open": open_,
+-        # None, never 0.0 -- an unresolved record is not a record of failure.
+-        "hit_rate": round(100.0 * hit / resolved, 1) if resolved else None,
++        # Explicit half-up, NOT round(). Python's round() is round-half-to-even,
++        # so round(6.25, 1) gives 6.2 while a customer's calculator gives 6.3 --
++        # and 1 hit of 16 resolved is exactly that case. The early record lives
++        # at these denominators, which is when a sceptic is most likely to check
++        # the arithmetic by hand on the number the product is sold on.
++        "hit_rate": _rate(hit, resolved),
+         "since": days[0] if days else None,
+         "meaningful_from": MEANINGFUL_FROM,
+         "is_meaningful": resolved >= MEANINGFUL_FROM,
+     })
+diff --git a/tests/test_client_api_record.py b/tests/test_client_api_record.py
+index f6ad8ef..a532ae7 100644
+--- a/tests/test_client_api_record.py
++++ b/tests/test_client_api_record.py
+@@ -85,10 +85,48 @@ def test_since_reports_the_first_recorded_day(client, store):
+ 
+ 
+ def test_empty_record_reports_since_as_none(client, store):
+     assert client.get("/api/app/record").get_json()["since"] is None
+ 
+ 
+ def test_record_is_public(client, store, monkeypatch):
+     from prototype import client_auth
+     monkeypatch.setattr(client_auth, "current_user", lambda: None)
+     assert client.get("/api/app/record").status_code == 200
++
++
++def test_hit_rate_rounds_half_up_like_a_calculator(client, store):
++    """round() is round-half-to-even: round(6.25, 1) is 6.2, not 6.3.
++
++    A customer with 16 graded calls and 1 win checks the arithmetic on a
++    phone and gets 6.3. The number the product is sold on must agree.
++    """
++    _add(store, "c0", "hit")
++    for i in range(1, 16):
++        _add(store, "c%d" % i, "miss")
++    assert client.get("/api/app/record").get_json()["hit_rate"] == 6.3
++
++
++def test_hit_rate_is_still_none_when_nothing_resolved(client, store):
++    """The helper must not turn the no-data case into 0.0."""
++    _add(store, "c1", "open")
++    assert client.get("/api/app/record").get_json()["hit_rate"] is None
++
++
++def test_a_large_but_mostly_unresolved_record_is_not_meaningful(client, store):
++    """The threshold counts RESOLVED calls, not total.
++
++    A record of 120 calls of which 3 are graded must not read as meaningful
++    just because the table is large. Without this test, switching the
++    threshold to len(rows) would pass every other test in this file.
++    """
++    for i in range(117):
++        _add(store, "o%d" % i, "open")
++    _add(store, "h1", "hit")
++    _add(store, "h2", "hit")
++    _add(store, "m1", "miss")
++
++    body = client.get("/api/app/record").get_json()
++    assert body["total"] == 120
++    assert body["resolved"] == 3
++    assert body["is_meaningful"] is False
++    assert body["meaningful_from"] == 100

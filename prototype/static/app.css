@@ -1,0 +1,124 @@
+/* Client dashboard. Light ground, white cards, indigo accent -- the language
+   Indian retail already trusts. One breakpoint at 900px: sidebar above,
+   bottom tab bar below. There is deliberately no tablet-specific third
+   layout; the middle one gets tested least and breaks quietest. */
+
+:root {
+  --bg: #F7F8FB;
+  --card: #ffffff;
+  --line: #E8EAF0;
+  --line-soft: #F0F1F5;
+  --ink: #12141C;
+  --ink-2: #6B7280;
+  --ink-3: #9AA0AE;
+  --accent: #4f46e5;
+  --accent-soft: #EEF0FE;
+  --up: #16A34A;
+  --up-soft: #DCFCE7;
+  --down: #DC2626;
+  --down-soft: #FEE2E2;
+  --r: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.2px; }
+.mark {
+  width: 22px; height: 22px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), #7c6bff);
+}
+.who { margin-left: auto; font-size: 12px; color: var(--ink-2); }
+
+.shell { display: flex; align-items: flex-start; }
+
+.sidenav { display: none; }
+.sidenav a {
+  display: block; padding: 8px 14px;
+  color: var(--ink-2); text-decoration: none; font-size: 13px;
+  border-left: 2px solid transparent;
+}
+.sidenav a.on {
+  color: var(--accent); font-weight: 700;
+  background: var(--accent-soft); border-left-color: var(--accent);
+}
+
+.content { flex: 1; padding: 14px; max-width: 980px; padding-bottom: 76px; }
+
+.view { display: none; }
+.view.on { display: block; }
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 14px; margin-bottom: 10px;
+}
+.card h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: -.1px; }
+
+.kpis { display: grid; grid-template-columns: 1fr; gap: 10px; }
+
+.label { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-2); }
+.big { font-size: 24px; font-weight: 700; letter-spacing: -.7px; }
+.up { color: var(--up); } .down { color: var(--down); }
+.muted { color: var(--ink-2); font-size: 12px; }
+.thin { color: var(--ink-3); font-size: 11px; }
+
+.pill {
+  font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  background: var(--up-soft); color: #15803D;
+}
+.pill.sell { background: var(--down-soft); color: #B91C1C; }
+
+.row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+}
+.row:last-child { border-bottom: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .name { font-weight: 600; }
+
+.btn {
+  font: inherit; font-size: 12px; padding: 7px 12px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); color: var(--ink); cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.quiet { color: var(--ink-2); }
+
+.empty { padding: 22px 14px; text-align: center; color: var(--ink-2); }
+.empty .big { font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; background: var(--card); border-top: 1px solid var(--line);
+  padding: 7px 0;
+}
+.tabbar a {
+  flex: 1; text-align: center; text-decoration: none;
+  color: var(--ink-3); font-size: 10px;
+}
+.tabbar a.on { color: var(--accent); font-weight: 700; }
+
+/* Above 900px: sidebar replaces the tab bar, KPIs go two-up. Below it, the
+   page is a single column and the tab bar is the navigation. */
+@media (min-width: 900px) {
+  .sidenav {
+    display: block; width: 150px; flex-shrink: 0;
+    padding: 14px 0; position: sticky; top: 0;
+  }
+  .tabbar { display: none; }
+  .content { padding: 18px; padding-bottom: 18px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+}

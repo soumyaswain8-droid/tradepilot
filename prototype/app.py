@@ -98,6 +98,12 @@ def index():
 def classic():
     return render_template("index.html")
 
+
+@app.route("/app")
+def client_app():
+    """The client dashboard. Additive -- / and /classic are unchanged."""
+    return render_template("app.html")
+
 @app.route("/landing")
 def landing():
     """Premium landing page for client demos."""

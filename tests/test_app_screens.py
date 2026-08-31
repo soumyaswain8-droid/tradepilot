@@ -1,0 +1,83 @@
+"""The client dashboard's served surface.
+
+None of the rendering is testable here -- there is no DOM, and adding one
+would breach the no-new-dependencies constraint. What these tests can prove is
+that the route serves, that every module referenced is actually fetchable, and
+that operator vocabulary never reaches a client's page. Everything else lives
+in docs/APP_MANUAL_CHECKS.md and is checked by hand.
+"""
+import os
+import sys
+
+import pytest
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+
+def test_app_route_serves(client):
+    assert client.get("/app").status_code == 200
+
+
+def test_every_module_the_page_references_is_fetchable(client):
+    """Fetch them, do not merely grep for the <script src>.
+
+    A tag can name a file that 404s -- that is exactly how a tab shipped blank
+    on 2026-08-03. Asserting the string appears in the HTML proves only that
+    somebody typed it.
+    """
+    for path in ("/static/desk/route.js", "/static/app/api.js",
+                 "/static/app/screens.js", "/static/app/main.js",
+                 "/static/app.css"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert len(r.data) > 0, path
+
+
+def test_all_five_mount_points_exist(client):
+    body = client.get("/app").get_data(as_text=True)
+    for view in ("view-home", "view-calls", "view-call", "view-book", "view-record"):
+        assert view in body, view
+
+
+def test_module_order_is_load_bearing(client):
+    """route.js defines TPRoute; main.js uses it. Order is not cosmetic."""
+    body = client.get("/app").get_data(as_text=True)
+    assert body.index("desk/route.js") < body.index("app/main.js")
+    assert body.index("app/api.js") < body.index("app/main.js")
+    assert body.index("app/screens.js") < body.index("app/main.js")
+
+
+def test_the_router_is_reused_not_reimplemented(client):
+    """main.js must go through TPRoute, not hand-roll a second parser.
+
+    route.js is pure and already carries twelve node tests. A second parser
+    would be a second thing to get wrong, and the load-order test alone does
+    not prove the dependency is actually used.
+    """
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "TPRoute.parse" in js
+    assert "TPRoute.build" in js
+
+
+def test_no_operator_vocabulary_reaches_the_page(client):
+    """A client sees what was called, never which engine said so."""
+    body = client.get("/app").get_data(as_text=True).lower()
+    for word in ("v4", "v5_size", "composite_scorer", "alpha-hunter",
+                 "regime", "orchestrator", "sprint"):
+        assert word not in body, word
+
+
+def test_the_terminal_and_classic_are_untouched(client):
+    """/app is additive. Neither existing surface changes."""
+    assert client.get("/").status_code == 200
+    assert client.get("/classic").status_code == 200
+
+
+def test_no_inline_script_in_the_template(client):
+    """Every script tag is src-only. Inline JS cannot be cached or linted."""
+    body = client.get("/app").get_data(as_text=True)
+    for chunk in body.split("<script")[1:]:
+        head = chunk.split(">")[0]
+        assert "src=" in head, "inline <script> found: " + head[:60]

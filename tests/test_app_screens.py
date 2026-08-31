@@ -129,3 +129,14 @@ def test_calls_screen_stamps_the_data_it_is_showing(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert "as_of" in js
 
+
+
+def test_record_screen_labels_since_as_recording_not_grading(client):
+    """`since` is the first call RECORDED, not the first resolved.
+
+    "Track record since January -- 62%" where the first call resolved in June
+    overstates the record's age. The spec's Deferred section makes this a
+    constraint on this screen, not on the API.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True).lower()
+    assert "recording since" in js

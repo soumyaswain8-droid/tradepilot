@@ -161,12 +161,27 @@
     });
   }
 
+  function loadRecord() {
+    var node = el("view-record");
+    if (!node) return;
+    node.innerHTML = "<div class='empty'>Loading…</div>";
+    Promise.all([window.TPApi.record(), window.TPApi.calls(50)])
+      .then(function (r) {
+        window.TPScreens.record(node, { record: r[0], calls: r[1] });
+      }, function () {
+        node.innerHTML = "";
+        node.appendChild(window.TPScreens.el(
+          "div", "empty", "Could not load the record. Reload the page."));
+      });
+  }
+
   window.TPApp = {
     SECTIONS: SECTIONS, go: go, boot: boot,
     onShow: function (section, rest) {
       if (section === "home") loadHome();
       else if (section === "calls") loadCalls();
       else if (section === "call") loadCall(rest && rest[0]);
+      else if (section === "record") loadRecord();
     }
   };
 })();

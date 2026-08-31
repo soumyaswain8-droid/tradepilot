@@ -210,10 +210,67 @@
     node.appendChild(back);
   }
 
+  function record(node, data) {
+    node.innerHTML = "";
+    var rec = data.record;
+
+    var head = card("Track record");
+    head.appendChild(rateLine(rec));
+    /* "since" is the first call RECORDED, not the first resolved. Labelling it
+       "recording since" keeps the page from implying the rate has been earned
+       across that whole span. */
+    head.appendChild(el("div", "thin", rec.since
+      ? "Recording since " + rec.since
+      : "Nothing recorded yet."));
+    node.appendChild(head);
+
+    var split = card("How the calls stand");
+    var rows = [["Hit", rec.hit], ["Missed", rec.miss],
+                ["Still open", rec.open],
+                ["Ungraded (no target published)", rec.ungraded]];
+    for (var i = 0; i < rows.length; i++) {
+      var r = el("div", "row");
+      r.appendChild(el("div", "grow muted", rows[i][0]));
+      r.appendChild(el("div", null, rows[i][1]));
+      split.appendChild(r);
+    }
+    split.appendChild(el("div", "thin",
+      "Ungraded calls are excluded from the rate -- a call published without " +
+      "a target has no standard to be graded against."));
+    node.appendChild(split);
+
+    /* outcomeKind is the single source of truth for hit/miss colouring --
+       reusing it here keeps this list from drifting from outcomeLine's. */
+    var list = (data.calls && data.calls.calls) || [];
+    var resolved = [];
+    for (var j = 0; j < list.length; j++) {
+      var k0 = window.TPOutcome.outcomeKind(list[j]);
+      if (k0 === "up" || k0 === "down") resolved.push(list[j]);
+    }
+    var recent = card("Resolved calls");
+    if (!resolved.length) {
+      recent.appendChild(el("div", "empty", "Nothing has resolved yet."));
+    } else {
+      for (var k = 0; k < resolved.length; k++) {
+        var c = resolved[k];
+        var row = el("div", "row");
+        var grow = el("div", "grow");
+        grow.appendChild(el("div", "name", c.symbol));
+        grow.appendChild(el("div", "thin", stamp(c.published_at)));
+        row.appendChild(grow);
+        var kind = window.TPOutcome.outcomeKind(c);
+        row.appendChild(el("div", "muted " + kind, kind === "up" ? "Hit" : "Missed"));
+        recent.appendChild(row);
+      }
+    }
+    node.appendChild(recent);
+  }
+
   window.TPScreens = {
     money: money, pct: pct, el: el, card: card,
     rateLine: rateLine, callRow: callRow,
     home: home,
-    calls: calls, call: call, stamp: stamp
+    calls: calls, call: call, stamp: stamp,
+    record: record
   };
 })();

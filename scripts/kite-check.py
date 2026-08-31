@@ -47,10 +47,20 @@ def main() -> int:
     print()
 
     r = st["rails"]
+    # Show WHERE each value came from. Without this, a rail silently falling back to a
+    # hardcoded default is indistinguishable from one you configured — which is exactly
+    # how .env saying 3200 while the broker enforced 5000 went unnoticed on 2026-08-31.
+    prov = kb.rails_provenance()
     print("  safety rails currently in force")
-    print(f"    max order value    : Rs {r['max_order_value']:,.0f}")
-    print(f"    max daily loss     : Rs {r['max_daily_loss']:,.0f}")
-    print(f"    max open positions : {r['max_open_positions']}")
+    print(f"    max order value    : Rs {r['max_order_value']:,.0f}"
+          f"   [{prov['KITE_MAX_ORDER_VALUE']}]")
+    print(f"    max daily loss     : Rs {r['max_daily_loss']:,.0f}"
+          f"   [{prov['KITE_MAX_DAILY_LOSS']}]")
+    print(f"    max open positions : {r['max_open_positions']}"
+          f"       [{prov['KITE_MAX_OPEN_POSITIONS']}]")
+    if any(v == "default" for v in prov.values()):
+        print("    NOTE: a rail reading 'default' is NOT coming from your .env —")
+        print("          check the key name if you expected it to be configured.")
     print(f"    kill switch file   : {kb.KILL_SWITCH}  (create it to halt everything)")
     print()
 

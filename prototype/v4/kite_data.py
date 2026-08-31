@@ -71,16 +71,26 @@ def enabled() -> bool:
 
 
 def _creds() -> dict:
+    """Kite credentials, os.environ taking precedence over .env.
+
+    Delegates to prototype.envcfg, the single .env reader. This function used to carry
+    its own parser; so did kite_broker and Floor.start, all slightly different — which
+    is how the safety rails ended up honouring .env in one place and ignoring it in
+    another. Behaviour here is unchanged; the duplication is not.
+
+    Still read fresh on every call: the access token is rewritten each morning while
+    long-running processes are up, and caching it is how a process serves a credential
+    that expired hours ago.
+    """
+    try:
+        from prototype.envcfg import get as _cfg
+    except ImportError:                       # when imported as top-level v4.kite_data
+        from envcfg import get as _cfg        # noqa: F401
     out = {}
-    env = ROOT / ".env"
-    if env.exists():
-        for ln in env.read_text().splitlines():
-            if ln.startswith("KITE_") and "=" in ln:
-                k, v = ln.split("=", 1)
-                out[k.strip()] = v.strip().strip('"').strip("'")
-    for k in ("KITE_API_KEY", "KITE_ACCESS_TOKEN"):
-        if os.environ.get(k):
-            out[k] = os.environ[k]
+    for k in ("KITE_API_KEY", "KITE_API_SECRET", "KITE_ACCESS_TOKEN"):
+        v = _cfg(k)
+        if v:
+            out[k] = v
     return out
 
 

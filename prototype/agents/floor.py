@@ -177,11 +177,17 @@ ENTRY_LEVELS = {"PDH", "PDL", "DAY_HIGH", "DAY_LOW", "ROUND"}
 MAX_CONCURRENT = 8
 ENTRY_WINDOW = ("09:30", "14:30")   # not the open (noise), not near the close
 FORCE_EXIT_AT = "15:15"
-# Sized to deploy a Rs25,000 book in full: 8 concurrent slots x Rs3,125 = Rs25,000.
-# Was 6000, which at MAX_CONCURRENT 8 implied Rs48,000 of peak exposure — nearly twice
-# the account. Per-slot size and the concurrency cap have to be set together or the
-# book silently sizes itself to a capital base that does not exist.
-NOTIONAL = 3125.0
+# Sized to sit UNDER a Rs25,000 book: 8 concurrent slots x Rs3,000 = Rs24,000 peak.
+#
+# Was 6000, which at MAX_CONCURRENT 8 implied Rs48,000 — nearly twice the account.
+# Per-slot size and the concurrency cap have to be set together, or the book silently
+# sizes itself to a capital base that does not exist.
+#
+# Deliberately Rs3,000 rather than the Rs3,125 that would fill 25,000 exactly. Entry
+# price is the last trade at signal time and the fill can print above it, so a book
+# sized to the rupee can breach its own limit on nothing worse than normal slippage.
+# Rs1,000 of headroom (4%) costs almost no deployment and removes that edge case.
+NOTIONAL = 3000.0
 TARGET_R = 1.5               # reward per unit of risk; below this the toll eats it
 POSITIONS_FILE = KNOW / "positions"
 
@@ -477,14 +483,13 @@ class Floor:
     def start(self):
         from kiteconnect import KiteTicker
         from prototype.v4 import kite_data as kd
-        api_key = os.environ.get("KITE_API_KEY")
-        token = os.environ.get("KITE_ACCESS_TOKEN")
-        if not api_key or not token:
-            for line in (ROOT / ".env").read_text().splitlines():
-                if line.startswith("KITE_API_KEY="):
-                    api_key = line.split("=", 1)[1].strip().strip('"')
-                if line.startswith("KITE_ACCESS_TOKEN="):
-                    token = line.split("=", 1)[1].strip().strip('"')
+        # via prototype.envcfg — os.environ then .env — rather than the hand-rolled
+        # parser this used to carry. Three files each had their own slightly different
+        # version, which is how a config key can be honoured in one place and silently
+        # ignored in another.
+        from prototype.envcfg import get as _cfg
+        api_key = _cfg("KITE_API_KEY")
+        token = _cfg("KITE_ACCESS_TOKEN")
         wl = self.build_watchlist()
         if not wl:
             print("  no watchlist — scouts returned nothing"); return

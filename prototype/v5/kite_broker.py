@@ -57,20 +57,24 @@ KILL_SWITCH = ROOT / "KILL_SWITCH"
 # and the broker was still reporting 5000/1000/5.
 #
 # os.environ wins over the file, so an operator can still override for one run.
-def _rail(name: str, default: str) -> str:
-    if os.environ.get(name):
-        return os.environ[name]
-    envf = ROOT / ".env"
-    if envf.exists():
-        for ln in envf.read_text().splitlines():
-            if ln.startswith(f"{name}=") and "=" in ln:
-                return ln.split("=", 1)[1].strip().strip('"').strip("'")
-    return default
+# Reads go through prototype.envcfg — the single .env reader — rather than another
+# hand-rolled parser. There were three slightly different ones before it existed.
+from prototype.envcfg import get_float as _f, get_int as _i, source_of as _src
+
+MAX_ORDER_VALUE = _f("KITE_MAX_ORDER_VALUE", 5000)
+MAX_DAILY_LOSS = _f("KITE_MAX_DAILY_LOSS", 1000)
+MAX_OPEN_POSITIONS = _i("KITE_MAX_OPEN_POSITIONS", 5)
 
 
-MAX_ORDER_VALUE = float(_rail("KITE_MAX_ORDER_VALUE", "5000"))
-MAX_DAILY_LOSS = float(_rail("KITE_MAX_DAILY_LOSS", "1000"))
-MAX_OPEN_POSITIONS = int(_rail("KITE_MAX_OPEN_POSITIONS", "5"))
+def rails_provenance() -> dict:
+    """Where each rail's value came from — environ, .env, or a hardcoded default.
+
+    Displayed by kite-check. The 3200-vs-5000 discrepancy survived because the check
+    printed the enforced number with no indication that it was a default overriding
+    the file the operator had just edited.
+    """
+    return {k: _src(k) for k in ("KITE_MAX_ORDER_VALUE", "KITE_MAX_DAILY_LOSS",
+                                 "KITE_MAX_OPEN_POSITIONS")}
 
 
 class KillSwitchActive(Exception):

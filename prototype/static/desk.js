@@ -38,6 +38,16 @@
   }
   function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : "flat"; }
 
+  // /api/scores returns the verdict as `direction`. This file read `r.signal`, which
+  // does not exist on that payload, so `|| "HOLD"` fired on EVERY row — the Market tab
+  // printed HOLD for names the engine had scored BUY (APOLLOHOSP 72.9, BHARTIARTL
+  // 70.9, COALINDIA 70.6 on 2026-08-31), and the "BUY signal" filter matched nothing.
+  // clay-market.js reads `direction` correctly, so the two views of the same data
+  // disagreed. Accept both keys: a silently wrong verdict is worse than a missing one.
+  function sigOf(r) {
+    return String(r.direction || r.signal || "HOLD").toUpperCase();
+  }
+
   function jget(url, timeoutMs) {
     var ctl = new AbortController();
     var t = setTimeout(function () { ctl.abort(); }, timeoutMs || 6000);
@@ -251,7 +261,7 @@
       if (mktQuery && sym.indexOf(mktQuery) === -1) return false;
       if (mktFilter === "gain") return (r.change || 0) > 0;
       if (mktFilter === "lose") return (r.change || 0) < 0;
-      if (mktFilter === "buy") return (r.signal || "").toUpperCase() === "BUY";
+      if (mktFilter === "buy") return sigOf(r) === "BUY";
       if (mktFilter === "held") return !!held[sym];
       return true;
     });
@@ -265,7 +275,7 @@
       "<th>Symbol</th><th class=\"r\">Price</th><th class=\"r\">1D %</th>" +
       "<th class=\"r\">Score</th><th>Signal</th><th></th></tr></thead><tbody>" +
       rows.slice(0, 250).map(function (r) {
-        var sig = (r.signal || "HOLD").toUpperCase();
+        var sig = sigOf(r);
         var sc = sig === "BUY" ? "ok" : sig === "SELL" || sig === "AVOID" ? "err" : "dim";
         return "<tr class=\"click\" data-sym=\"" + esc(r.symbol) + "\">" +
           "<td class=\"sym\">" + esc(r.symbol) + "</td>" +

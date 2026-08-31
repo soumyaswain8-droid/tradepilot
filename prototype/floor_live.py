@@ -187,6 +187,27 @@ def _scouts():
     return ScoutTeam
 
 
+def _env_token_tail() -> str:
+    """Last 8 chars of the token in .env, read directly off disk.
+
+    Compared against what the running process resolved. If these differ, the process
+    is holding a stale credential and the cache is the culprit; if they MATCH and the
+    call still fails, the cache is innocent and the token itself was invalidated
+    server-side — Kite kills the previous access_token when a new session is created,
+    so a second login in one morning does exactly that. Those two cases need opposite
+    fixes, and nothing in the console has been able to tell them apart.
+    """
+    try:
+        from pathlib import Path as _P
+        root = _P(__file__).resolve().parent.parent
+        for ln in (root / ".env").read_text().splitlines():
+            if ln.startswith("KITE_ACCESS_TOKEN="):
+                return ln.split("=", 1)[1].strip().strip('"').strip("'")[-8:]
+    except Exception:
+        pass
+    return "?"
+
+
 def _quotes(symbols):
     now = time.time()
     if _CACHE["quotes"] and now - _CACHE["quotes_at"] < QUOTE_TTL:
@@ -268,6 +289,23 @@ def board():
             kd = _kite()
             if kd.is_auth_error(e):
                 kd.invalidate()
+                # CAPTURE THE EVIDENCE. This condition has now recurred on 08-27,
+                # 08-28, 08-29 and 09-01, and every diagnosis so far has been
+                # destroyed by the restart used to recover from it. Record what the
+                # process actually sees, so the next occurrence is diagnosed from the
+                # console instead of from a hypothesis:
+                #   tok  — the token THIS process resolves, versus what is in .env
+                #   root — where its kite_data thinks the project root is
+                #   mod  — module identity, to catch a dual-import fork
+                import os as _os
+                _CACHE["board_diag"] = {
+                    "resolved_token_tail": (kd._creds().get("KITE_ACCESS_TOKEN")
+                                            or "")[-8:] or "NONE",
+                    "env_file_token_tail": _env_token_tail(),
+                    "kite_data_root": str(getattr(kd, "ROOT", "?")),
+                    "kite_data_module": getattr(kd, "__name__", "?"),
+                    "pid": _os.getpid(),
+                }
         except Exception:
             pass                       # diagnosis must never break the console
 
@@ -403,5 +441,7 @@ def snapshot(day=None, with_board=True):
         "declined": pos.get("declined", [])[-10:],
         "errors": {k: v for k, v in
                    {"quotes": _CACHE.get("quote_err"),
-                    "board": b.get("error")}.items() if v},
+                    "board": b.get("error"),
+                    # only present after an auth failure — see _env_token_tail()
+                    "diag": _CACHE.get("board_diag")}.items() if v},
     }

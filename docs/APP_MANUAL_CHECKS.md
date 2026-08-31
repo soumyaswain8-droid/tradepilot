@@ -150,7 +150,7 @@ in one does not show up while checking another.
 | ☐ | With fewer than 100 resolved calls, the page says so explicitly ("Too few to be meaningful...") |
 | ☐ | Ungraded calls are shown in the breakdown and explained, not hidden |
 | ☐ | With a call whose `outcome` is an unrecognised value, a "Not accounted for" row appears in "How the calls stand" with the right count |
-| ☐ | With all outcomes recognised, that row is absent entirely |
+| ☐ | With all outcomes recognised, that row is absent entirely. To reach this, delete only the odd row -- `DELETE FROM calls WHERE id='c-weird1';` -- and reload. Re-run the seed if you still need the other state |
 | ☐ | On an empty record the since-line reads "Nothing recorded yet.", never "Recording since null" |
 | ☐ | With nothing resolved, "Resolved calls" reads "Nothing has resolved yet." |
 | ☐ | The "Resolved calls" footer states how many of how many are shown |

@@ -332,3 +332,42 @@ exploitable today. But the accounts project will need the dashboard origin to
 send cookies, and the obvious change -- `supports_credentials=True` -- would make
 `http://localhost:*` a credentialed wildcard over a client's private book.
 Scope the CORS rule before making that change.
+
+## Deferred from the screens
+
+Same reasoning as the section above -- the execution workspace that held these
+is disposable, and both bind whoever builds the accounts project.
+
+### `record()` cannot tell an absent `callsFailed` from a false one
+
+`screens.js`'s `record()` branches on `if (data.callsFailed)`, which is falsy
+for both `false` and `undefined`. Exactly one caller exists today and it passes
+the field correctly. A future caller that omits it silently reproduces the bug
+the field was added to fix: the "Resolved calls" card claims "Nothing has
+resolved yet." while the tally above it, built from a fetch that succeeded,
+shows real hit and miss counts -- a false statement about a client's own track
+record, asserted from a request that failed.
+
+This was left as-is deliberately. Making a pure ES5 render helper reject an
+incomplete payload is a heavier contract than this codebase's style supports,
+and inverting the default so absent means failed would make a genuinely empty
+record show an error until every caller passes `false`. If a second caller of
+`record()` ever appears, revisit it then -- that is the moment the trade-off
+changes, not before.
+
+### The rule the screens kept relearning
+
+Three separate defects on this branch were one mistake: a screen stating
+something positive about a client's data on the strength of a request that
+failed. The Book said "Nothing logged yet." after a 500. Home said "log your
+first trade" when `positions` errored. Track record said "Nothing has resolved
+yet." when `calls` did. Each was written by a different task, and each passed
+its own review, because a per-task reviewer sees one screen and this rule only
+shows itself across two.
+
+State it once, where every screen can see it: **an empty rendering is a claim.
+Never derive one from a rejected promise.** `soft()` exists to keep a page
+alive when one endpoint dies, and it does that by collapsing a rejection to a
+falsy value -- which is exactly what erases the difference between "nothing" and
+"we could not tell". Any `|| []` or `|| {}` downstream of a `soft()` needs a
+separate flag carrying which case it was.

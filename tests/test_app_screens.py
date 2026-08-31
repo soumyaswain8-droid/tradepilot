@@ -163,3 +163,19 @@ def test_book_has_no_close_action(client):
     """Closing hides the only id that could reopen it. Add and Remove only."""
     js = client.get("/static/app/screens.js").get_data(as_text=True).lower()
     assert "closed_at" not in js
+
+
+def test_neither_screen_shows_a_zero_total_for_an_unpriced_book(client):
+    """A down quote feed must not render a book as worthless.
+
+    totals.value is a sum over the priced set, so an entirely unpriced book
+    yields 0. Both Home and Book must gate on totals.priced rather than on
+    whether positions exist, or the headline contradicts every row beneath it.
+
+    This is a grep, not a proof: it can confirm the guard text is present but
+    cannot confirm it is wired to the right branch. It exists as a tripwire
+    against the guard being deleted wholesale.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "totals.priced" in js or "anyPriced" in js
+    assert "No live prices right now." in js

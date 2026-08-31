@@ -99,6 +99,13 @@
     } else if (!data.book || !data.book.positions.length) {
       value.appendChild(el("div", "big", "--"));
       value.appendChild(el("div", "muted", "Log your first trade to see it here"));
+    } else if (!data.book.totals.priced) {
+      /* Holdings exist but none could be priced. Showing ₹0 here would state
+         the book is worthless; it only means we could not value it. */
+      value.appendChild(el("div", "big", "--"));
+      value.appendChild(el("div", "muted", "No live prices right now."));
+      value.appendChild(el("div", "thin", data.book.positions.length +
+        " holding(s) have no live price"));
     } else {
       var t = data.book.totals;
       value.appendChild(el("div", "big", money(t.value)));
@@ -330,16 +337,24 @@
     var list = (data.book && data.book.positions) || [];
     var totals = (data.book && data.book.totals) || {};
 
+    var anyPriced = totals.priced > 0;
     var head = card(null);
     head.appendChild(el("div", "label", "Your portfolio"));
-    head.appendChild(el("div", "big", list.length ? money(totals.value) : "--"));
-    if (list.length) {
+    /* Gate on whether anything is PRICED, not on whether positions exist.
+       totals.value is a sum over the priced set, so an entirely unpriced book
+       yields 0 -- and a large green ₹0 above rows that each say "price
+       unavailable" contradicts every one of them. */
+    head.appendChild(el("div", "big", anyPriced ? money(totals.value) : "--"));
+    if (list.length && anyPriced) {
       head.appendChild(el("div", "muted " + (totals.pnl >= 0 ? "up" : "down"),
                            money(totals.pnl) + " overall"));
-      if (totals.unpriced) {
-        head.appendChild(el("div", "thin", totals.unpriced +
-          " holding(s) have no live price and are not included in this total"));
-      }
+    }
+    if (list.length && !anyPriced) {
+      head.appendChild(el("div", "muted", "No live prices right now."));
+    }
+    if (totals.unpriced) {
+      head.appendChild(el("div", "thin", totals.unpriced +
+        " holding(s) have no live price and are not included in this total"));
     }
     node.appendChild(head);
 

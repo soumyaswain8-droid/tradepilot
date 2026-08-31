@@ -304,7 +304,12 @@
     $("dPrice").textContent = row ? "₹" + inr(row.price, 2) : "…";
     $("dMeta").textContent = row
       ? sgn(row.change, 2) + "% today · score " + inr(row.score, 1) +
-        (row.signal ? " · " + esc(row.signal) : "")
+        // second instance of the direction/signal mismatch: this read `row.signal`,
+        // which /api/scores does not return, so the drawer silently omitted the
+        // verdict for every stock. Kept conditional — absent stays absent rather than
+        // defaulting to a plausible-looking HOLD.
+        (row.direction || row.signal
+          ? " · " + esc(String(row.direction || row.signal)) : "")
       : "";
     renderRangePills();
     $("drawer").classList.add("open");

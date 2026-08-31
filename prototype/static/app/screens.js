@@ -284,11 +284,99 @@
     node.appendChild(recent);
   }
 
+  function positionRow(p, onRemove) {
+    var row = el("div", "row");
+    var grow = el("div", "grow");
+    grow.appendChild(el("div", "name", p.symbol));
+    grow.appendChild(el("div", "thin",
+      p.call_id ? "from a TradePilot call" : "your own idea"));
+    row.appendChild(grow);
+
+    var right = el("div");
+    right.style.textAlign = "right";
+    if (p.price_unavailable) {
+      /* Never zero. A silent numeric fallback renders a real holding as
+         worthless -- show the cost basis instead. */
+      right.appendChild(el("div", "muted", "price unavailable"));
+      right.appendChild(el("div", "thin",
+        p.qty + " @ " + money(p.avg_price)));
+    } else {
+      right.appendChild(el("div", null, money(p.value)));
+      right.appendChild(el("div", "thin " + (p.pnl >= 0 ? "up" : "down"),
+                           money(p.pnl) + " (" + pct(p.pnl_pct) + ")"));
+    }
+    row.appendChild(right);
+
+    var rm = el("button", "btn quiet", "Remove");
+    rm.addEventListener("click", function () { onRemove(p.id, p.symbol); });
+    row.appendChild(rm);
+    return row;
+  }
+
+  /* No Close action here on purpose. Marking a position shut would hide it
+     from /api/app/positions -- the only endpoint that can discover its id --
+     so closing is unrecoverable through the API, and no closed-positions
+     view exists to reach it afterward. Add and Remove only until that
+     view exists. */
+  function book(node, data) {
+    node.innerHTML = "";
+    if (data.signedOut) {
+      var gate = card(null);
+      gate.appendChild(el("div", "empty", "Sign in to see your book."));
+      node.appendChild(gate);
+      return;
+    }
+
+    var list = (data.book && data.book.positions) || [];
+    var totals = (data.book && data.book.totals) || {};
+
+    var head = card(null);
+    head.appendChild(el("div", "label", "Your portfolio"));
+    head.appendChild(el("div", "big", list.length ? money(totals.value) : "--"));
+    if (list.length) {
+      head.appendChild(el("div", "muted " + (totals.pnl >= 0 ? "up" : "down"),
+                           money(totals.pnl) + " overall"));
+      if (totals.unpriced) {
+        head.appendChild(el("div", "thin", totals.unpriced +
+          " holding(s) have no live price and are not included in this total"));
+      }
+    }
+    node.appendChild(head);
+
+    var c = card("Positions");
+    if (!list.length) {
+      c.appendChild(el("div", "empty", "Nothing logged yet."));
+    } else {
+      for (var i = 0; i < list.length; i++) {
+        c.appendChild(positionRow(list[i], data.onRemove));
+      }
+    }
+    node.appendChild(c);
+
+    var form = card("Log a trade");
+    var sym = el("input", "btn"); sym.placeholder = "Symbol, e.g. CIPLA";
+    var qty = el("input", "btn"); qty.placeholder = "Quantity"; qty.type = "number";
+    var px = el("input", "btn"); px.placeholder = "Average price"; px.type = "number";
+    var add = el("button", "btn primary", "Add to my book");
+    var err = el("div", "thin");
+    add.addEventListener("click", function () {
+      err.textContent = "";
+      data.onAdd({ symbol: sym.value, qty: Number(qty.value),
+                   avg_price: Number(px.value) }, function (message) {
+        err.textContent = message;
+      });
+    });
+    form.appendChild(sym); form.appendChild(qty);
+    form.appendChild(px); form.appendChild(add); form.appendChild(err);
+    node.appendChild(form);
+  }
+
   window.TPScreens = {
     money: money, pct: pct, el: el, card: card,
     rateLine: rateLine, callRow: callRow,
     home: home,
     calls: calls, call: call, stamp: stamp,
-    record: record
+    record: record,
+    book: book, positionRow: positionRow
   };
 })();

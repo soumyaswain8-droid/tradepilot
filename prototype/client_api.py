@@ -172,7 +172,7 @@ def fetch_quotes(symbols):
         return {}
 
 
-POSITION_FIELDS = ("id", "user_id", "symbol", "qty", "avg_price", "opened_at",
+POSITION_FIELDS = ("id", "symbol", "qty", "avg_price", "opened_at",
                    "closed_at", "exit_price", "source", "broker_ref", "call_id")
 
 

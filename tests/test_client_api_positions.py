@@ -223,3 +223,14 @@ def test_both_write_paths_reject_the_same_unreal_numbers(client, store):
     for bad in (float("inf"), float("-inf"), float("nan")):
         assert client.patch("/api/app/positions/" + pid,
                             json={"qty": bad}).status_code == 400, ("PATCH qty", bad)
+
+
+def test_positions_do_not_leak_the_internal_user_id(client, store):
+    """A client has no use for their own internal identifier.
+
+    Harmless while it is a stub; once accounts land it is the app's internal
+    key for that person, handed to the browser for no reason any screen needs.
+    """
+    _post(client)
+    pos = client.get("/api/app/positions").get_json()["positions"][0]
+    assert "user_id" not in pos

@@ -161,6 +161,34 @@
     });
   }
 
+  function loadBook() {
+    var node = el("view-book");
+    if (!node) return;
+    node.innerHTML = "<div class='empty'>Loading…</div>";
+    window.TPApi.positions().then(function (b) {
+      window.TPScreens.book(node, {
+        book: b, signedOut: false,
+        onAdd: function (body, onError) {
+          if (!body.symbol || !(body.qty > 0) || !(body.avg_price > 0)) {
+            onError("Enter a symbol, a positive quantity and a positive price.");
+            return;
+          }
+          window.TPApi.addPosition(body).then(loadBook, function () {
+            onError("That could not be added. Check the values and try again.");
+          });
+        },
+        onRemove: function (id, symbol) {
+          if (!window.confirm("Remove " + symbol + " from your book?")) return;
+          window.TPApi.removePosition(id).then(loadBook, function () {
+            window.alert("That could not be removed. Reload and try again.");
+          });
+        }
+      });
+    }, function (e) {
+      window.TPScreens.book(node, { signedOut: e && e.status === 401 });
+    });
+  }
+
   function loadRecord() {
     var node = el("view-record");
     if (!node) return;
@@ -182,6 +210,7 @@
       else if (section === "calls") loadCalls();
       else if (section === "call") loadCall(rest && rest[0]);
       else if (section === "record") loadRecord();
+      else if (section === "book") loadBook();
     }
   };
 })();

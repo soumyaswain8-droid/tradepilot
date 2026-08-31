@@ -145,3 +145,21 @@ def test_record_screen_labels_since_as_recording_not_grading(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert '"Recording since "' in js
     assert '"Since "' not in js
+
+
+def test_book_never_renders_a_missing_price_as_zero(client):
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "price unavailable" in js.lower()
+
+
+def test_book_shows_provenance_for_each_position(client):
+    """Which holdings came from a call, and which were the client's own."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "call_id" in js
+    assert "your own" in js.lower()
+
+
+def test_book_has_no_close_action(client):
+    """Closing hides the only id that could reopen it. Add and Remove only."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True).lower()
+    assert "closed_at" not in js

@@ -37,6 +37,13 @@
     return c;
   }
 
+  /* Home and Book both render this when their book fetch failed for a reason
+     other than being signed out. One constant so the two screens cannot say
+     it differently -- disagreeing wording here is exactly how a transient 500
+     once read as "Nothing logged yet.", a positive claim about a holding that
+     the failed request never actually disproved. */
+  var BOOK_LOAD_FAILED_TEXT = "Could not load your book just now.";
+
   /* The rate is never shown alone. resolved and is_meaningful ship in the same
      payload precisely so a page cannot honestly print 62% without also
      printing that it is eleven calls. */
@@ -95,7 +102,7 @@
       value.appendChild(el("div", "muted", "Sign in to see your book"));
     } else if (data.bookFailed) {
       value.appendChild(el("div", "big", "--"));
-      value.appendChild(el("div", "muted", "Could not load your book just now."));
+      value.appendChild(el("div", "muted", BOOK_LOAD_FAILED_TEXT));
     } else if (!data.book || !data.book.positions.length) {
       value.appendChild(el("div", "big", "--"));
       value.appendChild(el("div", "muted", "Log your first trade to see it here"));
@@ -331,6 +338,16 @@
       var gate = card(null);
       gate.appendChild(el("div", "empty", "Sign in to see your book."));
       node.appendChild(gate);
+      return;
+    }
+    /* Same shape as Home's book-load failure, and the same words (see
+       BOOK_LOAD_FAILED_TEXT). Returning here, before Positions or the Add
+       form exist, means a failed fetch can never render a form whose
+       onAdd was never wired -- there is nothing to add to anyway. */
+    if (data.failed) {
+      var fail = card(null);
+      fail.appendChild(el("div", "empty", BOOK_LOAD_FAILED_TEXT));
+      node.appendChild(fail);
       return;
     }
 

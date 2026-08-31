@@ -118,9 +118,17 @@ def test_api_module_is_the_only_place_fetch_appears(client):
 
 
 def test_screens_module_never_prints_a_bare_hit_rate(client):
-    """The spec forbids a rate without its sample size."""
+    """The spec forbids a rate without its sample size.
+
+    Asserts the template form -- the literal `rateLine` concatenates onto the
+    page -- not the bare word "resolved". `record()` also declares a local
+    variable named `resolved` that has nothing to do with printing a sample
+    size next to the rate; a plain substring check on "resolved" is satisfied
+    by that variable alone and would still pass with rateLine's sample-size
+    line deleted entirely.
+    """
     js = client.get("/static/app/screens.js").get_data(as_text=True)
-    assert "resolved" in js
+    assert '" resolved of "' in js
     assert "is_meaningful" in js
 
 
@@ -160,9 +168,15 @@ def test_book_shows_provenance_for_each_position(client):
 
 
 def test_book_has_no_close_action(client):
-    """Closing hides the only id that could reopen it. Add and Remove only."""
-    js = client.get("/static/app/screens.js").get_data(as_text=True).lower()
-    assert "closed_at" not in js
+    """Closing hides the only id that could reopen it. Add and Remove only.
+
+    A Close implemented as TPApi.updatePosition(id, {closed_at: ...}) would
+    put the banned token in api.js, not screens.js -- scan both, since the
+    fetch call and the button that triggers it can live in different files.
+    """
+    for path in ("/static/app/screens.js", "/static/app/api.js"):
+        body = client.get(path).get_data(as_text=True).lower()
+        assert "closed_at" not in body, path
 
 
 def test_neither_screen_shows_a_zero_total_for_an_unpriced_book(client):
@@ -175,9 +189,18 @@ def test_neither_screen_shows_a_zero_total_for_an_unpriced_book(client):
     This is a grep, not a proof: it can confirm the guard text is present but
     cannot confirm it is wired to the right branch. It exists as a tripwire
     against the guard being deleted wholesale.
+
+    Each operand names ONLY its own screen's guard. `totals.priced` alone is
+    not enough -- book() also reads `totals.priced` (into its `anyPriced`
+    local), so a plain `"totals.priced" in js` is satisfied by Book even with
+    Home's guard deleted outright, and the `or` meant either screen alone
+    could satisfy this and the other could vanish unnoticed. `!data.book.
+    totals.priced` is the literal used only in home(); `anyPriced` is the
+    local name used only in book().
     """
     js = client.get("/static/app/screens.js").get_data(as_text=True)
-    assert "totals.priced" in js or "anyPriced" in js
+    assert "!data.book.totals.priced" in js
+    assert "anyPriced" in js
     assert "No live prices right now." in js
 
 

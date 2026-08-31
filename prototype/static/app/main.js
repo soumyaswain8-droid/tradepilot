@@ -167,7 +167,7 @@
     node.innerHTML = "<div class='empty'>Loading…</div>";
     window.TPApi.positions().then(function (b) {
       window.TPScreens.book(node, {
-        book: b, signedOut: false,
+        book: b, signedOut: false, failed: false,
         onAdd: function (body, onError) {
           if (!body.symbol || !(body.qty > 0) || !(body.avg_price > 0)) {
             onError("Enter a symbol, a positive quantity and a positive price.");
@@ -185,7 +185,17 @@
         }
       });
     }, function (e) {
-      window.TPScreens.book(node, { signedOut: e && e.status === 401 });
+      /* Same three-state shape as loadHome's book fetch: a 401 means signed
+         out. Anything else means we could not tell, and "Nothing logged
+         yet." is a claim about their holdings a failed request has no right
+         to make -- so it gets its own branch instead of folding into
+         signedOut, which would render the same wrong claim under a
+         different cause. */
+      window.TPScreens.book(node, {
+        book: null,
+        signedOut: !!(e && e.status === 401),
+        failed: !(e && e.status === 401)
+      });
     });
   }
 
@@ -193,7 +203,11 @@
     var node = el("view-record");
     if (!node) return;
     node.innerHTML = "<div class='empty'>Loading…</div>";
-    Promise.all([window.TPApi.record(), window.TPApi.calls(50)])
+    /* The record itself is this screen's entire purpose; a failed calls(50)
+       must not take the whole screen down over the "Resolved calls" list
+       underneath it -- soft() the same way loadHome softens record/calls
+       around a failing positions() fetch. */
+    Promise.all([window.TPApi.record(), soft(window.TPApi.calls(50))])
       .then(function (r) {
         window.TPScreens.record(node, { record: r[0], calls: r[1] });
       }, function () {

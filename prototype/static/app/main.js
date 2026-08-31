@@ -132,10 +132,41 @@
     });
   }
 
+  function loadCalls() {
+    var node = el("view-calls");
+    if (!node) return;
+    node.innerHTML = "<div class='empty'>Loading…</div>";
+    window.TPApi.calls(50).then(function (c) {
+      window.TPScreens.calls(node, {
+        calls: c,
+        onOpenCall: function (id) { window.TPApp.go("call", [id]); }
+      });
+    }, function () {
+      node.innerHTML = "";
+      node.appendChild(window.TPScreens.el(
+        "div", "empty", "Could not load calls. Reload the page."));
+    });
+  }
+
+  function loadCall(id) {
+    var node = el("view-call");
+    if (!node) return;
+    var back = function () { window.TPApp.go("calls", []); };
+    if (!id) { window.TPScreens.call(node, { error: true, onBack: back }); return; }
+    node.innerHTML = "<div class='empty'>Loading…</div>";
+    window.TPApi.call(id).then(function (c) {
+      window.TPScreens.call(node, { call: c, onBack: back });
+    }, function () {
+      window.TPScreens.call(node, { error: true, onBack: back });
+    });
+  }
+
   window.TPApp = {
     SECTIONS: SECTIONS, go: go, boot: boot,
-    onShow: function (section) {
+    onShow: function (section, rest) {
       if (section === "home") loadHome();
+      else if (section === "calls") loadCalls();
+      else if (section === "call") loadCall(rest && rest[0]);
     }
   };
 })();

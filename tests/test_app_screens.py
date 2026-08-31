@@ -121,3 +121,16 @@ def test_screens_module_never_prints_a_bare_hit_rate(client):
     js = client.get("/static/app/screens.js").get_data(as_text=True)
     assert "resolved" in js
     assert "is_meaningful" in js
+
+
+def test_calls_screen_stamps_the_data_it_is_showing(client):
+    """Outside market hours the list is stale; the page must say when."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "as_of" in js
+
+
+def test_call_detail_distinguishes_open_from_resolved(client):
+    """A live call must not imply an outcome that has not happened."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    for token in ("outcome", "hit", "miss", "ungraded"):
+        assert token in js, token

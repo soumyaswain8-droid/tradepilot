@@ -135,9 +135,91 @@
     node.appendChild(calls);
   }
 
+  function stamp(iso) {
+    if (!iso) return "";
+    return iso.replace("T", " ").slice(0, 16);
+  }
+
+  function calls(node, data) {
+    node.innerHTML = "";
+    var c = card("Published calls");
+    var list = (data.calls && data.calls.calls) || [];
+    if (!list.length) {
+      c.appendChild(el("div", "empty", "No calls published yet."));
+    } else {
+      for (var i = 0; i < list.length; i++) {
+        c.appendChild(callRow(list[i], data.onOpenCall));
+      }
+      /* Outside market hours this list is the last session's. Saying so is
+         cheaper than a support question about why it has not moved. */
+      c.appendChild(el("div", "thin", "As of " + stamp(data.calls.as_of)));
+    }
+    node.appendChild(c);
+  }
+
+  function outcomeLine(c) {
+    if (c.outcome === "open") {
+      return el("div", "muted", "Still open -- no outcome yet.");
+    }
+    if (c.outcome === "ungraded") {
+      return el("div", "muted",
+        "Published without a target, so it is not graded and not counted.");
+    }
+    var moved = (c.outcome_price !== null && c.price_at_call)
+      ? ((c.outcome_price - c.price_at_call) / c.price_at_call) * 100 : null;
+    var line = el("div", "muted " + (c.outcome === "hit" ? "up" : "down"),
+      (c.outcome === "hit" ? "Hit" : "Missed") +
+      (c.outcome_price !== null ? " at " + money(c.outcome_price) : "") +
+      (moved !== null ? " (" + pct(moved) + ")" : ""));
+    return line;
+  }
+
+  function call(node, data) {
+    node.innerHTML = "";
+    if (data.error || !data.call) {
+      var miss = card(null);
+      miss.appendChild(el("div", "empty", "That call could not be found."));
+      var back0 = el("button", "btn", "Back to calls");
+      back0.addEventListener("click", data.onBack);
+      miss.appendChild(back0);
+      node.appendChild(miss);
+      return;
+    }
+    var c = data.call;
+    var head = card(null);
+    head.appendChild(el("div", "label", stamp(c.published_at)));
+    head.appendChild(el("div", "big", c.symbol));
+    head.appendChild(el("span", "pill" + (c.side === "SELL" ? " sell" : ""),
+                        c.side + (c.score ? " " + Math.round(c.score) : "")));
+    head.appendChild(outcomeLine(c));
+    node.appendChild(head);
+
+    var why = card("Why it fired");
+    why.appendChild(el("div", null, c.signal || "No reason recorded."));
+    node.appendChild(why);
+
+    var levels = card("Levels published with the call");
+    var rows = [["Price at call", money(c.price_at_call)],
+                ["Target", c.target === null ? "none published" : money(c.target)],
+                ["Stop", c.stop === null ? "none published" : money(c.stop)],
+                ["Horizon", c.horizon || "--"]];
+    for (var i = 0; i < rows.length; i++) {
+      var r = el("div", "row");
+      r.appendChild(el("div", "grow muted", rows[i][0]));
+      r.appendChild(el("div", null, rows[i][1]));
+      levels.appendChild(r);
+    }
+    node.appendChild(levels);
+
+    var back = el("button", "btn quiet", "Back to calls");
+    back.addEventListener("click", data.onBack);
+    node.appendChild(back);
+  }
+
   window.TPScreens = {
     money: money, pct: pct, el: el, card: card,
     rateLine: rateLine, callRow: callRow,
-    home: home
+    home: home,
+    calls: calls, call: call, stamp: stamp
   };
 })();

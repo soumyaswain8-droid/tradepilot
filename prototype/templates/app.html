@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TradePilot</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="mark"></span> TradePilot</div>
+  <div class="who" id="who"></div>
+</header>
+
+<div class="shell">
+  <nav class="sidenav" id="sidenav"></nav>
+
+  <main class="content">
+    <section class="view" id="view-home"></section>
+    <section class="view" id="view-calls"></section>
+    <section class="view" id="view-call"></section>
+    <section class="view" id="view-book"></section>
+    <section class="view" id="view-record"></section>
+  </main>
+</div>
+
+<nav class="tabbar" id="tabbar"></nav>
+
+<script src="/static/desk/route.js" defer></script>
+<script src="/static/app/api.js" defer></script>
+<script src="/static/app/outcome.js" defer></script>
+<script src="/static/app/screens.js" defer></script>
+<script src="/static/app/main.js" defer></script>
+</body>
+</html>

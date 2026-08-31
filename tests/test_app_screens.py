@@ -1,0 +1,236 @@
+"""The client dashboard's served surface.
+
+None of the rendering is testable here -- there is no DOM, and adding one
+would breach the no-new-dependencies constraint. What these tests can prove is
+that the route serves, that every module referenced is actually fetchable, and
+that operator vocabulary never reaches a client's page. Everything else lives
+in docs/APP_MANUAL_CHECKS.md and is checked by hand.
+"""
+import os
+import sys
+
+import pytest
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+
+def test_app_route_serves(client):
+    assert client.get("/app").status_code == 200
+
+
+def test_every_module_the_page_references_is_fetchable(client):
+    """Fetch them, do not merely grep for the <script src>.
+
+    A tag can name a file that 404s -- that is exactly how a tab shipped blank
+    on 2026-08-03. Asserting the string appears in the HTML proves only that
+    somebody typed it.
+    """
+    for path in ("/static/desk/route.js", "/static/app/api.js",
+                 "/static/app/outcome.js", "/static/app/screens.js",
+                 "/static/app/main.js", "/static/app.css"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert len(r.data) > 0, path
+
+
+def test_all_five_mount_points_exist(client):
+    body = client.get("/app").get_data(as_text=True)
+    for view in ("view-home", "view-calls", "view-call", "view-book", "view-record"):
+        assert view in body, view
+
+
+def test_module_order_is_load_bearing(client):
+    """route.js defines TPRoute; main.js uses it. Order is not cosmetic."""
+    body = client.get("/app").get_data(as_text=True)
+    for tag in ("desk/route.js", "app/api.js", "app/screens.js", "app/main.js"):
+        assert tag in body, "missing script tag: " + tag
+    assert body.index("desk/route.js") < body.index("app/main.js")
+    assert body.index("app/api.js") < body.index("app/main.js")
+    assert body.index("app/screens.js") < body.index("app/main.js")
+
+
+def test_the_router_is_reused_not_reimplemented(client):
+    """main.js must go through TPRoute, not hand-roll a second parser.
+
+    route.js is pure and already carries twelve node tests. A second parser
+    would be a second thing to get wrong, and the load-order test alone does
+    not prove the dependency is actually used.
+    """
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "TPRoute.parse" in js
+    assert "TPRoute.build" in js
+
+
+BANNED_VOCABULARY = ("v4", "v5_size", "composite_scorer", "alpha-hunter",
+                     "regime", "orchestrator", "sprint")
+
+
+def test_no_operator_vocabulary_in_the_page_or_its_modules(client):
+    """A client sees what was called, never which engine said so.
+
+    The served HTML is static, so scanning it alone can only catch a banned
+    word typed into the markup. The modules are where a renderer could label
+    something "v4 score", so they are scanned too.
+
+    What this CANNOT cover: a banned word arriving inside API data and being
+    rendered client-side. That is guarded a layer down by shape_call's
+    explicit field allowlist in prototype/client_api.py, which has its own
+    test. Do not read this test as covering it.
+    """
+    surfaces = ["/app", "/static/app/main.js", "/static/app/api.js",
+                "/static/app/outcome.js", "/static/app/screens.js",
+                "/static/app.css"]
+    for path in surfaces:
+        body = client.get(path).get_data(as_text=True).lower()
+        for word in BANNED_VOCABULARY:
+            assert word not in body, (path, word)
+
+
+def test_the_terminal_and_classic_are_untouched(client):
+    """/app is additive. Neither existing surface changes."""
+    assert client.get("/").status_code == 200
+    assert client.get("/classic").status_code == 200
+
+
+def test_no_inline_script_in_the_template(client):
+    """Every script tag is src-only. Inline JS cannot be cached or linted."""
+    body = client.get("/app").get_data(as_text=True)
+    for chunk in body.split("<script")[1:]:
+        head = chunk.split(">")[0]
+        assert "src=" in head, "inline <script> found: " + head[:60]
+
+
+def test_api_module_names_every_endpoint_it_needs(client):
+    """A screen that calls a path the module never defines fails silently."""
+    js = client.get("/static/app/api.js").get_data(as_text=True)
+    for path in ("/api/app/calls", "/api/app/record", "/api/app/positions"):
+        assert path in js, path
+
+
+def test_api_module_is_the_only_place_fetch_appears(client):
+    """Keeping fetch out of the renderers is what makes them inspectable."""
+    screens = client.get("/static/app/screens.js").get_data(as_text=True)
+    main = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "fetch(" not in screens
+    assert "fetch(" not in main
+
+
+def test_screens_module_never_prints_a_bare_hit_rate(client):
+    """The spec forbids a rate without its sample size.
+
+    Asserts the template form -- the literal `rateLine` concatenates onto the
+    page -- not the bare word "resolved". `record()` also declares a local
+    variable named `resolved` that has nothing to do with printing a sample
+    size next to the rate; a plain substring check on "resolved" is satisfied
+    by that variable alone and would still pass with rateLine's sample-size
+    line deleted entirely.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert '" resolved of "' in js
+    assert "is_meaningful" in js
+
+
+def test_calls_screen_stamps_the_data_it_is_showing(client):
+    """Outside market hours the list is stale; the page must say when."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "as_of" in js
+
+
+
+def test_record_screen_labels_since_as_recording_not_grading(client):
+    """`since` is the first call RECORDED, not the first resolved.
+
+    "Track record since January -- 62%" where the first call resolved in June
+    overstates the record's age. The spec's Deferred section makes this a
+    constraint on this screen, not on the API.
+
+    Asserts the template form -- opening quote and trailing space -- so that a
+    comment merely discussing the rule cannot satisfy it. A comment quoting
+    the phrase is exactly how this test was passing before.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert '"Recording since "' in js
+    assert '"Since "' not in js
+
+
+def test_record_screen_distinguishes_a_failed_calls_fetch_from_an_empty_one(client):
+    """The Resolved calls card must not say "Nothing has resolved yet." when
+    calls(50) failed and the tally above it (rec.hit / rec.miss) loaded fine.
+
+    That would repeat Critical 1 one screen over: a positive claim about the
+    user's own record, made from a request that failed, sitting directly
+    under a tally that contradicts it.
+
+    Pins the template form the way the `since` test above does -- the literal
+    `if (data.callsFailed)` guard on the Resolved calls branch -- so a revert
+    that folds the failure case back into the empty-list branch (deleting
+    this guard, leaving `if (!resolved.length)` to catch both cases again)
+    fails this test instead of passing silently.
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "if (data.callsFailed)" in js
+    assert "Could not load the resolved calls list just now." in js
+
+
+def test_book_never_renders_a_missing_price_as_zero(client):
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "price unavailable" in js.lower()
+
+
+def test_book_shows_provenance_for_each_position(client):
+    """Which holdings came from a call, and which were the client's own."""
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "call_id" in js
+    assert "your own" in js.lower()
+
+
+def test_book_has_no_close_action(client):
+    """Closing hides the only id that could reopen it. Add and Remove only.
+
+    A Close implemented as TPApi.updatePosition(id, {closed_at: ...}) would
+    put the banned token in api.js, not screens.js -- scan both, since the
+    fetch call and the button that triggers it can live in different files.
+    """
+    for path in ("/static/app/screens.js", "/static/app/api.js"):
+        body = client.get(path).get_data(as_text=True).lower()
+        assert "closed_at" not in body, path
+
+
+def test_neither_screen_shows_a_zero_total_for_an_unpriced_book(client):
+    """A down quote feed must not render a book as worthless.
+
+    totals.value is a sum over the priced set, so an entirely unpriced book
+    yields 0. Both Home and Book must gate on totals.priced rather than on
+    whether positions exist, or the headline contradicts every row beneath it.
+
+    This is a grep, not a proof: it can confirm the guard text is present but
+    cannot confirm it is wired to the right branch. It exists as a tripwire
+    against the guard being deleted wholesale.
+
+    Each operand names ONLY its own screen's guard. `totals.priced` alone is
+    not enough -- book() also reads `totals.priced` (into its `anyPriced`
+    local), so a plain `"totals.priced" in js` is satisfied by Book even with
+    Home's guard deleted outright, and the `or` meant either screen alone
+    could satisfy this and the other could vanish unnoticed. `!data.book.
+    totals.priced` is the literal used only in home(); `anyPriced` is the
+    local name used only in book().
+    """
+    js = client.get("/static/app/screens.js").get_data(as_text=True)
+    assert "!data.book.totals.priced" in js
+    assert "anyPriced" in js
+    assert "No live prices right now." in js
+
+
+def test_the_manual_checklist_exists_and_is_tracked(client):
+    """The rendering is unverifiable here; the checklist is the backstop.
+
+    A backstop nobody can find is not a backstop, so its existence is pinned
+    by a test rather than left to memory.
+    """
+    path = os.path.join(REPO_ROOT, "docs", "APP_MANUAL_CHECKS.md")
+    assert os.path.exists(path)
+    body = open(path, encoding="utf-8").read()
+    assert "☐" in body
+    assert "/app" in body

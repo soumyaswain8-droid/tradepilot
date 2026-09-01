@@ -1,0 +1,70 @@
+{
+  "date": "2026-08-31",
+  "generated_at": "2026-08-31T15:35:55.034564",
+  "summaries": [
+    {
+      "engine": "v4",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": 764.0,
+      "trades": 56,
+      "wins": 20,
+      "losses": 36,
+      "longs": 24,
+      "shorts": 32,
+      "win_rate": 35.7,
+      "open_positions": 10,
+      "best_trade": 1216.8,
+      "worst_trade": -546.0,
+      "avg_win": 155.63,
+      "avg_loss": -65.24,
+      "exit_reasons": {
+        "STOPLOSS": 15,
+        "TARGET": 2,
+        "FLAT_FORCE_EXIT": 16,
+        "TIME_EXIT": 10,
+        "SIGNAL_FLIP": 13
+      },
+      "n_closed": 56,
+      "n_open": 10
+    },
+    {
+      "engine": "v5_classic",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_2",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_3",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_6",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_7",
+      "status": "no_data"
+    },
+    {
+      "engine": "v5_8",
+      "status": "no_data"
+    },
+    {
+      "engine": "v6",
+      "status": "no_data"
+    }
+  ],
+  "overlap": {},
+  "insights": [
+    "Winner: <b>v5</b> with Rs +764 across 56 trades (35.7% win).",
+    "<b>v5</b>: STOPLOSS (15) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 35.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

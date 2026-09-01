@@ -130,10 +130,12 @@ def test_a_session_resolves_to_its_user(conn):
 
 
 def test_the_raw_token_is_never_stored(conn):
+    import hashlib
     token = accounts.create_session(conn, _user(conn))
     stored = conn.execute("SELECT token_hash FROM sessions").fetchone()[0]
-    assert stored != token
     assert token not in stored
+    assert stored == hashlib.sha256(token.encode("utf-8")).hexdigest()
+    assert len(stored) == 64
 
 
 def test_an_unknown_token_resolves_to_nothing(conn):

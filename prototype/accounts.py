@@ -27,7 +27,15 @@ def _now():
 
 
 def _iso(dt):
-    return dt.isoformat()
+    """ISO-8601 UTC, always microsecond-width.
+
+    The sessions sweep compares these as TEXT in SQL, so the string order
+    has to equal the chronological order. isoformat() drops the microsecond
+    field when it is zero, which happens to still sort correctly because
+    '+' < '.' in ASCII -- a coincidence, not a guarantee. Forcing the width
+    makes the comparison sound by construction rather than by luck.
+    """
+    return dt.isoformat(timespec="microseconds")
 
 
 def _parse(text):
@@ -84,6 +92,7 @@ def check_login(conn, email, password):
                  (row["id"],))
     conn.commit()
     return row["id"]
+
 
 SESSION_SLIDING_DAYS = 30
 SESSION_MAX_DAYS = 90

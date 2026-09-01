@@ -50,7 +50,14 @@ except ImportError:
 app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), "templates"),
             static_folder=os.path.join(os.path.dirname(__file__), "static"))
-CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "https://tradepilot.onrender.com"])  # Restricted CORS
+# CORS covers the legacy /api/* surface, which has external consumers.
+# /api/app/* is deliberately excluded: the dashboard fetches it from the same
+# origin that served /app, so it needs no CORS headers -- and excluding it
+# means supports_credentials can never make localhost a credentialed wildcard
+# over a client's private book.
+CORS(app, resources={r"/api/(?!app/).*": {
+    "origins": ["http://localhost:*", "http://127.0.0.1:*",
+                "https://tradepilot.onrender.com"]}})
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)
 
 from prototype import client_auth                        # noqa: E402

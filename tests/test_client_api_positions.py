@@ -14,18 +14,24 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from prototype import app_store, client_api
+from prototype import accounts, app_store, client_api, client_auth
 
 
 @pytest.fixture
-def store(tmp_path, monkeypatch):
+def store(client, tmp_path, monkeypatch):
     path = str(tmp_path / "api.db")
     conn = app_store.get_db(path)
     app_store.init_db(conn)
     monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
+    monkeypatch.setattr(client_auth, "open_store", lambda: app_store.get_db(path))
     monkeypatch.setattr(client_api, "fetch_quotes",
                         lambda syms: {s: {"last_price": 1100.0, "change_pct": 1.0}
                                       for s in syms})
+    # A real signed-in user, so every _post(client) call below authenticates
+    # exactly as a browser would -- these positions endpoints are gated.
+    uid = accounts.create_user(conn, "priya@example.com", "correct horse")
+    token = accounts.create_session(conn, uid)
+    client.set_cookie("localhost", client_auth.COOKIE_NAME, token)
     yield conn
     conn.close()
 
@@ -161,11 +167,11 @@ def test_another_user_cannot_patch_your_position(client, store, monkeypatch):
 
 def test_another_user_cannot_delete_your_position(client, store, monkeypatch):
     """A real id belonging to someone else, not a made-up one."""
-    from prototype import client_auth
     pid = _post(client).get_json()["id"]
+    owner = store.execute("SELECT id FROM users").fetchone()["id"]
     monkeypatch.setattr(client_auth, "current_user", lambda: "someone-else")
     assert client.delete("/api/app/positions/" + pid).status_code == 404
-    monkeypatch.setattr(client_auth, "current_user", lambda: "demo-user")
+    monkeypatch.setattr(client_auth, "current_user", lambda: owner)
     assert len(client.get("/api/app/positions").get_json()["positions"]) == 1
 
 

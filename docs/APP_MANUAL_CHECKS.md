@@ -122,6 +122,16 @@ cur.execute("DELETE FROM positions WHERE id IN "
 con.commit()
 ```
 
+## Sign in now
+
+Before working any of the checklists below, sign in as the account you just
+seeded: go to `/app/login` and use the address you passed to
+`add-client.py` and the password you set. Every Book check and three of
+Home's checks assume a signed-in session -- without this step they all read
+"Sign in to see your book" and look like regressions, when nothing is
+actually wrong yet. (Signing out is covered separately, at the end of this
+file, once you've had a chance to see the signed-in states first.)
+
 ## Home
 
 Home has five distinct states. Every one needs to be seen at least once, not
@@ -224,6 +234,12 @@ path in this codebase that fails it that way on demand. To see the
 signed-out branches, and the only one of Home's five states that needs a
 code edit rather than seed data or a stub flip):
 
+**You must be signed in for this to work.** `positions_list` is a gated
+endpoint: when you're signed out, the auth guard returns 401 before the
+handler -- and the `raise` below -- is ever reached, so the "Could not load
+your book just now." text this procedure exists to show you never appears.
+Sign in first (see "Sign in now" above), then proceed:
+
 1. Open `prototype/client_api.py` and add one line at the top of
    `positions_list()`, directly after its docstring:
    ```python
@@ -240,7 +256,7 @@ code edit rather than seed data or a stub flip):
    Home check in this file, and `positions_list` backs three other gated
    endpoints' worth of manual testing besides.
 
-### Signing out
+## Signing out
 
 Click **Sign out** in the header. To sign back in, use the **Sign in** link,
 or go to `/app/login` directly.

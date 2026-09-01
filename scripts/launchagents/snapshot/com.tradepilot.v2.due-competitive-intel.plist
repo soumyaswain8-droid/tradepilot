@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.tradepilot.v2.due-competitive-intel</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; python3 scripts/team/cadence/check-due.py --mark competitive-intel 'Weekly Qlib/FinRL/arxiv scan'</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/Users/soumyaswain/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict>
+        <key>Weekday</key><integer>0</integer>
+        <key>Hour</key><integer>19</integer>
+        <key>Minute</key><integer>0</integer>
+      </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/due.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/due.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+  </dict>
+</plist>

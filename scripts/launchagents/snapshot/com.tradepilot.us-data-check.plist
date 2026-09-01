@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  US feed cross-check — runs 18:30 IST Mon-Fri, 30 minutes BEFORE the US engine.
+
+  WHY 18:30 AND NOT AFTER THE SESSION
+  com.tradepilot.us-paper-trade starts at 19:00 IST. Checking the data after the
+  engine has traded on it is an autopsy. Thirty minutes is enough to see the page
+  and bootout the engine before the open.
+
+  PATH is anaconda-first and set EXPLICITLY. On 2026-07-28 post-open-check inherited
+  launchd's bare /usr/bin:/bin, python3 resolved to a numpy-less interpreter, and its
+  rescue relaunch spawned a fleet of crippled engines. Never rely on `bash -l`.
+  Verify with:
+    env -i PATH=<the PATH below> HOME=$HOME /bin/bash -c 'python3 -c "import pandas"'
+
+  StandardOutPath is a SEPARATE file from the script's own log. The script appends to
+  us-data-check.log itself; letting launchd also write that path would interleave two
+  writers in one file. It also keeps the launchd-owned file disposable: if it ever
+  picks up a stale com.apple.macl xattr (the 2026-07-28 exit-78 failure, where launchd
+  aborted BEFORE exec and produced no output at all), it can be deleted without losing
+  the run history.
+
+  Install:
+    cp scripts/launchagents/com.tradepilot.us-data-check.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tradepilot.us-data-check.plist
+  Remove:
+    launchctl bootout gui/$(id -u)/com.tradepilot.us-data-check
+  Run now:
+    launchctl kickstart -k gui/$(id -u)/com.tradepilot.us-data-check
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.tradepilot.us-data-check</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; python3 scripts/us-data-check.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/Users/soumyaswain/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- 18:30 IST Mon-Fri. StartCalendarInterval REPLAYS a run missed while the Mac
+         was asleep, but SILENTLY DROPS one missed while it was powered off — which is
+         how nine weeks of cadence jobs went unnoticed. guard-cadence is what catches
+         a drop; this schedule alone is not self-verifying. -->
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+      <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+      <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+      <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+      <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/us-data-check.launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/logs/auto/v2/us-data-check.launchd.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>AbandonProcessGroup</key>
+    <true/>
+  </dict>
+</plist>

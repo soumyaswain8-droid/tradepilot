@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tradepilot.regime-switching-daily</string>
+
+    <!-- Script lives in ~/Library/Application Support/ to avoid TCC sandbox
+         blocking launchd from reading scripts in ~/Documents (per the
+         OmniPilot LaunchAgent TCC lesson). The script accesses ~/Documents
+         at runtime, which works fine. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/soumyaswain/Library/Application Support/tradepilot/regime-switching-daily-research.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <!-- Daily at 07:00 IST. macOS timezone must be Asia/Kolkata. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Logs go to ~/Library/Logs (TCC-allowed) -->
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-regime-switching-daily.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-regime-switching-daily.err</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

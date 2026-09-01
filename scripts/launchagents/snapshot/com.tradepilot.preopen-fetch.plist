@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.tradepilot.preopen-fetch</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-c</string>
+    <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; /Users/soumyaswain/anaconda3/bin/python3 scripts/preopen-ingest.py --fetch >> logs/preopen-$(date +\%Y-\%m-\%d).log 2>&amp;1</string>
+  </array>
+  <key>StartCalendarInterval</key><array>
+    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>9</integer></dict>
+  </array>
+</dict></plist>

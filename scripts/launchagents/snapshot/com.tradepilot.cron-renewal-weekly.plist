@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tradepilot.cron-renewal-weekly</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/soumyaswain/Library/Application Support/tradepilot/weekly-cron-renewal-reminder.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <!-- Sunday 06:50 IST. Weekday=1 in launchd (Sunday=0 in some systems but
+         macOS launchd uses Sunday=0 OR Sunday=7 — we use 0 here per Apple docs). -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>50</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-cron-renewal.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-cron-renewal.err</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

@@ -32,7 +32,12 @@ docs/exec/*.json
 
 # Temp
 *.log
+# .env AND its backups. A rails edit on 2026-09-01 wrote .env.bak.083709 —
+# three secret lines, untracked and NOT ignored, which escaped the EOD
+# auto-commit only because its filename lacked that day's date. Coincidence
+# is not a control.
 .env
+.env.*
 
 # ═══ SECURITY — Never commit these ═══
 # Telegram bot credentials

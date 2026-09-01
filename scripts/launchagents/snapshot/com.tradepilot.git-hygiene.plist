@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tradepilot.git-hygiene</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/scripts/git-hygiene-check.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+    <!-- Daily at 16:20 IST (post-EOD) — catches drift on days the market stack isn't relaunched. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>16</integer>
+        <key>Minute</key><integer>20</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-git-hygiene.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-git-hygiene.err</string>
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

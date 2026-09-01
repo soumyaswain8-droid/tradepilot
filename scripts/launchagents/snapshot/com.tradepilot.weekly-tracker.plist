@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tradepilot.weekly-tracker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot/scripts/weekly-stats-tracker.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/soumyaswain/Documents/tinker/projects/tradepilot</string>
+
+    <!-- Monday 08:00 local time. IST users: ensure macOS timezone set to Asia/Kolkata. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Logs OUTSIDE ~/Documents (macOS TCC will block stdout there per OmniPilot lesson) -->
+    <key>StandardOutPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-weekly-tracker.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/soumyaswain/Library/Logs/tradepilot-weekly-tracker.err</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

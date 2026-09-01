@@ -454,9 +454,24 @@ the better sending identity -- but it has no mailbox provider either, so it can
 neither receive bounces nor accept replies to a verification email a user
 answers. That gap has to be closed before it can be used, not after.
 
-**Do not treat this as decided.** The provider choice belongs to B2 planning,
-alongside the question of whether to send from a subdomain (`mail.eazipay.in`)
-so that a sending reputation stays separable from the apex domain.
+**Decided 2026-09-01: `sidewall.in` sends the mail.** Google Workspace SMTP,
+stdlib `smtplib`, no new vendor and no new dependency. `eazipay.in` was the
+better identity on reputation grounds but has no MX at all, so it can neither
+receive bounces nor accept a reply to a verification email -- a gap that would
+have to be closed before it could send, and closing it is more work than this
+phase justifies.
+
+The reputation coupling is accepted knowingly: a public signup form's bounces
+and complaints will attach to the domain carrying the founder's real
+correspondence. Revisit if signup volume grows enough for that to bite; a
+`mail.sidewall.in` subdomain is the cheapest way out, because a subdomain's
+sending reputation is separable from the apex.
+
+**This does not unblock B2 yet.** `sidewall.in` publishes DMARC
+`p=quarantine` with no SPF and no DKIM behind it, so it cannot deliver
+authenticated mail today. Run `scripts/check-mail-dns.sh sidewall.in` -- it
+exits non-zero until the two records are in place, and it is the gate B2's
+first task should depend on.
 
 ### The order of operations, whichever domain wins
 

@@ -68,6 +68,17 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email
     ON users (lower(email));
+
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash  TEXT PRIMARY KEY,
+    user_id     TEXT NOT NULL REFERENCES users(id),
+    created_at  TEXT NOT NULL,
+    expires_at  TEXT NOT NULL,
+    last_seen   TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_sessions_user
+    ON sessions (user_id);
 """
 
 

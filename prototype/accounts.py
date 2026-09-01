@@ -84,3 +84,55 @@ def check_login(conn, email, password):
                  (row["id"],))
     conn.commit()
     return row["id"]
+
+SESSION_SLIDING_DAYS = 30
+SESSION_MAX_DAYS = 90
+
+
+def _hash_token(token):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_session(conn, user_id):
+    """Start a session. Returns the raw token -- the caller puts it in a cookie."""
+    token = secrets.token_urlsafe(32)
+    now = _now()
+    conn.execute(
+        "INSERT INTO sessions (token_hash, user_id, created_at, expires_at, last_seen) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (_hash_token(token), user_id, _iso(now),
+         _iso(now + timedelta(days=SESSION_SLIDING_DAYS)), _iso(now)))
+    # Opportunistic sweep. A scheduled job for a table this size would be
+    # machinery without a purpose.
+    conn.execute("DELETE FROM sessions WHERE expires_at < ?", (_iso(now),))
+    conn.commit()
+    return token
+
+
+def lookup_session(conn, token):
+    """The user id behind a token, or None. Slides the expiry as a side effect."""
+    if not token:
+        return None
+    row = conn.execute("SELECT * FROM sessions WHERE token_hash = ?",
+                       (_hash_token(token),)).fetchone()
+    if row is None:
+        return None
+
+    now = _now()
+    cap = _parse(row["created_at"]) + timedelta(days=SESSION_MAX_DAYS)
+    if _parse(row["expires_at"]) <= now or cap <= now:
+        return None
+
+    slid = min(now + timedelta(days=SESSION_SLIDING_DAYS), cap)
+    conn.execute("UPDATE sessions SET expires_at = ?, last_seen = ? WHERE token_hash = ?",
+                 (_iso(slid), _iso(now), row["token_hash"]))
+    conn.commit()
+    return row["user_id"]
+
+
+def revoke_session(conn, token):
+    """Delete a session. The row is the authority, so this is a real logout."""
+    if not token:
+        return
+    conn.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash_token(token),))
+    conn.commit()

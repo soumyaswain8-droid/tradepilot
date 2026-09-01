@@ -6,6 +6,7 @@ becomes an account enumerator.
 """
 import os
 import sys
+from datetime import timedelta
 
 import pytest
 
@@ -116,3 +117,83 @@ def test_an_expired_lock_restores_the_full_attempt_budget(conn):
     conn.commit()
     accounts.check_login(conn, "priya@example.com", "wrong")   # one failure, post-expiry
     assert accounts.check_login(conn, "priya@example.com", "correct horse")
+
+
+def _user(conn):
+    return accounts.create_user(conn, "priya@example.com", "correct horse")
+
+
+def test_a_session_resolves_to_its_user(conn):
+    uid = _user(conn)
+    token = accounts.create_session(conn, uid)
+    assert accounts.lookup_session(conn, token) == uid
+
+
+def test_the_raw_token_is_never_stored(conn):
+    token = accounts.create_session(conn, _user(conn))
+    stored = conn.execute("SELECT token_hash FROM sessions").fetchone()[0]
+    assert stored != token
+    assert token not in stored
+
+
+def test_an_unknown_token_resolves_to_nothing(conn):
+    accounts.create_session(conn, _user(conn))
+    assert accounts.lookup_session(conn, "not-a-real-token") is None
+
+
+def test_an_empty_token_resolves_to_nothing(conn):
+    accounts.create_session(conn, _user(conn))
+    assert accounts.lookup_session(conn, "") is None
+    assert accounts.lookup_session(conn, None) is None
+
+
+def test_an_expired_session_resolves_to_nothing(conn):
+    token = accounts.create_session(conn, _user(conn))
+    conn.execute("UPDATE sessions SET expires_at = '2020-01-01T00:00:00+00:00'")
+    conn.commit()
+    assert accounts.lookup_session(conn, token) is None
+
+
+def test_using_a_session_slides_its_expiry_forward(conn):
+    token = accounts.create_session(conn, _user(conn))
+    conn.execute("UPDATE sessions SET expires_at = ?",
+                 (accounts._iso(accounts._now() + timedelta(days=1)),))
+    conn.commit()
+    accounts.lookup_session(conn, token)
+    fresh = conn.execute("SELECT expires_at FROM sessions").fetchone()[0]
+    assert accounts._parse(fresh) > accounts._now() + timedelta(days=29)
+
+
+def test_sliding_cannot_push_past_the_absolute_cap(conn):
+    token = accounts.create_session(conn, _user(conn))
+    old = accounts._now() - timedelta(days=89)
+    conn.execute("UPDATE sessions SET created_at = ?", (accounts._iso(old),))
+    conn.commit()
+    accounts.lookup_session(conn, token)
+    fresh = conn.execute("SELECT expires_at FROM sessions").fetchone()[0]
+    # 89 days old, so the 90-day cap leaves at most one day, not thirty.
+    assert accounts._parse(fresh) < accounts._now() + timedelta(days=2)
+
+
+def test_a_session_past_the_cap_resolves_to_nothing(conn):
+    token = accounts.create_session(conn, _user(conn))
+    old = accounts._now() - timedelta(days=91)
+    conn.execute("UPDATE sessions SET created_at = ?, expires_at = ?",
+                 (accounts._iso(old), accounts._iso(accounts._now() + timedelta(days=30))))
+    conn.commit()
+    assert accounts.lookup_session(conn, token) is None
+
+
+def test_revoking_a_session_kills_it_immediately(conn):
+    token = accounts.create_session(conn, _user(conn))
+    accounts.revoke_session(conn, token)
+    assert accounts.lookup_session(conn, token) is None
+
+
+def test_two_sessions_for_one_user_are_independent(conn):
+    uid = _user(conn)
+    a = accounts.create_session(conn, uid)
+    b = accounts.create_session(conn, uid)
+    accounts.revoke_session(conn, a)
+    assert accounts.lookup_session(conn, a) is None
+    assert accounts.lookup_session(conn, b) == uid

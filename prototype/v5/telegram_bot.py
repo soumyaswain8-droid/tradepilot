@@ -291,12 +291,31 @@ def check_commands() -> list:
             return []
         data = resp.json()
         commands = []
+        owner = str(cfg.get("chat_id") or "").strip()
         for update in data.get("result", []):
             _last_update_id = update["update_id"]
             msg = update.get("message", {})
             text = msg.get("text", "").strip()
-            if text.startswith("/"):
-                commands.append(text.lower())
+            if not text.startswith("/"):
+                continue
+
+            # ACCEPT COMMANDS ONLY FROM THE CONFIGURED CHAT.
+            #
+            # getUpdates returns messages from ANYONE who has found the bot — Telegram
+            # bot usernames are discoverable and anyone can start a chat with one. Until
+            # this check existed, a stranger sending /status got the live portfolio back,
+            # because the reply goes to the configured chat but the COMMAND was honoured
+            # from any sender. That is an information leak today and a control surface
+            # the moment any command mutates state.
+            #
+            # Fail CLOSED: if chat_id is unset we honour nothing rather than everything.
+            # An unconfigured bot that silently accepts the world is the worse default.
+            sender = str((msg.get("chat") or {}).get("id") or "").strip()
+            if not owner or sender != owner:
+                print(f"  telegram: ignored {text.split()[0]} from an unauthorised chat",
+                      flush=True)
+                continue
+            commands.append(text.lower())
         return commands
     except Exception:
         return []

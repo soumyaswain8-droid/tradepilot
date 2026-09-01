@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.tradepilot.disk-watch</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-c</string>
+    <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; /Users/soumyaswain/anaconda3/bin/python3 scripts/disk-watch.py >> logs/disk-watch-$(date +\%Y-\%m-\%d).log 2>&amp;1</string>
+  </array>
+  <!-- Hourly. The volume hit zero on 2026-08-28 and froze the machine for six hours;
+       at zero bytes nothing can run, including the cleanup command. Hourly is enough
+       warning because the thresholds are generous (12 GB warn / 5 GB critical) — the
+       point is to be told while there is still room to act, not to catch the last
+       megabyte. Alerts fire only on a level CHANGE, so a steady WARN does not nag. -->
+  <key>StartInterval</key><integer>3600</integer>
+  <key>RunAtLoad</key><true/>
+</dict></plist>

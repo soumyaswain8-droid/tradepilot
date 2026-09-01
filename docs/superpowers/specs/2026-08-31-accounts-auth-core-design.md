@@ -394,3 +394,79 @@ TLS-terminating proxy without trusting a spoofable header. If a future change
 needs the scheme, scope the trust to a known proxy rather than reaching for
 `ProxyFix` app-wide -- it would change all ~70 operator routes to repair one
 comparison.
+
+## Mail: what B2 inherits
+
+Findings from a DNS survey on 2026-09-01. B1 sends no mail; all of this binds
+B2, where signup verification and password reset first need it.
+
+### Both candidate domains carry a DMARC policy with nothing behind it
+
+`sidewall.in` and `eazipay.in` publish an identical record:
+
+```
+v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net
+```
+
+Neither domain has any TXT record at all, so neither publishes SPF. No DKIM
+was found at the common selectors -- selector names are arbitrary, so one may
+exist under a name not guessed, but SPF's absence is definitive because SPF
+has exactly one place to live.
+
+DMARC passes only when SPF or DKIM passes *and* aligns with the From domain.
+With neither published, both legs evaluate to "none", DMARC fails, and
+`p=quarantine` instructs every enforcing receiver -- Gmail, Outlook, Yahoo --
+to file the message as spam.
+
+The `rua` address belongs to GoDaddy, which runs DNS for both domains. This
+looks like a per-domain default that was applied without the SPF and DKIM
+records that make it survivable, so **every other domain on that account is
+worth checking too.**
+
+### What each domain is
+
+| | `sidewall.in` | `eazipay.in` |
+|---|---|---|
+| MX | `smtp.google.com` (Google Workspace) | none -- cannot receive mail |
+| Sends today | yes, real business correspondence | nothing |
+| A record | -- | `18.61.146.3`, an existing server |
+| Reputation at stake | the founder's actual email | none |
+
+**`sidewall.in` is probably being quarantined today.** Not a future problem
+introduced by B2 -- a present one affecting ordinary mail, worth fixing on its
+own merits regardless of what this project decides.
+
+### The trade-off B2 has to settle
+
+Sending from `sidewall.in` means Google Workspace SMTP (`smtp.gmail.com:587`,
+stdlib `smtplib`, no new dependency, roughly 2,000 recipients/day) and an App
+Password, which requires 2FA on the account and lives as a long-lived
+credential in the deployment environment.
+
+Its cost is reputation coupling. A public signup form attracts junk and
+mistyped addresses; the resulting bounces and spam complaints attach to the
+sending domain. Tying that to the domain carrying the founder's real
+correspondence puts ordinary business email behind the behaviour of a
+registration form.
+
+`eazipay.in` inverts this. It has no correspondence to protect, which makes it
+the better sending identity -- but it has no mailbox provider either, so it can
+neither receive bounces nor accept replies to a verification email a user
+answers. That gap has to be closed before it can be used, not after.
+
+**Do not treat this as decided.** The provider choice belongs to B2 planning,
+alongside the question of whether to send from a subdomain (`mail.eazipay.in`)
+so that a sending reputation stays separable from the apex domain.
+
+### The order of operations, whichever domain wins
+
+1. Publish SPF for the sending domain, and enable DKIM at the provider.
+2. Confirm DMARC passes before writing any code that depends on delivery.
+3. Give bounces somewhere to land -- an unmonitored bounce stream is how a
+   sending reputation degrades without anyone noticing.
+4. Only then build verification and reset, whose entire behaviour assumes a
+   message actually arrives.
+
+Skipping step 1 produces the worst failure mode this project can have: signup
+appears to work, the code is correct, and every verification email silently
+lands in spam.

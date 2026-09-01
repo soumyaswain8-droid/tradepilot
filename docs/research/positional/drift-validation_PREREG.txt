@@ -1,0 +1,38 @@
+PRE-REGISTRATION — overnight drift validation at transactable prices
+Written 2026-09-01, AFTER drawing the sample and AFTER seeing the PAPER (close->open) drift
+on that sample (mean +0.632%, median +0.478%), but BEFORE fetching a single intraday bar
+and therefore before seeing any realistic-fill or netted number.
+
+WHAT IS BEING TESTED
+Buy the mover at a transactable price near the close of its +5% day; sell at a transactable
+price the next morning. Net of delivery costs. Is the +0.64%/night paper drift still there?
+
+ENTRY   = volume-weighted average of the 15:15 and 15:20 five-minute bars (15:15-15:25 IST),
+          typical price (H+L+C)/3 weighted by bar volume. Chosen because it is an order you
+          can actually work: 10 minutes of participation, ending 5 minutes before the close,
+          entirely outside the 30-minute window the official close is averaged over.
+EXIT    = close of the 09:15 five-minute bar, i.e. the traded price at 09:20 — five minutes
+          after the open, deliberately NOT the pre-open auction print.
+          Secondary exit reported: VWAP of the 09:15+09:20 bars (09:15-09:25).
+COSTS   = 0.240% round trip (delivery) + Rs 18.80 flat DP charge on the sell.
+          Headline position size Rs 8,000 (gap-risk.md §9 recommendation) => 0.235% flat,
+          0.475% all-in. Also reported at Rs 24,000 (0.318% all-in) and Rs 3,000 (0.867%).
+
+THE BAR — all four must hold at the Rs 8,000 headline size to justify building the lane:
+
+  B1  per-trade NET MEAN            >= +0.15%/night
+  B2  date-clustered HAC t-stat     >= 3.0
+  B3  per-trade NET MEDIAN          >  0.00%   (a broad drift, not a tail)
+  B4  top 5% of events contribute   <= 50% of total net P&L
+
+  4/4 = BUILD.  3/4 = redesign and retest, do not build.  <=2/4 = DEAD.
+
+B3 is the load-bearing one and it is deliberately hard: gap-risk.md §5 showed the mover
+close-to-close MEDIAN is already -0.065%/day. If the median net is negative, the lane is a
+right-tail lottery on a Rs24,000 book and the book will not survive the losing string long
+enough to reach the tail.
+
+FAILURE MODE THAT IS NOT A VERDICT
+If Kite coverage on the sampled events is below 60%, or if coverage is systematically biased
+(e.g. only the liquid survivors resolve), the answer is "undetermined", not "fail". That
+threshold is fixed here, now, before any fetch.

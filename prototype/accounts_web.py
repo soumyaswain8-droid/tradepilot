@@ -22,11 +22,16 @@ def open_store():
 def safe_next(target):
     """A local path to redirect to after signing in, or /app.
 
-    Anything that could leave this site is discarded. A protocol-relative
-    "//evil.example.com" is a URL, not a path, which is why checking only for
-    a leading slash is not enough.
+    Anything that could leave this site is discarded. Two shapes are easy to
+    miss: "//evil.example.com" is a URL rather than a path, so a leading-slash
+    check alone is not enough; and browsers strip ASCII tab, LF and CR from
+    ANYWHERE in a URL before parsing it, so "/\tevil" arrives at the browser
+    as "//evil" -- an off-site redirect that every prefix check below would
+    otherwise wave through.
     """
     if not target:
+        return "/app"
+    if any(ord(ch) < 0x20 or ord(ch) == 0x7f for ch in target):
         return "/app"
     if not target.startswith("/"):
         return "/app"

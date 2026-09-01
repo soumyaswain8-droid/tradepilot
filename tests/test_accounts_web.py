@@ -76,10 +76,34 @@ def test_signing_in_then_reaching_the_book(client, store):
     assert client.get("/api/app/me").status_code == 200
 
 
-def test_logging_out_revokes_the_session(client, store):
+def test_logging_out_clears_the_cookie(client, store):
+    """The test client drops its cookie once logout expires it.
+
+    That proves the browser-facing half (the client no longer holds a
+    cookie) but nothing about the server -- see
+    test_logout_revokes_server_side_not_just_the_cookie for the half that
+    actually matters.
+    """
     client.post("/app/login",
                 data={"email": "priya@example.com", "password": "correct horse"})
     client.post("/app/logout")
+    assert client.get("/api/app/me").status_code == 401
+
+
+def test_logout_revokes_server_side_not_just_the_cookie(client, store):
+    """Re-present the SAME token after logging out.
+
+    The test client drops the cookie when logout expires it, so merely
+    re-requesting proves nothing about the server. This proves the row is
+    gone -- which is the entire reason this design uses server-side sessions
+    rather than a signed cookie.
+    """
+    uid = accounts.check_login(store, "priya@example.com", "correct horse")
+    token = accounts.create_session(store, uid)
+    client.set_cookie("localhost", client_auth.COOKIE_NAME, token)
+    assert client.get("/api/app/me").status_code == 200
+    client.post("/app/logout")
+    client.set_cookie("localhost", client_auth.COOKIE_NAME, token)
     assert client.get("/api/app/me").status_code == 401
 
 
@@ -88,6 +112,10 @@ def test_logging_out_revokes_the_session(client, store):
     "//evil.example.com/phish",
     "http://evil.example.com",
     "\\\\evil.example.com",
+    "/\t/evil.example.com",
+    "/\n/evil.example.com",
+    "/\r/evil.example.com",
+    "/ev\til.example.com",
 ])
 def test_next_cannot_send_you_off_site(target):
     assert accounts_web.safe_next(target) == "/app"

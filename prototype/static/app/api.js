@@ -21,6 +21,9 @@
   }
 
   window.TPApi = {
+    me: function () {
+      return json("/api/app/me");
+    },
     calls: function (limit) {
       return json("/api/app/calls?limit=" + (limit || 50));
     },

@@ -234,3 +234,32 @@ def test_the_manual_checklist_exists_and_is_tracked(client):
     body = open(path, encoding="utf-8").read()
     assert "☐" in body
     assert "/app" in body
+
+
+def test_the_api_client_can_ask_who_is_signed_in(client):
+    js = client.get("/static/app/api.js").get_data(as_text=True)
+    assert "/api/app/me" in js
+
+
+def test_the_shell_fills_the_who_element(client):
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "\"who\"" in js or "'who'" in js
+
+
+def test_the_shell_offers_a_way_in_and_a_way_out(client):
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "/app/login" in js
+    assert "/app/logout" in js
+
+
+def test_signing_out_is_a_form_post_not_a_link(client):
+    """A bare href to /app/logout would pass the previous test too.
+
+    A GET to /app/logout can be triggered by any <img src> on any page --
+    that is the whole reason sign-out must be a form POST. Asserting the
+    method alongside the action closes the gap a regression to
+    `<a href="/app/logout">` would otherwise slip through.
+    """
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert 'out.method = "post"' in js
+    assert 'out.action = "/app/logout"' in js

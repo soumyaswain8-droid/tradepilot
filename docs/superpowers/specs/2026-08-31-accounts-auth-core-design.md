@@ -346,3 +346,51 @@ audience easier to grow.
 - **`record()` cannot distinguish an absent `callsFailed` from a false one** --
   carried from the dashboard spec. Unchanged by this project; revisit when a
   second caller appears.
+
+## Deferred from the auth core
+
+Recorded here because the execution workspace that held them is disposable.
+
+### The login timing oracle
+
+`check_login` returns early for an unknown email, a disabled account and a
+locked one, so only an active account pays the password-hashing cost. Timing
+therefore distinguishes "this address has a live account" from everything
+else -- a wider signal than the unknown-vs-wrong-password trade-off the spec
+already accepts.
+
+Left as-is deliberately. The fix is to hash unconditionally, which turns the
+login endpoint into a CPU amplifier: an attacker submits unknown addresses and
+the server burns a KDF on each one. That trades a weak timing signal for a
+real denial-of-service surface. B2's self-serve signup will reveal which
+addresses are taken far more cheaply than timing ever could, so revisit the
+question there rather than here.
+
+### `safe_next` rejects every colon
+
+A benign local target such as `/app?t=12:30` falls back to `/app`. This is
+over-broad and fails safe. Narrowing it to catch only scheme-like colons is
+exactly the cleverness that reopens the hole the function exists to close, so
+the cost -- a lost query parameter in a redirect -- is accepted.
+
+### The test-suite database net has one gap
+
+`tests/conftest.py` repoints `app_store.DB_PATH` at a temporary file for the
+whole run, so a fixture that forgets to patch one of the four `open_store`
+seams cannot reach the real product database. Autouse fixtures run after
+collection, though, so a `get_db()` call at a test module's import time would
+still resolve the real path. No such call exists today. Anyone adding one
+should not assume the net covers it.
+
+### Deployment still owes two answers
+
+**The Public Suffix List status of the production domain** decides whether
+`SameSite=Lax` separates sibling subdomains on a shared deployment host. The
+`Origin` check holds either way, which is a second reason it exists.
+
+**Nothing here handles `X-Forwarded-*`, deliberately.** The `Origin` check
+compares hosts rather than whole origins precisely so it works behind a
+TLS-terminating proxy without trusting a spoofable header. If a future change
+needs the scheme, scope the trust to a known proxy rather than reaching for
+`ProxyFix` app-wide -- it would change all ~70 operator routes to repair one
+comparison.

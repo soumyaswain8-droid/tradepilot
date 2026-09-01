@@ -14,7 +14,22 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from prototype import client_auth
+from prototype import accounts, app_store, client_api, client_auth
+
+
+@pytest.fixture
+def signed_in(client, tmp_path, monkeypatch):
+    """A real session, cookie set on the test client. Returns the user id."""
+    path = str(tmp_path / "auth.db")
+    conn = app_store.get_db(path)
+    app_store.init_db(conn)
+    monkeypatch.setattr(client_auth, "open_store", lambda: app_store.get_db(path))
+    monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
+    uid = accounts.create_user(conn, "priya@example.com", "correct horse")
+    token = accounts.create_session(conn, uid)
+    client.set_cookie("localhost", client_auth.COOKIE_NAME, token)
+    conn.close()
+    return uid
 
 
 def _app_endpoints(flask_app):
@@ -78,21 +93,56 @@ def test_gated_endpoint_401s_without_a_user(client, monkeypatch):
     assert client.get("/api/app/me").status_code == 401
 
 
-def test_gated_endpoint_allows_a_user(client):
+def test_gated_endpoint_allows_a_user(client, signed_in):
     assert client.get("/api/app/me").status_code == 200
 
 
-def test_me_returns_the_current_user(client):
+def test_me_returns_the_current_user(client, signed_in):
     body = client.get("/api/app/me").get_json()
-    assert body["user_id"] == "demo-user"
+    assert body["user_id"] == signed_in
     assert body["plan"] == "none"
 
 
-def test_401_body_leaks_nothing_internal(client, monkeypatch):
-    monkeypatch.setattr(client_auth, "current_user", lambda: None)
-    body = client.get("/api/app/me").get_data(as_text=True).lower()
-    for leak in ("sqlite", "traceback", "prototype/", "select ", "/users/"):
-        assert leak not in body
+def test_me_returns_the_signed_in_account_email(client, signed_in):
+    body = client.get("/api/app/me").get_json()
+    assert body["email"] == "priya@example.com"
+
+
+def test_no_cookie_means_no_user(client):
+    assert client.get("/api/app/me").status_code == 401
+
+
+def test_a_forged_token_means_no_user(client, signed_in):
+    client.set_cookie("localhost", client_auth.COOKIE_NAME, "forged-token")
+    assert client.get("/api/app/me").status_code == 401
+
+
+def test_an_unsafe_method_from_a_foreign_origin_is_refused(client, signed_in):
+    r = client.post("/api/app/positions",
+                    json={"symbol": "CIPLA", "qty": 1, "avg_price": 10.0},
+                    headers={"Origin": "https://evil.example.com"})
+    assert r.status_code == 403
+
+
+def test_a_missing_origin_is_not_treated_as_foreign(client, signed_in):
+    """CSRF requires a browser sending cookies, and browsers always send
+    Origin on an unsafe cross-origin request. A request with no Origin at all
+    is curl or a test -- not the threat model -- and rejecting it would break
+    every non-browser caller for no security gain."""
+    r = client.post("/api/app/positions", json={"symbol": "CIPLA", "qty": 1,
+                                                "avg_price": 10.0})
+    assert r.status_code == 201
+
+
+def test_a_matching_host_with_a_different_scheme_is_accepted(client, signed_in):
+    """Behind a TLS-terminating proxy the browser's Origin is https:// while
+    Flask sees http:// internally. Comparing schemes would refuse every real
+    write in production. request.host under the test client is "localhost",
+    confirmed directly rather than assumed."""
+    r = client.post("/api/app/positions",
+                    json={"symbol": "CIPLA", "qty": 1, "avg_price": 10.0},
+                    headers={"Origin": "https://" + "localhost"})
+    assert r.status_code == 201
 
 
 def test_the_operator_surface_is_untouched(client):

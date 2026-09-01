@@ -27,7 +27,26 @@ value the renderer does not recognise, and one position with no live quote.
 
 This writes to `prototype/tradepilot_app.db`, which is gitignored -- it is
 never committed, and there is nothing to revert in git. Run this after the
-app has created the database once (so the tables exist):
+app has created the database once (so the tables exist).
+
+Positions belong to one account now: `positions.user_id` must be the id of
+a real row in `users`, or the Book simply shows nothing for whoever is
+signed in -- the seed still runs and exits 0, so seeding under the wrong
+id fails silently rather than with an error. Create an account first, then
+seed under that exact address:
+
+```
+python3 scripts/add-client.py you@example.com
+```
+
+It prompts for the password twice (once to set it, once to confirm) and
+does not echo what you type -- that is expected, not a hang.
+
+Look the id up by the address you just created, rather than hardcoding it
+or guessing which row is newest -- `ORDER BY created_at` picks the oldest
+account on any database that already has one, which is not the one you
+just made, and seeding under it produces the same silent empty Book this
+fix exists to prevent:
 
 ```python
 import sqlite3, datetime
@@ -36,6 +55,10 @@ con = sqlite3.connect("prototype/tradepilot_app.db")
 cur = con.cursor()
 now = datetime.datetime.utcnow()
 iso = lambda dt: dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+YOUR_EMAIL = "you@example.com"   # the address you passed to add-client.py
+uid = cur.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
+                  (YOUR_EMAIL,)).fetchone()[0]
 
 calls = [
     # id, symbol, side, published_at, price_at_call, score, signal, horizon,
@@ -64,10 +87,10 @@ for c in calls:
 positions = [
     # id, user_id, symbol, qty, avg_price, opened_at, closed_at, exit_price,
     # source, broker_ref, call_id
-    ("p-priced1", "demo-user", "TCS", 10, 3800.0,
+    ("p-priced1", uid, "TCS", 10, 3800.0,
      iso(now - datetime.timedelta(days=1)), None, None, "call", None, "c-hit1"),
     # A symbol with no live quote -- exercises "price unavailable".
-    ("p-unpriced1", "demo-user", "ZZZNOPRICE", 5, 500.0,
+    ("p-unpriced1", uid, "ZZZNOPRICE", 5, 500.0,
      iso(now - datetime.timedelta(hours=2)), None, None, "manual", None, None),
 ]
 for p in positions:
@@ -99,6 +122,16 @@ cur.execute("DELETE FROM positions WHERE id IN "
 con.commit()
 ```
 
+## Sign in now
+
+Before working any of the checklists below, sign in as the account you just
+seeded: go to `/app/login` and use the address you passed to
+`add-client.py` and the password you set. Every Book check and three of
+Home's checks assume a signed-in session -- without this step they all read
+"Sign in to see your book" and look like regressions, when nothing is
+actually wrong yet. (Signing out is covered separately, at the end of this
+file, once you've had a chance to see the signed-in states first.)
+
 ## Home
 
 Home has five distinct states. Every one needs to be seen at least once, not
@@ -110,7 +143,7 @@ in one does not show up while checking another.
 | | Verification |
 |:---:|:-------------|
 | ☐ | Home loads with no console errors, and shows the hit rate and today's calls |
-| ☐ | Signed out: portfolio card reads "Sign in to see your book" -- calls and hit rate still show (see signed-out section below) |
+| ☐ | Signed out: portfolio card reads "Sign in to see your book" -- calls and hit rate still show (see Signing out below) |
 | ☐ | Book endpoint failing (a 500, not a 401): portfolio card reads "Could not load your book just now." and does **not** say "Log your first trade" (see book-load-failure section below for how to force this) |
 | ☐ | Zero positions: portfolio card reads "Log your first trade to see it here", not ₹0 |
 | ☐ | Positions exist but none are priced: shows "--" and "No live prices right now.", never ₹0 |
@@ -201,6 +234,12 @@ path in this codebase that fails it that way on demand. To see the
 signed-out branches, and the only one of Home's five states that needs a
 code edit rather than seed data or a stub flip):
 
+**You must be signed in for this to work.** `positions_list` is a gated
+endpoint: when you're signed out, the auth guard returns 401 before the
+handler -- and the `raise` below -- is ever reached, so the "Could not load
+your book just now." text this procedure exists to show you never appears.
+Sign in first (see "Sign in now" above), then proceed:
+
 1. Open `prototype/client_api.py` and add one line at the top of
    `positions_list()`, directly after its docstring:
    ```python
@@ -217,39 +256,20 @@ code edit rather than seed data or a stub flip):
    Home check in this file, and `positions_list` backs three other gated
    endpoints' worth of manual testing besides.
 
-## Checking the signed-out states
+## Signing out
 
-`current_user()` in `prototype/client_auth.py` is a stub that always returns
-a fixed user id, so a browser cannot reach the signed-out states through
-normal use -- there is nothing to sign out of yet. To check them:
-
-1. Open `prototype/client_auth.py` and change:
-   ```python
-   def current_user():
-       return "demo-user"
-   ```
-   to:
-   ```python
-   def current_user():
-       return None
-   ```
-2. Restart the app and reload `/app`.
-3. Walk this table:
+Click **Sign out** in the header. To sign back in, use the **Sign in** link,
+or go to `/app/login` directly.
 
 ::: {.checklist}
 
 | | Verification |
 |:---:|:-------------|
-| ☐ | Home still shows the calls and the hit rate -- the acquisition surface works even signed out |
-| ☐ | Home's portfolio card reads "Sign in to see your book" |
-| ☐ | Book reads "Sign in to see your book." rather than erroring or showing a stale book |
-| ☐ | Calls and Track record are fully usable, unaffected by sign-out state |
+| ☐ | The header shows your email and a Sign out control when signed in |
+| ☐ | The header shows a Sign in link when signed out |
+| ☐ | After signing out, the Book reads "Sign in to see your book" and the link reaches `/app/login` |
+| ☐ | Home and Calls still render fully when signed out -- they are public |
+| ☐ | Signing in from `/app/login` returns you to `/app`, still signed in after a reload |
+| ☐ | A wrong password says the same thing as an unknown email |
 
 :::
-
-4. **Revert the edit before doing anything else.** Change
-   `client_auth.py` back to `return "demo-user"` and restart the app. Do not
-   commit the stub in its signed-out form -- it gates five endpoints
-   (`client_api.me`, `client_api.positions_list`, `client_api.position_create`,
-   `client_api.position_update`, `client_api.position_delete`) and leaving it
-   returning `None` breaks all of them for every other check in this file.

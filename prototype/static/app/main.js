@@ -93,6 +93,45 @@
       var q = parseHash();
       go(q.section, q.rest, true);
     });
+    loadWho();
+  }
+
+  /* Fills the header's #who -- signed in, it names the account and offers a
+     way out; signed out, it offers a way in. Nothing else on the page reads
+     identity, so this is the one place the shell claims to know who is
+     looking at it. */
+  function loadWho() {
+    var node = el("who");
+    if (!node) return;
+    window.TPApi.me().then(function (m) {
+      node.innerHTML = "";
+      var name = window.TPScreens.el("span", "thin", m.email || m.user_id);
+      var out = document.createElement("form");
+      out.method = "post";
+      out.action = "/app/logout";
+      out.style.display = "inline";
+      var b = document.createElement("button");
+      b.type = "submit";
+      b.className = "who-out";
+      b.textContent = "Sign out";
+      out.appendChild(b);
+      node.appendChild(name);
+      node.appendChild(out);
+    }, function (e) {
+      node.innerHTML = "";
+      if (e && e.status === 401) {
+        var a = document.createElement("a");
+        a.href = "/app/login";
+        a.textContent = "Sign in";
+        node.appendChild(a);
+        return;
+      }
+      /* Any other failure -- 500, a dropped connection, bad JSON -- tells us
+         nothing about whether they are signed in. Offering "Sign in" would be
+         a claim built on a request that failed, which is the mistake this
+         codebase has now made three times. Say nothing instead: Home's book
+         card still carries a working link for a signed-out visitor. */
+    });
   }
 
   /* A rejected promise loses its value. Swallow the rejection here and hand

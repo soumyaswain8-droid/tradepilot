@@ -93,6 +93,40 @@
       var q = parseHash();
       go(q.section, q.rest, true);
     });
+    loadWho();
+  }
+
+  /* Fills the header's #who -- signed in, it names the account and offers a
+     way out; signed out, it offers a way in. Nothing else on the page reads
+     identity, so this is the one place the shell claims to know who is
+     looking at it. */
+  function loadWho() {
+    var node = el("who");
+    if (!node) return;
+    window.TPApi.me().then(function (m) {
+      node.innerHTML = "";
+      var name = window.TPScreens.el("span", "thin", m.user_id);
+      var out = document.createElement("form");
+      out.method = "post";
+      out.action = "/app/logout";
+      out.style.display = "inline";
+      var b = document.createElement("button");
+      b.type = "submit";
+      b.className = "who-out";
+      b.textContent = "Sign out";
+      out.appendChild(b);
+      node.appendChild(name);
+      node.appendChild(out);
+    }, function () {
+      /* 401 is the ordinary signed-out case, not an error worth shouting about.
+         Anything else lands here too, and the honest rendering is the same:
+         offer the way in, claim nothing about who they are. */
+      node.innerHTML = "";
+      var a = document.createElement("a");
+      a.href = "/app/login";
+      a.textContent = "Sign in";
+      node.appendChild(a);
+    });
   }
 
   /* A rejected promise loses its value. Swallow the rejection here and hand

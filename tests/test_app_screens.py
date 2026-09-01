@@ -234,3 +234,19 @@ def test_the_manual_checklist_exists_and_is_tracked(client):
     body = open(path, encoding="utf-8").read()
     assert "☐" in body
     assert "/app" in body
+
+
+def test_the_api_client_can_ask_who_is_signed_in(client):
+    js = client.get("/static/app/api.js").get_data(as_text=True)
+    assert "/api/app/me" in js
+
+
+def test_the_shell_fills_the_who_element(client):
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "\"who\"" in js or "'who'" in js
+
+
+def test_the_shell_offers_a_way_in_and_a_way_out(client):
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert "/app/login" in js
+    assert "/app/logout" in js

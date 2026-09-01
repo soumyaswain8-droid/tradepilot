@@ -16,6 +16,8 @@ Each task adds its own endpoints here as it adds them. That is deliberate:
 it keeps both enumeration tests green at every commit, and it makes
 classification an active step rather than a list written once and trusted.
 """
+from urllib.parse import urlparse
+
 from flask import jsonify, request
 
 from prototype import accounts, app_store
@@ -76,10 +78,17 @@ def install_guard(app):
             return jsonify({"error": "sign in to see this"}), 401
         if request.method in UNSAFE_METHODS:
             origin = request.headers.get("Origin")
-            # Only a PRESENT and mismatched Origin is refused. Browsers always
-            # send it on an unsafe cross-origin request, so the attack is
+            # Compare hosts, not whole origins. Behind a TLS-terminating proxy
+            # Flask sees http:// internally while the browser sends https://,
+            # so comparing schemes would refuse every genuine write in
+            # production. Deliberately NOT using ProxyFix: it trusts
+            # X-Forwarded-Proto, which is spoofable unless a proxy overwrites
+            # it, and it would change all ~70 operator routes to fix one check.
+            #
+            # Only a PRESENT and mismatched host is refused. Browsers always
+            # send Origin on an unsafe cross-origin request, so the attack is
             # caught; a request with none is not a browser and therefore not
             # the CSRF threat model.
-            if origin is not None and origin != request.host_url.rstrip("/"):
+            if origin is not None and urlparse(origin).netloc != request.host:
                 return jsonify({"error": "bad origin"}), 403
         return None

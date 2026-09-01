@@ -55,7 +55,7 @@ app = Flask(__name__,
 # origin that served /app, so it needs no CORS headers -- and excluding it
 # means supports_credentials can never make localhost a credentialed wildcard
 # over a client's private book.
-CORS(app, resources={r"/api/(?!app/).*": {
+CORS(app, resources={r"/api/(?!app(/|$)).*": {
     "origins": ["http://localhost:*", "http://127.0.0.1:*",
                 "https://tradepilot.onrender.com"]}})
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # pick up template edits without a process restart (debug stays off)

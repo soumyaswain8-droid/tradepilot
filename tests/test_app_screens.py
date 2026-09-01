@@ -250,3 +250,16 @@ def test_the_shell_offers_a_way_in_and_a_way_out(client):
     js = client.get("/static/app/main.js").get_data(as_text=True)
     assert "/app/login" in js
     assert "/app/logout" in js
+
+
+def test_signing_out_is_a_form_post_not_a_link(client):
+    """A bare href to /app/logout would pass the previous test too.
+
+    A GET to /app/logout can be triggered by any <img src> on any page --
+    that is the whole reason sign-out must be a form POST. Asserting the
+    method alongside the action closes the gap a regression to
+    `<a href="/app/logout">` would otherwise slip through.
+    """
+    js = client.get("/static/app/main.js").get_data(as_text=True)
+    assert 'out.method = "post"' in js
+    assert 'out.action = "/app/logout"' in js

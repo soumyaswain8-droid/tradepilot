@@ -105,7 +105,7 @@
     if (!node) return;
     window.TPApi.me().then(function (m) {
       node.innerHTML = "";
-      var name = window.TPScreens.el("span", "thin", m.user_id);
+      var name = window.TPScreens.el("span", "thin", m.email || m.user_id);
       var out = document.createElement("form");
       out.method = "post";
       out.action = "/app/logout";
@@ -117,15 +117,20 @@
       out.appendChild(b);
       node.appendChild(name);
       node.appendChild(out);
-    }, function () {
-      /* 401 is the ordinary signed-out case, not an error worth shouting about.
-         Anything else lands here too, and the honest rendering is the same:
-         offer the way in, claim nothing about who they are. */
+    }, function (e) {
       node.innerHTML = "";
-      var a = document.createElement("a");
-      a.href = "/app/login";
-      a.textContent = "Sign in";
-      node.appendChild(a);
+      if (e && e.status === 401) {
+        var a = document.createElement("a");
+        a.href = "/app/login";
+        a.textContent = "Sign in";
+        node.appendChild(a);
+        return;
+      }
+      /* Any other failure -- 500, a dropped connection, bad JSON -- tells us
+         nothing about whether they are signed in. Offering "Sign in" would be
+         a claim built on a request that failed, which is the mistake this
+         codebase has now made three times. Say nothing instead: Home's book
+         card still carries a working link for a signed-out visitor. */
     });
   }
 

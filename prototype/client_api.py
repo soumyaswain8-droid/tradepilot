@@ -23,7 +23,16 @@ bp = Blueprint("client_api", __name__, url_prefix="/api/app")
 @bp.route("/me")
 def me():
     """The signed-in user and their plan. Project B owns this shape later."""
-    return jsonify({"user_id": client_auth.current_user(), "plan": "none"})
+    uid = client_auth.current_user()
+    conn = open_store()
+    try:
+        row = conn.execute(
+            "SELECT email FROM users WHERE id = ?", (uid,)).fetchone()
+    finally:
+        conn.close()
+    return jsonify({"user_id": uid,
+                    "email": row["email"] if row else None,
+                    "plan": "none"})
 
 
 def open_store():

@@ -29,18 +29,24 @@ This writes to `prototype/tradepilot_app.db`, which is gitignored -- it is
 never committed, and there is nothing to revert in git. Run this after the
 app has created the database once (so the tables exist).
 
-Positions belong to an account now: `positions.user_id` must be a real row
-in `users`, or the Book simply shows nothing for whoever is signed in --
-the seed still runs and exits 0, so a made-up id fails silently rather than
-with an error. Create an account first, before running the snippet below:
+Positions belong to one account now: `positions.user_id` must be the id of
+a real row in `users`, or the Book simply shows nothing for whoever is
+signed in -- the seed still runs and exits 0, so seeding under the wrong
+id fails silently rather than with an error. Create an account first, then
+seed under that exact address:
 
 ```
 python3 scripts/add-client.py you@example.com
 ```
 
-Then look the id up rather than hardcoding it -- `add-client.py` prints it,
-but the snippet below reads it back from the database so it works
-regardless of which account you seeded first:
+It prompts for the password twice (once to set it, once to confirm) and
+does not echo what you type -- that is expected, not a hang.
+
+Look the id up by the address you just created, rather than hardcoding it
+or guessing which row is newest -- `ORDER BY created_at` picks the oldest
+account on any database that already has one, which is not the one you
+just made, and seeding under it produces the same silent empty Book this
+fix exists to prevent:
 
 ```python
 import sqlite3, datetime
@@ -50,8 +56,9 @@ cur = con.cursor()
 now = datetime.datetime.utcnow()
 iso = lambda dt: dt.strftime("%Y-%m-%dT%H:%M:%S")
 
-uid = cur.execute(
-    "SELECT id FROM users ORDER BY created_at LIMIT 1").fetchone()[0]
+YOUR_EMAIL = "you@example.com"   # the address you passed to add-client.py
+uid = cur.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
+                  (YOUR_EMAIL,)).fetchone()[0]
 
 calls = [
     # id, symbol, side, published_at, price_at_call, score, signal, horizon,

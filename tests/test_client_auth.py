@@ -103,6 +103,11 @@ def test_me_returns_the_current_user(client, signed_in):
     assert body["plan"] == "none"
 
 
+def test_me_returns_the_signed_in_account_email(client, signed_in):
+    body = client.get("/api/app/me").get_json()
+    assert body["email"] == "priya@example.com"
+
+
 def test_no_cookie_means_no_user(client):
     assert client.get("/api/app/me").status_code == 401
 

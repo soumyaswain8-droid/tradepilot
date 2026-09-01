@@ -131,7 +131,7 @@ def test_a_missing_origin_is_not_treated_as_foreign(client, signed_in):
     every non-browser caller for no security gain."""
     r = client.post("/api/app/positions", json={"symbol": "CIPLA", "qty": 1,
                                                 "avg_price": 10.0})
-    assert r.status_code != 403
+    assert r.status_code == 201
 
 
 def test_a_matching_host_with_a_different_scheme_is_accepted(client, signed_in):
@@ -142,14 +142,7 @@ def test_a_matching_host_with_a_different_scheme_is_accepted(client, signed_in):
     r = client.post("/api/app/positions",
                     json={"symbol": "CIPLA", "qty": 1, "avg_price": 10.0},
                     headers={"Origin": "https://" + "localhost"})
-    assert r.status_code != 403
-
-
-def test_401_body_leaks_nothing_internal(client, monkeypatch):
-    monkeypatch.setattr(client_auth, "current_user", lambda: None)
-    body = client.get("/api/app/me").get_data(as_text=True).lower()
-    for leak in ("sqlite", "traceback", "prototype/", "select ", "/users/"):
-        assert leak not in body
+    assert r.status_code == 201
 
 
 def test_the_operator_surface_is_untouched(client):

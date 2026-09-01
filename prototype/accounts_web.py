@@ -4,8 +4,8 @@ Server-rendered on purpose. A real form POST means browser password managers
 work, and credentials never pass through the fetch layer -- api.js does not
 know this page exists.
 """
-from flask import (Blueprint, make_response, redirect, render_template,
-                   request, url_for)
+from flask import (Blueprint, jsonify, make_response, redirect,
+                   render_template, request, url_for)
 
 from prototype import accounts, app_store, client_auth
 
@@ -39,6 +39,12 @@ def safe_next(target):
         return "/app"
     if "\\" in target or ":" in target:
         return "/app"
+    # Quotes shouldn't matter -- the template renders this through
+    # |urlencode -- but a value that never contains one costs nothing and
+    # stops that filter being the only thing standing between this value and
+    # an attribute break-out.
+    if '"' in target or "'" in target:
+        return "/app"
     return target
 
 
@@ -47,6 +53,17 @@ def login():
     nxt = safe_next(request.args.get("next"))
     if request.method == "GET":
         return render_template("login.html", error=None, next=nxt)
+
+    # Login sits outside GATED_ENDPOINTS -- correctly, since a login page
+    # that required a session to reach would be a locked door with the key
+    # inside -- so the client_auth guard never runs here. SameSite=Lax can't
+    # cover it either: signing in requires no cookie, so there is nothing for
+    # SameSite to withhold. Without this check a hostile page can cross-site
+    # POST the attacker's own credentials and sign the victim into the
+    # attacker's account, where every position the victim then logs lands in
+    # a book the attacker can read.
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
 
     conn = open_store()
     try:
@@ -60,15 +77,27 @@ def login():
         conn.close()
 
     resp = make_response(redirect(nxt))
+    # The cookie is transport, the row is the authority: accounts.lookup_session
+    # already slides expires_at on every request and enforces the 90-day cap
+    # server-side, so the cookie only needs to outlive that cap, not track the
+    # 30-day sliding window itself. Setting max_age to SESSION_SLIDING_DAYS
+    # instead would sign a daily-active user out at day 30 regardless of
+    # activity -- the browser would discard a cookie the server still
+    # considers valid. Re-issuing Set-Cookie on every gated response would
+    # also work, but that adds a header to every API call to track a
+    # lifetime the server already tracks in the sessions table.
     resp.set_cookie(client_auth.COOKIE_NAME, token,
                     httponly=True, samesite="Lax", path="/",
                     secure=request.is_secure,
-                    max_age=accounts.SESSION_SLIDING_DAYS * 24 * 3600)
+                    max_age=accounts.SESSION_MAX_DAYS * 24 * 3600)
     return resp
 
 
 @bp.route("/app/logout", methods=["POST"])
 def logout():
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
     token = request.cookies.get(client_auth.COOKIE_NAME)
     conn = open_store()
     try:

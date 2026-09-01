@@ -84,6 +84,16 @@ def test_outcome_defaults_to_open(conn):
 
 
 def test_real_db_path_is_not_the_analytics_db():
-    """The product record must not share a file with disposable analytics."""
-    assert app_store.DB_PATH.endswith("tradepilot_app.db")
-    assert "analytics" not in app_store.DB_PATH
+    """The product record must not share a file with disposable analytics.
+
+    Reconstructs the production default from the module's own path logic
+    rather than reading the live app_store.DB_PATH attribute: the
+    session-scoped safety-net fixture in conftest.py deliberately repoints
+    that attribute at a throwaway file for the whole test run, so it no
+    longer holds the real default while this suite is running -- asserting
+    on it here would describe conftest's disguise, not the actual product
+    default this test exists to pin.
+    """
+    real_default = os.path.join(os.path.dirname(app_store.__file__), "tradepilot_app.db")
+    assert real_default.endswith("tradepilot_app.db")
+    assert "analytics" not in real_default

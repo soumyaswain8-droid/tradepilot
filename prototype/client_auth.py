@@ -66,6 +66,22 @@ def current_user():
         conn.close()
 
 
+def foreign_origin():
+    """True when the request carries an Origin that is not ours.
+
+    Only a PRESENT and mismatched Origin is foreign: browsers always send
+    Origin on an unsafe cross-origin request, so the attack is caught, while
+    a request with none is not a browser and therefore not the CSRF threat
+    model. Compares hosts, not whole origins, because behind a TLS-
+    terminating proxy Flask sees http:// while the browser sends https://.
+    Deliberately NOT using ProxyFix: it trusts X-Forwarded-Proto, which is
+    spoofable unless a proxy overwrites it, and it would change all ~70
+    operator routes to fix one check.
+    """
+    origin = request.headers.get("Origin")
+    return origin is not None and urlparse(origin).netloc != request.host
+
+
 def install_guard(app):
     """Refuse gated client endpoints when nobody is signed in."""
 
@@ -76,19 +92,6 @@ def install_guard(app):
             return None
         if current_user() is None:
             return jsonify({"error": "sign in to see this"}), 401
-        if request.method in UNSAFE_METHODS:
-            origin = request.headers.get("Origin")
-            # Compare hosts, not whole origins. Behind a TLS-terminating proxy
-            # Flask sees http:// internally while the browser sends https://,
-            # so comparing schemes would refuse every genuine write in
-            # production. Deliberately NOT using ProxyFix: it trusts
-            # X-Forwarded-Proto, which is spoofable unless a proxy overwrites
-            # it, and it would change all ~70 operator routes to fix one check.
-            #
-            # Only a PRESENT and mismatched host is refused. Browsers always
-            # send Origin on an unsafe cross-origin request, so the attack is
-            # caught; a request with none is not a browser and therefore not
-            # the CSRF threat model.
-            if origin is not None and urlparse(origin).netloc != request.host:
-                return jsonify({"error": "bad origin"}), 403
+        if request.method in UNSAFE_METHODS and foreign_origin():
+            return jsonify({"error": "bad origin"}), 403
         return None

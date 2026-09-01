@@ -6,6 +6,7 @@ site, the victim signs in for real, and the redirect lands them on a copy
 that asks again.
 """
 import os
+import re
 import sys
 
 import pytest
@@ -14,7 +15,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from prototype import accounts, accounts_web, app_store, client_auth
+from prototype import accounts, accounts_web, app_store, client_api, client_auth
 
 
 @pytest.fixture
@@ -24,6 +25,7 @@ def store(tmp_path, monkeypatch):
     app_store.init_db(conn)
     monkeypatch.setattr(client_auth, "open_store", lambda: app_store.get_db(path))
     monkeypatch.setattr(accounts_web, "open_store", lambda: app_store.get_db(path))
+    monkeypatch.setattr(client_api, "open_store", lambda: app_store.get_db(path))
     accounts.create_user(conn, "priya@example.com", "correct horse")
     yield conn
     conn.close()
@@ -56,10 +58,58 @@ def test_the_cookie_is_httponly_and_samesite(client, store):
     assert "SameSite=Lax" in cookie
 
 
+def test_the_cookie_outlives_the_sliding_window_not_just_it(client, store):
+    """The cookie's Max-Age must track the 90-day cap, not the 30-day slide.
+
+    accounts.lookup_session already slides expires_at server-side on every
+    request and enforces the cap there -- the row is the authority. A cookie
+    whose Max-Age matched SESSION_SLIDING_DAYS instead would make the
+    browser discard it at day 30 regardless of activity, signing out a
+    daily-active user well before the 90-day cap the spec promises. The two
+    existing cookie tests above only assert HttpOnly/SameSite and presence,
+    never the header's Max-Age -- that gap is why this shipped.
+    """
+    r = client.post("/app/login",
+                    data={"email": "priya@example.com", "password": "correct horse"})
+    cookie = r.headers.get("Set-Cookie", "")
+    max_age = int(re.search(r"Max-Age=(\d+)", cookie).group(1))
+    assert max_age == accounts.SESSION_MAX_DAYS * 24 * 3600
+    assert max_age != accounts.SESSION_SLIDING_DAYS * 24 * 3600
+
+
 def test_a_wrong_password_does_not_sign_you_in(client, store):
     r = client.post("/app/login",
                     data={"email": "priya@example.com", "password": "wrong"})
     assert client_auth.COOKIE_NAME not in r.headers.get("Set-Cookie", "")
+
+
+def test_login_csrf_a_cross_site_origin_is_refused(client, store):
+    """Login sits outside GATED_ENDPOINTS and SameSite=Lax can't help either
+    -- signing in requires no cookie. Without an Origin check a hostile page
+    can cross-site POST the attacker's own credentials and sign the victim
+    into the attacker's account."""
+    r = client.post("/app/login",
+                    data={"email": "priya@example.com", "password": "correct horse"},
+                    headers={"Origin": "https://evil.example.com"})
+    assert r.status_code == 403
+    assert client_auth.COOKIE_NAME not in r.headers.get("Set-Cookie", "")
+
+
+def test_login_with_a_matching_origin_still_signs_in(client, store):
+    r = client.post("/app/login",
+                    data={"email": "priya@example.com", "password": "correct horse"},
+                    headers={"Origin": "http://localhost"})
+    assert r.status_code == 302
+    assert client_auth.COOKIE_NAME in r.headers.get("Set-Cookie", "")
+
+
+def test_login_with_no_origin_still_signs_in(client, store):
+    """No Origin header is not a browser cross-site request -- it's curl or
+    a test -- so it is not the CSRF threat model and must not be refused."""
+    r = client.post("/app/login",
+                    data={"email": "priya@example.com", "password": "correct horse"})
+    assert r.status_code == 302
+    assert client_auth.COOKIE_NAME in r.headers.get("Set-Cookie", "")
 
 
 def test_the_refusal_is_identical_for_an_unknown_email(client, store):

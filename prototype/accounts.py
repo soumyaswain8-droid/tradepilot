@@ -122,9 +122,18 @@ def lookup_session(conn, token):
     """The user id behind a token, or None. Slides the expiry as a side effect."""
     if not token:
         return None
-    row = conn.execute("SELECT * FROM sessions WHERE token_hash = ?",
-                       (_hash_token(token),)).fetchone()
+    row = conn.execute(
+        "SELECT s.*, u.disabled_at FROM sessions s "
+        "JOIN users u ON u.id = s.user_id "
+        "WHERE s.token_hash = ?", (_hash_token(token),)).fetchone()
     if row is None:
+        return None
+    if row["disabled_at"] is not None:
+        # A disabled account must lose access to sessions it opened before
+        # being disabled, not just future logins -- check_login already
+        # refuses disabled users, but that guards new sign-ins only. Without
+        # this, a cookie issued before disabling keeps working for up to
+        # SESSION_MAX_DAYS with no way to cut off the client.
         return None
 
     now = _now()

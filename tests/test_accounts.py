@@ -199,3 +199,20 @@ def test_two_sessions_for_one_user_are_independent(conn):
     accounts.revoke_session(conn, a)
     assert accounts.lookup_session(conn, a) is None
     assert accounts.lookup_session(conn, b) == uid
+
+
+def test_disabling_an_account_ends_its_existing_sessions(conn):
+    """check_login refuses a disabled user, but that only guards new sign-ins.
+
+    A session opened before the account was disabled must stop resolving
+    too, or a client can keep using a cookie for up to SESSION_MAX_DAYS with
+    no way to cut it off.
+    """
+    uid = _user(conn)
+    token = accounts.create_session(conn, uid)
+    assert accounts.lookup_session(conn, token) == uid
+    conn.execute("UPDATE users SET disabled_at = ? WHERE id = ?",
+                 (accounts._iso(accounts._now()), uid))
+    conn.commit()
+    # Same token, re-presented after disabling.
+    assert accounts.lookup_session(conn, token) is None

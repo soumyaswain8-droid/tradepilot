@@ -51,13 +51,45 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) TradePilot/news-watch"
 
 # Broad feeds, deliberately not per-symbol. `when:1d` is load-bearing — without it
 # Google returns evergreen items with today's pubDate (see news_utils.py).
-FEEDS = [
+# India: symbol-level catalysts. Items here are kept ONLY if they name a listed company.
+FEEDS_IN = [
     ("https://news.google.com/rss/search?q=nse+india+company+results+when:1d&hl=en-IN&gl=IN&ceid=IN:en", "results"),
     ("https://news.google.com/rss/search?q=india+company+order+win+contract+when:1d&hl=en-IN&gl=IN&ceid=IN:en", "order"),
     ("https://news.google.com/rss/search?q=india+stock+brokerage+target+upgrade+downgrade+when:1d&hl=en-IN&gl=IN&ceid=IN:en", "rating"),
     ("https://news.google.com/rss/search?q=sebi+rbi+india+company+regulatory+when:1d&hl=en-IN&gl=IN&ceid=IN:en", "regulatory"),
     ("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en", "business"),
 ]
+
+# GLOBAL: the overnight edge. India trades 09:15-15:30 IST; the US session runs roughly
+# 19:00-01:30 IST and Europe 12:30-21:00 IST, so the single largest block of
+# price-forming information for an Indian open arrives while nobody here is awake. By
+# 09:15 it is already in the gap — the only way to have it BEFORE the open is to have
+# been collecting through the night.
+#
+# These are kept WITHOUT requiring an Indian symbol match. That is the whole point: a
+# Fed decision, a crude spike or an Nvidia miss names no NSE company and would be
+# dropped by the symbol filter, yet moves the Indian open more reliably than most
+# company news does.
+FEEDS_GLOBAL = [
+    ("https://news.google.com/rss/search?q=federal+reserve+interest+rate+decision+when:1d&hl=en-US&gl=US&ceid=US:en", ("US", "macro")),
+    ("https://news.google.com/rss/search?q=us+stocks+dow+nasdaq+s%26p+500+close+when:1d&hl=en-US&gl=US&ceid=US:en", ("US", "equity")),
+    ("https://news.google.com/rss/search?q=crude+oil+brent+price+when:1d&hl=en-US&gl=US&ceid=US:en", ("GLOBAL", "commodity")),
+    ("https://news.google.com/rss/search?q=gold+copper+metals+price+when:1d&hl=en-US&gl=US&ceid=US:en", ("GLOBAL", "commodity")),
+    ("https://news.google.com/rss/search?q=dollar+index+rupee+currency+when:1d&hl=en-US&gl=US&ceid=US:en", ("GLOBAL", "fx")),
+    ("https://news.google.com/rss/search?q=asian+markets+nikkei+hang+seng+when:1d&hl=en-US&gl=US&ceid=US:en", ("ASIA", "equity")),
+    ("https://news.google.com/rss/search?q=europe+stocks+ecb+dax+ftse+when:1d&hl=en-US&gl=US&ceid=US:en", ("EU", "equity")),
+    ("https://news.google.com/rss/search?q=semiconductor+chip+nvidia+tsmc+when:1d&hl=en-US&gl=US&ceid=US:en", ("US", "sector")),
+    ("https://news.google.com/rss/search?q=global+trade+tariff+geopolitics+oil+supply+when:1d&hl=en-US&gl=US&ceid=US:en", ("GLOBAL", "geopolitics")),
+]
+
+# A global headline is only worth recording if it plausibly moves an Indian open.
+# Without this the macro feeds bury the ledger in generic business copy.
+GLOBAL_RELEVANT = re.compile(
+    r"\b(fed|federal reserve|rate (cut|hike|decision)|inflation|cpi|payroll|"
+    r"treasury|yield|recession|tariff|sanction|opec|crude|brent|wti|"
+    r"gold|copper|nikkei|hang seng|shanghai|dax|ftse|ecb|boj|"
+    r"dollar|rupee|yuan|yen|semiconductor|chip|nvidia|tsmc|"
+    r"rally|selloff|plunge|surge|slump|record high|correction|war|strike)\b", re.I)
 
 # Rule-based, NOT an LLM. Auditable, deterministic, free, and reproducible six months
 # from now — an LLM classification cannot be re-derived once the model changes, which
@@ -95,6 +127,26 @@ STOP_NAMES = {"india", "bank", "power", "steel", "auto", "motors", "finance", "e
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _which_session() -> str:
+    """Which market was awake when we saw this, in IST.
+
+    Recorded because it is the field that makes the overnight thesis testable: an item
+    first seen in OVERNIGHT_US is information we hold before the Indian open, and its
+    value can be measured against the next open's gap. One first seen in IN_SESSION is
+    already in the price by the time we act on it.
+    """
+    h = datetime.now().hour
+    if 9 <= h < 16:
+        return "IN_SESSION"
+    if 16 <= h < 19:
+        return "IN_POST"
+    if 19 <= h or h < 2:
+        return "OVERNIGHT_US"
+    if 2 <= h < 7:
+        return "OVERNIGHT_LATE"
+    return "IN_PRE"                      # 07:00-09:00, the window that matters most
 
 
 def _english_words() -> set:
@@ -202,7 +254,10 @@ def run_once(names: dict, verbose: bool = True) -> int:
     have = seen_hashes(day)
     rows, feeds_ok = [], 0
 
-    for url, bucket in FEEDS:
+    sources = ([(u, b, "IN", None) for u, b in FEEDS_IN] +
+               [(u, t, r, t) for u, (r, t) in FEEDS_GLOBAL])
+
+    for url, bucket, region, theme in sources:
         try:
             items = parse_items(fetch(url))
             feeds_ok += 1
@@ -226,8 +281,19 @@ def run_once(names: dict, verbose: bool = True) -> int:
             if h in have:
                 continue
             syms = match_symbols(title, names)
-            if not syms:
-                continue                    # macro news is already covered elsewhere
+
+            # Two admission rules, because the two feed sets answer different questions.
+            # India: keep only what names a listed company — unattributed Indian macro
+            # is already served by the dashboard's existing feed.
+            # Global: keep it WITHOUT a symbol, because the value is precisely that it
+            # moves the whole market before we open. Requiring an NSE name here would
+            # discard every Fed decision and crude spike, which is the overnight edge.
+            if region == "IN":
+                if not syms:
+                    continue
+            elif not (syms or GLOBAL_RELEVANT.search(title)):
+                continue
+
             have.add(h)
             rows.append({
                 # OUR clock. The only timestamp in this record that cannot be
@@ -236,7 +302,12 @@ def run_once(names: dict, verbose: bool = True) -> int:
                 "first_seen_utc": _now(),
                 "hash": h,
                 "symbols": syms,
-                "catalyst": classify(title),
+                "catalyst": cat,
+                # region/theme carry the overnight context: an item with no symbols and
+                # region != IN is market-level information that landed while India slept
+                "region": region,
+                "theme": theme,
+                "session": _which_session(),
                 "feed_bucket": bucket,
                 "title": title,
                 "link": it["link"],
@@ -250,11 +321,11 @@ def run_once(names: dict, verbose: bool = True) -> int:
             for r in rows:
                 fh.write(json.dumps(r) + "\n")
     if verbose:
-        print(f"  {datetime.now():%H:%M:%S}  feeds {feeds_ok}/{len(FEEDS)}  "
-              f"new matched items: {len(rows)}", flush=True)
-        for r in rows[:6]:
-            print(f"    {','.join(r['symbols'])[:22]:<22} [{r['catalyst']:<10}] "
-                  f"{r['title'][:64]}", flush=True)
+        print(f"  {datetime.now():%H:%M:%S}  feeds {feeds_ok}/{len(sources)}  "
+              f"session {_which_session()}  new items: {len(rows)}", flush=True)
+        for r in rows[:8]:
+            who = ",".join(r["symbols"])[:20] or f"[{r['region']}/{r['theme']}]"
+            print(f"    {who:<22} [{r['catalyst']:<10}] {r['title'][:60]}", flush=True)
     return len(rows)
 
 
@@ -272,26 +343,35 @@ def stats() -> None:
             except Exception:
                 pass
     print(f"  {len(rows)} items across {len(files)} day(s)")
+    print("  by region   :", dict(collections.Counter(r.get("region", "?") for r in rows)))
+    print("  by session  :", dict(collections.Counter(r.get("session", "?") for r in rows)))
     print("  by catalyst :", dict(collections.Counter(r["catalyst"] for r in rows)))
+    print("  by theme    :", dict(collections.Counter(
+        r["theme"] for r in rows if r.get("theme"))))
     syms = collections.Counter(s for r in rows for s in r["symbols"])
     print("  distinct symbols:", len(syms))
     print("  most mentioned  :", dict(syms.most_common(6)))
-
-
-ACTIVE_HOURS = (7, 21)          # IST, inclusive start / exclusive end
+    # the overnight count is the number this whole change exists to make non-zero
+    on = sum(1 for r in rows if r.get("session", "").startswith("OVERNIGHT"))
+    print(f"  collected while India slept: {on}")
 
 
 def in_active_hours() -> bool:
-    """Collect 07:00-21:00 IST, every day including weekends.
+    """Always true. Collection runs 24/7, weekends included.
 
-    Not restricted to market hours on purpose: results, order wins and regulatory
-    orders are routinely announced after the close and over weekends, and the point of
-    forward collection is to timestamp WHEN WE COULD FIRST HAVE KNOWN. Skipping the
-    overnight window is politeness to the feeds, not a view about when news matters —
-    anything published at 03:00 is picked up by the 07:00 pass with an honest
-    first_seen a few hours later, which is the correct record of our knowledge.
+    It briefly did not, and that was a mistake worth recording: an earlier version
+    slept 21:00-07:00 IST "to be polite to the feeds", which switched the collector off
+    for the ENTIRE US session (roughly 19:00-01:30 IST) — the single largest block of
+    price-forming information ahead of an Indian open. It would have collected only
+    news that was already in the price by the time we could act on it, and the whole
+    argument for watching global markets is that the value lives in the hours nobody
+    here is awake.
+
+    The cost of running through the night is nine HTTP fetches every fifteen minutes,
+    almost all of which dedupe to nothing. That is not worth optimising against the
+    thing the collector exists to capture.
     """
-    return ACTIVE_HOURS[0] <= datetime.now().hour < ACTIVE_HOURS[1]
+    return True
 
 
 def main() -> int:

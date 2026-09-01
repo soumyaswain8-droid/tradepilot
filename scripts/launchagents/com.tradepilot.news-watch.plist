@@ -6,12 +6,13 @@
     <string>/bin/bash</string><string>-c</string>
     <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; /Users/soumyaswain/anaconda3/bin/python3 scripts/news-watch.py --scheduled >> logs/news-watch-$(date +\%Y-\%m-\%d).log 2>&amp;1</string>
   </array>
-  <!-- Every 15 minutes. The script itself exits quietly outside 07:00-21:00 IST, so
-       the interval stays simple here rather than enumerating 56 calendar entries.
-       Runs weekends too: results and regulatory orders land outside market hours, and
-       the whole point of forward collection is recording when we could first have
-       known. Each pass is five HTTP fetches and dedupes on a title hash, so repeated
-       passes over the same story cost nothing and record nothing twice. -->
+  <!-- Every 15 minutes, 24/7, weekends included. The overnight window is the POINT,
+       not an edge case: India trades 09:15-15:30 IST while the US session runs roughly
+       19:00-01:30 IST, so the largest block of price-forming information ahead of an
+       Indian open arrives while nobody here is awake. An earlier version slept
+       21:00-07:00 and would have missed the entire US session.
+       Each pass is 14 HTTP fetches and dedupes on a title hash, so repeated passes
+       over the same story cost nothing and record nothing twice. -->
   <key>StartInterval</key><integer>900</integer>
   <key>RunAtLoad</key><false/>
 </dict></plist>

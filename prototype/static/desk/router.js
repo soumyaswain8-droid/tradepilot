@@ -19,6 +19,7 @@
   var SECTIONS = [
     { id: "desk",   label: "Desk",        subs: [] },
     { id: "market", label: "Market",      subs: [] },
+    { id: "news",   label: "News",        subs: [] },
     { id: "agents", label: "Agent Floor", subs: [{ id: "quant", label: "Quant Desk" },
                                                  { id: "floor", label: "Live Floor" }] }
   ];

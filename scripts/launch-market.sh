@@ -471,9 +471,24 @@ echo "[2/9] Starting Flask dashboard (localhost:5050)..."
 if lsof -iTCP:5050 -sTCP:LISTEN -n -P > /dev/null 2>&1; then
   echo "  ✓ already running on :5050"
 else
-  cd prototype && nohup python3 app.py > /tmp/flask.log 2>&1 &
+  # PYTHONPATH="$ROOT" is REQUIRED, not tidiness. app.py does `from prototype import
+  # client_auth` (98f8921), and running it from inside prototype/ puts prototype/ on
+  # sys.path rather than the project root, so that import raises ModuleNotFoundError
+  # and Flask never binds. Found 2026-09-01: this line had been silently failing, and
+  # the dashboard was only up because it had been started by hand.
+  #
+  # Verify after any change with: (cd prototype && python3 -c "import app")
+  cd prototype && PYTHONPATH="$ROOT" nohup python3 app.py > /tmp/flask.log 2>&1 &
   cd "$ROOT"
-  echo "  ✓ Flask launched (PID $!)"
+  sleep 6
+  if lsof -iTCP:5050 -sTCP:LISTEN -n -P > /dev/null 2>&1; then
+    echo "  ✓ Flask launched (PID $!)"
+  else
+    # Do not report a launch that did not happen. A silent Flask failure is how the
+    # console reads "offline" all morning with nothing in the log to explain it.
+    echo "  ✗ Flask FAILED to bind :5050 — last lines of /tmp/flask.log:"
+    tail -5 /tmp/flask.log | sed 's/^/      /'
+  fi
 fi
 
 # [3/9] Capture today's dashboard score snapshot (added 2026-04-23)

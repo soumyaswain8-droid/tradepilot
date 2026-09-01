@@ -149,6 +149,56 @@ def floor_view():
     return render_template("floor.html", embed=request.args.get("embed") == "1")
 
 
+@app.route("/api/news")
+def api_news():
+    """The catalyst ledger written by scripts/news-watch.py.
+
+    Read-only over the JSONL the collector appends to — the dashboard never triggers a
+    fetch, so a slow or rate-limited feed can never stall the page, and viewing the feed
+    cannot alter what was collected. first_seen_utc is the collector's own observation
+    time and is the only timestamp here that can be trusted; publisher_pubdate is
+    carried through for comparison but Google re-stamps it (see prototype/news_utils.py).
+    """
+    import json as _j
+    from pathlib import Path as _P
+    from datetime import datetime as _dt, timedelta as _td
+    from flask import request as _rq
+
+    days = max(1, min(int(_rq.args.get("days", 2)), 14))
+    want_region = (_rq.args.get("region") or "").upper()
+    want_sym = (_rq.args.get("symbol") or "").upper()
+
+    base = _P(__file__).resolve().parent.parent / "docs" / "sarathi" / "knowledge" / "news"
+    rows = []
+    for i in range(days):
+        f = base / f"{(_dt.now() - _td(days=i)):%Y-%m-%d}.jsonl"
+        if not f.exists():
+            continue
+        for ln in f.read_text().splitlines():
+            try:
+                rows.append(_j.loads(ln))
+            except Exception:
+                continue
+    if want_region:
+        rows = [r for r in rows if (r.get("region") or "") == want_region]
+    if want_sym:
+        rows = [r for r in rows if want_sym in (r.get("symbols") or [])]
+    rows.sort(key=lambda r: r.get("first_seen_utc", ""), reverse=True)
+
+    import collections as _c
+    return jsonify({
+        "items": rows[:300],
+        "total": len(rows),
+        "days": days,
+        "by_region": dict(_c.Counter(r.get("region", "?") for r in rows)),
+        "by_session": dict(_c.Counter(r.get("session", "?") for r in rows)),
+        "by_catalyst": dict(_c.Counter(r.get("catalyst", "?") for r in rows)),
+        # the number that says whether overnight watching is doing its job
+        "overnight": sum(1 for r in rows
+                         if str(r.get("session", "")).startswith("OVERNIGHT")),
+    })
+
+
 @app.route("/api/floor/live")
 def api_floor_live():
     """Live state for the console.

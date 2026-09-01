@@ -120,6 +120,26 @@
     </div>
   </section>
 
+  <!-- News: the catalyst ledger. Region filters lead with OVERNIGHT because that is
+       the point of collecting globally — items first seen while India slept are
+       information we hold BEFORE the open, unlike anything seen in-session. -->
+  <section class="view" id="view-news">
+    <div class="mktbar">
+      <input class="search" id="newsSearch" placeholder="Search headline or symbol…" autocomplete="off" spellcheck="false">
+      <button class="fpill on" data-nf="all">All</button>
+      <button class="fpill" data-nf="overnight">Overnight</button>
+      <button class="fpill" data-nf="IN">India</button>
+      <button class="fpill" data-nf="US">US</button>
+      <button class="fpill" data-nf="GLOBAL">Global</button>
+      <button class="fpill" data-nf="catalyst">Catalysts only</button>
+      <span class="chip dim" id="newsCount">…</span>
+      <span class="asof" id="newsAsOf">…</span>
+    </div>
+    <div class="card" style="padding:0 6px">
+      <div id="newsBody"><div class="empty skel" style="height:300px;margin:10px"></div></div>
+    </div>
+  </section>
+
   <!-- ═══ AGENT FLOOR ═══ -->
   <section class="view pane" id="view-agents-quant">
     <iframe class="paneframe" id="frameQuant" title="Quant Desk" src=""></iframe>

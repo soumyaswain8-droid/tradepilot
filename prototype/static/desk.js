@@ -38,6 +38,72 @@
   }
   function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : "flat"; }
 
+  /* ── news ──────────────────────────────────────────────────────────────────
+     Reads the ledger scripts/news-watch.py appends to. The dashboard never triggers
+     a feed fetch, so a rate-limited source cannot stall the page and opening this
+     tab cannot change what was collected. */
+  var newsRows = [], newsFilter = "all", newsQuery = "", newsMeta = {};
+
+  function agoOf(iso) {
+    var t = Date.parse(iso);
+    if (!t) return "";
+    var m = Math.max(0, (Date.now() - t) / 60000);
+    if (m < 60) return Math.round(m) + "m";
+    if (m < 1440) return Math.round(m / 60) + "h";
+    return Math.round(m / 1440) + "d";
+  }
+
+  function loadNews() {
+    return jget("/api/news?days=3").then(function (res) {
+      var d = res.j || {};
+      newsRows = d.items || [];
+      newsMeta = d;
+      renderNews();
+    }).catch(function () {
+      $("newsBody").innerHTML = '<div class="empty">News ledger unavailable</div>';
+    });
+  }
+
+  function renderNews() {
+    var rows = newsRows.filter(function (r) {
+      if (newsQuery) {
+        var hay = ((r.title || "") + " " + (r.symbols || []).join(" ")).toUpperCase();
+        if (hay.indexOf(newsQuery) === -1) return false;
+      }
+      if (newsFilter === "all") return true;
+      if (newsFilter === "overnight") return String(r.session || "").indexOf("OVERNIGHT") === 0;
+      if (newsFilter === "catalyst") return r.catalyst && r.catalyst !== "other";
+      return (r.region || "") === newsFilter;
+    });
+    $("newsCount").textContent = rows.length + " of " + newsRows.length;
+    $("newsAsOf").textContent = (newsMeta.overnight || 0) + " overnight · "
+      + (newsMeta.total || 0) + " in " + (newsMeta.days || 0) + "d";
+    if (!rows.length) {
+      $("newsBody").innerHTML = '<div class="empty">Nothing matches</div>';
+      return;
+    }
+    $("newsBody").innerHTML =
+      '<div class="scrollbox" style="max-height:70vh"><table class="tbl"><thead><tr>' +
+      "<th>Seen</th><th>Where</th><th>Type</th><th>Symbols</th><th>Headline</th>" +
+      "</tr></thead><tbody>" +
+      rows.slice(0, 250).map(function (r) {
+        var overnight = String(r.session || "").indexOf("OVERNIGHT") === 0;
+        var cc = r.catalyst && r.catalyst !== "other" ? "acc" : "dim";
+        return "<tr>" +
+          '<td class="num dim">' + esc(agoOf(r.first_seen_utc)) + "</td>" +
+          // overnight is accented: those items were in hand before the open
+          '<td><span class="chip ' + (overnight ? "ok" : "dim") + '">' +
+            esc(r.region || "?") + "</span></td>" +
+          '<td><span class="chip ' + cc + '">' + esc(r.catalyst || "-") + "</span></td>" +
+          '<td class="sym">' + esc((r.symbols || []).join(" ")) + "</td>" +
+          "<td>" + (r.link
+            ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">' +
+              esc(r.title) + "</a>"
+            : esc(r.title)) + "</td>" +
+          "</tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
   // /api/scores returns the verdict as `direction`. This file read `r.signal`, which
   // does not exist on that payload, so `|| "HOLD"` fired on EVERY row — the Market tab
   // printed HOLD for names the engine had scored BUY (APOLLOHOSP 72.9, BHARTIARTL
@@ -498,6 +564,29 @@
       refresh: loadMarket,
       pollMs: 60000
     });
+
+    window.TPRouter.register("news", {
+      mount: loadNews,
+      refresh: loadNews,
+      // 5 minutes: the collector itself only runs every 15, so polling faster shows
+      // motion that is not there — the same reasoning as the floor's board TTL.
+      pollMs: 300000
+    });
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-nf]") : null;
+      if (!b) return;
+      newsFilter = b.getAttribute("data-nf");
+      document.querySelectorAll("[data-nf]").forEach(function (x) {
+        x.classList.toggle("on", x === b);
+      });
+      renderNews();
+    });
+    var ns = $("newsSearch");
+    if (ns) ns.addEventListener("input", function () {
+      newsQuery = (ns.value || "").trim().toUpperCase();
+      renderNews();
+    });
+
     // Shell furniture first: if the router fails to load, a frozen index strip
     // beside a live clock looks like stale market data, not a broken deploy.
     setInterval(function () {

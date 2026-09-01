@@ -55,6 +55,19 @@ CREATE TABLE IF NOT EXISTS positions (
 
 CREATE INDEX IF NOT EXISTS ix_positions_user
     ON positions (user_id, closed_at);
+
+CREATE TABLE IF NOT EXISTS users (
+    id             TEXT PRIMARY KEY,
+    email          TEXT NOT NULL,
+    password_hash  TEXT NOT NULL,
+    created_at     TEXT NOT NULL,
+    disabled_at    TEXT,
+    failed_count   INTEGER NOT NULL DEFAULT 0,
+    locked_until   TEXT
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email
+    ON users (lower(email));
 """
 
 

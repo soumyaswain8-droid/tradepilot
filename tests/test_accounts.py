@@ -100,3 +100,19 @@ def test_a_successful_login_clears_the_failure_count(conn):
     row = conn.execute("SELECT failed_count, locked_until FROM users").fetchone()
     assert row["failed_count"] == 0
     assert row["locked_until"] is None
+
+
+def test_an_expired_lock_restores_the_full_attempt_budget(conn):
+    """A lock that has run its course must reset the counter with it.
+
+    Otherwise failed_count stays at the threshold and the very next failure
+    re-locks -- which lets an attacker hold the account shut for one request
+    every LOCKOUT_MINUTES, and leaves the real user a single-attempt window.
+    """
+    accounts.create_user(conn, "priya@example.com", "correct horse")
+    for _ in range(accounts.LOCKOUT_THRESHOLD):
+        accounts.check_login(conn, "priya@example.com", "wrong")
+    conn.execute("UPDATE users SET locked_until = '2020-01-01T00:00:00+00:00'")
+    conn.commit()
+    accounts.check_login(conn, "priya@example.com", "wrong")   # one failure, post-expiry
+    assert accounts.check_login(conn, "priya@example.com", "correct horse")

@@ -63,6 +63,12 @@ def check_login(conn, email, password):
         return None
     if row["locked_until"] and _parse(row["locked_until"]) > _now():
         return None
+    if row["locked_until"] and _parse(row["locked_until"]) <= _now():
+        conn.execute("UPDATE users SET failed_count = 0, locked_until = NULL WHERE id = ?",
+                     (row["id"],))
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM users WHERE lower(email) = lower(?)", (email,)).fetchone()
 
     if not check_password_hash(row["password_hash"], password):
         failed = row["failed_count"] + 1

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.tradepilot.news-watch</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-c</string>
+    <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; /Users/soumyaswain/anaconda3/bin/python3 scripts/news-watch.py --scheduled >> logs/news-watch-$(date +\%Y-\%m-\%d).log 2>&amp;1</string>
+  </array>
+  <!-- Every 15 minutes. The script itself exits quietly outside 07:00-21:00 IST, so
+       the interval stays simple here rather than enumerating 56 calendar entries.
+       Runs weekends too: results and regulatory orders land outside market hours, and
+       the whole point of forward collection is recording when we could first have
+       known. Each pass is five HTTP fetches and dedupes on a title hash, so repeated
+       passes over the same story cost nothing and record nothing twice. -->
+  <key>StartInterval</key><integer>900</integer>
+  <key>RunAtLoad</key><false/>
+</dict></plist>

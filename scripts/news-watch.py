@@ -278,13 +278,33 @@ def stats() -> None:
     print("  most mentioned  :", dict(syms.most_common(6)))
 
 
+ACTIVE_HOURS = (7, 21)          # IST, inclusive start / exclusive end
+
+
+def in_active_hours() -> bool:
+    """Collect 07:00-21:00 IST, every day including weekends.
+
+    Not restricted to market hours on purpose: results, order wins and regulatory
+    orders are routinely announced after the close and over weekends, and the point of
+    forward collection is to timestamp WHEN WE COULD FIRST HAVE KNOWN. Skipping the
+    overnight window is politeness to the feeds, not a view about when news matters —
+    anything published at 03:00 is picked up by the 07:00 pass with an honest
+    first_seen a few hours later, which is the correct record of our knowledge.
+    """
+    return ACTIVE_HOURS[0] <= datetime.now().hour < ACTIVE_HOURS[1]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--loop", type=int, default=0, help="seconds between passes")
     ap.add_argument("--stats", action="store_true")
+    ap.add_argument("--scheduled", action="store_true",
+                    help="exit quietly outside active hours (for launchd)")
     a = ap.parse_args()
     if a.stats:
         stats()
+        return 0
+    if a.scheduled and not in_active_hours():
         return 0
     names = symbol_names()
     print(f"  matching against {len(names)} listed companies", flush=True)

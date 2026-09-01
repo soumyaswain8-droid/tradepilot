@@ -123,20 +123,25 @@ SWEEP_LOOKBACK = 45         # ticks; was 30
 # PRE-REGISTERED bar in shadow -- stated before the data arrives, so it cannot be
 # fitted afterwards. That is the discipline that killed six ideas already, and the
 # only reason to trust the seventh.
-# 2026-08-28, Soumya's call: switched shadow -> live on the PAPER book so the floor
-# actually holds names during the session and the console stops reading empty.
+# BACK TO SHADOW 2026-09-01, after the 31 Aug live-paper session answered the
+# question it was turned on to answer.
 #
-# What this sets aside, stated plainly so nobody later mistakes it for a passed gate:
-# SHADOW_GATE below was NOT met — 18 trades across 1 session against a bar of 150
-# across 8. The gate's purpose is to keep unproven rules away from REAL money, and
-# this book is simulated at NOTIONAL, so nothing is at risk but the evidence. Two
-# consequences worth knowing when this sample is analysed:
-#   - live is capped by MAX_CONCURRENT, so it takes FEWER trades than shadow recorded
-#     (18 shadow entries today would not all have been openable)
-#   - the live sample is therefore smaller but more honest — it pays the concurrency
-#     and exit-management constraints a real book faces
-# To revert: set this back to "shadow". Nothing else needs changing.
-ENTRY_MODE = "live"
+# It was switched to "live" on 08-28 to get exits, which shadow alone cannot produce,
+# and it worked: 120 closed trades settled the geometry question in one session where
+# the pre-registered gate would have taken eight. The verdict was clear — breakeven
+# needs 56.4% at 1.5R with those stops, actual was 40.0%, and the 95% CI (31.2-48.8%)
+# sat entirely below breakeven.
+#
+# Shadow is the right mode for what comes next. The two changes above — SWEEP_RECLAIM
+# only, and TARGET_R 1.85 — are a REWORKED GEOMETRY, not a validated one, and the
+# margin is 0.04R on an assumption that may not hold. Trading an unvalidated
+# configuration to find out is what the shadow gate exists to prevent, and shadow
+# still measures it: shadow-settle.py settles recorded entries against real bars, so
+# the sample keeps growing without taking positions.
+#
+# SHADOW_GATE below is the bar this must clear before going live again.
+# To resume live entries: set this back to "live". Nothing else needs changing.
+ENTRY_MODE = "shadow"
 SHADOW_FILE = KNOW / "shadow"
 
 # The bar a rule must clear in shadow before it may go live. Written down FIRST.
@@ -148,13 +153,18 @@ SHADOW_GATE = {
 }
 AUTO_ENTRY = ENTRY_MODE == "live"
 ENTRY_TRIGGER = "SWEEP_RECLAIM"   # the rule under test; kept for shadow-settle.py
-# Widened 2026-08-28 at Soumya's request so the book is not empty all session.
-# SWEEP_RECLAIM alone is rare — none fired in the twenty minutes after the 09:51
-# restart, so the floor can watch all day and hold nothing. LEVEL_TOUCH is the
-# evidence-backed addition: this floor's own tally has it at n=473, 0.404% vs a
-# 0.318% base, lift +0.085pp. VOL_SPIKE stays in DISABLED_TRIGGERS (n=540, lift
-# -0.014pp) because widening should not mean admitting what was measured as harmful.
-ENTRY_TRIGGERS = {"SWEEP_RECLAIM", "LEVEL_TOUCH"}
+# NARROWED BACK 2026-09-01, on the evidence of the 31 Aug session (n=120 closed).
+#
+# LEVEL_TOUCH was added on 08-28 so the book would not sit empty. It was the worse
+# half by a wide margin: n=72, win 36.1%, net -Rs293.54, against SWEEP_RECLAIM's
+# n=48, 45.8%, -Rs30.86. It carried 60% of the trades and produced 90% of the loss.
+#
+# The deeper reason for dropping it is cost, not hit rate. The book was GROSS
+# POSITIVE (+Rs27.71) and lost Rs352.11 to fees — the toll ran 12.7x the per-trade
+# gross edge, on Rs360,000 of turnover against Rs24,000 of capital in one session.
+# Every trade pays a near-fixed toll, so the direct attack is fewer, higher-conviction
+# trades. Dropping LEVEL_TOUCH cuts trade count ~60% at the cost of the weaker signal.
+ENTRY_TRIGGERS = {"SWEEP_RECLAIM"}
 ENTRY_MIN_AGREE = 2          # confluence: our one finding that survived falsification
 
 # Only levels where ORDERS ACTUALLY REST can be swept. Found by reading the charts
@@ -188,7 +198,20 @@ FORCE_EXIT_AT = "15:15"
 # sized to the rupee can breach its own limit on nothing worse than normal slippage.
 # Rs1,000 of headroom (4%) costs almost no deployment and removes that edge case.
 NOTIONAL = 3000.0
-TARGET_R = 1.5               # reward per unit of risk; below this the toll eats it
+# Raised 1.5 -> 1.85 on 2026-09-01. Each trade pays a near-fixed toll, so a bigger
+# target carries more gross edge against the same cost. Derived, not guessed: solving
+# p*(R*r - toll) = (1-p)*(r + toll) on the 31 Aug book gives breakeven R = 1.81 for
+# SWEEP_RECLAIM alone (n=48, win 45.8%, median risk 0.370%), and R = 2.52 if
+# LEVEL_TOUCH is included — which is a second reason to drop it.
+#
+# TWO HONEST CAVEATS, because 1.85 is not a comfortable margin:
+#   - it clears breakeven by 0.04R. That is thin enough that a small drift in the
+#     win rate erases it.
+#   - it assumes 45.8% SURVIVES the target moving out. Wider targets are usually hit
+#     less often, so the true breakeven is probably above 1.81 and this may still be
+#     under water. That is precisely why ENTRY_MODE goes back to shadow below rather
+#     than trading this configuration live.
+TARGET_R = 1.85
 POSITIONS_FILE = KNOW / "positions"
 
 # ── dynamic reassignment (Soumya, 2026-08-24) ────────────────────────────────

@@ -56,8 +56,26 @@ TWOFA = "https://kite.zerodha.com/api/twofa"
 
 
 def _fail(stage: str, detail: str = "") -> None:
-    """Report the stage, never the payload — a login error can echo credentials."""
-    print(f"  FAILED at {stage}" + (f": {detail[:120]}" if detail else ""), flush=True)
+    """Report the stage, never the payload — a login error can echo credentials.
+
+    Also alerts. This runs unattended before the open, and a silent failure here means
+    a dark session: no ticks, no screen, no floor. A log line nobody reads at 08:15 is
+    indistinguishable from success until 09:16, which is far too late to fix it by hand.
+    The alert carries the STAGE only — never the credential that failed.
+    """
+    msg = f"KITE AUTO-LOGIN FAILED at {stage}" + (f": {detail[:120]}" if detail else "")
+    print(f"  {msg}", flush=True)
+    # A preflight failure means "not configured yet" — a setup state the owner already
+    # knows about, not a runtime fault. Alerting on it every weekday morning until the
+    # credentials are added would train them to ignore the channel, and this alert has
+    # to still mean something on the morning a password is actually rejected.
+    if stage == "preflight":
+        raise SystemExit(2)
+    try:
+        from prototype.v5 import telegram_bot as tb
+        tb.send_alert(f"{msg}\nThe token is NOT refreshed. Log in manually before 09:15.")
+    except Exception as e:
+        print(f"  (alert could not be sent: {str(e)[:60]})", flush=True)
     raise SystemExit(2)
 
 

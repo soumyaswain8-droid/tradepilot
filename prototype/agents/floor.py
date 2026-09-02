@@ -198,20 +198,27 @@ FORCE_EXIT_AT = "15:15"
 # sized to the rupee can breach its own limit on nothing worse than normal slippage.
 # Rs1,000 of headroom (4%) costs almost no deployment and removes that edge case.
 NOTIONAL = 3000.0
-# Raised 1.5 -> 1.85 on 2026-09-01. Each trade pays a near-fixed toll, so a bigger
-# target carries more gross edge against the same cost. Derived, not guessed: solving
-# p*(R*r - toll) = (1-p)*(r + toll) on the 31 Aug book gives breakeven R = 1.81 for
-# SWEEP_RECLAIM alone (n=48, win 45.8%, median risk 0.370%), and R = 2.52 if
-# LEVEL_TOUCH is included — which is a second reason to drop it.
+# REVERTED to 1.5 on 2026-09-03, one settled day after raising it. The experiment
+# failed and the failure was informative, so it is recorded rather than deleted.
 #
-# TWO HONEST CAVEATS, because 1.85 is not a comfortable margin:
-#   - it clears breakeven by 0.04R. That is thin enough that a small drift in the
-#     win rate erases it.
-#   - it assumes 45.8% SURVIVES the target moving out. Wider targets are usually hit
-#     less often, so the true breakeven is probably above 1.81 and this may still be
-#     under water. That is precisely why ENTRY_MODE goes back to shadow below rather
-#     than trading this configuration live.
-TARGET_R = 1.85
+# The change (1.5 -> 1.85 on 09-01) was derived, not guessed: solving
+# p*(R*r - toll) = (1-p)*(r + toll) on the 31 Aug book gave breakeven R = 1.81 for
+# SWEEP_RECLAIM alone. But that solve HELD THE WIN RATE FIXED at the 45.8% observed at
+# 1.5R, and the caveat written here at the time was that wider targets are usually hit
+# less often. Measured on 69 settled shadow trades from 09-01:
+#
+#     win rate   45.8% at 1.5R  ->  29.0% at 1.85R      (-17 points)
+#     gross      POSITIVE       ->  -0.083%/trade       (sign flipped)
+#     net                           -0.189%/trade, cumulative -13.05%
+#
+# Moving the target out cost far more hit rate than the wider target paid back. The
+# 0.04R of margin the solve produced was never real, because the win rate is not
+# independent of R — it is a FUNCTION of it, and treating it as a constant is what made
+# the arithmetic look safe.
+#
+# The lesson generalises past this one number: any breakeven solve that holds p fixed
+# while moving R is describing a market that does not exist.
+TARGET_R = 1.5
 POSITIONS_FILE = KNOW / "positions"
 
 # ── dynamic reassignment (Soumya, 2026-08-24) ────────────────────────────────

@@ -81,7 +81,21 @@ def settle(rec, day, k, cache):
 def main():
     days = sorted(p.stem for p in SHADOW_FILE.glob("2026-*.jsonl")) \
         if SHADOW_FILE.exists() else []
-    if "--all" not in sys.argv:
+
+    # SETTLE EVERY DAY, ALWAYS. This used to default to today only and then
+    # write_text() the result — which OVERWROTE the whole file with a single day, so
+    # each run destroyed all prior settled history. Found 2026-09-03: 09-01's 69
+    # settled trades had been replaced by 09-02's 41.
+    #
+    # That silently made SHADOW_GATE unreachable. The gate needs 150 trades across 8
+    # days; a file that only ever holds the latest day can never reach either, and
+    # nothing would have reported an error — the run looked successful every time.
+    #
+    # The per-day ledgers are the source of truth and settlement is deterministic, so
+    # rebuilding the full set each run is both correct and idempotent. --today is kept
+    # for a quick single-day look, but it now writes to a scratch path so it cannot
+    # clobber the accumulated record.
+    if "--today" in sys.argv:
         today = datetime.now().strftime("%Y-%m-%d")
         days = [d for d in days if d == today] or days[-1:]
     if not days:
@@ -107,7 +121,9 @@ def main():
         return 1
 
     SETTLED.parent.mkdir(parents=True, exist_ok=True)
-    SETTLED.write_text("\n".join(json.dumps(o) for o in out) + "\n")
+    # a --today run must never overwrite the accumulated record — see main()'s note
+    dest = SETTLED if "--today" not in sys.argv else SETTLED.with_name("settled_today.jsonl")
+    dest.write_text("\n".join(json.dumps(o) for o in out) + "\n")
 
     nets = [o["net_pct"] for o in out]
     mu = st.mean(nets)

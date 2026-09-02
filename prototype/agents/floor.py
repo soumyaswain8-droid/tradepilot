@@ -513,7 +513,33 @@ class Floor:
         from prototype.envcfg import get as _cfg
         api_key = _cfg("KITE_API_KEY")
         token = _cfg("KITE_ACCESS_TOKEN")
-        wl = self.build_watchlist()
+        # RETRY THE OPENING SWEEP. sweep() raises on a total quote failure (added
+        # 2026-08-28 so a broken screen could not masquerade as an empty market). That
+        # is right for the dashboard, which catches it — but here it propagated out of
+        # start() and KILLED THE PROCESS. On 2026-09-02 a transient
+        # HTTPSConnectionPool "max retries exceeded" at startup left the floor dead for
+        # the whole session, because launchd starts it once at 09:16 and the watchdog
+        # only restarts within a capped budget.
+        #
+        # rebalance() already survives this (it catches at its own call site); only the
+        # opening build was unguarded. A quote endpoint that is briefly unreachable at
+        # 09:16 must not cost the session, so retry over a few minutes before giving up.
+        wl = []
+        for attempt in range(1, 7):
+            try:
+                wl = self.build_watchlist()
+                break
+            except Exception as e:
+                if attempt == 6:
+                    print(f"  ABORT — opening sweep failed {attempt}x, last error: "
+                          f"{str(e)[:100]}", flush=True)
+                    print("  The floor is NOT running. Check the Kite token and "
+                          "network, then restart.", flush=True)
+                    return
+                wait = 20 * attempt          # 20s, 40s, 60s ... ~5 min total
+                print(f"  opening sweep failed ({str(e)[:60]}) — retry {attempt}/5 "
+                      f"in {wait}s", flush=True)
+                time.sleep(wait)
         if not wl:
             print("  no watchlist — scouts returned nothing"); return
         print(f"  seeding theses for {len(wl)} agents...")

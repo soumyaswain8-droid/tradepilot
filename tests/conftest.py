@@ -31,6 +31,26 @@ def _never_touch_the_real_database(tmp_path_factory):
     app_store.DB_PATH = real
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _never_send_real_mail():
+    """Make the real SMTP transport unreachable for the whole run.
+
+    The database has a net for the same reason: a seam patched per-fixture
+    is a seam someone eventually forgets. Mail is worse than a stray write,
+    because the side effect leaves the machine and reaches a person.
+    """
+    from prototype import mailer
+    real = mailer._smtp_transport
+
+    def refuse(*args, **kwargs):
+        raise AssertionError(
+            "a test reached the real SMTP transport -- pass transport= "
+            "or patch accounts_web.send_mail")
+    mailer._smtp_transport = refuse
+    yield
+    mailer._smtp_transport = real
+
+
 @pytest.fixture(scope="session")
 def flask_app():
     """The prototype Flask application, configured for testing."""

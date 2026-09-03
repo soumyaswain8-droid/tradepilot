@@ -141,7 +141,8 @@ def test_a_live_invite_renders_the_form(client, store):
     token = _invite(store)
     r = client.get("/app/set-password?t=" + token)
     assert r.status_code == 200
-    assert b"password" in r.data.lower()
+    assert b'name="password"' in r.data
+    assert b'name="t"' in r.data
 
 
 def test_an_expired_link_says_so_without_revealing_anything(client, store):

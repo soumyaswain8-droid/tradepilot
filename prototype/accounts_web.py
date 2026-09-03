@@ -209,10 +209,30 @@ def set_password():
 
         row = conn.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
                            (email,)).fetchone()
+
+        # A token is redeemed for the thing it was issued for. An invite that
+        # arrives after the account exists must not quietly reset it, and a
+        # reset for an account that no longer exists must not quietly create
+        # one. The token is already spent either way -- that is correct, a
+        # redeemed link should not be replayable whatever it turned out to be.
+        if purpose == "invite" and row is not None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+        if purpose == "reset" and row is None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+
         if row is None:
-            uid = accounts.create_user(conn, email, password)
-            conn.execute("UPDATE waitlist SET user_id = ? WHERE lower(email) = lower(?)",
-                         (uid, email))
+            try:
+                uid = accounts.create_user(conn, email, password)
+            except ValueError:
+                # Lost a race with another redemption for the same address.
+                # The link is spent; say so rather than 500.
+                return render_template("set-password.html", live=False,
+                                       token="", error=None), 400
+            conn.execute(
+                "UPDATE waitlist SET user_id = ? WHERE lower(email) = lower(?)",
+                (uid, email))
             conn.commit()
         else:
             uid = row["id"]

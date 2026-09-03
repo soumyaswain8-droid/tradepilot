@@ -165,7 +165,7 @@ def test_an_invite_link_cannot_be_used_twice(client, store):
     token = _invite(store)
     client.post("/app/set-password", data={"t": token, "password": "a good one"})
     again = client.post("/app/set-password", data={"t": token, "password": "another"})
-    assert again.status_code != 302
+    assert again.status_code == 400
     assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 1
 
 
@@ -213,4 +213,28 @@ def test_an_empty_password_is_refused(client, store):
     token = _invite(store)
     r = client.post("/app/set-password", data={"t": token, "password": ""})
     assert r.status_code != 302
+    assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+
+
+
+def test_an_invite_is_refused_once_the_account_exists(client, store):
+    """Two approvals can issue two live invites. The second must not
+    silently reset what the first created."""
+    token_a = _invite(store)
+    token_b = _invite(store)
+    client.post("/app/set-password", data={"t": token_a, "password": "first one"})
+    r = client.post("/app/set-password", data={"t": token_b, "password": "second one"})
+    assert r.status_code == 400
+    assert accounts.check_login(store, "priya@example.com", "first one")
+    assert accounts.check_login(store, "priya@example.com", "second one") is None
+
+
+def test_a_reset_is_refused_when_the_account_is_gone(client, store):
+    uid = accounts.create_user(store, "priya@example.com", "old password")
+    token = accounts.issue_token(store, "reset", "priya@example.com",
+                                 accounts.RESET_HOURS)
+    store.execute("DELETE FROM users WHERE id = ?", (uid,))
+    store.commit()
+    r = client.post("/app/set-password", data={"t": token, "password": "new one"})
+    assert r.status_code == 400
     assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0

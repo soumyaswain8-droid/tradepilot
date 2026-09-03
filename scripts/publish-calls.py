@@ -32,10 +32,18 @@ from prototype import app_store
 PICKS_URL = os.environ.get(
     "TP_PICKS_URL", "http://127.0.0.1:5050/api/picks?category=stocks&count=10")
 
+# /api/picks is not cached -- it calls score_stocks_v4(), which scores the whole
+# universe against live market data on every request. Measured at over 120
+# seconds on this machine. The original 30 here was a guess made without
+# measuring, and it meant the fetch could never complete: the scheduled 09:20
+# run would have failed every morning with a timeout that looked like the
+# engine being down. Override with TP_PICKS_TIMEOUT if the universe grows.
+PICKS_TIMEOUT = int(os.environ.get("TP_PICKS_TIMEOUT", "300"))
+
 
 def fetch_picks(url):
     """GET the picks payload. Raises on any non-200, unparseable, or error body."""
-    with urllib.request.urlopen(url, timeout=30) as r:
+    with urllib.request.urlopen(url, timeout=PICKS_TIMEOUT) as r:
         if r.status != 200:
             raise RuntimeError("picks endpoint returned HTTP %s" % r.status)
         payload = json.loads(r.read().decode("utf-8"))

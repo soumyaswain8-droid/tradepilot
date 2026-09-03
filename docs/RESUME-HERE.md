@@ -27,17 +27,20 @@ component. Now 300s, overridable with `TP_PICKS_TIMEOUT` (commit `4e197d4`).
    weekdays and have stayed uninstalled on purpose — they write to `calls`, which is the
    one table whose loss cannot be reconstructed.
 
-### The anomaly worth chasing before you schedule anything
+### The "anomaly" — RESOLVED 2026-09-04, and it was not what this note guessed
 
-`/api/picks` answered in about **two minutes on a freshly started instance** and had not
-answered in **over ten** on the instance that had been up all day. Same code, same route.
-That difference cannot be in the request handler — it is state the long-lived process is
-holding: a cache that has grown, a pool exhausted, a lock another agent is sitting on.
+This section originally described `/api/picks` answering in two minutes on a fresh
+instance but not in ten on one that had been up all day, and guessed at "a cache that
+has grown, a pool exhausted, a lock." **The cause was found the same night and it was
+none of those.** The long-lived instance was holding a DEAD KITE TOKEN: Flask's
+`app.run()` auto-loads `.env` into `os.environ` at startup, and `envcfg` reads environ
+before the file, so the process served its boot-time token forever and every quote
+timed out. Fixed with `load_dotenv=False` (commit `9592077`), verified by rotating the
+token on disk with Flask running.
 
-It only appears after hours of uptime, so it will never show in a test or a fresh dev
-start. **Restarting will make it vanish without explaining it** — capture the state first
-if you want the cause rather than the symptom. This matters because `publish-calls.py`
-targets `127.0.0.1:5050` by default, which is the long-lived instance.
+So: **restarting is no longer required, and the "capture state first" advice is moot.**
+The `/api/_diag/creds` endpoint (loopback-only) shows the process's own token view if
+this is ever in doubt again.
 
 ### Using the client app right now
 

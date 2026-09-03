@@ -45,11 +45,20 @@ def cmd_list(conn):
 
 
 def cmd_approve(conn, email, send):
+    # Deliberately not restricted to approved_at IS NULL: an invite that
+    # expired without anyone completing it is not a terminal state -- the
+    # operator can re-approve, per the 72-hour-then-back-to-pending spec.
+    # What actually blocks a re-approval is checked below: an account that
+    # already exists, or an invite that is still live.
     row = conn.execute(
-        "SELECT id FROM waitlist WHERE lower(email) = lower(?) "
-        "AND approved_at IS NULL", (email,)).fetchone()
+        "SELECT id, user_id FROM waitlist WHERE lower(email) = lower(?)",
+        (email,)).fetchone()
     if row is None:
         print("%s is not waiting" % email, file=sys.stderr)
+        return 1
+
+    if row["user_id"] is not None:
+        print("%s already has an account" % email, file=sys.stderr)
         return 1
 
     existing = conn.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
@@ -58,12 +67,25 @@ def cmd_approve(conn, email, send):
         print("%s already has an account" % email, file=sys.stderr)
         return 1
 
+    live = conn.execute(
+        "SELECT 1 FROM auth_tokens WHERE lower(email) = lower(?) "
+        "AND purpose = 'invite' AND used_at IS NULL AND expires_at > ?",
+        (email, accounts._iso(accounts._now()))).fetchone()
+    if live is not None:
+        print("%s already has a live invite" % email, file=sys.stderr)
+        return 1
+
     token = accounts.issue_token(conn, "invite", email, accounts.INVITE_HOURS)
     try:
         send(email, "Your TradePilot invite", _invite_body(token))
     except Exception as e:
-        # Marking approved now would leave a satisfied-looking list and a
-        # client who never hears anything. Leave it pending.
+        # A token nobody received must not outlive the failed send -- the
+        # command promises to change nothing when it fails, and marking
+        # approved now would leave a satisfied-looking list and a client
+        # who never hears anything.
+        conn.execute("DELETE FROM auth_tokens WHERE token_hash = ?",
+                     (accounts._hash_token(token),))
+        conn.commit()
         print("could not send: %s" % e, file=sys.stderr)
         return 2
 

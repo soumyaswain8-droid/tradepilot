@@ -94,11 +94,55 @@ def test_a_failed_send_leaves_the_row_pending(db):
     assert waitlist.main(["approve", "priya@example.com"], send=explode) != 0
     row = db.execute("SELECT approved_at FROM waitlist").fetchone()
     assert row["approved_at"] is None
+    # The command promises to change nothing when it fails -- a token
+    # nobody received must not survive the failed send either.
+    assert db.execute("SELECT COUNT(*) FROM auth_tokens").fetchone()[0] == 0
 
 
 def test_approving_someone_not_on_the_list_is_refused(db):
     _, send = _sink()
     assert waitlist.main(["approve", "nobody@example.com"], send=send) != 0
+
+
+def test_reapproving_after_the_invite_expired_succeeds(db):
+    """72 hours, then back to pending -- the operator re-approves."""
+    _wait(db, "priya@example.com")
+    _, send = _sink()
+    waitlist.main(["approve", "priya@example.com"], send=send)
+    db.execute("UPDATE auth_tokens SET expires_at = '2020-01-01T00:00:00.000000+00:00'")
+    db.commit()
+
+    sent, send = _sink()
+    assert waitlist.main(["approve", "priya@example.com"], send=send) == 0
+    assert len(sent) == 1
+    live = db.execute(
+        "SELECT COUNT(*) FROM auth_tokens WHERE used_at IS NULL "
+        "AND expires_at > '2020-01-01T00:00:00.000000+00:00'").fetchone()[0]
+    assert live == 1
+
+
+def test_reapproving_while_the_invite_is_still_live_is_refused(db):
+    _wait(db, "priya@example.com")
+    _, send = _sink()
+    waitlist.main(["approve", "priya@example.com"], send=send)
+
+    sent, send = _sink()
+    assert waitlist.main(["approve", "priya@example.com"], send=send) != 0
+    assert sent == []
+    assert db.execute("SELECT COUNT(*) FROM auth_tokens").fetchone()[0] == 1
+
+
+def test_approving_someone_who_already_completed_is_refused(db):
+    _wait(db, "priya@example.com")
+    uid = accounts.create_user(db, "priya@example.com", "pw")
+    db.execute("UPDATE waitlist SET user_id = ?, approved_at = ? "
+              "WHERE lower(email) = lower(?)",
+              (uid, accounts._iso(accounts._now()), "priya@example.com"))
+    db.commit()
+
+    sent, send = _sink()
+    assert waitlist.main(["approve", "priya@example.com"], send=send) != 0
+    assert sent == []
 
 
 def test_approving_an_address_that_already_has_an_account_is_refused(db):

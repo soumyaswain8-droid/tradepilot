@@ -79,6 +79,29 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS ix_sessions_user
     ON sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS waitlist (
+    id            TEXT PRIMARY KEY,
+    email         TEXT NOT NULL,
+    requested_at  TEXT NOT NULL,
+    approved_at   TEXT,
+    user_id       TEXT REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_waitlist_pending
+    ON waitlist (approved_at, requested_at);
+
+CREATE TABLE IF NOT EXISTS auth_tokens (
+    token_hash  TEXT PRIMARY KEY,
+    purpose     TEXT NOT NULL,
+    email       TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    expires_at  TEXT NOT NULL,
+    used_at     TEXT
+);
+
+CREATE INDEX IF NOT EXISTS ix_auth_tokens_email
+    ON auth_tokens (email, purpose);
 """
 
 

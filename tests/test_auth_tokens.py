@@ -61,6 +61,56 @@ def test_a_token_can_only_be_consumed_once(conn):
     assert second == (None, None)
 
 
+def test_two_threads_racing_to_consume_the_same_token_only_one_wins(tmp_path):
+    """Calling consume_token twice in sequence, on one connection, cannot
+    fail even if the check-and-claim were split into a read then a write --
+    there is no window for a second caller to land between them when there
+    is no second caller. This drives it with two real OS threads, each on
+    its own sqlite3 connection to the same file, released from a Barrier at
+    the same instant, so both are inside consume_token's body concurrently.
+
+    Repeated for many tokens: a single race is not conclusive on its own,
+    since a lucky interleaving can make even a broken implementation look
+    correct once.
+    """
+    import threading
+
+    path = str(tmp_path / "race.db")
+    setup = app_store.get_db(path)
+    app_store.init_db(setup)
+
+    ITERATIONS = 200
+    tokens = [accounts.issue_token(setup, "invite", "priya@example.com", 72)
+              for _ in range(ITERATIONS)]
+    setup.commit()
+    setup.close()
+
+    for token in tokens:
+        results = [None, None]
+        barrier = threading.Barrier(2)
+
+        def attempt(slot):
+            conn = app_store.get_db(path)
+            try:
+                barrier.wait(timeout=5)
+                results[slot] = accounts.consume_token(conn, token)
+            finally:
+                conn.close()
+
+        threads = [threading.Thread(target=attempt, args=(i,)) for i in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        wins = [r for r in results if r == ("invite", "priya@example.com")]
+        losses = [r for r in results if r == (None, None)]
+        assert len(wins) == 1, (
+            "exactly one thread must win the race for a given token, "
+            "got %r" % (results,))
+        assert len(losses) == 1
+
+
 def test_a_used_token_no_longer_peeks(conn):
     token = accounts.issue_token(conn, "invite", "priya@example.com", 72)
     accounts.consume_token(conn, token)

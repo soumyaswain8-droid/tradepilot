@@ -154,3 +154,84 @@ def revoke_session(conn, token):
         return
     conn.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash_token(token),))
     conn.commit()
+
+
+INVITE_HOURS = 72
+RESET_HOURS = 1
+
+
+def issue_token(conn, purpose, email, hours):
+    """Create a single-use link token. Returns the raw value for the email."""
+    token = secrets.token_urlsafe(32)
+    now = _now()
+    conn.execute(
+        "INSERT INTO auth_tokens (token_hash, purpose, email, created_at, expires_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (_hash_token(token), purpose, email, _iso(now),
+         _iso(now + timedelta(hours=hours))))
+    conn.commit()
+    return token
+
+
+def peek_token(conn, token):
+    """The purpose of a live token, or None. Read-only -- does not spend it."""
+    if not token:
+        return None
+    row = conn.execute(
+        "SELECT purpose FROM auth_tokens "
+        "WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?",
+        (_hash_token(token), _iso(_now()))).fetchone()
+    return row["purpose"] if row else None
+
+
+def consume_token(conn, token):
+    """Spend a token. Returns (purpose, email), or (None, None).
+
+    The check and the claim are one statement on purpose. Reading the row,
+    testing used_at, and then updating lets two nearly simultaneous requests
+    both pass the test before either writes -- and double-clicks happen, as
+    does link prefetching by mail clients. Zero rows affected means the token
+    was already used, has expired, or never existed; all three are refused
+    identically.
+    """
+    if not token:
+        return (None, None)
+    digest = _hash_token(token)
+    now = _iso(_now())
+    cur = conn.execute(
+        "UPDATE auth_tokens SET used_at = ? "
+        "WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?",
+        (now, digest, now))
+    conn.commit()
+    if cur.rowcount != 1:
+        return (None, None)
+    row = conn.execute(
+        "SELECT purpose, email FROM auth_tokens WHERE token_hash = ?",
+        (digest,)).fetchone()
+    return (row["purpose"], row["email"])
+
+
+def set_password(conn, user_id, password):
+    """Replace a password, and clear any lockout with it.
+
+    Someone locked out is exactly the person who reaches for a reset link, so
+    leaving failed_count at the threshold would let them set a new password
+    and still be refused by it.
+    """
+    conn.execute(
+        "UPDATE users SET password_hash = ?, failed_count = 0, locked_until = NULL "
+        "WHERE id = ?",
+        (generate_password_hash(password), user_id))
+    conn.commit()
+
+
+def revoke_all_sessions(conn, user_id):
+    """Delete every session for a user. Returns how many were removed.
+
+    A password reset must end existing sessions. Someone resetting because
+    they believe their account is compromised gains nothing if the attacker's
+    cookie keeps working for the rest of its ninety days.
+    """
+    cur = conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    conn.commit()
+    return cur.rowcount

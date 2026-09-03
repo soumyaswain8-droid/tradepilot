@@ -301,3 +301,58 @@ the signup form where the public can find it.** This project can be built,
 tested and merged without settling it: the machinery is inert until the form
 is reachable and the operator approves someone. Building it is not the
 decision; publishing the link is.
+
+## Deferred from the front door
+
+Recorded here because the execution workspace that held them is disposable.
+
+### `/app/forgot` leaks account existence through timing
+
+The identical response body is real, but a known address does a `SELECT`, an
+`INSERT` and a **synchronous SMTP round-trip**, while an unknown one does a
+single indexed `SELECT`. Seconds against sub-milliseconds, separable over a
+network by anyone willing to average a few samples. Every test on this route
+compares status and content, so nothing in the suite can see it.
+
+The honest fix is to stop sending inline, which means a background execution
+model this codebase does not have: a thread whose failures are invisible
+without its own logger, a daemon thread that can lose a reset email on process
+exit, and a second injectable seam purely to keep the tests deterministic.
+That is a design change, not a bug fix.
+
+**This is a deploy gate.** It costs nothing while the signup form is
+unreachable, and it is a live enumeration oracle the moment the form is
+linked. `/app/login` has the same shape for the same reason — werkzeug's slow
+KDF runs only when the row exists — so whatever answer is chosen should cover
+both.
+
+### The mail net does not fail loudly on one route
+
+`tests/conftest.py` makes the real SMTP transport raise, so no test can send
+mail. On `/app/forgot` that raise is swallowed: `AssertionError` is an
+`Exception` subclass and `send_mail` sits inside that route's broad handler,
+so a test which forgot its `sent` fixture gets a quiet 200 instead of a
+failure. No mail is sent either way — the net's purpose holds — but the
+mistake is invisible there. Raising something derived from `BaseException`
+would fix it in one line.
+
+### Smaller things, all correct today
+
+- `peek_token` and `consume_token` each spell their own liveness predicate.
+  They agree; nothing keeps them in step.
+- `except ValueError` around `create_user` is scoped to the right statement
+  but not the right meaning. If `create_user` ever grew input validation, a
+  real validation failure would render as "that link is no longer valid".
+- `auth_tokens` has no expiry sweep, unlike `sessions`. Spent and expired rows
+  accumulate. They are inert — a raw token's value exists only in the request
+  that carried it and is never logged.
+- `TRADEPILOT_URL` is read at import time in the CLI and per-request in the
+  web layer. Same value, two call sites.
+
+### Still the gate that matters
+
+**The SEBI Research Analyst / Investment Adviser question governs linking the
+signup form where the public can find it.** This project deliberately ships a
+front door that only the operator can open: approval is a terminal command,
+and nobody gets an account without it. Building the machinery was never the
+decision. Publishing the link is.

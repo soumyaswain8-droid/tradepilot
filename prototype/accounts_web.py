@@ -4,10 +4,13 @@ Server-rendered on purpose. A real form POST means browser password managers
 work, and credentials never pass through the fetch layer -- api.js does not
 know this page exists.
 """
-from flask import (Blueprint, jsonify, make_response, redirect,
+import os
+import secrets
+
+from flask import (Blueprint, current_app, jsonify, make_response, redirect,
                    render_template, request, url_for)
 
-from prototype import accounts, app_store, client_auth
+from prototype import accounts, app_store, client_auth, mailer
 
 bp = Blueprint("accounts_web", __name__)
 
@@ -106,4 +109,169 @@ def logout():
         conn.close()
     resp = make_response(redirect(url_for("client_app")))
     resp.delete_cookie(client_auth.COOKIE_NAME, path="/")
+    return resp
+
+
+WAITLIST_ACK = "Thanks -- we will be in touch."
+FORGOT_ACK = "If that address has an account, a reset link is on its way."
+
+
+def send_mail(to, subject, body):
+    """Indirection so tests replace one function instead of the mailer."""
+    mailer.send(to, subject, body)
+
+
+def _base_url():
+    """One source for both link builders. The CLI has no request context,
+    so TRADEPILOT_URL is the only thing both can read."""
+    return (os.environ.get("TRADEPILOT_URL") or request.host_url).rstrip("/")
+
+
+def reset_body(token):
+    return ("Someone asked to reset the password on your TradePilot account.\n\n"
+            "If that was you, set a new one here -- the link is good for an hour:\n"
+            "%s/app/set-password?t=%s\n\n"
+            "If it was not you, ignore this. Nothing has changed.\n"
+            % (_base_url(), token))
+
+
+@bp.route("/app/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html", done=False, ack=WAITLIST_ACK)
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    email = (request.form.get("email") or "").strip()
+    if email:
+        conn = open_store()
+        try:
+            conn.execute(
+                "INSERT INTO waitlist (id, email, requested_at) VALUES (?, ?, ?)",
+                ("w-" + secrets.token_hex(4), email, accounts._iso(accounts._now())))
+            conn.commit()
+        finally:
+            conn.close()
+    # The same page whether the address is new, repeated, or already an
+    # account. Anything else makes this form an account enumerator.
+    return render_template("signup.html", done=True, ack=WAITLIST_ACK)
+
+
+@bp.route("/app/forgot", methods=["GET", "POST"])
+def forgot():
+    if request.method == "GET":
+        return render_template("forgot.html", done=False, ack=FORGOT_ACK)
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    email = (request.form.get("email") or "").strip()
+    if email:
+        conn = open_store()
+        try:
+            row = conn.execute(
+                "SELECT id FROM users WHERE lower(email) = lower(?)",
+                (email,)).fetchone()
+            if row is not None:
+                try:
+                    token = accounts.issue_token(conn, "reset", email,
+                                                 accounts.RESET_HOURS)
+                except Exception:
+                    # Cannot be surfaced: a 500 here while an unknown
+                    # address gets 200 is exactly the oracle this route
+                    # exists to close. Log it and answer normally.
+                    current_app.logger.exception("reset token issue failed")
+                else:
+                    body = reset_body(token)
+                    try:
+                        send_mail(email, "Reset your TradePilot password", body)
+                    except Exception:
+                        # Cannot be surfaced: saying "we could not send it"
+                        # would confirm the account exists. Log it and
+                        # answer normally.
+                        current_app.logger.exception("reset mail failed")
+        finally:
+            conn.close()
+    return render_template("forgot.html", done=True, ack=FORGOT_ACK)
+
+
+@bp.route("/app/set-password", methods=["GET", "POST"])
+def set_password():
+    token = request.args.get("t") or request.form.get("t") or ""
+
+    if request.method == "GET":
+        conn = open_store()
+        try:
+            live = accounts.peek_token(conn, token) is not None
+        finally:
+            conn.close()
+        return render_template("set-password.html", live=live, token=token,
+                               error=None)
+
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    password = request.form.get("password") or ""
+    if not password:
+        conn = open_store()
+        try:
+            live = accounts.peek_token(conn, token) is not None
+        finally:
+            conn.close()
+        return render_template("set-password.html", live=live, token=token,
+                               error="Choose a password."), 400
+
+    conn = open_store()
+    try:
+        purpose, email = accounts.consume_token(conn, token)
+        if purpose is None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+
+        row = conn.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
+                           (email,)).fetchone()
+
+        # A token is redeemed for the thing it was issued for. An invite that
+        # arrives after the account exists must not quietly reset it, and a
+        # reset for an account that no longer exists must not quietly create
+        # one. The token is already spent either way -- that is correct, a
+        # redeemed link should not be replayable whatever it turned out to be.
+        if purpose == "invite" and row is not None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+        if purpose == "reset" and row is None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+
+        if row is None:
+            try:
+                uid = accounts.create_user(conn, email, password)
+            except ValueError:
+                # Lost a race with another redemption for the same address.
+                # The link is spent; say so rather than 500.
+                return render_template("set-password.html", live=False,
+                                       token="", error=None), 400
+            # Also stamp approved_at: a duplicate waitlist row for the same
+            # address (signup allows repeats) would otherwise carry the new
+            # user_id but no approved_at, and sit under "waiting" forever --
+            # cmd_list filters on approved_at IS NULL, not user_id.
+            conn.execute(
+                "UPDATE waitlist SET user_id = ?, approved_at = ? "
+                "WHERE lower(email) = lower(?)",
+                (uid, accounts._iso(accounts._now()), email))
+            conn.commit()
+        else:
+            uid = row["id"]
+            accounts.set_password(conn, uid, password)
+            # Revoke BEFORE issuing, or the new session is deleted with the old.
+            accounts.revoke_all_sessions(conn, uid)
+
+        session_token = accounts.create_session(conn, uid)
+    finally:
+        conn.close()
+
+    resp = make_response(redirect("/app"))
+    resp.set_cookie(client_auth.COOKIE_NAME, session_token,
+                    httponly=True, samesite="Lax", path="/",
+                    secure=request.is_secure,
+                    max_age=accounts.SESSION_MAX_DAYS * 24 * 3600)
     return resp

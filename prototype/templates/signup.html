@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Request access — TradePilot</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<div class="content" style="max-width:24rem;margin:4rem auto">
+  <h1>Request access</h1>
+  {% if done %}
+    <div class="empty">{{ ack }}</div>
+  {% else %}
+    <p class="thin">Leave your email and we will be in touch.</p>
+    <form method="post" action="/app/signup">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+      <button type="submit">Request access</button>
+    </form>
+  {% endif %}
+</div>

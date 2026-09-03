@@ -7,24 +7,27 @@
     <string>cd /Users/soumyaswain/Documents/tinker/projects/tradepilot &amp;&amp; /Users/soumyaswain/anaconda3/bin/python3 scripts/kite-auto-login.py >> logs/kite-auto-login-$(date +\%Y-\%m-\%d).log 2>&amp;1</string>
   </array>
   <!-- Zerodha invalidates the access token at 06:00 IST daily. Two attempts, both
-       before the 08:50 launcher and the 09:16 floor start, so a transient network
-       failure at the first has a second chance while there is still time to fix it
-       by hand. The script refuses to refresh a token that already works, so the
-       08:35 run is a no-op whenever 08:15 succeeded — Zerodha kills the PREVIOUS
+       well before the 08:50 launcher and 09:16 floor start. 08:00 is deliberate:
+       Soumya asked for the token to be settled by 8AM so a failure leaves over an
+       hour to fix it by hand rather than being discovered at the open. The
+       tokencheck regression test runs at 08:10, AFTER this, so it verifies a real
+       refreshed token instead of yesterday's expired one.
+       The script refuses to refresh a token that already works, so the 08:30 run is
+       a no-op whenever 08:00 succeeded — Zerodha kills the PREVIOUS
        token on a new session, and a redundant refresh would break every process
        already streaming on it.
        Weekdays only: no token is needed on a day the market does not open. -->
   <key>StartCalendarInterval</key><array>
-    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>35</integer></dict>
-    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>35</integer></dict>
-    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>35</integer></dict>
-    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>35</integer></dict>
-    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>35</integer></dict>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
   </array>
   <key>RunAtLoad</key><false/>
 </dict></plist>

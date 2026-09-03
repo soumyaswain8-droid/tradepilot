@@ -33,8 +33,8 @@ def check(name, ok, detail=""):
 
 
 def main():
-    env = ROOT / ".env"
-    original = env.read_text()
+    live = ROOT / ".env"
+    original = live.read_text()
     real_tok = None
     for ln in original.splitlines():
         if ln.startswith("KITE_ACCESS_TOKEN="):
@@ -42,6 +42,27 @@ def main():
     if not real_tok:
         print("  no KITE_ACCESS_TOKEN in .env — cannot run")
         return 1
+
+    # SANDBOX — the live .env is never written. This file's docstring always CLAIMED
+    # "a throwaway .env copy", but until 2026-09-03 it wrote DEADTOKEN_FROM_YESTERDAY
+    # straight into the real one and restored it afterwards. Scheduled at 09:12, four
+    # minutes before the floor starts, that put a deliberately invalid credential into
+    # the live secrets file during the exact window every process reads it — a
+    # regression test for the dead-token bug, injecting the dead-token bug.
+    #
+    # The redirect has to be on envcfg.ENV_FILE, not on kd.ROOT: _creds() delegates to
+    # envcfg.get(), which resolves the path itself. Pointing kd.ROOT at a temp dir
+    # would look right and change nothing.
+    import shutil
+    import tempfile
+
+    from prototype import envcfg
+    tmpdir = Path(tempfile.mkdtemp(prefix="tokentest-"))
+    env = tmpdir / ".env"
+    shutil.copy(live, env)
+    real_env_file = envcfg.ENV_FILE
+    envcfg.ENV_FILE = env
+    live_before = live.read_text()
 
     try:
         # 1. poison the cache exactly as the morning did: a stale token, cached today
@@ -81,9 +102,17 @@ def main():
         check("a stale quote is DISCARDED, not served as live",
               not got, f"served {len(got)} stale rows" if got else "returned empty")
     finally:
-        env.write_text(original)
+        envcfg.ENV_FILE = real_env_file
         kd._kite = kd._kite_day = kd._kite_tok = None
-        print(f"\n  .env restored ({'intact' if env.read_text() == original else 'MISMATCH'})")
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        # Assert the live file was never touched. The previous version restored the
+        # live .env from a variable and called that "intact" — which is only true if
+        # nothing crashed between poisoning and restoring. Comparing the file against
+        # what it held on entry is the check that would actually have caught this.
+        untouched = live.read_text() == live_before
+        print(f"\n  live .env untouched: {'yes' if untouched else 'NO — INVESTIGATE'}")
+        if not untouched:
+            FAILS.append("live .env was modified")
 
     print()
     if FAILS:

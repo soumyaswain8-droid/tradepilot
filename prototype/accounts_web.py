@@ -4,6 +4,7 @@ Server-rendered on purpose. A real form POST means browser password managers
 work, and credentials never pass through the fetch layer -- api.js does not
 know this page exists.
 """
+import os
 import secrets
 
 from flask import (Blueprint, current_app, jsonify, make_response, redirect,
@@ -120,12 +121,18 @@ def send_mail(to, subject, body):
     mailer.send(to, subject, body)
 
 
+def _base_url():
+    """One source for both link builders. The CLI has no request context,
+    so TRADEPILOT_URL is the only thing both can read."""
+    return (os.environ.get("TRADEPILOT_URL") or request.host_url).rstrip("/")
+
+
 def reset_body(token):
     return ("Someone asked to reset the password on your TradePilot account.\n\n"
             "If that was you, set a new one here -- the link is good for an hour:\n"
             "%s/app/set-password?t=%s\n\n"
             "If it was not you, ignore this. Nothing has changed.\n"
-            % (request.host_url.rstrip("/"), token))
+            % (_base_url(), token))
 
 
 @bp.route("/app/signup", methods=["GET", "POST"])
@@ -165,15 +172,23 @@ def forgot():
                 "SELECT id FROM users WHERE lower(email) = lower(?)",
                 (email,)).fetchone()
             if row is not None:
-                token = accounts.issue_token(conn, "reset", email,
-                                             accounts.RESET_HOURS)
-                body = reset_body(token)
                 try:
-                    send_mail(email, "Reset your TradePilot password", body)
+                    token = accounts.issue_token(conn, "reset", email,
+                                                 accounts.RESET_HOURS)
                 except Exception:
-                    # Cannot be surfaced: saying "we could not send it" would
-                    # confirm the account exists. Log it and answer normally.
-                    current_app.logger.exception("reset mail failed")
+                    # Cannot be surfaced: a 500 here while an unknown
+                    # address gets 200 is exactly the oracle this route
+                    # exists to close. Log it and answer normally.
+                    current_app.logger.exception("reset token issue failed")
+                else:
+                    body = reset_body(token)
+                    try:
+                        send_mail(email, "Reset your TradePilot password", body)
+                    except Exception:
+                        # Cannot be surfaced: saying "we could not send it"
+                        # would confirm the account exists. Log it and
+                        # answer normally.
+                        current_app.logger.exception("reset mail failed")
         finally:
             conn.close()
     return render_template("forgot.html", done=True, ack=FORGOT_ACK)
@@ -197,7 +212,12 @@ def set_password():
 
     password = request.form.get("password") or ""
     if not password:
-        return render_template("set-password.html", live=True, token=token,
+        conn = open_store()
+        try:
+            live = accounts.peek_token(conn, token) is not None
+        finally:
+            conn.close()
+        return render_template("set-password.html", live=live, token=token,
                                error="Choose a password."), 400
 
     conn = open_store()
@@ -230,9 +250,14 @@ def set_password():
                 # The link is spent; say so rather than 500.
                 return render_template("set-password.html", live=False,
                                        token="", error=None), 400
+            # Also stamp approved_at: a duplicate waitlist row for the same
+            # address (signup allows repeats) would otherwise carry the new
+            # user_id but no approved_at, and sit under "waiting" forever --
+            # cmd_list filters on approved_at IS NULL, not user_id.
             conn.execute(
-                "UPDATE waitlist SET user_id = ? WHERE lower(email) = lower(?)",
-                (uid, email))
+                "UPDATE waitlist SET user_id = ?, approved_at = ? "
+                "WHERE lower(email) = lower(?)",
+                (uid, accounts._iso(accounts._now()), email))
             conn.commit()
         else:
             uid = row["id"]

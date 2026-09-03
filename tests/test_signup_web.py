@@ -95,6 +95,19 @@ def test_forgot_issues_a_reset_token(client, store, sent):
     assert row["purpose"] == "reset"
 
 
+def test_reset_link_host_follows_tradepilot_url_when_set(
+        client, store, sent, monkeypatch):
+    """scripts/waitlist.py builds invite links from TRADEPILOT_URL. If
+    reset links used request.host_url instead, one deployment could mail
+    invite and reset links pointing at different hosts."""
+    monkeypatch.setenv("TRADEPILOT_URL", "https://tradepilot.onrender.com")
+    accounts.create_user(store, "priya@example.com", "pw")
+    client.post("/app/forgot", data={"email": "priya@example.com"})
+    body = sent[0][2]
+    assert "https://tradepilot.onrender.com/app/set-password?t=" in body
+    assert "localhost" not in body
+
+
 def test_forgot_sends_nothing_for_an_unknown_address(client, store, sent):
     client.post("/app/forgot", data={"email": "nobody@example.com"})
     assert sent == []
@@ -122,6 +135,23 @@ def test_forgot_still_answers_normally_when_mail_fails(client, store, monkeypatc
     r = client.post("/app/forgot", data={"email": "priya@example.com"})
     assert r.status_code == 200
     assert accounts_web.FORGOT_ACK.encode() in r.data
+
+
+def test_forgot_still_answers_normally_when_issuing_the_token_fails(
+        client, store, sent, monkeypatch):
+    """A database failure on the known-account branch must not 500 while an
+    unknown address gets 200 -- that asymmetry is exactly the oracle this
+    route exists to close."""
+    accounts.create_user(store, "priya@example.com", "pw")
+
+    def explode(conn, purpose, email, hours):
+        raise RuntimeError("db down")
+    monkeypatch.setattr(accounts, "issue_token", explode)
+
+    r = client.post("/app/forgot", data={"email": "priya@example.com"})
+    assert r.status_code == 200
+    assert accounts_web.FORGOT_ACK.encode() in r.data
+    assert sent == []
 
 
 def test_forgot_from_a_foreign_origin_is_refused(client, store, sent):
@@ -160,6 +190,29 @@ def test_completing_an_invite_creates_the_account_and_signs_them_in(client, stor
     assert r.status_code == 302
     assert accounts.check_login(store, "priya@example.com", "a good one")
     assert client.get("/api/app/me").status_code == 200
+
+
+def test_completing_an_invite_leaves_nothing_pending_for_that_address(
+        client, store):
+    """set-password stamps waitlist.user_id, but a duplicate waitlist row
+    for the same address (signup allows repeats) would otherwise carry the
+    new user_id with no approved_at and sit under "waiting" forever --
+    cmd_list filters on approved_at IS NULL."""
+    store.execute(
+        "INSERT INTO waitlist (id, email, requested_at) VALUES (?, ?, ?)",
+        ("w-a", "priya@example.com", accounts._iso(accounts._now())))
+    store.execute(
+        "INSERT INTO waitlist (id, email, requested_at) VALUES (?, ?, ?)",
+        ("w-b", "priya@example.com", accounts._iso(accounts._now())))
+    store.commit()
+
+    token = _invite(store)
+    client.post("/app/set-password", data={"t": token, "password": "a good one"})
+
+    pending = store.execute(
+        "SELECT COUNT(*) FROM waitlist WHERE lower(email) = lower(?) "
+        "AND approved_at IS NULL", ("priya@example.com",)).fetchone()[0]
+    assert pending == 0
 
 
 def test_an_invite_link_cannot_be_used_twice(client, store):

@@ -131,3 +131,86 @@ def test_forgot_from_a_foreign_origin_is_refused(client, store, sent):
     assert r.status_code == 403
     assert sent == []
     assert store.execute("SELECT COUNT(*) FROM auth_tokens").fetchone()[0] == 0
+
+
+def _invite(store, email="priya@example.com"):
+    return accounts.issue_token(store, "invite", email, accounts.INVITE_HOURS)
+
+
+def test_a_live_invite_renders_the_form(client, store):
+    token = _invite(store)
+    r = client.get("/app/set-password?t=" + token)
+    assert r.status_code == 200
+    assert b"password" in r.data.lower()
+
+
+def test_an_expired_link_says_so_without_revealing_anything(client, store):
+    token = _invite(store)
+    store.execute("UPDATE auth_tokens SET expires_at = '2020-01-01T00:00:00.000000+00:00'")
+    store.commit()
+    body = client.get("/app/set-password?t=" + token).get_data(as_text=True)
+    unknown = client.get("/app/set-password?t=never-existed").get_data(as_text=True)
+    assert body == unknown
+
+
+def test_completing_an_invite_creates_the_account_and_signs_them_in(client, store):
+    token = _invite(store)
+    r = client.post("/app/set-password", data={"t": token, "password": "a good one"})
+    assert r.status_code == 302
+    assert accounts.check_login(store, "priya@example.com", "a good one")
+    assert client.get("/api/app/me").status_code == 200
+
+
+def test_an_invite_link_cannot_be_used_twice(client, store):
+    token = _invite(store)
+    client.post("/app/set-password", data={"t": token, "password": "a good one"})
+    again = client.post("/app/set-password", data={"t": token, "password": "another"})
+    assert again.status_code != 302
+    assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 1
+
+
+def test_a_reset_changes_the_password_and_the_old_one_stops_working(client, store):
+    uid = accounts.create_user(store, "priya@example.com", "old password")
+    token = accounts.issue_token(store, "reset", "priya@example.com",
+                                 accounts.RESET_HOURS)
+    client.post("/app/set-password", data={"t": token, "password": "new password"})
+    assert accounts.check_login(store, "priya@example.com", "new password") == uid
+    assert accounts.check_login(store, "priya@example.com", "old password") is None
+
+
+def test_a_reset_ends_sessions_that_already_existed(client, store):
+    """Re-present the OLD token explicitly. The client's cookie jar has moved
+    on, so merely re-requesting would prove nothing about the server."""
+    uid = accounts.create_user(store, "priya@example.com", "old password")
+    stale = accounts.create_session(store, uid)
+    token = accounts.issue_token(store, "reset", "priya@example.com",
+                                 accounts.RESET_HOURS)
+    client.post("/app/set-password", data={"t": token, "password": "new password"})
+    assert accounts.lookup_session(store, stale) is None
+
+
+def test_the_browser_completing_a_reset_is_left_signed_in(client, store):
+    """Revocation must happen BEFORE the new session is issued, or the fresh
+    one is deleted along with the old and the user lands back at login."""
+    uid = accounts.create_user(store, "priya@example.com", "old password")
+    accounts.create_session(store, uid)
+    token = accounts.issue_token(store, "reset", "priya@example.com",
+                                 accounts.RESET_HOURS)
+    client.post("/app/set-password", data={"t": token, "password": "new password"})
+    assert client.get("/api/app/me").status_code == 200
+
+
+def test_set_password_from_a_foreign_origin_is_refused(client, store):
+    token = _invite(store)
+    r = client.post("/app/set-password",
+                    data={"t": token, "password": "a good one"},
+                    headers={"Origin": "https://evil.example.com"})
+    assert r.status_code == 403
+    assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+
+
+def test_an_empty_password_is_refused(client, store):
+    token = _invite(store)
+    r = client.post("/app/set-password", data={"t": token, "password": ""})
+    assert r.status_code != 302
+    assert store.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0

@@ -177,3 +177,56 @@ def forgot():
         finally:
             conn.close()
     return render_template("forgot.html", done=True, ack=FORGOT_ACK)
+
+
+@bp.route("/app/set-password", methods=["GET", "POST"])
+def set_password():
+    token = request.args.get("t") or request.form.get("t") or ""
+
+    if request.method == "GET":
+        conn = open_store()
+        try:
+            live = accounts.peek_token(conn, token) is not None
+        finally:
+            conn.close()
+        return render_template("set-password.html", live=live, token=token,
+                               error=None)
+
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    password = request.form.get("password") or ""
+    if not password:
+        return render_template("set-password.html", live=True, token=token,
+                               error="Choose a password."), 400
+
+    conn = open_store()
+    try:
+        purpose, email = accounts.consume_token(conn, token)
+        if purpose is None:
+            return render_template("set-password.html", live=False, token="",
+                                   error=None), 400
+
+        row = conn.execute("SELECT id FROM users WHERE lower(email) = lower(?)",
+                           (email,)).fetchone()
+        if row is None:
+            uid = accounts.create_user(conn, email, password)
+            conn.execute("UPDATE waitlist SET user_id = ? WHERE lower(email) = lower(?)",
+                         (uid, email))
+            conn.commit()
+        else:
+            uid = row["id"]
+            accounts.set_password(conn, uid, password)
+            # Revoke BEFORE issuing, or the new session is deleted with the old.
+            accounts.revoke_all_sessions(conn, uid)
+
+        session_token = accounts.create_session(conn, uid)
+    finally:
+        conn.close()
+
+    resp = make_response(redirect("/app"))
+    resp.set_cookie(client_auth.COOKIE_NAME, session_token,
+                    httponly=True, samesite="Lax", path="/",
+                    secure=request.is_secure,
+                    max_age=accounts.SESSION_MAX_DAYS * 24 * 3600)
+    return resp

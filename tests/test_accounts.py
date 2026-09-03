@@ -9,6 +9,7 @@ import sys
 from datetime import timedelta
 
 import pytest
+from werkzeug.security import check_password_hash
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
@@ -230,6 +231,10 @@ def test_setting_a_password_stores_a_hash_not_the_password(conn):
     accounts.set_password(conn, uid, "new password")
     stored = conn.execute("SELECT password_hash FROM users").fetchone()[0]
     assert "new password" not in stored
+    # "not in stored" alone would pass for base64 or any other reversible
+    # encoding -- prove it is actually a hash that verifies the password.
+    assert check_password_hash(stored, "new password") is True
+    assert check_password_hash(stored, "old password") is False
 
 
 def test_setting_a_password_clears_a_lockout(conn):

@@ -167,9 +167,9 @@ def forgot():
             if row is not None:
                 token = accounts.issue_token(conn, "reset", email,
                                              accounts.RESET_HOURS)
+                body = reset_body(token)
                 try:
-                    send_mail(email, "Reset your TradePilot password",
-                              reset_body(token))
+                    send_mail(email, "Reset your TradePilot password", body)
                 except Exception:
                     # Cannot be surfaced: saying "we could not send it" would
                     # confirm the account exists. Log it and answer normally.

@@ -130,3 +130,4 @@ def test_forgot_from_a_foreign_origin_is_refused(client, store, sent):
                     headers={"Origin": "https://evil.example.com"})
     assert r.status_code == 403
     assert sent == []
+    assert store.execute("SELECT COUNT(*) FROM auth_tokens").fetchone()[0] == 0

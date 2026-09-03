@@ -209,3 +209,29 @@ def consume_token(conn, token):
         "SELECT purpose, email FROM auth_tokens WHERE token_hash = ?",
         (digest,)).fetchone()
     return (row["purpose"], row["email"])
+
+
+def set_password(conn, user_id, password):
+    """Replace a password, and clear any lockout with it.
+
+    Someone locked out is exactly the person who reaches for a reset link, so
+    leaving failed_count at the threshold would let them set a new password
+    and still be refused by it.
+    """
+    conn.execute(
+        "UPDATE users SET password_hash = ?, failed_count = 0, locked_until = NULL "
+        "WHERE id = ?",
+        (generate_password_hash(password), user_id))
+    conn.commit()
+
+
+def revoke_all_sessions(conn, user_id):
+    """Delete every session for a user. Returns how many were removed.
+
+    A password reset must end existing sessions. Someone resetting because
+    they believe their account is compromised gains nothing if the attacker's
+    cookie keeps working for the rest of its ninety days.
+    """
+    cur = conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    conn.commit()
+    return cur.rowcount

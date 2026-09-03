@@ -216,3 +216,50 @@ def test_disabling_an_account_ends_its_existing_sessions(conn):
     conn.commit()
     # Same token, re-presented after disabling.
     assert accounts.lookup_session(conn, token) is None
+
+
+def test_setting_a_password_replaces_the_old_one(conn):
+    uid = accounts.create_user(conn, "priya@example.com", "old password")
+    accounts.set_password(conn, uid, "new password")
+    assert accounts.check_login(conn, "priya@example.com", "new password") == uid
+    assert accounts.check_login(conn, "priya@example.com", "old password") is None
+
+
+def test_setting_a_password_stores_a_hash_not_the_password(conn):
+    uid = accounts.create_user(conn, "priya@example.com", "old password")
+    accounts.set_password(conn, uid, "new password")
+    stored = conn.execute("SELECT password_hash FROM users").fetchone()[0]
+    assert "new password" not in stored
+
+
+def test_setting_a_password_clears_a_lockout(conn):
+    """Someone locked out is exactly who reaches for a reset link."""
+    uid = accounts.create_user(conn, "priya@example.com", "old password")
+    for _ in range(accounts.LOCKOUT_THRESHOLD):
+        accounts.check_login(conn, "priya@example.com", "wrong")
+    accounts.set_password(conn, uid, "new password")
+    assert accounts.check_login(conn, "priya@example.com", "new password") == uid
+
+
+def test_revoking_kills_every_session_for_that_user(conn):
+    uid = accounts.create_user(conn, "priya@example.com", "pw")
+    a = accounts.create_session(conn, uid)
+    b = accounts.create_session(conn, uid)
+    assert accounts.revoke_all_sessions(conn, uid) == 2
+    assert accounts.lookup_session(conn, a) is None
+    assert accounts.lookup_session(conn, b) is None
+
+
+def test_revoking_leaves_other_users_alone(conn):
+    mine = accounts.create_user(conn, "priya@example.com", "pw")
+    theirs = accounts.create_user(conn, "rahul@example.com", "pw")
+    my_token = accounts.create_session(conn, mine)
+    their_token = accounts.create_session(conn, theirs)
+    accounts.revoke_all_sessions(conn, mine)
+    assert accounts.lookup_session(conn, my_token) is None
+    assert accounts.lookup_session(conn, their_token) == theirs
+
+
+def test_revoking_a_user_with_no_sessions_is_harmless(conn):
+    uid = accounts.create_user(conn, "priya@example.com", "pw")
+    assert accounts.revoke_all_sessions(conn, uid) == 0

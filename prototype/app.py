@@ -149,6 +149,32 @@ def floor_view():
     return render_template("floor.html", embed=request.args.get("embed") == "1")
 
 
+@app.route("/api/movers")
+def api_movers():
+    """Market-wide top gainers and losers across the full NSE cash universe.
+
+    Separate from /api/scores on purpose. That endpoint scores 50 NIFTY names for the
+    engines; this one ranks ~2,600 by move. Comparing our tab against Zerodha's on
+    2026-09-04 found zero overlap between the two lists, because a NIFTY 50 universe
+    cannot contain the market's biggest movers.
+    """
+    from flask import request as _rq
+    try:
+        from prototype import movers as _mv
+    except Exception:
+        import movers as _mv
+    n = max(5, min(int(_rq.args.get("n", 20)), 100))
+    # rupees; 0 = show everything, including illiquid names that genuinely moved
+    mt = float(_rq.args.get("min_turnover", 0) or 0)
+    try:
+        return jsonify(_mv.movers(n=n, min_turnover=mt))
+    except Exception as e:
+        # never 500 into the console — but say what broke rather than returning an
+        # empty market, which reads as "nothing moved today"
+        return jsonify({"error": str(e)[:200], "gainers": [], "losers": [],
+                        "universe": 0, "quoted": 0}), 200
+
+
 @app.route("/api/news")
 def api_news():
     """The catalyst ledger written by scripts/news-watch.py.

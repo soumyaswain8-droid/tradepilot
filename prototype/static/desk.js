@@ -38,6 +38,55 @@
   }
   function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : "flat"; }
 
+  /* ── movers ────────────────────────────────────────────────────────────────
+     The full NSE cash universe (~2,600), not the scored 50. Ranked by MOVE — a
+     gainers list ordered by anything else is not a gainers list. */
+  var mvFilter = 0, mvData = null;
+
+  function loadMovers() {
+    return jget("/api/movers?n=25&min_turnover=" + mvFilter, 20000).then(function (res) {
+      mvData = res.j || {};
+      renderMovers();
+    }).catch(function () {
+      $("moversBody").innerHTML = '<div class="empty">Movers unavailable</div>';
+    });
+  }
+
+  function moverTable(title, rows, cls) {
+    if (!rows || !rows.length) return '<div class="empty">no data</div>';
+    return '<div class="card" style="padding:0 6px;flex:1;min-width:0">' +
+      '<table class="tbl"><thead><tr><th colspan="3">' + esc(title) +
+      "</th></tr></thead><tbody>" +
+      rows.map(function (r) {
+        return '<tr class="click" data-sym="' + esc(r.symbol) + '">' +
+          '<td class="sym">' + esc(r.symbol) + "</td>" +
+          '<td class="r num">' + inr(r.price, 2) + "</td>" +
+          '<td class="r num ' + cls + '">' + sgn(r.change, 2) + "%</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
+  function renderMovers() {
+    var d = mvData || {};
+    if (d.error) {
+      $("moversBody").innerHTML = '<div class="empty">' + esc(d.error) + "</div>";
+      return;
+    }
+    var adv = d.advances || 0, dec = d.declines || 0;
+    $("mvBreadth").textContent = adv + " up · " + dec + " down";
+    $("mvAsOf").textContent = (d.quoted || 0) + " of " + (d.universe || 0) + " quoted"
+      + (d.excluded_by_filter ? " · " + d.excluded_by_filter + " filtered out" : "")
+      + (d.at ? " · " + d.at : "");
+    $("moversBody").innerHTML =
+      '<div style="display:flex;gap:8px;align-items:flex-start">' +
+      moverTable("TOP GAINERS", d.gainers, "pos") +
+      moverTable("TOP LOSERS", d.losers, "neg") + "</div>";
+    $("moversBody").querySelectorAll("tr.click").forEach(function (tr) {
+      tr.addEventListener("click", function () {
+        openDrawer(tr.getAttribute("data-sym"));
+      });
+    });
+  }
+
   /* ── news ──────────────────────────────────────────────────────────────────
      Reads the ledger scripts/news-watch.py appends to. The dashboard never triggers
      a feed fetch, so a rate-limited source cannot stall the page and opening this
@@ -331,7 +380,18 @@
       if (mktFilter === "held") return !!held[sym];
       return true;
     });
-    rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    // Sort by whatever the filter claims to rank. "Gainers" sorted by SCORE is not a
+    // gainers list — it is a score list with losers hidden, and it reads as ranked when
+    // it is not. Observed 2026-09-04: Gainers showed COALINDIA +0.53% ABOVE UPL +1.19%,
+    // and Losers led with EICHERMOT -0.28% while TECHM -1.54% sat at the bottom.
+    // Everything else still ranks by score, which is the engine's own ordering.
+    if (mktFilter === "gain") {
+      rows.sort(function (a, b) { return (b.change || 0) - (a.change || 0); });
+    } else if (mktFilter === "lose") {
+      rows.sort(function (a, b) { return (a.change || 0) - (b.change || 0); });
+    } else {
+      rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    }
     $("mktCount").textContent = rows.length + " of " + mktRows.length;
     if (!rows.length) {
       $("mktBody").innerHTML = '<div class="empty">Nothing matches</div>';
@@ -565,6 +625,13 @@
       pollMs: 60000
     });
 
+    window.TPRouter.register("movers", {
+      mount: loadMovers,
+      refresh: loadMovers,
+      // 30s matches the movers cache TTL — polling faster shows motion that is not there
+      pollMs: 30000
+    });
+
     window.TPRouter.register("news", {
       mount: loadNews,
       refresh: loadNews,
@@ -573,6 +640,15 @@
       pollMs: 300000
     });
     document.addEventListener("click", function (e) {
+      var m = e.target.closest ? e.target.closest("[data-mv]") : null;
+      if (m) {
+        mvFilter = Number(m.getAttribute("data-mv")) || 0;
+        document.querySelectorAll("[data-mv]").forEach(function (x) {
+          x.classList.toggle("on", x === m);
+        });
+        loadMovers();
+        return;
+      }
       var b = e.target.closest ? e.target.closest("[data-nf]") : null;
       if (!b) return;
       newsFilter = b.getAttribute("data-nf");

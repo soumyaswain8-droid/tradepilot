@@ -149,6 +149,78 @@ def floor_view():
     return render_template("floor.html", embed=request.args.get("embed") == "1")
 
 
+# ── who writes KITE_ACCESS_TOKEN into os.environ at runtime? ─────────────────
+# Installed at import so it is armed before the first request. A long-running Flask
+# has three times served a token that differed from .env; `ps eww` shows the variable
+# is NOT in the exec environment, yet os.environ has it at runtime — so something in
+# this process sets it after startup. Every static grep of our code found nothing, so
+# trap the write itself and record the stack. Read back via /api/_diag/creds.
+_ENVIRON_SETTERS = []
+try:
+    import os as _os_spy
+    import traceback as _tb_spy
+    _orig_setitem = _os_spy.environ.__class__.__setitem__
+
+    def _spy_setitem(self, k, v):
+        if k == "KITE_ACCESS_TOKEN":
+            _ENVIRON_SETTERS.append({
+                "tail": (v or "")[-8:],
+                "stack": [l.strip().splitlines()[0][:120]
+                          for l in _tb_spy.format_stack()[-7:-1]],
+            })
+        return _orig_setitem(self, k, v)
+    _os_spy.environ.__class__.__setitem__ = _spy_setitem
+except Exception:
+    pass
+
+
+@app.route("/api/_diag/creds")
+def api_diag_creds():
+    """What THIS process resolves for the Kite token, and from where. Loopback only.
+
+    Exists because a long-running Flask has repeatedly served a token that differed
+    from the one in .env (08-27, 09-02, 09-04) while a fresh process reading the same
+    file was correct. Every theory so far was tested from OUTSIDE the process, which
+    is why none of them stuck — this reports the process's own view, tail-only, so it
+    can be compared against the file without exposing the credential.
+    """
+    from flask import request as _rq
+    if _rq.remote_addr not in ("127.0.0.1", "::1"):
+        return jsonify({"error": "loopback only"}), 403
+    import os as _os
+    import sys as _sys
+    from prototype import envcfg as _e
+    from prototype.v4 import kite_data as _kd
+
+    def tail(v):
+        return (v or "")[-8:] or None
+
+    file_tail = None
+    try:
+        for ln in (_e.ROOT / ".env").read_text().splitlines():
+            if ln.startswith("KITE_ACCESS_TOKEN="):
+                file_tail = tail(ln.split("=", 1)[1].strip().strip('"').strip("'"))
+    except Exception:
+        pass
+    return jsonify({
+        "pid": _os.getpid(),
+        "envcfg_ENV_FILE": str(_e.ENV_FILE),
+        "envcfg_ROOT": str(_e.ROOT),
+        "envcfg_get_tail": tail(_e.get("KITE_ACCESS_TOKEN")),
+        "envcfg_source": _e.source_of("KITE_ACCESS_TOKEN"),
+        "os_environ_tail": tail(_os.environ.get("KITE_ACCESS_TOKEN")),
+        "file_on_disk_tail": file_tail,
+        "kd_creds_tail": tail(_kd._creds().get("KITE_ACCESS_TOKEN")),
+        "kd_cached_tok_tail": tail(_kd._kite_tok),
+        "kd_cached_day": str(_kd._kite_day),
+        "envcfg_module_file": _e.__file__,
+        "kite_data_module_file": _kd.__file__,
+        "sys_path_head": _sys.path[:3],
+        # every runtime write to os.environ["KITE_ACCESS_TOKEN"], with its caller
+        "environ_setters": _ENVIRON_SETTERS[-5:],
+    })
+
+
 @app.route("/api/movers")
 def api_movers():
     """Market-wide top gainers and losers across the full NSE cash universe.
@@ -4126,4 +4198,20 @@ if __name__ == "__main__":
 
     import threading as _th
     _th.Thread(target=_cache_warmer, daemon=True, name="cache-warmer").start()
-    app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
+    # load_dotenv=False is THE fix for TP-FLOOR-BLANK's stale-token half, root-caused
+    # 2026-09-04 after recurring on 08-27, 09-02 and 09-04.
+    #
+    # With python-dotenv installed, app.run() silently calls flask.cli.load_dotenv(),
+    # which exports every key in .env into os.environ ONCE, at startup. envcfg then
+    # consults os.environ BEFORE the file — a rule meant to let an operator override a
+    # single run — so this process kept returning the token it booted with, and every
+    # later rewrite of .env (the daily 06:00 refresh) was invisible to it. A freshly
+    # started process read the file and worked; this one did not; only a restart
+    # cured it. Two correct behaviours composed into a bug.
+    #
+    # It hid from every static search because the write is inside Flask, not in this
+    # codebase, and `ps eww` correctly showed nothing in the exec environment because
+    # the export happens ~200ms after exec. Caught by trapping os.environ.__setitem__
+    # and recording the stack (see _ENVIRON_SETTERS above).
+    app.run(host="127.0.0.1", port=5050, debug=False, threaded=True,
+            load_dotenv=False)

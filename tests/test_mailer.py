@@ -51,7 +51,7 @@ def test_the_message_carries_the_subject_and_body(creds):
 def test_it_sends_from_the_configured_address(creds):
     sent, transport = recorder()
     mailer.send("priya@example.com", "s", "b", transport=transport)
-    assert sent[0]["msg"]["From"] == mailer.FROM_ADDRESS
+    assert sent[0]["msg"]["From"] == "soumya@sidewall.in"
 
 
 def test_it_uses_the_workspace_smtp_endpoint(creds):
@@ -86,3 +86,29 @@ def test_nothing_is_sent_when_credentials_are_missing(monkeypatch):
     with pytest.raises(RuntimeError):
         mailer.send("priya@example.com", "s", "b", transport=transport)
     assert sent == []
+
+
+def test_a_missing_user_alone_raises(monkeypatch):
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.setenv("SMTP_PASS", "an-app-password")
+    _, transport = recorder()
+    with pytest.raises(RuntimeError):
+        mailer.send("priya@example.com", "s", "b", transport=transport)
+
+
+def test_an_empty_password_raises(monkeypatch):
+    """The realistic deployment failure: the variable is present and blank,
+    not absent. `not ""` is what the guard exists to catch."""
+    monkeypatch.setenv("SMTP_USER", "soumya@sidewall.in")
+    monkeypatch.setenv("SMTP_PASS", "")
+    _, transport = recorder()
+    with pytest.raises(RuntimeError):
+        mailer.send("priya@example.com", "s", "b", transport=transport)
+
+
+def test_an_empty_user_raises(monkeypatch):
+    monkeypatch.setenv("SMTP_USER", "")
+    monkeypatch.setenv("SMTP_PASS", "an-app-password")
+    _, transport = recorder()
+    with pytest.raises(RuntimeError):
+        mailer.send("priya@example.com", "s", "b", transport=transport)

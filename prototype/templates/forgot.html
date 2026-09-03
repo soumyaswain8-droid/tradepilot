@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Reset your password — TradePilot</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<div class="content" style="max-width:24rem;margin:4rem auto">
+  <h1>Reset your password</h1>
+  {% if done %}
+    <div class="empty">{{ ack }}</div>
+  {% else %}
+    <p class="thin">If that address has an account, we will email a link.</p>
+    <form method="post" action="/app/forgot">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+      <button type="submit">Send reset link</button>
+    </form>
+  {% endif %}
+</div>

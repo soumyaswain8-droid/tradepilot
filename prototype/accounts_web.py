@@ -4,10 +4,12 @@ Server-rendered on purpose. A real form POST means browser password managers
 work, and credentials never pass through the fetch layer -- api.js does not
 know this page exists.
 """
-from flask import (Blueprint, jsonify, make_response, redirect,
+import secrets
+
+from flask import (Blueprint, current_app, jsonify, make_response, redirect,
                    render_template, request, url_for)
 
-from prototype import accounts, app_store, client_auth
+from prototype import accounts, app_store, client_auth, mailer
 
 bp = Blueprint("accounts_web", __name__)
 
@@ -107,3 +109,71 @@ def logout():
     resp = make_response(redirect(url_for("client_app")))
     resp.delete_cookie(client_auth.COOKIE_NAME, path="/")
     return resp
+
+
+WAITLIST_ACK = "Thanks -- we will be in touch."
+FORGOT_ACK = "If that address has an account, a reset link is on its way."
+
+
+def send_mail(to, subject, body):
+    """Indirection so tests replace one function instead of the mailer."""
+    mailer.send(to, subject, body)
+
+
+def reset_body(token):
+    return ("Someone asked to reset the password on your TradePilot account.\n\n"
+            "If that was you, set a new one here -- the link is good for an hour:\n"
+            "%s/app/set-password?t=%s\n\n"
+            "If it was not you, ignore this. Nothing has changed.\n"
+            % (request.host_url.rstrip("/"), token))
+
+
+@bp.route("/app/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html", done=False, ack=WAITLIST_ACK)
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    email = (request.form.get("email") or "").strip()
+    if email:
+        conn = open_store()
+        try:
+            conn.execute(
+                "INSERT INTO waitlist (id, email, requested_at) VALUES (?, ?, ?)",
+                ("w-" + secrets.token_hex(4), email, accounts._iso(accounts._now())))
+            conn.commit()
+        finally:
+            conn.close()
+    # The same page whether the address is new, repeated, or already an
+    # account. Anything else makes this form an account enumerator.
+    return render_template("signup.html", done=True, ack=WAITLIST_ACK)
+
+
+@bp.route("/app/forgot", methods=["GET", "POST"])
+def forgot():
+    if request.method == "GET":
+        return render_template("forgot.html", done=False, ack=FORGOT_ACK)
+    if client_auth.foreign_origin():
+        return jsonify({"error": "bad origin"}), 403
+
+    email = (request.form.get("email") or "").strip()
+    if email:
+        conn = open_store()
+        try:
+            row = conn.execute(
+                "SELECT id FROM users WHERE lower(email) = lower(?)",
+                (email,)).fetchone()
+            if row is not None:
+                token = accounts.issue_token(conn, "reset", email,
+                                             accounts.RESET_HOURS)
+                try:
+                    send_mail(email, "Reset your TradePilot password",
+                              reset_body(token))
+                except Exception:
+                    # Cannot be surfaced: saying "we could not send it" would
+                    # confirm the account exists. Log it and answer normally.
+                    current_app.logger.exception("reset mail failed")
+        finally:
+            conn.close()
+    return render_template("forgot.html", done=True, ack=FORGOT_ACK)

@@ -1,4 +1,35 @@
-# Resume here — state as of 2026-09-01 evening
+# Resume here — updated 2026-09-03 late
+
+## THE WEEKEND JOB — Kite token automation, deferred deliberately
+
+Everything is built and scheduled; only the credentials are missing. Deferred from
+09-03 because completing it requires **re-enrolling TOTP in Kite**, and doing that late
+at night before a trading day risks a lockout for no gain.
+
+**Do this with time to spare, not before an open:**
+
+1. kite.zerodha.com → profile → My profile → Settings → **Password & security**
+2. **External TOTP** → Reset / Re-enable
+3. Copy the **manual entry key / secret key** shown beside the QR — that is the seed. It
+   is a long base32 string (16–32 chars, A–Z and 2–7), NOT the rotating 6-digit code.
+4. **Re-scan the QR into your authenticator before leaving the page** — re-enrolling
+   invalidates the old TOTP, and losing it locks you out of Kite login entirely.
+5. In a real Terminal (getpass needs a TTY, so not through Claude):
+   `cd ~/Documents/tinker/projects/tradepilot && python3 scripts/kite-setup-auto.py`
+6. It prints a 6-digit code — confirm it matches your authenticator. If not, answer `n`;
+   nothing is written.
+
+A first attempt on 09-03 pasted the 6-digit code instead of the seed. The script caught
+it and wrote nothing, which is exactly what that validation exists for.
+
+**Until then the manual flow is fine.** The un-configured job exits at preflight without
+alerting, so it makes no noise. The actual 09-03 failure was a rogue test writing dead
+tokens into the live .env — that is fixed and rescheduled, so today's failure mode
+cannot recur whether or not automation lands.
+
+---
+
+# Earlier state — as of 2026-09-01 evening
 
 Paused mid-thread. This is what is running, what is waiting on you, and what the open
 questions are. Everything below is committed and pushed (`dev` and `main` at `e80aece`).

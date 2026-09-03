@@ -1,4 +1,70 @@
-# Resume here — updated 2026-09-03 late
+# Resume here — updated 2026-09-04 early
+
+## THE OTHER WEEKEND JOB — connect the client dashboard to the engine
+
+The client product is finished and running. Accounts, sessions, sign-in, the waitlist
+front door, invites and password reset all shipped and merged (447 pytest, 18 node).
+What has never happened is a single call being published, so the dashboard's track
+record is honestly empty.
+
+**One defect was found and fixed tonight, and it matters for what comes next.**
+`/api/picks` is not cached — it calls `score_stocks_v4()` and scores the whole universe
+against live data on every request. Measured at **over 120 seconds**. `publish-calls.py`
+had a 30-second timeout, chosen without measuring, so the 09:20 agent would have failed
+every morning with an error reading like "the engine is down" — pointing at the healthy
+component. Now 300s, overridable with `TP_PICKS_TIMEOUT` (commit `4e197d4`).
+
+**Do this with the market open, not at night:**
+
+1. Restart the long-running instance first — see the anomaly below.
+2. `python3 scripts/publish-calls.py` around 09:20, and watch it. The field mapping is
+   confirmed against live output: `direction` is `BUY`/`SELL`, and `target`/`stopLoss`
+   are **percentages** under those exact names.
+3. Read the dashboard. Calls, call detail and Track record should all populate.
+4. Only if you are happy standing behind those calls, install the two agents:
+   `deploy/launchd/co.tradepilot.{publish,resolve}-calls.plist`. Both carry a literal
+   `/Users/YOURNAME` placeholder that must be replaced first. They are scheduled 09:20
+   weekdays and have stayed uninstalled on purpose — they write to `calls`, which is the
+   one table whose loss cannot be reconstructed.
+
+### The anomaly worth chasing before you schedule anything
+
+`/api/picks` answered in about **two minutes on a freshly started instance** and had not
+answered in **over ten** on the instance that had been up all day. Same code, same route.
+That difference cannot be in the request handler — it is state the long-lived process is
+holding: a cache that has grown, a pool exhausted, a lock another agent is sitting on.
+
+It only appears after hours of uptime, so it will never show in a test or a fresh dev
+start. **Restarting will make it vanish without explaining it** — capture the state first
+if you want the cause rather than the symptom. This matters because `publish-calls.py`
+targets `127.0.0.1:5050` by default, which is the long-lived instance.
+
+### Using the client app right now
+
+A local instance of the merged code runs on **5051** (started 09-04, separate from the
+5050 one, which is older code). Sign in at `http://127.0.0.1:5051/app/login` as
+`soumya@sidewall.in`. The account was made with `scripts/add-client.py`, which needs no
+email — the waitlist and reset flows do need `SMTP_USER`/`SMTP_PASS`, and nothing else
+does.
+
+`sidewall.in` now publishes SPF and a DKIM key at selector `google`;
+`scripts/check-mail-dns.sh sidewall.in` exits 0. That also fixed ordinary business mail,
+which had been quarantined because a GoDaddy default DMARC `p=quarantine` was published
+with neither record behind it. **Every other domain on that account probably has the same
+default** — `eazipay.in` did.
+
+### Still the gate that governs all of it
+
+**The SEBI Research Analyst / Investment Adviser question decides when `/app` can be
+publicly reachable.** The front door was deliberately built so only you can open it:
+approval is a terminal command, and nobody gets an account without one. Building the
+machinery was never the decision. Publishing the link is.
+
+Two deferred items in `docs/superpowers/specs/2026-09-03-accounts-signup-design.md` are
+gated on the same answer — chiefly that `/app/forgot` reveals whether an address has an
+account through response *timing*, which the identical response body cannot hide.
+
+---
 
 ## THE WEEKEND JOB — Kite token automation, deferred deliberately
 

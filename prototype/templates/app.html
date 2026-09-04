@@ -4,26 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TradePilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="brand"><span class="mark"></span> TradePilot</div>
-  <div class="who" id="who"></div>
+  <a class="brand" href="#home">
+    <svg viewBox="0 0 72 72" aria-hidden="true"><defs><linearGradient id="LG" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#087A50"></stop><stop offset="100%" stop-color="#2ECC8F"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#LG)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+    <span>TradePilot</span>
+  </a>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="topright">
+    <label class="search">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="search" placeholder="Search a stock or a call" aria-label="Search a stock or a call">
+    </label>
+    <span class="mkt" id="mkt"><span class="dot"></span>Market closed</span>
+    <div class="who" id="who"></div>
+    <div class="avatar" id="avatar">·</div>
+  </div>
 </header>
 
-<div class="shell">
-  <nav class="sidenav" id="sidenav"></nav>
-
-  <main class="content">
-    <section class="view" id="view-home"></section>
-    <section class="view" id="view-calls"></section>
-    <section class="view" id="view-call"></section>
-    <section class="view" id="view-book"></section>
-    <section class="view" id="view-record"></section>
-  </main>
-</div>
+<main class="content">
+  <section class="view" id="view-home"></section>
+  <section class="view" id="view-calls"></section>
+  <section class="view" id="view-call"></section>
+  <section class="view" id="view-book"></section>
+  <section class="view" id="view-record"></section>
+</main>
 
 <nav class="tabbar" id="tabbar"></nav>
 

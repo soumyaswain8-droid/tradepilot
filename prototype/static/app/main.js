@@ -21,25 +21,65 @@
 
   function el(id) { return document.getElementById(id); }
 
+  /* Stroke icons for the phone tab bar, copied from HomePhone.dc.html. One
+     path string per section; the svg wrapper is built below. */
+  var ICONS = {
+    home:   [["path", { d: "M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" }]],
+    calls:  [["path", { d: "M4 19h16M6 15l4-5 4 3 5-7" }]],
+    book:   [["path", { d: "M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM8 7h8M8 11h8M8 15h5" }]],
+    record: [["circle", { cx: "12", cy: "12", r: "9" }], ["path", { d: "M12 7v5l3 2" }]]
+  };
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  function icon(id) {
+    var svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    var parts = ICONS[id] || [];
+    for (var i = 0; i < parts.length; i++) {
+      var node = document.createElementNS(SVG_NS, parts[i][0]);
+      var attrs = parts[i][1];
+      for (var k in attrs) {
+        if (attrs.hasOwnProperty(k)) node.setAttribute(k, attrs[k]);
+      }
+      svg.appendChild(node);
+    }
+    return svg;
+  }
+
+  /* The current section is `call` when a call is open; the Calls tab stays
+     lit so the user can see where they are in the product. */
+  function navCurrent() { return cur === "call" ? "calls" : cur; }
+
+  /* Top tabs (desktop) and bottom tabs (phone) come from the same list, and
+     both hrefs go through TPRoute.build -- one list, one parser, so the two
+     bars cannot disagree about where a tab leads. CSS decides which one is
+     visible at a given width. */
   function renderNav() {
-    var side = el("sidenav");
-    var tabs = el("tabbar");
-    if (!side || !tabs) return;
-    side.innerHTML = "";
-    tabs.innerHTML = "";
+    var top = el("tabs");
+    var bottom = el("tabbar");
+    if (!top || !bottom) return;
+    top.innerHTML = "";
+    bottom.innerHTML = "";
+    var on = navCurrent();
     for (var i = 0; i < SECTIONS.length; i++) {
       var s = SECTIONS[i];
+      var href = window.TPRoute.build(s.id, null, []);
+
       var a = document.createElement("a");
-      a.href = "#" + s.id;
+      a.href = href;
       a.textContent = s.label;
-      if (s.id === cur) a.className = "on";
-      side.appendChild(a);
+      a.className = "tab" + (s.id === on ? " on" : "");
+      if (s.id === on) a.setAttribute("aria-current", "page");
+      top.appendChild(a);
 
       var t = document.createElement("a");
-      t.href = "#" + s.id;
-      t.textContent = s.label;
-      if (s.id === cur) t.className = "on";
-      tabs.appendChild(t);
+      t.href = href;
+      t.className = "tabm" + (s.id === on ? " on" : "");
+      if (s.id === on) t.setAttribute("aria-current", "page");
+      t.appendChild(icon(s.id));
+      t.appendChild(document.createTextNode(s.label));
+      bottom.appendChild(t);
     }
   }
 
@@ -103,9 +143,12 @@
   function loadWho() {
     var node = el("who");
     if (!node) return;
+    var avatar = el("avatar");
     window.TPApi.me().then(function (m) {
       node.innerHTML = "";
-      var name = window.TPScreens.el("span", "thin", m.email || m.user_id);
+      var who = m.email || m.user_id || "";
+      if (avatar) avatar.textContent = (String(who).charAt(0) || "·").toUpperCase();
+      var name = window.TPScreens.el("span", "thin", who);
       var out = document.createElement("form");
       out.method = "post";
       out.action = "/app/logout";

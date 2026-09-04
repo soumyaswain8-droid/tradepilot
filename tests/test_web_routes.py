@@ -56,7 +56,7 @@ def test_team_without_embed_keeps_header(client):
     """The standalone page is unchanged."""
     r = client.get("/team")
     assert b"<h1>TradePilot Quant Desk</h1>" in r.data
-    assert b"pageswitch.js" in r.data
+    assert b"_operator_nav" not in r.data and b"class=\"nav\"" in r.data  # operator nav replaces pageswitch (2026-09-05)
 
 
 def test_router_declares_three_sections(client):

@@ -30,9 +30,17 @@
      with no registered view and render a blank tab. These are plain links,
      never routed. */
   var EXTERNAL = [
+    { label: "Live",      href: "/live" },
+    { label: "Lab",       href: "/lab" },
     { label: "Decisions", href: "/decisions" },
+    { label: "Portfolio", href: "/portfolio" },
     { label: "Classic",   href: "/classic" }
   ];
+
+  /* The client-facing app, pushed to the far right so it reads as a way OUT
+     of the operator tier rather than one more operator tab. Inline style on
+     purpose: desk.css owns the nav look and this is the one exception. */
+  var CLIENT_APP = { label: "Client app", href: "/app" };
 
   var views = {};     // viewId -> hooks
   var mounted = {};   // viewId -> true
@@ -86,6 +94,16 @@
       a.appendChild(ext);
       nav.appendChild(a);
     });
+    var c = document.createElement("a");
+    c.href = CLIENT_APP.href;
+    c.style.marginLeft = "auto";
+    c.style.color = "var(--acc)";
+    c.appendChild(document.createTextNode(CLIENT_APP.label + " "));
+    var cext = document.createElement("span");
+    cext.className = "ext";
+    cext.textContent = "↗";
+    c.appendChild(cext);
+    nav.appendChild(c);
   }
 
   function renderSubnav(section, sub) {

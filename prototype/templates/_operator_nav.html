@@ -1,0 +1,66 @@
+{#- _operator_nav.html — the operator header + nav, shared by every operator page
+    except the Terminal itself (desk.html renders its nav from TPRouter.SECTIONS).
+    Markup mirrors desk.html's topbar/nav so desk.css styles it unchanged.
+
+    Usage, at the top of <body>:
+        {% set current = 'live' %}
+        {% include "_operator_nav.html" %}
+
+    Server-rendered and static: no API, no JS. The index strip and clock are
+    placeholders here — the Terminal owns the live values. No ids on purpose,
+    so a host page's own #clock / #sessPill never collide with these. -#}
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 72 72" aria-label="TradePilot">
+      <defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#4338CA"/><stop offset="100%" stop-color="#7C7FF3"/>
+      </linearGradient></defs>
+      <g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg)"/>
+      <line x1="34" y1="29" x2="34" y2="56" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg)"/>
+      <line x1="53" y1="18" x2="53" y2="45" stroke="url(#tpg)" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg)"/>
+      <path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+    </svg>
+    <b>TRADEPILOT</b><span>TERMINAL</span>
+  </div>
+
+  <div class="idxstrip">
+    <div class="idx"><span class="n">NIFTY 50</span><span class="v num">--</span><span class="c num">--</span></div>
+    <div class="idx"><span class="n">SENSEX</span><span class="v num">--</span><span class="c num">--</span></div>
+    <div class="idx"><span class="n">BANK NIFTY</span><span class="v num">--</span><span class="c num">--</span></div>
+    <div class="idx"><span class="n">NIFTY IT</span><span class="v num">--</span><span class="c num">--</span></div>
+    <div class="idx"><span class="n">INDIA VIX</span><span class="v num">--</span><span class="c num">--</span></div>
+  </div>
+
+  <div class="sess">
+    <span class="pill closed">Paper</span>
+    <span class="clock">--:--:--</span>
+  </div>
+</header>
+
+{%- set _cur = current if current is defined else '' %}
+{%- set _tabs = [
+  ('desk',      'Desk',      '/'),
+  ('market',    'Market',    '/#market'),
+  ('movers',    'Movers',    '/#movers'),
+  ('news',      'News',      '/#news'),
+  ('agents',    'Agents',    '/#agents'),
+  ('live',      'Live',      '/live'),
+  ('lab',       'Lab',       '/lab'),
+  ('decisions', 'Decisions', '/decisions'),
+  ('portfolio', 'Portfolio', '/portfolio'),
+] %}
+{#- On a phone the eleven links are wider than the viewport. Let the nav scroll
+    inside itself (as the index strip does) rather than the whole page. #}
+<style>.nav{overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav a{white-space:nowrap;flex:none}
+@media (max-width:600px){.topbar{gap:12px}.topbar .brand span{display:none}}</style>
+<nav class="nav">
+  {%- for id, label, href in _tabs %}
+  <a href="{{ href }}"{% if id == _cur %} class="on"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+  <a href="/classic">Classic <span class="ext">↗</span></a>
+  <a href="/app" style="margin-left:auto;color:var(--acc)">Client app <span class="ext">↗</span></a>
+</nav>

@@ -7,63 +7,67 @@
 <meta name="description" content="TradePilot live trading dashboard — paper trading, ML signals, engine arena, F&O chain, market pulse for the Indian market.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/desk.css">
 <style>
 /* ═══════════════════════════════════════════════════════════════
    TRADEPILOT · LIVE TRADING DESK
-   2026-05-08 redesign — Plaid layout × Stripe palette.
-   White cards with soft shadows, indigo accent, Inter Tight + JetBrains Mono.
+   2026-05-08 layout, reskinned 2026-09-05 to the Terminal desk tokens
+   (static/desk.css is the token source of truth). Dark panels, indigo
+   accent, system sans + JetBrains Mono for numbers. Panels/JS untouched.
    ═══════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  /* Stripe palette */
-  --paper:    #FFFFFF;
-  --paper-2:  #F6F9FC;
-  --surface:  #FFFFFF;
-  --surface-2:#F6F9FC;
-  --bg:       #F6F9FC;
-  --ink:      #0A2540;
-  --ink-2:    #1A2C42;
-  --ink-3:    #425466;
-  --ink-4:    #6B7C93;
-  --line:     #E3E8EE;
-  --line-soft: rgba(14,37,64,0.10);
-  --line-faint: rgba(14,37,64,0.05);
-  --hairline: #EFF1F4;
+  /* Desk tokens (desk.css) mapped onto the legacy variable names.
+     --paper/--surface = panel, --paper-2 = panel2 (insets, table heads),
+     --surface-2 = hover, --ink-3 = muted, --ink-4 = dim. */
+  --paper:    #10141c;
+  --paper-2:  #0d1118;
+  --surface:  #10141c;
+  --surface-2:#151b26;
+  --bg:       #0a0d13;
+  --ink:      #e6ebf2;
+  --ink-2:    #e6ebf2;
+  --ink-3:    #8a94a6;
+  --ink-4:    #57627a;
+  --line:     #1c2330;
+  --line-soft: #242d3d;
+  --line-faint: #1c2330;
+  --hairline: #1c2330;
 
-  /* Stripe indigo / blue family */
-  --indigo:      #635BFF;
-  --indigo-2:    #4F46E5;
-  --indigo-soft: #EEEDFF;
-  --blue:        #0F75D8;
-  --blue-dim:    rgba(15,117,216,0.18);
-  --cyan:        #4FD1FF;
-  --violet:      #8B5CF6;
+  /* Accent — interaction/selection is indigo, never green/red */
+  --indigo:      #6366f1;
+  --indigo-2:    #7c7ff3;
+  --indigo-soft: rgba(99,102,241,0.12);
+  --blue:        #6366f1;
+  --blue-dim:    rgba(99,102,241,0.18);
+  --cyan:        #6366f1;
+  --violet:      #6366f1;
 
-  /* Semantic — modern fintech */
-  --green:        #10B981;
-  --green-bright: #14A464;
-  --green-dim:    rgba(16,185,129,0.14);
-  --red:          #EF4444;
-  --red-bright:   #DC2626;
-  --red-dim:      rgba(239,68,68,0.12);
-  --amber:        #F59E0B;
-  --amber-dim:    rgba(245,158,11,0.14);
+  /* Semantic — green/red mean P&L only, amber means stale/warning */
+  --green:        #16c784;
+  --green-bright: #16c784;
+  --green-dim:    rgba(22,199,132,0.12);
+  --red:          #ea3943;
+  --red-bright:   #ea3943;
+  --red-dim:      rgba(234,57,67,0.12);
+  --amber:        #f0a93b;
+  --amber-dim:    rgba(240,169,59,0.14);
 
-  /* Type — match landing */
-  --display: 'Inter Tight','Inter',system-ui,sans-serif;
+  /* Type — system sans for labels, JetBrains Mono (tabular) for numbers */
+  --display: -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
   --led:     'JetBrains Mono','SF Mono','Menlo',monospace;
   --mono:    'JetBrains Mono','SF Mono','Menlo',monospace;
-  --sans:    'Inter','SF Pro Text',system-ui,sans-serif;
+  --sans:    -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
 
   /* Density / rhythm */
   --pad: 14px;
   --gap: 14px;
-  --radius: 10px;
-  --shadow-sm: 0 1px 2px rgba(50,50,93,0.06);
-  --shadow-md: 0 4px 12px rgba(50,50,93,0.06), 0 2px 4px rgba(0,0,0,0.03);
+  --radius: 6px;
+  --shadow-sm: none;
+  --shadow-md: 0 4px 14px rgba(0,0,0,0.35);
 }
 
 html, body { height: 100%; }
@@ -76,7 +80,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  /* Operator nav (_operator_nav.html: 46px header + ~36px nav) sits above
+     .app; flex column lets .app take whatever height remains. */
+  display: flex;
+  flex-direction: column;
 }
+/* The operator nav must keep its natural height; only .app flexes. */
+body > .topbar, body > .nav, body > .subnav { flex: none; }
 body[data-density="cozy"] { --pad: 18px; --gap: 18px; font-size: 14px; }
 body[data-density="tight"] { --pad: 10px; --gap: 10px; font-size: 12px; }
 
@@ -90,17 +100,23 @@ input { cursor: text; }
 .app {
   position: relative;
   z-index: 5;
-  height: 100vh;
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  min-height: 0;
+  height: auto;
   display: grid;
   grid-template-rows: 36px 1fr 26px;
 }
 
 /* ═══ TOP BAR (macOS-style) ═══ */
-.topbar {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: saturate(180%) blur(10px);
-  -webkit-backdrop-filter: saturate(180%) blur(10px);
+.app .topbar {
+  background: var(--paper-2);
   border-bottom: 1px solid var(--hairline);
+  height: auto;
+  position: relative;
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -121,7 +137,7 @@ input { cursor: text; }
 .traffic .r { background: #FF5F56; }
 .traffic .y { background: #FFBD2E; }
 .traffic .g { background: #27C93F; }
-.brand {
+.app .brand {
   display: flex; align-items: center; gap: 8px;
   font-family: var(--display);
   font-weight: 700;
@@ -131,7 +147,7 @@ input { cursor: text; }
 }
 .brand-mark {
   width: 22px; height: 22px;
-  background: linear-gradient(135deg, var(--indigo) 0%, var(--blue) 100%);
+  background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-2) 100%);
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
@@ -147,10 +163,12 @@ input { cursor: text; }
 }
 
 .tb-pills { display: flex; gap: 6px; align-items: center; }
-.pill {
+.app .pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  text-transform: uppercase;
+  white-space: nowrap;
   padding: 3px 9px;
   border: 1px solid var(--line);
   background: var(--paper-2);
@@ -163,7 +181,7 @@ input { cursor: text; }
 }
 .pill.green { background: var(--green-dim); color: var(--green-bright); border-color: rgba(16,185,129,0.32); }
 .pill.red { background: var(--red-dim); color: var(--red-bright); border-color: rgba(239,68,68,0.32); }
-.pill.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pill.dark { background: var(--surface); color: var(--ink); border-color: var(--line-soft); }
 .pill.amber { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,158,11,0.36); }
 .pill.indigo { background: var(--indigo-soft); color: var(--indigo-2); border-color: rgba(99,91,255,0.28); }
 .pill.dot::before {
@@ -191,6 +209,7 @@ input { cursor: text; }
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.tb-mini-stat .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .tb-mini-stat .k { color: var(--ink-3); font-weight: 600; }
 .tb-mini-stat .v { font-weight: 800; }
 .tb-mini-stat .v.up { color: var(--green); }
@@ -208,7 +227,7 @@ input { cursor: text; }
   cursor: pointer;
   min-width: 180px;
 }
-.cmd-trigger:hover { background: var(--paper); }
+.cmd-trigger:hover { background: var(--surface-2); }
 .cmd-trigger .key {
   font-family: var(--mono);
   font-size: 9px;
@@ -269,10 +288,14 @@ input { cursor: text; }
 }
 
 /* ═══ MAIN AREA ═══ */
-.main {
+.app .main {
   display: grid;
   grid-template-columns: 200px 1fr;
   overflow: hidden;
+  padding: 0;
+  max-width: none;
+  margin: 0;
+  min-height: 0;
 }
 
 /* ═══ SIDEBAR ═══ */
@@ -309,7 +332,7 @@ input { cursor: text; }
   color: var(--ink-3);
   transition: all 0.12s ease;
 }
-.sb-nav a:hover { background: var(--bg); color: var(--ink); }
+.sb-nav a:hover { background: var(--surface-2); color: var(--ink); }
 .sb-nav a.active {
   background: var(--indigo-soft);
   color: var(--indigo-2);
@@ -657,9 +680,9 @@ table.dt {
 .arena-col:last-child { border-right: none; }
 .arena-col .nm-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .arena-col .badge { font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-.arena-col .badge.ok { background: var(--green-soft, #d1fae5); color: var(--green); }
-.arena-col .badge.warn { background: #fef3c7; color: #92400e; }
-.arena-col .badge.dead { background: #fee2e2; color: #991b1b; }
+.arena-col .badge.ok { background: var(--green-dim); color: var(--green); }
+.arena-col .badge.warn { background: var(--amber-dim); color: var(--amber); }
+.arena-col .badge.dead { background: var(--red-dim); color: var(--red); }
 .arena-col .v {
   font-family: var(--led);
   font-size: 11px; line-height: 1;
@@ -723,7 +746,7 @@ table.dt {
   color: var(--ink-3);
 }
 .scores-toolbar .filter button:last-child { border-right: none; }
-.scores-toolbar .filter button.active { background: var(--ink); color: var(--paper); }
+.scores-toolbar .filter button.active { background: var(--indigo-soft); color: var(--indigo); }
 .scores-toolbar .info {
   margin-left: auto;
   font-family: var(--mono);
@@ -762,7 +785,25 @@ table.dt {
   border-bottom: 1px solid var(--line-faint);
   background: var(--paper-2);
 }
-.fno-toolbar .filter button.active { background: var(--ink); color: var(--paper); }
+.fno-toolbar .filter {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.fno-toolbar .filter button {
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line-soft);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fno-toolbar .filter button:last-child { border-right: none; }
+.fno-toolbar .filter button.active { background: var(--indigo-soft); color: var(--indigo); }
 .fno-grid {
   display: grid;
   grid-template-columns: 1fr 60px 1fr;
@@ -894,7 +935,7 @@ table.dt {
 .cmd-modal {
   position: fixed;
   inset: 0;
-  background: rgba(20,20,20,0.4);
+  background: rgba(10,13,19,0.65);
   display: none;
   align-items: flex-start;
   justify-content: center;
@@ -982,19 +1023,19 @@ table.dt {
 }
 .toast {
   padding: 8px 14px;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-soft);
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   min-width: 220px;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   animation: toastIn 0.2s ease-out;
 }
-.toast.ok { background: var(--green); border-color: var(--green); }
-.toast.err { background: var(--red); border-color: var(--red); }
+.toast.ok { background: var(--green); border-color: var(--green); color: #0a0d13; }
+.toast.err { background: var(--red); border-color: var(--red); color: #fff; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* ─── SKELETON ─── */
@@ -1009,6 +1050,10 @@ table.dt {
 
 /* ─── DOT-MATRIX HELPERS ─── */
 .led { font-family: var(--led); line-height: 1; }
+/* Numbers are mono + tabular everywhere (desk rule). */
+.led, .kpi .v, .idx-px, .idx-chg, .pulse-mood .v, .pulse-count .v, .wl-row, table.dt,
+.sig-row, .arena-row, .fno-grid, .kill-card .tier, .watch-card .sym, .watch-card .pct,
+.eng-leaderboard, .tb-mini-stat .v, .sysh-event .ts { font-variant-numeric: tabular-nums; }
 .muted { color: var(--ink-3); }
 
 /* ─── RESPONSIVE (smaller laptops) ─── */
@@ -1059,13 +1104,13 @@ table.dt {
   display: inline-block;
   width: 18px; height: 18px;
   border-radius: 50%;
-  background: var(--ink-4); color: var(--surface);
+  background: var(--ink-4); color: var(--ink);
   font-family: var(--led); font-size: 10px; font-weight: 700;
   text-align: center; line-height: 18px;
 }
-.eng-leaderboard .rank-badge.r1 { background: linear-gradient(135deg,#FFD700,#D4A017); color: var(--ink); }
-.eng-leaderboard .rank-badge.r2 { background: linear-gradient(135deg,#C0C0C0,#9A9A9A); color: var(--ink); }
-.eng-leaderboard .rank-badge.r3 { background: linear-gradient(135deg,#CD7F32,#8B5A2B); color: var(--surface); }
+.eng-leaderboard .rank-badge.r1 { background: linear-gradient(135deg,#FFD700,#D4A017); color: #0a0d13; }
+.eng-leaderboard .rank-badge.r2 { background: linear-gradient(135deg,#C0C0C0,#9A9A9A); color: #0a0d13; }
+.eng-leaderboard .rank-badge.r3 { background: linear-gradient(135deg,#CD7F32,#8B5A2B); color: #0a0d13; }
 .eng-leaderboard .pnl-bar {
   display: inline-block;
   height: 10px; min-width: 30px;
@@ -1090,7 +1135,7 @@ table.dt {
 .eng-leaderboard .tier-badge.t0 { color: var(--green); border-color: var(--green-dim); background: rgba(31,122,62,0.06); }
 .eng-leaderboard .tier-badge.t1 { color: var(--amber); border-color: rgba(217,135,31,0.4); background: rgba(217,135,31,0.08); }
 .eng-leaderboard .tier-badge.t2 { color: var(--red); border-color: var(--red-dim); background: rgba(199,62,44,0.08); }
-.eng-leaderboard .tier-badge.t3 { color: var(--surface); background: var(--red); border-color: var(--red-bright); animation: pulse-red 1.2s ease-in-out infinite; }
+.eng-leaderboard .tier-badge.t3 { color: #fff; background: var(--red); border-color: var(--red-bright); animation: pulse-red 1.2s ease-in-out infinite; }
 @keyframes pulse-red {
   0%, 100% { box-shadow: 0 0 0 0 rgba(199,62,44,0.5); }
   50% { box-shadow: 0 0 0 4px rgba(199,62,44,0); }
@@ -1211,12 +1256,12 @@ table.dt {
 .kill-card.t2 .tier { color: var(--red); }
 .kill-card.t2 .label { color: var(--red); }
 .kill-card.t2 { border-left: 3px solid var(--red); background: rgba(199,62,44,0.06); }
-.kill-card.t3 .tier { color: var(--surface); }
-.kill-card.t3 .label { color: var(--surface); }
+.kill-card.t3 .tier { color: #fff; }
+.kill-card.t3 .label { color: #fff; }
 .kill-card.t3 { background: var(--red); border-color: var(--red-bright); animation: pulse-red 1.2s ease-in-out infinite; }
-.kill-card.t3 .eng { color: var(--surface); opacity: 0.8; }
-.kill-card.t3 .pnl-now { color: var(--surface); opacity: 0.8; }
-.kill-card.t3 .pnl-now b { color: var(--surface); }
+.kill-card.t3 .eng { color: #fff; opacity: 0.8; }
+.kill-card.t3 .pnl-now { color: #fff; opacity: 0.8; }
+.kill-card.t3 .pnl-now b { color: #fff; }
 
 /* ═══════════════════════════════════════════════════════════════
    SYSTEM HEALTH NOTIFICATIONS (added 2026-05-08)
@@ -1272,11 +1317,11 @@ table.dt {
 .sysh-banner.error .dot { background: var(--red); box-shadow: 0 0 0 4px rgba(199,62,44,0.22); }
 .sysh-banner.critical {
   background: var(--red);
-  color: var(--surface);
+  color: #fff;
 }
-.sysh-banner.critical .msg, .sysh-banner.critical .meta-r { color: var(--surface); }
+.sysh-banner.critical .msg, .sysh-banner.critical .meta-r { color: #fff; }
 .sysh-banner.critical .dot {
-  background: var(--surface);
+  background: #fff;
   box-shadow: 0 0 0 4px rgba(255,255,255,0.4);
   animation: sysh-pulse-critical 0.9s ease-in-out infinite;
 }
@@ -1320,7 +1365,7 @@ table.dt {
 .sysh-event .sev.info     { color: var(--blue);   border-color: rgba(42,95,184,0.32); background: rgba(42,95,184,0.08); }
 .sysh-event .sev.warn     { color: var(--amber);  border-color: rgba(217,135,31,0.40); background: rgba(217,135,31,0.10); }
 .sysh-event .sev.error    { color: var(--red);    border-color: rgba(199,62,44,0.36); background: rgba(199,62,44,0.10); }
-.sysh-event .sev.critical { color: var(--surface); border-color: var(--red-bright); background: var(--red); }
+.sysh-event .sev.critical { color: #fff; border-color: var(--red-bright); background: var(--red); }
 .sysh-event .src {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -1352,6 +1397,7 @@ table.dt {
 </style>
 </head>
 <body data-density="normal">
+{% set current = 'dashboard' %}{% include "_operator_nav.html" %}
 <div class="app">
 
   <!-- ═══════ TOP BAR ═══════ -->
@@ -2921,6 +2967,5 @@ table.dt {
 
 })();
 </script>
-<script src="/static/pageswitch.js"></script>
 </body>
 </html>

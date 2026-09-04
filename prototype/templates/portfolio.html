@@ -3,99 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1A24">
+<meta name="theme-color" content="#0a0d13">
 <title>{{ p.owner.name }} · Portfolio</title>
+<link rel="stylesheet" href="/static/desk.css">
 <style>
-/* Clay surfaces, same language as the market explorer: outer lift, inner light on
-   the top edge, inner dark below. Both insets are required — with only the drop
-   shadow it reads as flat card-with-shadow rather than a moulded surface. */
-:root{
-  --bg:#0E1A24; --surface:#16242F; --line:#233544; --ink:#E6EEF4;
-  --mute:#7E93A3; --brass:#D9A441; --pos:#4CB782; --neg:#D9614C;
-  --clay:0 10px 26px rgba(0,0,0,.42),
-         inset -3px -4px 10px rgba(0,0,0,.38),
-         inset 3px 4px 11px rgba(255,255,255,.055);
-  --face:linear-gradient(145deg, rgba(255,255,255,.045), rgba(0,0,0,.10));
-  --r:20px;
-}
-@media (prefers-color-scheme: light){
-  :root{ --bg:#F6F7F5; --surface:#FFF; --line:#DFE4E7; --ink:#12212B;
-         --mute:#5E717F; --brass:#A9741A; --pos:#1F7F55; --neg:#B33F2C;
-         --clay:0 10px 22px rgba(15,23,42,.10),
-                inset -3px -4px 9px rgba(15,23,42,.055),
-                inset 3px 4px 11px rgba(255,255,255,.95);
-         --face:linear-gradient(145deg, rgba(255,255,255,.95), rgba(15,23,42,.045)); }
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);line-height:1.45;
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased}
-.wrap{max-width:1000px;margin:0 auto;
-  padding:calc(20px + env(safe-area-inset-top)) 16px calc(48px + env(safe-area-inset-bottom));
-  display:flex;flex-direction:column;gap:22px}
-.kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:600}
-h1{margin:3px 0 0;font-size:27px;letter-spacing:-.02em;font-weight:650;text-wrap:balance}
-.sub{color:var(--mute);font-size:13px;margin-top:4px}
+/* /portfolio on desk.css tokens (2026-09-05 reskin). The clay surfaces and the
+   light-mode palette are gone: the operator tier is one dark skin. Old
+   page-local names stay as aliases for the markup that uses them. */
+:root{ --surface:var(--panel); --mute:var(--mut); --brass:var(--acc); --pos:var(--green); --neg:var(--red); --r:6px; }
+body{line-height:1.45;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;
+  padding:18px 16px calc(48px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:16px}
+.kicker{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:700}
+h1{margin:3px 0 0;font-size:22px;letter-spacing:-.3px;font-weight:700;text-wrap:balance}
+.sub{color:var(--mut);font-size:12.5px;margin-top:4px}
 .paper{display:inline-flex;gap:6px;align-self:flex-start;margin-top:10px;
-  border:1px solid var(--line);background:var(--surface);color:var(--mute);
-  padding:6px 11px;border-radius:7px;font-size:11.5px;line-height:1.4;max-width:640px}
-.paper b{color:var(--brass)}
+  border:1px solid var(--line);background:var(--panel);color:var(--mut);
+  padding:6px 11px;border-radius:4px;font-size:11.5px;line-height:1.4;max-width:640px}
+.paper b{color:var(--amber)}
 
-.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:640px){.cards{grid-template-columns:repeat(4,1fr)}}
-.card{background:var(--surface);background-image:var(--face);border-radius:var(--r);
-  box-shadow:var(--clay);padding:15px 16px;display:flex;flex-direction:column;gap:3px}
-.cval{font-size:22px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.cval.pos{color:var(--pos)} .cval.neg{color:var(--neg)}
-.clab{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+.card{padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.cval{font-size:22px;font-weight:700;letter-spacing:-.4px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cval.pos{color:var(--green)} .cval.neg{color:var(--red)}
+.clab{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim);font-weight:700}
 
-section{display:flex;flex-direction:column;gap:10px}
+section{display:flex;flex-direction:column;gap:8px}
 .shead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.stitle{font-size:15px;font-weight:650}
-.snote{font-size:11.5px;color:var(--mute)}
+.stitle{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim)}
+.snote{font-size:11.5px;color:var(--mut)}
 
-.panel{background:var(--surface);background-image:var(--face);border-radius:var(--r);
-  box-shadow:var(--clay);overflow:hidden}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:560px}
-th{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);
-  text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
-td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+table{width:100%;border-collapse:collapse;min-width:560px;font-size:12.5px}
+th{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim);
+  text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);font-weight:700;white-space:nowrap}
+td{padding:7px 12px;border-bottom:1px solid var(--line);font-size:12.5px}
 tr:last-child td{border-bottom:none}
-.num{text-align:right;font-variant-numeric:tabular-nums;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.nm{font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.tag{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
-.tag.on{color:var(--pos);border-color:var(--pos)}
-.pos{color:var(--pos)} .neg{color:var(--neg)} .flat{color:var(--mute)}
-.note{border:1px solid var(--line);background:var(--surface);border-radius:12px;
-  padding:13px 15px;font-size:12.5px;color:var(--mute);display:flex;flex-direction:column;gap:7px}
+.num{text-align:right}
+.nm{font-weight:650;font-family:var(--mono)}
+.tag{font-size:10px;padding:1px 7px;border-radius:3px;border:1px solid var(--line);color:var(--mut);letter-spacing:.4px}
+.tag.on{color:var(--green);border-color:var(--green)}
+.pos{color:var(--green)} .neg{color:var(--red)} .flat{color:var(--mut)}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:6px;
+  padding:12px 14px;font-size:12.5px;color:var(--mut);display:flex;flex-direction:column;gap:7px}
 .note b{color:var(--ink)}
-footer{color:var(--mute);font-size:11px;text-align:center;padding-top:8px;border-top:1px solid var(--line)}
+footer{color:var(--dim);font-size:11px;text-align:center;padding-top:10px;border-top:1px solid var(--line)}
 
 /* ledger */
-.search{width:100%;padding:12px 15px;border-radius:13px;border:none;
-  background:var(--surface);background-image:var(--face);box-shadow:var(--clay);
-  color:var(--ink);font-size:14px;font-family:inherit}
-.search::placeholder{color:var(--mute)}
-.search:focus{outline:2px solid var(--brass);outline-offset:2px}
+.search{width:100%;padding:9px 12px;border-radius:5px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font:13px var(--mono)}
+.search::placeholder{color:var(--dim)}
+.search:focus{outline:none;border-color:var(--acc)}
 tr.sym{cursor:pointer}
-tr.sym:hover{background:rgba(217,164,65,.07)}
-tr.sym td:first-child::before{content:"▸";color:var(--mute);margin-right:8px;
+tr.sym:hover td{background:var(--hover)}
+tr.sym td:first-child::before{content:"▸";color:var(--dim);margin-right:8px;
   display:inline-block;transition:transform .15s}
-tr.sym.open td:first-child::before{transform:rotate(90deg);color:var(--brass)}
-tr.detail>td{padding:0;background:rgba(0,0,0,.10)}
-[data-theme="light"] tr.detail>td, @media (prefers-color-scheme: light){tr.detail>td{background:rgba(15,23,42,.03)}}
+tr.sym.open td:first-child::before{transform:rotate(90deg);color:var(--acc)}
+tr.detail>td{padding:0;background:var(--panel2)}
 .hist{width:100%;border-collapse:collapse;min-width:0}
-.hist th{font-size:9.5px;padding:8px 14px;letter-spacing:.08em}
-.hist td{padding:8px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+.hist th{font-size:9.5px;padding:7px 12px;letter-spacing:.8px;background:var(--panel2)}
+.hist td{padding:6px 12px;font-size:12px;border-bottom:1px solid var(--line)}
 .hist tr:last-child td{border-bottom:none}
-.pill{font-size:9.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.wrap .pill{font-size:10px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--mut);
+  font-weight:600;letter-spacing:.4px;text-transform:none}
 @media (prefers-reduced-motion: reduce){tr.sym td:first-child::before{transition:none}}
 </style>
 </head>
 <body>
+{% set current = 'portfolio' %}
+{% include "_operator_nav.html" %}
 <div class="wrap">
   <header>
     <div class="kicker">TradePilot · Portfolio</div>
@@ -352,6 +331,5 @@ tr.detail>td{padding:0;background:rgba(0,0,0,.10)}
     });
 })();
 </script>
-<script src="/static/pageswitch.js"></script>
 </body>
 </html>

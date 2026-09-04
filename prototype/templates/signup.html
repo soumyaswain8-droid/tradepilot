@@ -1,17 +1,91 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Request access — TradePilot</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-<div class="content" style="max-width:24rem;margin:4rem auto">
-  <h1>Request access</h1>
-  {% if done %}
-    <div class="empty">{{ ack }}</div>
-  {% else %}
-    <p class="thin">Leave your email and we will be in touch.</p>
-    <form method="post" action="/app/signup">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="email" required>
-      <button type="submit">Request access</button>
-    </form>
-  {% endif %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: #FFFFFF; color: #1B1F2A; font: 14px/1.5 "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #0B8F5F; text-decoration: none; } a:hover { color: #087A50; }
+  .num { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .mut { color: #6C7280; }
+  .label { font-size: 12px; color: #6C7280; font-weight: 600; }
+  .card { background: #FFFFFF; border: 1px solid #EAECF0; border-radius: 16px; padding: 14px 16px; flex: 1; }
+
+  .auth { min-height: 100vh; display: flex; background: #FFFFFF; }
+  .promo { width: 560px; flex: none; background: #F6F8FA; display: flex; flex-direction: column; justify-content: space-between; padding: 48px 56px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 26px; height: 26px; }
+  .brand span { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+  .pitch { display: flex; flex-direction: column; gap: 18px; }
+  .pitch h1 { margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; }
+  .pitch p { margin: 0; font-size: 16px; line-height: 1.6; color: #3F4552; }
+  .tiles { display: flex; gap: 12px; }
+  .tiles .v { font-size: 22px; font-weight: 800; }
+  .tiles .v .mut { font-size: 12px; font-weight: 600; }
+  .foot { font-size: 12px; color: #6C7280; }
+
+  .pane { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+  .form { width: 400px; max-width: 100%; display: flex; flex-direction: column; gap: 18px; }
+  .form h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .form .sub { font-size: 14px; color: #6C7280; }
+  .form .sub a, .links a { font-weight: 700; }
+  .form form { display: flex; flex-direction: column; gap: 18px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .input { height: 46px; width: 100%; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 14px; font: inherit; font-size: 14px; color: #1B1F2A; background: #fff; outline: none; }
+  .input::placeholder { color: #9AA0AE; }
+  .input:focus { border-color: #0FA36B; box-shadow: 0 0 0 3px #E6F7EF; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 10px; font: inherit; font-weight: 700; font-size: 14px; background: #0FA36B; color: #fff; border: 0; cursor: pointer; }
+  .btn:hover { background: #0B8F5F; }
+  .links { display: flex; justify-content: space-between; font-size: 13px; }
+  .links a { font-weight: 600; }
+  .empty { background: #FDECEA; color: #C93C2E; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 600; }
+  .ok { background: #E6F7EF; color: #0B8F5F; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .auth { flex-direction: column; }
+    .promo { width: auto; padding: 20px 24px; gap: 10px; justify-content: flex-start; }
+    .pitch { gap: 6px; }
+    .pitch h1 { font-size: 22px; letter-spacing: -.5px; }
+    .pitch p, .tiles { display: none; }
+    .pane { padding: 32px 20px; align-items: flex-start; }
+  }
+</style>
+<div class="auth">
+<div class="promo">
+  <div class="brand"><svg viewBox="0 0 72 72" aria-hidden="true"><defs><linearGradient id="LG" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#087A50"></stop><stop offset="100%" stop-color="#2ECC8F"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#LG)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><span>TradePilot</span></div>
+  <div class="pitch">
+    <h1>Every call we make, graded in public.</h1>
+    <p>Intraday calls with a target and a stop, a book that marks your positions to market, and a track record we only publish once it means something.</p>
+    <div class="tiles">
+      <div class="card"><div class="label">Calls published</div><div class="num v">[CALLS PUBLISHED]</div></div>
+      <div class="card"><div class="label">Resolved</div><div class="num v">[RESOLVED] <span class="mut">of 100</span></div></div>
+    </div>
+  </div>
+  <div class="foot">Paper record. Not investment advice. [SEBI STATUS LINE]</div>
+</div>
+  <div class="pane">
+    <div class="form">
+      <div>
+        <h2>Request access</h2>
+        {% if not done %}<div class="sub">Leave your email and we will be in touch.</div>{% endif %}
+      </div>
+      {% if done %}
+        <div class="ok">{{ ack }}</div>
+        <div class="links"><a href="/app/login">Back to sign in</a></div>
+      {% else %}
+        <form method="post" action="/app/signup">
+          <div class="field">
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <button class="btn" type="submit">Request access</button>
+        </form>
+        <div class="links"><span class="mut">Already a member?</span><a href="/app/login">Sign in</a></div>
+      {% endif %}
+    </div>
+  </div>
 </div>

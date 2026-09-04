@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #FFFFFF; color: #1B1F2A; font: 14px/1.5 "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #0B8F5F; text-decoration: none; } a:hover { color: #087A50; }
+    .num { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .card { background: #FFFFFF; border: 1px solid #EAECF0; border-radius: 16px; padding: 20px 22px; }
+    .tint { background: #F6F8FA; border-color: #F6F8FA; }
+    .label { font-size: 12px; color: #6C7280; font-weight: 600; }
+    .up { color: #0FA36B; } .down { color: #E04A3C; } .mut { color: #6C7280; }
+    .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .2px; }
+    .chip.buy { background: #E6F7EF; color: #0B8F5F; } .chip.sell { background: #FDECEA; color: #C93C2E; }
+    .chip.open { background: #EEF2FF; color: #4A55C7; } .chip.hit { background: #E6F7EF; color: #0B8F5F; } .chip.miss { background: #FDECEA; color: #C93C2E; } .chip.ung { background: #F1F3F5; color: #6C7280; }
+    .tab { height: 44px; display: inline-flex; align-items: center; padding: 0 4px; margin-right: 24px; font-size: 15px; font-weight: 600; color: #6C7280; border-bottom: 2px solid transparent; }
+    .tab.on { color: #1B1F2A; border-bottom-color: #0FA36B; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl th { text-align: left; font-size: 12px; color: #6C7280; font-weight: 600; padding: 0 12px 12px 0; border-bottom: 1px solid #EAECF0; }
+    .tbl td { padding: 14px 12px 14px 0; border-bottom: 1px solid #F1F3F5; vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .tbl .r { text-align: right; padding-right: 0; }
+    .sym { font-weight: 700; } .why { color: #3F4552; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 10px; font-weight: 700; font-size: 14px; background: #0FA36B; color: #fff; border: 0; }
+    .btn.ghost { background: #fff; color: #1B1F2A; border: 1px solid #DADDE3; }
+    .fchip { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #DADDE3; font-size: 13px; font-weight: 600; color: #3F4552; }
+    .fchip.on { background: #1B1F2A; color: #fff; border-color: #1B1F2A; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .input { height: 46px; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 14px; font-size: 14px; display: flex; align-items: center; color: #1B1F2A; background: #fff; }
+    .input.ph { color: #9AA0AE; }
+    .idx { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border: 1px solid #EAECF0; border-radius: 12px; min-width: 150px; }
+    .idx .n { font-size: 12px; color: #6C7280; font-weight: 600; } .idx .v { font-size: 15px; font-weight: 700; }
+    .tabm { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 52px; justify-content: center; color: #9AA0AE; font-size: 11px; font-weight: 600; }
+    .tabm.on { color: #0FA36B; }
+    .tabm svg, .ic { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1000px; display: flex; flex-direction: column; background: #FFFFFF;">
+  <header style="display: flex; align-items: center; gap: 36px; height: 68px; padding: 0 64px; border-bottom: 1px solid #EAECF0;">
+    <div style="display: flex; align-items: center; gap: 10px;"><svg viewBox="0 0 72 72" style="width: 26px; height: 26px;"><defs><linearGradient id="LG" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#087A50"></stop><stop offset="100%" stop-color="#2ECC8F"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#LG)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><span style="font-size: 19px; font-weight: 800; letter-spacing: -.3px;">TradePilot</span></div>
+    <nav style="display: flex; align-items: center; height: 68px;"><a class="tab" href="#">Home</a><a class="tab on" href="#">Calls</a><a class="tab" href="#">Book</a><a class="tab" href="#">Record</a></nav>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; width: 300px; height: 40px; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 12px; color: #9AA0AE; font-size: 13px;"><svg class="ic" viewBox="0 0 24 24" style="width: 18px; height: 18px;"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Search a stock or a call</div>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #6C7280; font-weight: 600;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #C4C9D2;"></span>Market closed</span>
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #E6F7EF; color: #0B8F5F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;">S</div>
+    </div>
+  </header>
+  <main style="flex: 1; padding: 28px 64px 40px; display: flex; flex-direction: column; gap: 20px;">
+
+    <a href="#" style="font-weight: 700; font-size: 13px;">← All calls</a>
+    <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px;"><h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.6px;">TBZ</h1><span class="chip buy" style="height: 28px; font-size: 12px;">BUY</span><span class="chip open" style="height: 28px; font-size: 12px;">OPEN</span><span class="mut num" style="margin-left: auto; font-size: 13px;">Published 4 Sep · 10:24</span></div>
+          <div style="display: flex; align-items: baseline; gap: 14px;"><span class="num" style="font-size: 34px; font-weight: 800; letter-spacing: -.8px;">₹480.85</span><span class="mut">price at call</span><span class="num up" style="font-weight: 700;">₹484.10 now · +0.7%</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+            <div class="card tint" style="padding: 14px 16px;"><div class="label">Entry</div><div class="num" style="font-size: 20px; font-weight: 700;">₹480.85</div></div>
+            <div class="card tint" style="padding: 14px 16px;"><div class="label">Target</div><div class="num up" style="font-size: 20px; font-weight: 700;">₹490.50 <span style="font-size: 12px;">+2.0%</span></div></div>
+            <div class="card tint" style="padding: 14px 16px;"><div class="label">Stop</div><div class="num down" style="font-size: 20px; font-weight: 700;">₹478.40 <span style="font-size: 12px;">−0.5%</span></div></div>
+          </div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 800;">Why this call</h2>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3F4552;">Reclaimed VWAP on 2.1× the usual volume while the sector was leading. Buyers defended the morning low at 478 twice before the breakout. Score <span class="num" style="font-weight: 700; color: #1B1F2A;">78</span> out of 100 — the higher the score, the more of our checks lined up.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;"><span class="fchip" style="height: 30px; font-size: 12px;">Above VWAP</span><span class="fchip" style="height: 30px; font-size: 12px;">Volume 2.1×</span><span class="fchip" style="height: 30px; font-size: 12px;">Sector leading</span><span class="fchip" style="height: 30px; font-size: 12px;">Held the retest</span></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="label">Price since the call</div>
+          <svg viewBox="0 0 320 120" style="width: 100%; height: 120px;"><line x1="0" y1="64" x2="320" y2="64" stroke="#DADDE3" stroke-dasharray="4 4"></line><text x="4" y="58" font-size="10" fill="#9AA0AE" font-family="JetBrains Mono, monospace">480.85 call</text><line x1="0" y1="18" x2="320" y2="18" stroke="#0FA36B" stroke-dasharray="4 4" opacity=".6"></line><text x="4" y="14" font-size="10" fill="#0FA36B" font-family="JetBrains Mono, monospace">490.50 target</text><line x1="0" y1="104" x2="320" y2="104" stroke="#E04A3C" stroke-dasharray="4 4" opacity=".6"></line><text x="4" y="116" font-size="10" fill="#E04A3C" font-family="JetBrains Mono, monospace">478.40 stop</text><path d="M0 64 L30 70 L60 58 L90 62 L120 50 L150 56 L180 44 L210 52 L240 46 L270 40 L300 48 L320 42" fill="none" stroke="#1B1F2A" stroke-width="2"></path></svg>
+          <div class="mut" style="font-size: 12px;">Closed at ₹484.10 on Thursday. Open until target or stop is reached, or 5 sessions pass.</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="label">Timeline</div>
+          <div style="display: flex; gap: 12px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #0FA36B; margin-top: 5px;"></span><div><div style="font-weight: 700;">Published</div><div class="mut num" style="font-size: 12px;">Thu 4 Sep · 10:24 · ₹480.85</div></div></div>
+          <div style="display: flex; gap: 12px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #C4C9D2; margin-top: 5px;"></span><div><div style="font-weight: 700; color: #6C7280;">Outcome</div><div class="mut" style="font-size: 12px;">Not yet — still open</div></div></div>
+        </div>
+        <a class="btn" href="#">Add to my book at ₹484.10</a>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

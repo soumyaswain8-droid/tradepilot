@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #FFFFFF; color: #1B1F2A; font: 14px/1.5 "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #0B8F5F; text-decoration: none; } a:hover { color: #087A50; }
+    .num { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .card { background: #FFFFFF; border: 1px solid #EAECF0; border-radius: 16px; padding: 20px 22px; }
+    .tint { background: #F6F8FA; border-color: #F6F8FA; }
+    .label { font-size: 12px; color: #6C7280; font-weight: 600; }
+    .up { color: #0FA36B; } .down { color: #E04A3C; } .mut { color: #6C7280; }
+    .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .2px; }
+    .chip.buy { background: #E6F7EF; color: #0B8F5F; } .chip.sell { background: #FDECEA; color: #C93C2E; }
+    .chip.open { background: #EEF2FF; color: #4A55C7; } .chip.hit { background: #E6F7EF; color: #0B8F5F; } .chip.miss { background: #FDECEA; color: #C93C2E; } .chip.ung { background: #F1F3F5; color: #6C7280; }
+    .tab { height: 44px; display: inline-flex; align-items: center; padding: 0 4px; margin-right: 24px; font-size: 15px; font-weight: 600; color: #6C7280; border-bottom: 2px solid transparent; }
+    .tab.on { color: #1B1F2A; border-bottom-color: #0FA36B; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl th { text-align: left; font-size: 12px; color: #6C7280; font-weight: 600; padding: 0 12px 12px 0; border-bottom: 1px solid #EAECF0; }
+    .tbl td { padding: 14px 12px 14px 0; border-bottom: 1px solid #F1F3F5; vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .tbl .r { text-align: right; padding-right: 0; }
+    .sym { font-weight: 700; } .why { color: #3F4552; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 10px; font-weight: 700; font-size: 14px; background: #0FA36B; color: #fff; border: 0; }
+    .btn.ghost { background: #fff; color: #1B1F2A; border: 1px solid #DADDE3; }
+    .fchip { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #DADDE3; font-size: 13px; font-weight: 600; color: #3F4552; }
+    .fchip.on { background: #1B1F2A; color: #fff; border-color: #1B1F2A; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .input { height: 46px; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 14px; font-size: 14px; display: flex; align-items: center; color: #1B1F2A; background: #fff; }
+    .input.ph { color: #9AA0AE; }
+    .idx { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border: 1px solid #EAECF0; border-radius: 12px; min-width: 150px; }
+    .idx .n { font-size: 12px; color: #6C7280; font-weight: 600; } .idx .v { font-size: 15px; font-weight: 700; }
+    .tabm { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 52px; justify-content: center; color: #9AA0AE; font-size: 11px; font-weight: 600; }
+    .tabm.on { color: #0FA36B; }
+    .tabm svg, .ic { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: #FFFFFF; overflow: hidden;">
+  <header style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; margin-top: 44px;">
+    <svg viewBox="0 0 72 72" style="width: 26px; height: 26px;"><defs><linearGradient id="LG" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#087A50"></stop><stop offset="100%" stop-color="#2ECC8F"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#LG)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><span style="font-size: 17px; font-weight: 800; letter-spacing: -.3px;">TradePilot</span>
+    <div style="margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: #E6F7EF; color: #0B8F5F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">S</div>
+  </header>
+  <main style="flex: 1; min-height: 0; overflow: hidden; padding: 8px 16px 0; display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="display: flex; gap: 8px; overflow: hidden;"><div class="idx" style="min-width: 0; flex: 1; padding: 10px 12px;"><span class="n">NIFTY 50</span><span class="v num" style="font-size: 14px;">23,897 <span class="up" style="font-size: 11px;">+0.1%</span></span></div><div class="idx" style="min-width: 0; flex: 1; padding: 10px 12px;"><span class="n">SENSEX</span><span class="v num" style="font-size: 14px;">76,515 <span class="up" style="font-size: 11px;">+0.5%</span></span></div></div>
+    <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;">
+      <div class="label">Your book</div>
+      <div class="num" style="font-size: 32px; font-weight: 800; letter-spacing: -.8px; line-height: 1.05;">₹2,71,486</div>
+      <div style="font-size: 13px;"><span class="num down" style="font-weight: 700;">−₹1,224 (−0.45%)</span> <span class="mut">today</span></div>
+      <div style="display: flex; gap: 8px; margin-top: 8px;"><a class="btn" href="#" style="flex: 1; height: 40px;">Add a trade</a><a class="btn ghost" href="#" style="flex: 1; height: 40px;">Open book</a></div>
+    </div>
+    <div class="card" style="padding: 14px 18px; display: flex; align-items: center; gap: 12px;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;"><div class="label">Track record</div><div class="mut" style="font-size: 12px;"><span class="num" style="color: #1B1F2A; font-weight: 700;">18</span> resolved · hit rate from <span class="num" style="color: #1B1F2A; font-weight: 700;">100</span></div><div style="height: 6px; background: #F1F3F5; border-radius: 3px;"><div style="width: 18%; height: 6px; background: #0FA36B; border-radius: 3px;"></div></div></div>
+      <div style="font-size: 18px; font-weight: 800; color: #6C7280;">Not yet</div>
+    </div>
+    <div class="card" style="padding: 12px 18px 2px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;"><h2 style="margin: 0; font-size: 15px; font-weight: 800;">Today's calls</h2><a href="#" style="margin-left: auto; font-weight: 700; font-size: 13px;">See all</a></div>
+      <div style="display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 0; border-bottom: 1px solid #F1F3F5;">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="sym">TBZ</span><span class="chip buy" style="height: 20px; font-size: 10px;">BUY</span><span class="num" style="margin-left: auto; font-size: 13px; font-weight: 600;">₹480.85</span></div>
+          <div class="mut" style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Reclaimed VWAP on 2.1× volume; sector leading</div>
+        </div><span class="chip open" style="height: 20px; font-size: 10px;">OPEN</span></div>
+      <div style="display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 0; border-bottom: 1px solid #F1F3F5;">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="sym">HFCL</span><span class="chip buy" style="height: 20px; font-size: 10px;">BUY</span><span class="num" style="margin-left: auto; font-size: 13px; font-weight: 600;">₹231.44</span></div>
+          <div class="mut" style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Opening-range breakout above 229; held the retest</div>
+        </div><span class="chip open" style="height: 20px; font-size: 10px;">OPEN</span></div>
+      <div style="display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 0; border-bottom: 1px solid #F1F3F5;">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+          <div style="display: flex; align-items: center; gap: 8px;"><span class="sym">RRKABEL</span><span class="chip sell" style="height: 20px; font-size: 10px;">SELL</span><span class="num" style="margin-left: auto; font-size: 13px; font-weight: 600;">₹2,522.50</span></div>
+          <div class="mut" style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Broke below the morning low; −1.4% under VWAP</div>
+        </div><span class="chip hit" style="height: 20px; font-size: 10px;">HIT</span></div>
+    </div>
+
+  </main>
+  <nav style="display: flex; background: #fff; border-top: 1px solid #EAECF0; padding: 6px 8px 22px;"><a class="tabm on" href="#"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a><a class="tabm" href="#"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-5 4 3 5-7"></path></svg>Calls</a><a class="tabm" href="#"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM8 7h8M8 11h8M8 15h5"></path></svg>Book</a><a class="tabm" href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Record</a></nav>
+</div>
+</x-dc>
+</body>
+</html>

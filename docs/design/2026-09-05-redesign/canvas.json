@@ -1,0 +1,19 @@
+{
+  "pages": [{"id": "client", "name": "Client app · Groww-style"}, {"id": "operator", "name": "Operator terminal"}],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Home", "page": "client", "x": 0, "y": 0, "w": 1440, "h": 1000 },
+    { "file": "Calls.dc.html", "title": "Calls", "page": "client", "x": 1540, "y": 0, "w": 1440, "h": 1000 },
+    { "file": "CallDetail.dc.html", "title": "Call detail", "page": "client", "x": 0, "y": 1140, "w": 1440, "h": 1000 },
+    { "file": "Book.dc.html", "title": "Book", "page": "client", "x": 1540, "y": 1140, "w": 1440, "h": 1000 },
+    { "file": "Record.dc.html", "title": "Track record", "page": "client", "x": 0, "y": 2280, "w": 1440, "h": 1000 },
+    { "file": "SignIn.dc.html", "title": "Sign in", "page": "client", "x": 1540, "y": 2280, "w": 1440, "h": 900 },
+    { "file": "HomePhone.dc.html", "title": "Home · phone", "page": "client", "x": 3080, "y": 0, "w": 390, "h": 844 },
+    { "file": "CallsPhone.dc.html", "title": "Calls · phone", "page": "client", "x": 3560, "y": 0, "w": 390, "h": 844 },
+    { "file": "TerminalDesk.dc.html", "title": "Operator · Terminal Desk", "page": "operator", "x": 0, "y": 0, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    { "id": "system-note", "page": "client", "x": 3080, "y": 960, "w": 340, "text": "Client system (Groww-inspired, original palette)\n\nGround #FFFFFF, cards white with #EAECF0 hairline, 16px radius. Action + gain green #0FA36B, loss #E04A3C, open-call indigo #4A55C7. Plus Jakarta Sans for text, JetBrains Mono for every number (tabular). 44px targets.\n\nTop tabs + search on desktop, bottom tabs on phone. No engine names anywhere.\n\nCalls, book and prices are SAMPLE values shaped like the real API." },
+    { "id": "nav-note", "page": "operator", "x": 1540, "y": 0, "w": 300, "text": "Terminal nav carries Live, Lab, Agents, Decisions and Portfolio as real tabs. The floating page-switcher pill is retired.\n\n'Client app ↗' jumps an operator to /app." }
+  ],
+  "launch": { "view": "canvas", "page": "client" }
+}

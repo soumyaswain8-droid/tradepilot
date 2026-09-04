@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #0a0d13; color: #e6ebf2; font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #8a94a6; text-decoration: none; } a:hover { color: #e6ebf2; }
+    .num { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .pos { color: #16c784; } .neg { color: #ea3943; } .flat { color: #8a94a6; }
+    .idx { display: flex; align-items: baseline; gap: 7px; padding: 4px 10px; border-radius: 4px; white-space: nowrap; }
+    .idx .n { font-size: 10.5px; letter-spacing: .8px; color: #57627a; text-transform: uppercase; }
+    .idx .v { font-size: 12.5px; font-weight: 600; }
+    .idx .c { font-size: 11.5px; }
+    .nav a { padding: 9px 14px 8px; font-size: 12px; font-weight: 600; color: #8a94a6; letter-spacing: .3px; border-bottom: 2px solid transparent; }
+    .nav a.on { color: #e6ebf2; border-bottom-color: #6366f1; }
+    .nav a .ext { color: #57627a; font-size: 10px; }
+    .card { background: #10141c; border: 1px solid #1c2330; border-radius: 6px; padding: 12px 14px; min-width: 0; }
+    .card h3 { font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #57627a; text-transform: uppercase; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+    .big { font-size: 22px; font-weight: 600; line-height: 1.1; }
+    .sub { font-size: 11.5px; color: #8a94a6; margin-top: 6px; }
+    .chip { font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; border: 1px solid #1c2330; color: #8a94a6; }
+    .chip.ok { color: #16c784; background: rgba(22,199,132,.09); border-color: rgba(22,199,132,.3); }
+    .chip.dim { margin-left: auto; }
+    .t { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .t th { text-align: left; font-size: 10.5px; letter-spacing: 1px; color: #57627a; text-transform: uppercase; font-weight: 700; padding: 6px 8px; border-bottom: 1px solid #1c2330; }
+    .t td { padding: 8px 8px; border-bottom: 1px solid #1c2330; }
+    .t tr:last-child td { border-bottom: 0; }
+    .t .r { text-align: right; }
+    .t td.sym { font-weight: 700; letter-spacing: .2px; }
+    .eng { font-size: 11px; color: #8a94a6; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0a0d13; overflow: hidden;">
+
+  <header style="display: flex; align-items: center; gap: 20px; height: 46px; padding: 0 16px; background: #0d1118; border-bottom: 1px solid #1c2330;">
+    <div style="display: flex; align-items: center; gap: 8px; flex: none;">
+      <svg viewBox="0 0 72 72" style="width: 20px; height: 20px;"><defs><linearGradient id="tpg2" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4338CA"></stop><stop offset="100%" stop-color="#7C7FF3"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#tpg2)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg2)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#tpg2)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg2)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#tpg2)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg2)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg2)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg2)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+      <b style="font-size: 12px; letter-spacing: 2.5px; font-weight: 700;">TRADEPILOT</b><span style="font-size: 12px; letter-spacing: 2.5px; color: #57627a;">TERMINAL</span>
+    </div>
+    <div style="display: flex; gap: 4px; flex: 1; overflow: hidden;">
+      <div class="idx"><span class="n">NIFTY 50</span><span class="v num">23,897.70</span><span class="c num pos">+0.10%</span></div>
+      <div class="idx"><span class="n">SENSEX</span><span class="v num">76,515.00</span><span class="c num pos">+0.48%</span></div>
+      <div class="idx"><span class="n">BANK NIFTY</span><span class="v num">57,369.65</span><span class="c num neg">−0.32%</span></div>
+      <div class="idx"><span class="n">NIFTY IT</span><span class="v num">38,102.40</span><span class="c num neg">−0.71%</span></div>
+      <div class="idx"><span class="n">INDIA VIX</span><span class="v num">20.45</span><span class="c num neg">−2.1%</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; flex: none;">
+      <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; padding: 3px 10px; border-radius: 3px; text-transform: uppercase; color: #57627a; background: #10141c; border: 1px solid #1c2330;">Closed</span>
+      <span class="num" style="font-size: 12.5px; color: #8a94a6;">00:17:49 IST</span>
+    </div>
+  </header>
+
+  <nav class="nav" style="display: flex; gap: 2px; padding: 0 16px; background: #0d1118; border-bottom: 1px solid #1c2330;">
+    <a class="on" href="#">Desk</a><a href="#">Market</a><a href="#">Movers</a><a href="#">News</a><a href="#">Live</a><a href="#">Lab</a><a href="#">Agents</a><a href="#">Decisions</a><a href="#">Portfolio</a><a href="#">Classic <span class="ext">↗</span></a>
+    <a href="#" style="margin-left: auto; color: #6366f1;">Client app <span class="ext">↗</span></a>
+  </nav>
+
+  <main style="flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;">
+      <div class="card"><h3>Fleet net <span class="chip dim">Last session</span></h3><div class="big num neg">₹−2,910</div><div class="sub">fleet net · last session 2026-09-04 · modelled fees ₹1,686</div></div>
+      <div class="card"><h3>Closed trades</h3><div class="big num">120</div><div class="sub">closed trades · turnover ₹15,90,155</div></div>
+      <div class="card"><h3>Size experiment</h3><div class="big num">124 <span style="font-size: 13px; color: #8a94a6; font-weight: 400;">/ 300</span></div><div class="sub">v5_size trades to significance · median ₹90,373</div><div style="height: 4px; background: #1c2330; border-radius: 2px; margin-top: 8px;"><div style="width: 41%; height: 4px; background: #6366f1; border-radius: 2px;"></div></div></div>
+      <div class="card"><h3>Guards</h3><div style="display: flex; flex-wrap: wrap; gap: 6px;"><span class="chip ok">Alerts muted</span><span class="chip ok">Disk gate</span><span class="chip ok">Session guard</span></div><div class="sub">session guard: v10, v5_classic · first live run at next 08:50</div></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; flex: 1; min-height: 0;">
+      <div style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+        <div class="card" style="padding: 12px 14px 4px;">
+          <h3>Engine leaderboard <span class="chip dim">Session 2026-09-04 · updated 00:17:48</span></h3>
+          <table class="t">
+            <thead><tr><th>Engine</th><th class="r">Trades</th><th class="r">Win %</th><th class="r">Median pos</th><th class="r">Gross ₹</th><th class="r">Fees ₹</th><th class="r" style="color: #6366f1;">Net ₹ ↓</th><th class="r">Open</th></tr></thead>
+            <tbody>
+              <tr><td class="sym">v5_wide</td><td class="r num">59</td><td class="r num">51%</td><td class="r num">11,442</td><td class="r num neg">−29</td><td class="r num">938</td><td class="r num neg">−967</td><td class="r num">14</td></tr>
+              <tr><td class="sym">v5 <span class="chip" style="margin-left: 6px;">Control</span></td><td class="r num">61</td><td class="r num">48%</td><td class="r num">11,074</td><td class="r num neg">−1,195</td><td class="r num">748</td><td class="r num neg">−1,943</td><td class="r num">1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" style="padding: 12px 14px 4px; flex: 1; min-height: 0; overflow: hidden;">
+          <h3>Exit feed <span class="chip dim">Last 6</span></h3>
+          <table class="t">
+            <thead><tr><th>Time</th><th>Symbol</th><th>Engine</th><th class="r">P&amp;L ₹</th><th class="r">%</th><th>Exit</th></tr></thead>
+            <tbody>
+              <tr><td class="num">15:15</td><td class="sym">HDFCAMC</td><td class="eng">v5</td><td class="r num pos">+26</td><td class="r num pos">+1.05</td><td class="eng">Time exit</td></tr>
+              <tr><td class="num">15:15</td><td class="sym">ECLERX</td><td class="eng">v5_wide</td><td class="r num pos">+255</td><td class="r num pos">+0.70</td><td class="eng">Time exit</td></tr>
+              <tr><td class="num">15:11</td><td class="sym">PIDILITIND</td><td class="eng">v5</td><td class="r num neg">−25</td><td class="r num neg">−0.14</td><td class="eng">Flat force exit</td></tr>
+              <tr><td class="num">13:39</td><td class="sym">RAYMOND</td><td class="eng">v5_wide</td><td class="r num pos">+4</td><td class="r num pos">+0.01</td><td class="eng">Flat force exit</td></tr>
+              <tr><td class="num">11:57</td><td class="sym">DIXON</td><td class="eng">v5</td><td class="r num neg">−85</td><td class="r num neg">−0.60</td><td class="eng">Stop-loss</td></tr>
+              <tr><td class="num">11:25</td><td class="sym">RRKABEL</td><td class="eng">v5_wide</td><td class="r num pos">+526</td><td class="r num pos">+2.32</td><td class="eng">Target</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="padding: 12px 14px 4px; min-height: 0; overflow: hidden;">
+        <h3>Open positions <span class="chip dim">15 open</span></h3>
+        <table class="t">
+          <thead><tr><th>Symbol</th><th>Engine</th><th class="r">Qty</th><th class="r">Entry</th><th class="r">Value</th></tr></thead>
+          <tbody>
+            <tr><td class="sym">ADANIENSOL</td><td class="eng">v5</td><td class="r num">16</td><td class="r num">1,406.50</td><td class="r num">22,504</td></tr>
+            <tr><td class="sym">TBZ</td><td class="eng">v5_wide</td><td class="r num">66</td><td class="r num">480.85</td><td class="r num">31,736</td></tr>
+            <tr><td class="sym">DEEPINDS</td><td class="eng">v5_wide</td><td class="r num">35</td><td class="r num">791.75</td><td class="r num">27,711</td></tr>
+            <tr><td class="sym">KSHINTL</td><td class="eng">v5_wide</td><td class="r num">22</td><td class="r num">1,088.85</td><td class="r num">23,955</td></tr>
+            <tr><td class="sym">PAISALO</td><td class="eng">v5_wide</td><td class="r num">287</td><td class="r num">73.94</td><td class="r num">21,221</td></tr>
+            <tr><td class="sym">HFCL</td><td class="eng">v5_wide</td><td class="r num">80</td><td class="r num">231.44</td><td class="r num">18,515</td></tr>
+            <tr><td class="sym">PCJEWELLER</td><td class="eng">v5_wide</td><td class="r num">1,393</td><td class="r num">11.61</td><td class="r num">16,173</td></tr>
+            <tr><td class="sym">TATACOMM</td><td class="eng">v5_wide</td><td class="r num">8</td><td class="r num">1,751.40</td><td class="r num">14,011</td></tr>
+            <tr><td class="sym">BALAMINES</td><td class="eng">v5_wide</td><td class="r num">4</td><td class="r num">2,539.20</td><td class="r num">10,157</td></tr>
+            <tr><td class="sym">FCL</td><td class="eng">v5_wide</td><td class="r num">213</td><td class="r num">51.62</td><td class="r num">10,995</td></tr>
+            <tr><td class="sym">GNA</td><td class="eng">v5_wide</td><td class="r num">17</td><td class="r num">555.90</td><td class="r num">9,450</td></tr>
+            <tr><td class="sym">RHETAN</td><td class="eng">v5_wide</td><td class="r num">290</td><td class="r num">25.42</td><td class="r num">7,372</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

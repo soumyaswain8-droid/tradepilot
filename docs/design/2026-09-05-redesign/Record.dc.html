@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #FFFFFF; color: #1B1F2A; font: 14px/1.5 "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #0B8F5F; text-decoration: none; } a:hover { color: #087A50; }
+    .num { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .card { background: #FFFFFF; border: 1px solid #EAECF0; border-radius: 16px; padding: 20px 22px; }
+    .tint { background: #F6F8FA; border-color: #F6F8FA; }
+    .label { font-size: 12px; color: #6C7280; font-weight: 600; }
+    .up { color: #0FA36B; } .down { color: #E04A3C; } .mut { color: #6C7280; }
+    .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .2px; }
+    .chip.buy { background: #E6F7EF; color: #0B8F5F; } .chip.sell { background: #FDECEA; color: #C93C2E; }
+    .chip.open { background: #EEF2FF; color: #4A55C7; } .chip.hit { background: #E6F7EF; color: #0B8F5F; } .chip.miss { background: #FDECEA; color: #C93C2E; } .chip.ung { background: #F1F3F5; color: #6C7280; }
+    .tab { height: 44px; display: inline-flex; align-items: center; padding: 0 4px; margin-right: 24px; font-size: 15px; font-weight: 600; color: #6C7280; border-bottom: 2px solid transparent; }
+    .tab.on { color: #1B1F2A; border-bottom-color: #0FA36B; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl th { text-align: left; font-size: 12px; color: #6C7280; font-weight: 600; padding: 0 12px 12px 0; border-bottom: 1px solid #EAECF0; }
+    .tbl td { padding: 14px 12px 14px 0; border-bottom: 1px solid #F1F3F5; vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .tbl .r { text-align: right; padding-right: 0; }
+    .sym { font-weight: 700; } .why { color: #3F4552; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 10px; font-weight: 700; font-size: 14px; background: #0FA36B; color: #fff; border: 0; }
+    .btn.ghost { background: #fff; color: #1B1F2A; border: 1px solid #DADDE3; }
+    .fchip { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #DADDE3; font-size: 13px; font-weight: 600; color: #3F4552; }
+    .fchip.on { background: #1B1F2A; color: #fff; border-color: #1B1F2A; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .input { height: 46px; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 14px; font-size: 14px; display: flex; align-items: center; color: #1B1F2A; background: #fff; }
+    .input.ph { color: #9AA0AE; }
+    .idx { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border: 1px solid #EAECF0; border-radius: 12px; min-width: 150px; }
+    .idx .n { font-size: 12px; color: #6C7280; font-weight: 600; } .idx .v { font-size: 15px; font-weight: 700; }
+    .tabm { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 52px; justify-content: center; color: #9AA0AE; font-size: 11px; font-weight: 600; }
+    .tabm.on { color: #0FA36B; }
+    .tabm svg, .ic { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1000px; display: flex; flex-direction: column; background: #FFFFFF;">
+  <header style="display: flex; align-items: center; gap: 36px; height: 68px; padding: 0 64px; border-bottom: 1px solid #EAECF0;">
+    <div style="display: flex; align-items: center; gap: 10px;"><svg viewBox="0 0 72 72" style="width: 26px; height: 26px;"><defs><linearGradient id="LG" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#087A50"></stop><stop offset="100%" stop-color="#2ECC8F"></stop></linearGradient></defs><g><line x1="15" y1="40" x2="15" y2="62" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#LG)"></rect><line x1="34" y1="29" x2="34" y2="56" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><line x1="53" y1="18" x2="53" y2="45" stroke="url(#LG)" stroke-width="2.6" stroke-linecap="round"></line><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#LG)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#LG)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><span style="font-size: 19px; font-weight: 800; letter-spacing: -.3px;">TradePilot</span></div>
+    <nav style="display: flex; align-items: center; height: 68px;"><a class="tab" href="#">Home</a><a class="tab" href="#">Calls</a><a class="tab" href="#">Book</a><a class="tab on" href="#">Record</a></nav>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; width: 300px; height: 40px; border: 1px solid #DADDE3; border-radius: 10px; padding: 0 12px; color: #9AA0AE; font-size: 13px;"><svg class="ic" viewBox="0 0 24 24" style="width: 18px; height: 18px;"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Search a stock or a call</div>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #6C7280; font-weight: 600;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #C4C9D2;"></span>Market closed</span>
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #E6F7EF; color: #0B8F5F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;">S</div>
+    </div>
+  </header>
+  <main style="flex: 1; padding: 28px 64px 40px; display: flex; flex-direction: column; gap: 20px;">
+
+    <div><h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.6px;">Track record</h1><div class="mut" style="font-size: 14px;">Every call we publish is graded against its own target and stop. Nothing is removed.</div></div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px;">
+      <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="label">Hit rate</div>
+        <div style="font-size: 44px; font-weight: 800; letter-spacing: -1px; color: #6C7280; line-height: 1;">Not yet</div>
+        <div style="font-size: 15px; color: #3F4552;"><span class="num" style="font-weight: 800; color: #1B1F2A;">18</span> calls resolved since 28 Aug. We publish a hit rate from <span class="num" style="font-weight: 800; color: #1B1F2A;">100</span> resolved calls, because a percentage over a handful of trades is the easiest number in finance to fool yourself with.</div>
+        <div style="height: 10px; background: #F1F3F5; border-radius: 5px; margin-top: 6px;"><div style="width: 18%; height: 10px; background: #0FA36B; border-radius: 5px;"></div></div>
+        <div style="display: flex; justify-content: space-between;" class="mut num"><span>18 resolved</span><span>100</span></div>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="label">All calls so far · 31</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 90px; font-weight: 700;">Hit</span><div style="flex: 1; height: 12px; background: #F1F3F5; border-radius: 6px;"><div style="width: 39%; height: 12px; background: #0FA36B; border-radius: 6px;"></div></div><span class="num" style="width: 30px; text-align: right; font-weight: 700;">12</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 90px; font-weight: 700;">Miss</span><div style="flex: 1; height: 12px; background: #F1F3F5; border-radius: 6px;"><div style="width: 19%; height: 12px; background: #E04A3C; border-radius: 6px;"></div></div><span class="num" style="width: 30px; text-align: right; font-weight: 700;">6</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 90px; font-weight: 700;">Ungraded</span><div style="flex: 1; height: 12px; background: #F1F3F5; border-radius: 6px;"><div style="width: 16%; height: 12px; background: #C4C9D2; border-radius: 6px;"></div></div><span class="num" style="width: 30px; text-align: right; font-weight: 700;">5</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 90px; font-weight: 700;">Open</span><div style="flex: 1; height: 12px; background: #F1F3F5; border-radius: 6px;"><div style="width: 26%; height: 12px; background: #4A55C7; border-radius: 6px;"></div></div><span class="num" style="width: 30px; text-align: right; font-weight: 700;">8</span></div>
+        </div>
+        <div class="mut" style="font-size: 12px;">Ungraded means price never reached target or stop within 5 sessions. It counts as resolved, not as a hit.</div>
+      </div>
+    </div>
+    <div class="card" style="padding: 8px 22px;">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 0 4px;"><h2 style="margin: 0; font-size: 15px; font-weight: 800;">Resolved calls</h2><span class="mut" style="font-size: 12px;">newest first</span></div>
+      <table class="tbl"><thead><tr><th>Stock</th><th>Published</th><th class="r">Price at call</th><th class="r">Target</th><th class="r">Stop</th><th class="r">Resolved at</th><th class="r">Outcome</th></tr></thead><tbody>
+        <tr><td><span class="sym">RRKABEL</span> <span class="chip sell">SELL</span></td><td class="mut num">4 Sep 10:24</td><td class="r num">₹2,522.50</td><td class="r num">₹2,472.05</td><td class="r num">₹2,535.11</td><td class="r num">₹2,468.00 · 11:25</td><td class="r"><span class="chip hit">HIT</span></td></tr>
+        <tr><td><span class="sym">SRF</span> <span class="chip sell">SELL</span></td><td class="mut num">4 Sep 09:36</td><td class="r num">₹2,544.00</td><td class="r num">₹2,493.12</td><td class="r num">₹2,569.44</td><td class="r num">₹2,581.60 · 10:06</td><td class="r"><span class="chip miss">MISS</span></td></tr>
+        <tr><td><span class="sym">PAYTM</span> <span class="chip buy">BUY</span></td><td class="mut num">4 Sep 09:36</td><td class="r num">₹1,648.60</td><td class="r num">₹1,681.57</td><td class="r num">₹1,640.36</td><td class="r num">₹1,682.10 · 11:12</td><td class="r"><span class="chip hit">HIT</span></td></tr>
+        <tr><td><span class="sym">RAYMOND</span> <span class="chip sell">SELL</span></td><td class="mut num">4 Sep 10:24</td><td class="r num">₹748.50</td><td class="r num">₹733.53</td><td class="r num">₹752.24</td><td class="r num">— · 5 sessions</td><td class="r"><span class="chip ung">UNGRADED</span></td></tr>
+      </tbody></table>
+    </div>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

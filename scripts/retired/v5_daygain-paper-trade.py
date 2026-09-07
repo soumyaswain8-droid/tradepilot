@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+RETIRED 2026-09-07: Phase 0 holdout failed all three pre-registered gates (docs/research/daygain/).
+Kept for the record. Do not relaunch, do not tune.
+
 v5_daygain — DAYGAIN top-gainer concentration lane (paper). Pre-registered spec:
 1cr-roadmap/design/2026-09-05-daygain-lane-spec.md. The rule is FROZEN; this file
 implements it and nothing else. One decision per day at 09:35 IST.

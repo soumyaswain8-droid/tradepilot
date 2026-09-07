@@ -1,0 +1,68 @@
+<!doctype html><html><head><meta charset="utf-8"><title>TradePilot EOD 2026-09-04</title><style>
+@page { size: A4; margin: 14mm 12mm; }
+body { font-family: 'Avenir Next','Avenir',Helvetica,Arial,sans-serif; color:#1e1b4b; font-size:10.5pt; line-height:1.45; margin:0; }
+h1 { font-size:22pt; margin:0 0 2px; } h2 { font-size:14pt; margin:14px 0 6px; border-bottom:2px solid #4f46e5; padding-bottom:3px; } h3 { margin:6px 0 4px; font-size:12pt; color:#4f46e5; page-break-after:avoid; break-after:avoid } h4 { margin:8px 0 3px; font-size:10.5pt }
+.hdr { background:linear-gradient(135deg,#1e1b4b,#4338ca); color:white; padding:18px 20px; border-radius:10px; margin-bottom:12px } .hdr .sub { opacity:.85; font-size:10pt }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px } .eng { border:1px solid #e0e7ff; border-radius:8px; padding:8px 10px; page-break-inside:avoid }
+table { border-collapse:collapse; width:100%; font-size:9.5pt } td,th { padding:3px 6px; border-bottom:1px solid #eef2ff; text-align:left; vertical-align:top } th { background:#eef2ff; color:#312e81 }
+.kv td:last-child { text-align:right; font-weight:600; white-space:nowrap } .t td:not(:first-child) { text-align:right; white-space:nowrap } .big { font-size:14pt }
+.pos { color:#16a34a } .neg { color:#dc2626 } .muted { color:#6b7280; font-weight:400; font-size:9pt }
+.cards { display:grid; grid-template-columns:1fr 1fr; gap:8px } .card { page-break-inside:avoid } .card img { width:100%; border:1px solid #e5e7eb; border-radius:6px }
+.box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; margin:8px 0; page-break-inside:avoid }
+.warn { background:#fff7ed; border-color:#fed7aa } .pb { page-break-before:always }
+.legend span { display:inline-block; margin-right:14px } .sq { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:middle }
+</style></head><body>
+<div class="hdr"><h1>TradePilot — End of Day, Thu 4 Sep 2026</h1><div class="sub">Paper fleet: v5 + v5_wide &nbsp;·&nbsp; Regime BEAR (30% allocation) &nbsp;·&nbsp; Gap −0.76% at open &nbsp;·&nbsp; Prepared by Sarathi for Soumya Swain</div></div>
+
+<div class="box"><b>Bottom line.</b> Combined gross <b class="neg">−Rs 1,224</b>, net of costs <b class="neg">−Rs 3,133</b>.
+Stop-losses were the whole story: 34 stop-outs cost Rs 2,465 across both engines, and 16 of them reversed our way after we were out, worth Rs 2,560 had we held.
+Realistic money left on the table today: <b>about Rs 2,560</b> (stops inside first-hour noise) plus <b>about Rs 2,364</b> gross on 11 BUY signals no engine took. The "perfect exit" ceiling is far higher (Rs 9,569) but is not a real target.</div>
+
+<h2>1. Scoreboard</h2><div class="grid"><div class="eng"><h3>v5</h3>
+<table class="kv"><tr><td>Gross P&L</td><td class="neg big">−Rs 1,195</td></tr>
+<tr><td>Net of costs</td><td class="neg">−Rs 2,042 <span class="muted">(costs Rs 847)</span></td></tr>
+<tr><td>Trades</td><td>61 &nbsp; L 14 / S 47</td></tr>
+<tr><td>Win rate</td><td>48% &nbsp;<span class="muted">(29W / 32L)</span></td></tr></table>
+<table class="t"><tr><th>Exit reason</th><th>#</th><th>P&L</th></tr><tr><td>STOPLOSS</td><td>19</td><td class='neg'>−Rs 1,054</td></tr><tr><td>SIGNAL_FLIP</td><td>10</td><td class='neg'>−Rs 460</td></tr><tr><td>FLAT_FORCE_EXIT</td><td>13</td><td class='pos'>+Rs 38</td></tr><tr><td>TIME_EXIT</td><td>18</td><td class='pos'>+Rs 123</td></tr><tr><td>TARGET</td><td>1</td><td class='pos'>+Rs 158</td></tr></table>
+<h4>Left on the table</h4>
+<table class="kv">
+<tr><td>Held everything to 15:15 instead of exiting</td><td class="neg">−Rs 358</td></tr>
+<tr><td>Stop-losses that later reversed our way (10 trades)</td><td class="pos">+Rs 908</td></tr>
+<tr><td>Perfect-exit ceiling after our exits <span class="muted">(unrealistic upper bound)</span></td><td>+Rs 2,651</td></tr>
+<tr><td>Max favourable excursion from entry <span class="muted">(if every trade exited at its best tick)</span></td><td>+Rs 3,396</td></tr></table></div><div class="eng"><h3>v5_wide</h3>
+<table class="kv"><tr><td>Gross P&L</td><td class="neg big">−Rs 29</td></tr>
+<tr><td>Net of costs</td><td class="neg">−Rs 1,091 <span class="muted">(costs Rs 1,062)</span></td></tr>
+<tr><td>Trades</td><td>59 &nbsp; L 27 / S 32</td></tr>
+<tr><td>Win rate</td><td>51% &nbsp;<span class="muted">(30W / 29L)</span></td></tr></table>
+<table class="t"><tr><th>Exit reason</th><th>#</th><th>P&L</th></tr><tr><td>STOPLOSS</td><td>15</td><td class='neg'>−Rs 1,411</td></tr><tr><td>SIGNAL_FLIP</td><td>18</td><td class='neg'>−Rs 240</td></tr><tr><td>FLAT_FORCE_EXIT</td><td>15</td><td class='neg'>−Rs 32</td></tr><tr><td>TIME_EXIT</td><td>8</td><td class='pos'>+Rs 819</td></tr><tr><td>TARGET</td><td>3</td><td class='pos'>+Rs 834</td></tr></table>
+<h4>Left on the table</h4>
+<table class="kv">
+<tr><td>Held everything to 15:15 instead of exiting</td><td class="pos">+Rs 324</td></tr>
+<tr><td>Stop-losses that later reversed our way (6 trades)</td><td class="pos">+Rs 1,651</td></tr>
+<tr><td>Perfect-exit ceiling after our exits <span class="muted">(unrealistic upper bound)</span></td><td>+Rs 6,918</td></tr>
+<tr><td>Max favourable excursion from entry <span class="muted">(if every trade exited at its best tick)</span></td><td>+Rs 9,021</td></tr></table></div></div>
+
+<h2>2. Left on the table — how it was measured</h2>
+<p>Every closed trade was replayed against Kite 5-minute candles fetched after the close. Three questions per trade: what would the P&L have been if we simply held to 15:15 (<b>hold delta</b>), which stop-losses reversed and went our way afterwards, and how far did price travel in our favour after we exited (<b>ceiling</b>). Trades exited at the 15:15 force-close have nothing after them and count as zero.</p>
+<div class="grid">
+<div><h3>v5 — top post-exit moves</h3><table class="t"><tr><th>Stock</th><th>Dir</th><th>Exit</th><th>Time</th><th>P&L</th><th>Hold Δ</th><th>Ceiling</th></tr><tr><td>PAYTM</td><td>LONG</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='pos'>+Rs 136</td><td class='pos'>+Rs 59</td><td>+Rs 451</td></tr><tr><td>SRF</td><td>SHORT</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='neg'>−Rs 376</td><td class='pos'>+Rs 355</td><td>+Rs 355</td></tr><tr><td>SWIGGY</td><td>LONG</td><td>STOPLOSS</td><td>09:36→10:20</td><td class='pos'>+Rs 129</td><td class='neg'>−Rs 16</td><td>+Rs 312</td></tr><tr><td>INDIANB</td><td>SHORT</td><td>STOPLOSS</td><td>10:10→11:25</td><td class='neg'>−Rs 185</td><td class='pos'>+Rs 129</td><td>+Rs 202</td></tr><tr><td>COCHINSHIP</td><td>LONG</td><td>SIGNAL_FLIP</td><td>09:36→10:43</td><td class='pos'>+Rs 65</td><td class='neg'>−Rs 53</td><td>+Rs 186</td></tr><tr><td>DIXON</td><td>SHORT</td><td>STOPLOSS</td><td>10:10→11:57</td><td class='neg'>−Rs 85</td><td class='pos'>+Rs 114</td><td>+Rs 144</td></tr><tr><td>PNB</td><td>LONG</td><td>SIGNAL_FLIP</td><td>09:36→10:43</td><td class='neg'>−Rs 1</td><td class='pos'>+Rs 22</td><td>+Rs 104</td></tr><tr><td>HUDCO</td><td>SHORT</td><td>STOPLOSS</td><td>10:10→11:45</td><td class='neg'>−Rs 120</td><td class='pos'>+Rs 94</td><td>+Rs 104</td></tr><tr><td>COLPAL</td><td>SHORT</td><td>STOPLOSS</td><td>10:10→11:13</td><td class='neg'>−Rs 95</td><td class='pos'>+Rs 71</td><td>+Rs 96</td></tr><tr><td>COALINDIA</td><td>SHORT</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='neg'>−Rs 115</td><td class='pos'>+Rs 49</td><td>+Rs 91</td></tr></table></div>
+<div><h3>v5_wide — top post-exit moves</h3><table class="t"><tr><th>Stock</th><th>Dir</th><th>Exit</th><th>Time</th><th>P&L</th><th>Hold Δ</th><th>Ceiling</th></tr><tr><td>RRKABEL</td><td>SHORT</td><td>TARGET</td><td>10:24→11:25</td><td class='pos'>+Rs 526</td><td class='pos'>+Rs 45</td><td>+Rs 806</td></tr><tr><td>SWIGGY</td><td>LONG</td><td>STOPLOSS</td><td>09:36→10:55</td><td class='pos'>+Rs 374</td><td class='neg'>−Rs 98</td><td>+Rs 707</td></tr><tr><td>RAYMOND</td><td>SHORT</td><td>FLAT_FORCE_EXIT</td><td>10:24→13:39</td><td class='pos'>+Rs 4</td><td class='pos'>+Rs 274</td><td>+Rs 614</td></tr><tr><td>ECLERX</td><td>SHORT</td><td>TIME_EXIT</td><td>15:01→15:15</td><td class='pos'>+Rs 255</td><td class='pos'>+Rs 169</td><td>+Rs 600</td></tr><tr><td>AEQUS</td><td>SHORT</td><td>STOPLOSS</td><td>10:24→10:44</td><td class='neg'>−Rs 189</td><td class='pos'>+Rs 543</td><td>+Rs 543</td></tr><tr><td>SRF</td><td>SHORT</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='neg'>−Rs 574</td><td class='pos'>+Rs 543</td><td>+Rs 543</td></tr><tr><td>PAYTM</td><td>LONG</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='pos'>+Rs 124</td><td class='pos'>+Rs 54</td><td>+Rs 414</td></tr><tr><td>ZYDUSLIFE</td><td>SHORT</td><td>STOPLOSS</td><td>09:36→10:06</td><td class='neg'>−Rs 211</td><td class='pos'>+Rs 346</td><td>+Rs 346</td></tr><tr><td>COCHINSHIP</td><td>LONG</td><td>SIGNAL_FLIP</td><td>09:36→10:45</td><td class='pos'>+Rs 80</td><td class='neg'>−Rs 64</td><td>+Rs 254</td></tr><tr><td>KALYANKJIL</td><td>LONG</td><td>STOPLOSS</td><td>14:57→07:53</td><td class='neg'>−Rs 77</td><td class='pos'>+Rs 123</td><td>+Rs 177</td></tr></table></div></div>
+
+<div class="box"><b>Read-across.</b> v5's hold delta is <b>negative</b> (−Rs 358): as a whole its exits were right, the pain is concentrated in 10 stop-outs that reversed (+Rs 908). v5_wide's hold delta is <b>positive</b> (+Rs 324) with 6 reversed stop-outs worth +Rs 1,651 — SRF, AEQUS and ZYDUSLIFE alone were Rs 1,432. Both engines were stopped on the same SRF short at 10:06 for a combined −Rs 950, and SRF then fell exactly as called. The stop is sitting inside 5-minute noise on the first hour.</div>
+
+<h2>3. BUY signals nobody took</h2>
+<p>62 dashboard BUYs at open; v5 entered 6, v5_wide is not in the scorer's engine list. Of the 56 skipped: 11 rose more than 0.5% (wrong to skip), 21 fell more than 0.5% (right to skip), 22 flat. Average move of the skipped set −0.09%, so skipping was net neutral. The gross upside on the 11 wrong calls at v5's median position size (Rs 11,000) was:</p>
+<div class="grid"><table class="t"><tr><th>Stock</th><th>Day move</th><th>At Rs 11K</th></tr><tr><td>IGL</td><td>+4.63%</td><td>+Rs 509</td></tr><tr><td>ALOKINDS</td><td>+4.51%</td><td>+Rs 496</td></tr><tr><td>KAYNES</td><td>+3.04%</td><td>+Rs 334</td></tr><tr><td>MGL</td><td>+2.29%</td><td>+Rs 252</td></tr><tr><td>CROMPTON</td><td>+2.09%</td><td>+Rs 230</td></tr><tr><td>GNFC</td><td>+1.28%</td><td>+Rs 141</td></tr><tr><td>RITES</td><td>+0.84%</td><td>+Rs 92</td></tr><tr><td>IRFC</td><td>+0.79%</td><td>+Rs 87</td></tr><tr><td>SJVN</td><td>+0.77%</td><td>+Rs 85</td></tr><tr><td>JIOFIN</td><td>+0.71%</td><td>+Rs 78</td></tr><tr><td>ACC</td><td>+0.54%</td><td>+Rs 59</td></tr><tr><th>Total gross</th><th></th><th>+Rs 2,364</th></tr></table>
+<div class="box warn"><b>Ops notes for tonight</b><ul style="margin:4px 0 0 16px;padding:0">
+<li>Kite token was refreshed manually at 07:42 (auto-login lacks password/TOTP in .env).</li>
+<li>08:50 launchd run re-spawned both engines on top of the 07:42 manual launch — launch script gates dashboard/watchdogs but not engines. Harmless pre-open, fatal mid-session.</li>
+<li>missed-opps watchdog was blind from 08:50 to close: DNS resolution failed inside the process (getaddrinfo thread failed) plus SQLite "unable to open database file". Last good snapshot 08:43.</li>
+<li>15:35 auto EOD report produced HTML but no PDF; same DNS failure hit its Telegram send. It also still lists v4/v5_6/v6 and does not know v5_wide.</li>
+<li>Legacy engine-comparison also cannot see v5_wide — coverage stats above undercount it.</li></ul></div></div>
+
+<h2 style="margin-top:18px">4. The trades that hurt most — candlesticks</h2>
+<p class="legend"><span><span class="sq" style="background:#16a34a"></span>green candle up / green marker = our entry</span><span><span class="sq" style="background:#dc2626"></span>red candle down</span><span><span class="sq" style="background:#7c3aed"></span>purple marker = our exit</span><span>dashed lines = entry / exit price</span></p>
+<h3>v5</h3><div class="cards"><div class="card"><img src="charts/lot_v5_0_PAYTM.png"></div><div class="card"><img src="charts/lot_v5_1_SRF.png"></div><div class="card"><img src="charts/lot_v5_2_SWIGGY.png"></div><div class="card"><img src="charts/lot_v5_3_INDIANB.png"></div><div class="card"><img src="charts/lot_v5_4_COCHINSHIP.png"></div><div class="card"><img src="charts/lot_v5_5_DIXON.png"></div></div>
+<h3 style="margin-top:12px">v5_wide</h3><div class="cards"><div class="card"><img src="charts/lot_v5_wide_0_RRKABEL.png"></div><div class="card"><img src="charts/lot_v5_wide_1_SWIGGY.png"></div><div class="card"><img src="charts/lot_v5_wide_2_RAYMOND.png"></div><div class="card"><img src="charts/lot_v5_wide_3_ECLERX.png"></div><div class="card"><img src="charts/lot_v5_wide_4_AEQUS.png"></div><div class="card"><img src="charts/lot_v5_wide_5_SRF.png"></div></div>
+<p class="muted" style="margin-top:14px">Sources: docs/paper-trades/{v5,v5_wide}/2026-09-04.json · Kite historical 5-min · docs/reports/missed-trades-2026-09-04.md · engine logs. Paper trading only, no real orders.</p>
+</body></html>

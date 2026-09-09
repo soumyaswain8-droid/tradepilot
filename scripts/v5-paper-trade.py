@@ -90,10 +90,41 @@ _sp = os.environ.get("STOP_PCT");   STOP_PCT   = float(_sp) if _sp is not None e
 STOP_MODE = os.environ.get("STOP_MODE", "trailing")
 
 
-def cost_for_trade(qty: int, entry_price: float, exit_price: float) -> float:
-    """Round-trip cost in INR using avg notional × bps. ~12 bps default."""
-    notional_avg = qty * (entry_price + exit_price) / 2
-    return notional_avg * (COST_BPS_ROUND_TRIP / 10000)
+# M0 WP-1 (2026-09-10): Zerodha equity DELIVERY (CNC) schedule for multi-day pools.
+# Rates are fractions of value. Brokerage is 0 on delivery; DP charge is flat per
+# sell scrip. INTRADAY keeps the bps model above so its history stays comparable.
+DELIVERY_BROKERAGE          = 0.0
+DELIVERY_STT_PCT            = 0.001       # 0.1% on buy value AND on sell value
+DELIVERY_EXCHANGE_TXN_PCT   = 0.0000297   # NSE 0.00297% of turnover (buy + sell)
+DELIVERY_SEBI_PCT           = 0.000001    # 0.0001% of turnover
+DELIVERY_STAMP_PCT          = 0.00015     # 0.015% of buy value
+DELIVERY_GST_PCT            = 0.18        # on brokerage + exchange txn + SEBI
+DELIVERY_DP_CHARGE_INR      = 15.34       # per sell scrip, + GST
+
+
+def cost_for_trade(qty: int, entry_price: float, exit_price: float,
+                   pool: str = "INTRADAY") -> float:
+    """Round-trip cost in INR for one closed trade.
+
+    INTRADAY (and any pool not in MULTI_DAY_POOLS): avg notional × bps, ~12 bps
+    default -- byte-identical to the pre-2026-09-10 model.
+    SWING / POSITIONAL / INVESTMENT: Zerodha delivery round trip (spec
+    2026-09-10-m0-truth-first-design.md decision 2), rounded to 2 dp. Buy value is
+    qty × entry, sell value is qty × exit (the multi-day pools are long-only CNC).
+    """
+    if pool not in MULTI_DAY_POOLS:
+        notional_avg = qty * (entry_price + exit_price) / 2
+        return notional_avg * (COST_BPS_ROUND_TRIP / 10000)
+    buy_value = qty * entry_price
+    sell_value = qty * exit_price
+    turnover = buy_value + sell_value
+    stt = DELIVERY_STT_PCT * buy_value + DELIVERY_STT_PCT * sell_value
+    exchange = DELIVERY_EXCHANGE_TXN_PCT * turnover
+    sebi = DELIVERY_SEBI_PCT * turnover
+    stamp = DELIVERY_STAMP_PCT * buy_value
+    gst = DELIVERY_GST_PCT * (DELIVERY_BROKERAGE + exchange + sebi)
+    dp_charge = DELIVERY_DP_CHARGE_INR * (1 + DELIVERY_GST_PCT)
+    return round(DELIVERY_BROKERAGE + stt + exchange + sebi + stamp + gst + dp_charge, 2)
 
 
 def _short_block_active(state) -> bool:
@@ -894,7 +925,7 @@ def close_position(state, pm, rm, pool_name, pos, exit_price, reason):
         pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * 100
     # Task 1.4: realistic Indian retail cost. pnl_gross stays as the reported number
     # for backwards compat with prior reports; pnl_net + cost added as new fields.
-    cost = cost_for_trade(pos["qty"], pos["entry_price"], exit_price)
+    cost = cost_for_trade(pos["qty"], pos["entry_price"], exit_price, pool=pool_name)
     pnl_gross = pnl
     pnl_net = pnl - cost
     if pm: pm.close_position(pool_name, sym, exit_price, reason)

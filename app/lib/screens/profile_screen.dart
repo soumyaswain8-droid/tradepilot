@@ -276,7 +276,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'AI predictions by TradePilot Engine',
+              'AI signals by TradePilot Engine',
               style: TextStyle(
                 fontSize: 10,
                 color: AppColors.textMuted.withValues(alpha: 0.6),

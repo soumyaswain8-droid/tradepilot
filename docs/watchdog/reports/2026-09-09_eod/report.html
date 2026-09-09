@@ -208,8 +208,8 @@ p.lede {
     <h1>The fleet, <em>2026-09-09.</em></h1>
   </div>
   <div class="meta">
-    Engines covered &nbsp;·&nbsp; <b style="color:var(--ink);">1</b><br>
-    Generated &nbsp;·&nbsp; 15:35:56
+    Engines covered &nbsp;·&nbsp; <b style="color:var(--ink);">3</b><br>
+    Generated &nbsp;·&nbsp; 02:55:57
   </div>
 </header>
 
@@ -221,8 +221,8 @@ p.lede {
     <div class="small">Rs +381  ·  56 trades  ·  58.9% wins</div>
   </div>
   <div class="kpi pos"><div class="label">Engines Profitable</div>
-    <div class="value">1 <span style="font-size:11pt;color:var(--ink-3);font-weight:500;">/ 1</span></div>
-    <div class="small">Negative: 0</div>
+    <div class="value">1 <span style="font-size:11pt;color:var(--ink-3);font-weight:500;">/ 3</span></div>
+    <div class="small">Negative: 2</div>
   </div>
   <div class="kpi"><div class="label">Best Single Trade</div>
     <div class="value">Rs +395</div>
@@ -245,14 +245,24 @@ p.lede {
   <td class="num red">Rs -81</td>
   <td class="num green">Rs +381</td>
 </tr>
-<tr><td>-</td><td>v4</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_classic</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_2</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_3</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_6</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_7</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v5_8</td><td colspan="5" class="muted">no_data</td></tr>
-<tr><td>-</td><td>v6</td><td colspan="5" class="muted">no_data</td></tr>
+<tr class="row-loss">
+  <td>2</td>
+  <td><b>v5_swing</b></td>
+  <td class="num">0</td>
+  <td class="num">0.0%</td>
+  <td class="num green">Rs +0</td>
+  <td class="num red">Rs +0</td>
+  <td class="num green">Rs +0</td>
+</tr>
+<tr class="row-loss">
+  <td>3</td>
+  <td><b>v5_wide</b></td>
+  <td class="num">65</td>
+  <td class="num">49.2%</td>
+  <td class="num green">Rs +84</td>
+  <td class="num red">Rs -145</td>
+  <td class="num red">Rs -2,239</td>
+</tr>
 </tbody></table>
 
 <div class="chart"><img src="charts/scoreboard.png" alt="Scoreboard"></div>
@@ -279,7 +289,7 @@ p.lede {
 <div class="section-num">№ 06  ·  OVERLAP</div>
 <h2>Where engines <em>agreed.</em></h2>
 <p class="lede">Symbols touched by two engines today, and the P&L gap between them. High overlap with very different outcomes points at the part of the logic that decides the trade.</p>
-<p class='muted'>No overlap data.</p>
+<table><thead><tr><th>Pair</th><th class='num'>Shared symbols</th><th class='num'>P&L gap (a - b)</th><th>Sample</th></tr></thead><tbody><tr><td><b>v5</b> vs <b>v5_wide</b></td><td class='num'>24</td><td class='num'>Rs +2,621</td><td class='small muted'>ADANIENSOL, ADANIPORTS, ADANIPOWER, BAJFINANCE, BEL, BHARATFORG...</td></tr></tbody></table>
 
 <div class="page-break"></div>
 
@@ -287,8 +297,11 @@ p.lede {
 <h2>Patterns the watchdog <em>surfaced.</em></h2>
 <p class="lede">Auto-extracted observations from the day's data — starting points for the post-market review, not conclusions in themselves. Verify against the per-engine detail in section 08 before acting.</p>
 <div class="insight good">Winner: <b>v5</b> with Rs +381 across 56 trades (58.9% win).</div>
+<div class="insight warn">Laggard: <b>v5_wide</b> with Rs -2,239 across 65 trades (49.2% win).</div>
 <div class="insight warn"><b>v5</b>: STOPLOSS (16) >= TARGET (1). Consider widening SL or tightening entry filters.</div>
+<div class="insight warn"><b>v5_wide</b>: STOPLOSS (24) >= TARGET (1). Consider widening SL or tightening entry filters.</div>
 <div class="insight warn"><b>v5</b>: 58.9% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
+<div class="insight warn"><b>v5_wide</b>: 49.2% win rate (target 80%). Entry quality is the problem — tune ML score threshold up.</div>
 
 <div class="section-num">№ 08  ·  PER-ENGINE DETAIL</div>
 
@@ -298,6 +311,22 @@ p.lede {
 <tbody><tr><td>1</td><td>HINDUNILVR</td><td class='num green'>Rs +395</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>2</td><td>ADANIPOWER</td><td class='num green'>Rs +184</td><td class='small muted'>TARGET</td></tr><tr><td>3</td><td>ADANIPORTS</td><td class='num green'>Rs +162</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>RADICO</td><td class='num green'>Rs +161</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>5</td><td>ATGL</td><td class='num green'>Rs +144</td><td class='small muted'>SIGNAL_FLIP</td></tr></tbody></table>
 <table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
 <tbody><tr><td>1</td><td>BAJFINANCE</td><td class='num red'>Rs -384</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>BEL</td><td class='num red'>Rs -298</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>ADANIENSOL</td><td class='num red'>Rs -209</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>KPITTECH</td><td class='num red'>Rs -113</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>SUZLON</td><td class='num red'>Rs -103</td><td class='small muted'>SIGNAL_FLIP</td></tr></tbody></table>
+
+
+<h3>v5_swing — Rs +0 · 0 trades · 0.0%</h3>
+<p class="small muted">Regime: ? · open positions at EOD: 0 · exits: </p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed wins</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td colspan='4' class='muted'>no closed losses</td></tr></tbody></table>
+
+
+<h3>v5_wide — Rs -2,239 · 65 trades · 49.2%</h3>
+<p class="small muted">Regime: SIDEWAYS · open positions at EOD: 7 · exits: STOPLOSS:24 · FLAT_FORCE_EXIT:23 · TIME_EXIT:11 · SIGNAL_FLIP:6 · TARGET:1</p>
+<table class="small"><thead><tr><th colspan="4">Top 5 winners</th></tr></thead>
+<tbody><tr><td>1</td><td>ADANIPOWER</td><td class='num green'>Rs +361</td><td class='small muted'>TARGET</td></tr><tr><td>2</td><td>HINDUNILVR</td><td class='num green'>Rs +291</td><td class='small muted'>TIME_EXIT</td></tr><tr><td>3</td><td>GOODLUCK</td><td class='num green'>Rs +242</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>EPACKPEB</td><td class='num green'>Rs +190</td><td class='small muted'>SIGNAL_FLIP</td></tr><tr><td>5</td><td>ADANIENSOL</td><td class='num green'>Rs +188</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
+<table class="small"><thead><tr><th colspan="4">Top 5 losers</th></tr></thead>
+<tbody><tr><td>1</td><td>EMAMILTD</td><td class='num red'>Rs -751</td><td class='small muted'>STOPLOSS</td></tr><tr><td>2</td><td>COFORGE</td><td class='num red'>Rs -616</td><td class='small muted'>STOPLOSS</td></tr><tr><td>3</td><td>BLACKBUCK</td><td class='num red'>Rs -539</td><td class='small muted'>STOPLOSS</td></tr><tr><td>4</td><td>SAMBHV</td><td class='num red'>Rs -479</td><td class='small muted'>STOPLOSS</td></tr><tr><td>5</td><td>BALUFORGE</td><td class='num red'>Rs -367</td><td class='small muted'>STOPLOSS</td></tr></tbody></table>
 
 
 <div class="footer">

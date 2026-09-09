@@ -3,7 +3,7 @@
 TradePilot Missed-Trades EOD Report
 ====================================
 Compares BUY signals captured at market open against engines' actual entries.
-Identifies stocks scored BUY but skipped by all 7 engines, then evaluates
+Identifies stocks scored BUY but skipped by every engine on the disk roster, then evaluates
 whether skipping was a right call (stock dropped) or wrong call (stock rose).
 
 Inputs:
@@ -26,7 +26,10 @@ from datetime import datetime, date as date_cls, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-ENGINES = ['v4', 'v5', 'v5_classic', 'v5_6', 'v5_7', 'v5_8', 'v6']
+sys.path.insert(0, str(ROOT))
+from prototype.engines import active_engines  # noqa: E402
+
+# Roster is discovered from disk per date (spec §4); no hard-coded engine list.
 REPORTS_DIR = ROOT / 'docs' / 'reports'
 
 
@@ -57,10 +60,10 @@ def load_buy_list(target: str) -> tuple[set[str], dict, dict]:
     return buy_set, stocks, meta
 
 
-def load_engine_entries(target: str) -> dict[str, set[str]]:
+def load_engine_entries(target: str, engines: list[str]) -> dict[str, set[str]]:
     """For each engine returns the set of symbols touched today (open or closed)."""
-    entries = {e: set() for e in ENGINES}
-    for v in ENGINES:
+    entries = {e: set() for e in engines}
+    for v in engines:
         f = ROOT / f'docs/paper-trades/{v}/{target}.json'
         if not f.exists():
             continue
@@ -189,7 +192,7 @@ def build_report(target: str, buy_set: set[str], entries: dict[str, set[str]],
     lines.append('')
     lines.append('| Engine | Entered (of BUY universe) | Missed |')
     lines.append('|:--|--:|--:|')
-    for v in ENGINES:
+    for v in entries:
         entered = entries.get(v, set()) & buy_set
         miss = buy_set - entries.get(v, set())
         lines.append(f'| {v} | {len(entered)} / {len(buy_set)} | {len(miss)} |')
@@ -260,7 +263,9 @@ def main() -> int:
               f'docs/dashboard-scores/{target}.json', file=sys.stderr)
         return 1
 
-    entries = load_engine_entries(target)
+    engines = active_engines(target)
+    print(f'Engines on disk     : {", ".join(engines) or "(none)"}')
+    entries = load_engine_entries(target, engines)
     all_entered = set().union(*entries.values()) if entries else set()
     missed = buy_set - all_entered
 
@@ -268,7 +273,7 @@ def main() -> int:
     print(f'Entered by ≥1 engine : {len(buy_set & all_entered)}')
     print(f'Missed by all       : {len(missed)}')
     print()
-    for v in ENGINES:
+    for v in engines:
         e = entries.get(v, set()) & buy_set
         print(f'  {v:<12} entered {len(e):>3} of {len(buy_set)} BUYs')
     print()

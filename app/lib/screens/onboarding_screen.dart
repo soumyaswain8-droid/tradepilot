@@ -32,7 +32,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingPage(
       icon: Icons.psychology_rounded,
       iconColor: AppColors.cyan,
-      title: 'AI Stock Predictions',
+      title: 'AI Stock Signals',
       subtitle: 'See profit probability before every trade',
       detail: 'Our AI engine analyses 451+ stocks using RSI, MACD, volume, and trend data to give you a clear BUY / HOLD / AVOID signal.',
     ),

@@ -290,7 +290,7 @@ class StockDetailScreen extends StatelessWidget {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'AI predictions are for educational purposes only. This is a demo app with no real money involved.',
+                          'AI signals are for educational purposes only. This is a demo app with no real money involved.',
                           style: TextStyle(
                             fontSize: 10.5,
                             color: AppColors.amber,

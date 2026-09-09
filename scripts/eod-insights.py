@@ -20,11 +20,14 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from prototype.engines import active_engines  # noqa: E402
+
 DATA_DIR = ROOT / "docs" / "paper-trades"
 OUT_DIR = ROOT / "docs" / "work-log"
 LEARN_DIR = ROOT / "learnings" / "daily"
 
-ENGINES = ["v4", "v5", "v5_classic", "v5_2", "v5_3", "v5_6", "v5_7"]
+# Roster is discovered from disk per date (spec §4); no hard-coded engine list.
 
 # Phased roadmap — update this as we progress
 ROADMAP = [
@@ -130,8 +133,9 @@ def generate_insights(today_str=None):
     if today_str is None:
         today_str = datetime.now().strftime("%Y-%m-%d")
     today_date = datetime.strptime(today_str, "%Y-%m-%d").date()
-    today_stats = {e: load_engine_stats(e, today_str) for e in ENGINES}
-    baselines = {e: baseline_avg(e, today=today_date) for e in ENGINES}
+    engines = active_engines(today_str)
+    today_stats = {e: load_engine_stats(e, today_str) for e in engines}
+    baselines = {e: baseline_avg(e, today=today_date) for e in engines}
     phase = current_phase(today=today_date)
 
     insights = []
@@ -160,8 +164,8 @@ def generate_insights(today_str=None):
         else:
             insights.append(f"● v5 vs v5_classic gap Rs {gap:+,.0f} (narrowing but not closed).")
 
-    # 3. Win rate sanity
-    for engine in ["v4", "v5_6", "v5_7", "v5_classic"]:
+    # 3. Win rate sanity — every engine on today's roster
+    for engine in engines:
         s = today_stats.get(engine)
         if s and s["trades"] >= 5:
             if s["wr"] < 60:
@@ -169,8 +173,8 @@ def generate_insights(today_str=None):
             elif s["wr"] > 90:
                 insights.append(f"✅ {engine} win rate {s['wr']:.0f}% — elite session.")
 
-    # 4. Trade count vs baseline (detect engine throttling)
-    for engine in ["v5", "v5_6", "v5_7", "v5_classic"]:
+    # 4. Trade count vs baseline (detect engine throttling) — every engine on today's roster
+    for engine in engines:
         s = today_stats.get(engine)
         b = baselines.get(engine)
         if s and b and b["trades"] > 5:
@@ -187,7 +191,7 @@ def generate_insights(today_str=None):
         insights.append(f"● Week {phase['week']} target not yet hit: v5 Rs {v5_pnl:+,.0f} < Rs {phase['v5_target_min']:,}. Need: {phase['gate']}")
 
     # 6. Dormant engine detection
-    for engine in ENGINES:
+    for engine in engines:
         s = today_stats.get(engine)
         if s and s["trades"] == 0 and engine not in ("v5_2",):  # v5_2 is weekly options
             insights.append(f"⚠ {engine} took 0 trades today. Likely dormant or over-filtered.")
@@ -239,7 +243,7 @@ def main():
     lines.append("")
 
     lines.append("═══ TODAY vs 3-DAY BASELINE ═══")
-    for eng in ENGINES:
+    for eng in today_stats:
         s = today_stats.get(eng)
         b = baselines.get(eng)
         if not s:
@@ -273,7 +277,7 @@ def main():
 | Engine | Today P&L | Trades | WR | Baseline avg |
 |--------|----------:|-------:|---:|-------------:|
 """
-    for eng in ENGINES:
+    for eng in today_stats:
         s = today_stats.get(eng)
         b = baselines.get(eng)
         if not s:
@@ -300,7 +304,7 @@ def main():
             "phase_week": phase["week"],
             "phase_change": phase["change"],
             "combined_pnl": sum(s["pnl"] for s in today_stats.values() if s),
-            "per_engine": {e: today_stats[e] for e in ENGINES if today_stats.get(e)},
+            "per_engine": {e: today_stats[e] for e in today_stats if today_stats.get(e)},
             "insights": insights,
             "storage": "local-only per project rule",
         }, default_flow_style=False, allow_unicode=True))

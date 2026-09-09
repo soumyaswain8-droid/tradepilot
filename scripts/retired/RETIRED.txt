@@ -1,0 +1,48 @@
+# Retired paper-trade engines — excluded from disk-discovered rosters.
+# One name per line; '#' starts a comment. Read by prototype/engines.py.
+# Verified 2026-09-10 against docs/paper-trades/ and scripts/launch-market.sh ENGINES
+# (live: v5, v5_wide). State files are preserved; nothing here is deleted.
+#
+# --- Retired per orchestrator list (no launcher, no September writes) ---
+v4            # last file 2026-06-11
+v5_classic    # last file 2026-08-21
+v5_2          # last file 2026-04-27
+v5_3          # last file 2026-04-28
+v5_6          # last file 2026-05-15
+v5_7          # last file 2026-05-15
+v5_8          # last file 2026-05-25
+v6            # last file 2026-05-25
+v10           # last file 2026-08-21
+v5_chop       # last file 2026-08-21
+v5_gate       # last file 2026-08-21
+v5_hold       # last file 2026-08-21
+v5_kite       # last file 2026-08-21
+v5_cut        # last file 2026-08-21
+v5_flip       # last file 2026-08-21
+v5_long       # last file 2026-08-21
+v5_rrg        # last file 2026-08-21
+v5_god        # last file 2026-08-19
+v5_noml       # last file 2026-06-26
+v7_regime     # last file 2026-06-26
+us_v1         # last file 2026-08-29; launchd com.tradepilot.us-paper-trade exits 78 (not running)
+opt1k         # no day files; lane-opt launchd loaded but writes nothing here
+real1k        # last file 2026-08-24; lane-real launchd loaded but no September writes
+v5_daygain    # one-off run 2026-09-07 (no launcher, no open positions) — baseline capture only
+#
+# writes daily files (through 2026-09-09) and holds swing positions. It is listed
+# here ONLY to keep it out of the INTRADAY comparison/missed-trades/insights rosters,
+# where it always shows 0 trades; its verdicts live under docs/research/swing/.
+# Remove this line if the intraday reports should include it.
+#
+# --- Found on disk, absent from the orchestrator list, no launcher, no September writes ---
+v5_1L         # last file 2026-08-21
+v5_4          # last file 2026-04-16
+v5_5          # last file 2026-04-16
+v5_apr        # last file 2026-06-26
+v5_cut_1L     # last file 2026-08-21
+v5_deploy     # last file 2026-08-05
+v5_long_1L    # last file 2026-08-21
+v5_pick       # last file 2026-08-05
+v5_size       # last file 2026-08-21
+v5_time       # last file 2026-08-05
+v8            # last file 2026-07-29

@@ -33,6 +33,7 @@ from pathlib import Path
 
 # Constants
 ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "prototype"))
 sys.path.insert(0, str(ROOT / "prototype" / "v4"))
 
@@ -106,18 +107,32 @@ def _alert_low_coverage(n: int, expected: int) -> None:
         log(f"  (alert send failed: {type(e).__name__})")
 
 def load_our_positions():
-    """Read all 7 engines' current positions. Returns {symbol: [{engine, direction}, ...]}"""
+    """Read current positions of every ACTIVE engine (spec §4: roster from disk).
+
+    Active = has docs/paper-trades/<engine>/<today>.json with trades > 0 or open
+    positions, not listed in scripts/retired/RETIRED.txt, not a _dryrun engine.
+    Returns {symbol: [{engine, direction}, ...]}"""
+    from prototype.engines import retired_engines
     today = datetime.now().strftime("%Y-%m-%d")
     positions_by_sym = {}
+    # Held positions live in positions_active.json, so THAT file is the roster of "we hold
+    # this" — not the day file (a swing lane can hold a book on a 0-trade day, and early in a
+    # session no engine has written today's file yet). Retired engines' stale books are
+    # excluded by name (scripts/retired/RETIRED.txt), as are _dryrun engines.
+    retired = set(retired_engines(ROOT))
+    pt = ROOT / "docs" / "paper-trades"
+    active = sorted(d.name for d in pt.iterdir()
+                    if d.is_dir() and d.name not in retired and not d.name.endswith("_dryrun")
+                    and ((d / "positions_active.json").exists() or d.name == "v4")) if pt.exists() else []
 
     def _add(sym, engine, direction):
         positions_by_sym.setdefault(sym, []).append({
             "engine": engine, "direction": direction
         })
 
-    # v4: date-stamped
+    # v4: date-stamped (flat shape). Only if v4 is on today's active roster.
     v4f = ROOT / "docs" / "paper-trades" / "v4" / f"{today}.json"
-    if v4f.exists():
+    if "v4" in active and v4f.exists():
         try:
             state = json.load(open(v4f))
             for p in state.get("positions", []):
@@ -132,9 +147,11 @@ def load_our_positions():
     # v5_long, v5_chop, v5_rrg, v7_regime, v8) were added. Their held positions were
     # silently dropped and got mis-classified as "on the table" opportunities instead of
     # positions we already hold. Auto-discovering avoids this going stale again.
-    paper_trades_dir = ROOT / "docs" / "paper-trades"
-    engine_dirs = sorted(p.name for p in paper_trades_dir.iterdir() if p.is_dir() and p.name != "v4") \
-        if paper_trades_dir.is_dir() else []
+    # 2026-09-10 (M0 WP-3): discovery now goes through prototype.engines.active_engines,
+    # which excludes retired engines (scripts/retired/RETIRED.txt), _dryrun engines and
+    # any engine without a state file for TODAY — stale positions_active.json files of
+    # dead engines no longer count as positions we hold.
+    engine_dirs = [e for e in active if e != "v4"]
     for eng in engine_dirs:
         f = ROOT / "docs" / "paper-trades" / eng / "positions_active.json"
         if not f.exists():

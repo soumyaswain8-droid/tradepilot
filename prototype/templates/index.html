@@ -3709,7 +3709,7 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
 </section>
 
   <footer class="footer">
-    TradePilot v0.3 &middot; Neural Trading Intelligence &middot; 451+ Assets: Stocks, ETFs, MF, Commodities, Forex &middot; AI predictions are probabilistic, not guaranteed
+    TradePilot v0.3 &middot; Neural Trading Intelligence &middot; 451+ Assets: Stocks, ETFs, MF, Commodities, Forex &middot; AI signals are probabilistic estimates, not promises
   </footer>
 </main>
 
@@ -3790,7 +3790,7 @@ button, .nav-tab, .stock-card, .pick-card, .swipe-btn, .fno-idx-card,
           <div class="ai-metrics" id="aiMetrics"></div>
         </div>
         <div class="ai-reasons" id="aiReasons"></div>
-        <div class="ai-disclaimer">AI predictions are probabilistic estimates based on technical indicators. Past performance does not guarantee future results.</div>
+        <div class="ai-disclaimer">AI signals are probabilistic estimates based on technical indicators. Past performance does not guarantee future results.</div>
       </div>
       <div class="trade-panel" id="tradePanel">
         <div class="trade-header"><span class="ai-header-dot"></span> TRADE SIMULATOR</div>
@@ -4113,7 +4113,7 @@ function drawChart(canvas, data, mode, opts) {
     ctx.fillStyle = grad; ctx.fill();
   }
 
-  // AI prediction line
+  // AI projected-target line (dashed, from the signal's target / stop)
   if (opts.score && opts.direction && mode === 'line') {
     var lastP = closes[closes.length - 1];
     var lastX = xPos(closes.length - 1);

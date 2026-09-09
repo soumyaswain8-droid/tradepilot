@@ -37,12 +37,17 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from prototype.engines import active_engines, engine_colour  # noqa: E402
+
 PAPER = ROOT / "docs" / "paper-trades"
 WATCH = ROOT / "docs" / "watchdog"
 REPORTS = WATCH / "reports"
 
-ENGINES = ["v4", "v5", "v5_classic", "v5_2", "v5_3", "v5_6", "v5_7", "v5_8", "v6"]
+# Roster is discovered from disk per date (spec §4): docs/paper-trades/<engine>/<date>.json
+# minus scripts/retired/RETIRED.txt. No hard-coded engine list.
 
+# Preferred colours for known engines; anything else gets engine_colour(name).
 PALETTE = {
     "v4":         "#64748b",
     "v5":         "#2563eb",
@@ -211,12 +216,12 @@ def load_snapshots(date_str: str) -> list[dict]:
 # Charts
 # ═════════════════════════════════════════════════════════════
 
-def chart_pnl_timeline(snapshots: list[dict], out_path: Path) -> None:
-    if not snapshots:
+def chart_pnl_timeline(snapshots: list[dict], out_path: Path, engines: list[str]) -> None:
+    if not snapshots or not engines:
         return
     times = [s["time_hhmm"] for s in snapshots]
     fig, ax = plt.subplots(figsize=(10, 5), dpi=140)
-    for eng in ENGINES:
+    for eng in engines:
         series = []
         for s in snapshots:
             hit = next((e for e in s["engines"] if e["engine"] == eng), None)
@@ -225,7 +230,7 @@ def chart_pnl_timeline(snapshots: list[dict], out_path: Path) -> None:
             else:
                 series.append(None)
         if any(v is not None for v in series):
-            ax.plot(times, series, label=eng, color=PALETTE.get(eng, "#333"),
+            ax.plot(times, series, label=eng, color=PALETTE.get(eng) or engine_colour(eng),
                     marker="o", markersize=4, linewidth=1.8)
     ax.axhline(0, color="#555", linewidth=0.7, linestyle="--")
     ax.set_title("P&L Timeline — All Engines Through the Day", fontsize=13, fontweight="bold")
@@ -299,7 +304,7 @@ def chart_winrate_vs_trades(summaries: list[dict], out_path: Path) -> None:
         return
     fig, ax = plt.subplots(figsize=(9, 6), dpi=140)
     for s in ok:
-        color = PALETTE.get(s["engine"], "#333")
+        color = PALETTE.get(s["engine"]) or engine_colour(s["engine"])
         size = max(80, abs(s["total_pnl"]) / 30)
         ax.scatter(s["trades"], s["win_rate"], s=size, color=color,
                    alpha=0.75, edgecolor="#111", linewidth=1.2, label=s["engine"])
@@ -380,7 +385,8 @@ def generate_insights(summaries: list[dict]) -> list[str]:
                 f"(low-vol avg Rs {l_avg:,.0f} vs high-vol Rs {h_avg:,.0f})."
             )
 
-    # v5 vs v5.6 head-to-head (since v5 was the fix target)
+    # v5 vs v5.6 head-to-head (since v5 was the fix target). v5_6 is retired;
+    # this block is skipped whenever either engine is absent from the roster.
     v5 = next((s for s in ok if s["engine"] == "v5"), None)
     v56 = next((s for s in ok if s["engine"] == "v5_6"), None)
     if v5 and v56:
@@ -869,13 +875,15 @@ def main() -> int:
     print(f"[eod-report] date: {date_str}")
     print(f"[eod-report] output: {out_dir}")
 
-    # Load everything
-    summaries = [summarise(e, load_engine(e, date_str)) for e in ENGINES]
+    # Load everything — roster from disk, never hard-coded
+    engines = active_engines(date_str)
+    print(f"[eod-report] engines: {', '.join(engines) or '(none)'}")
+    summaries = [summarise(e, load_engine(e, date_str)) for e in engines]
     snapshots = load_snapshots(date_str)
 
     # Charts
     chart_scoreboard(summaries, charts_dir / "scoreboard.png")
-    chart_pnl_timeline(snapshots, charts_dir / "pnl_timeline.png")
+    chart_pnl_timeline(snapshots, charts_dir / "pnl_timeline.png", engines)
     chart_exit_mix(summaries, charts_dir / "exit_mix.png")
     chart_winrate_vs_trades(summaries, charts_dir / "winrate_bubble.png")
     print(f"[eod-report] charts rendered: {len(list(charts_dir.glob('*.png')))}")

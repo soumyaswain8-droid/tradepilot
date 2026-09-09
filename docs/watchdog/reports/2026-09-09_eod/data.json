@@ -1,11 +1,7 @@
 {
   "date": "2026-09-09",
-  "generated_at": "2026-09-09T15:35:56.597175",
+  "generated_at": "2026-09-10T02:55:57.426767",
   "summaries": [
-    {
-      "engine": "v4",
-      "status": "no_data"
-    },
     {
       "engine": "v5",
       "status": "ok",
@@ -33,38 +29,86 @@
       "n_open": 6
     },
     {
-      "engine": "v5_classic",
-      "status": "no_data"
+      "engine": "v5_swing",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": 0.0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": 0,
+      "worst_trade": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "exit_reasons": {},
+      "n_closed": 0,
+      "n_open": 0
     },
     {
-      "engine": "v5_2",
-      "status": "no_data"
-    },
-    {
-      "engine": "v5_3",
-      "status": "no_data"
-    },
-    {
-      "engine": "v5_6",
-      "status": "no_data"
-    },
-    {
-      "engine": "v5_7",
-      "status": "no_data"
-    },
-    {
-      "engine": "v5_8",
-      "status": "no_data"
-    },
-    {
-      "engine": "v6",
-      "status": "no_data"
+      "engine": "v5_wide",
+      "status": "ok",
+      "regime": "SIDEWAYS",
+      "total_pnl": -2239.36,
+      "trades": 65,
+      "wins": 32,
+      "losses": 33,
+      "longs": 28,
+      "shorts": 37,
+      "win_rate": 49.2,
+      "open_positions": 7,
+      "best_trade": 361.13,
+      "worst_trade": -750.75,
+      "avg_win": 84.48,
+      "avg_loss": -144.66,
+      "exit_reasons": {
+        "STOPLOSS": 24,
+        "FLAT_FORCE_EXIT": 23,
+        "TIME_EXIT": 11,
+        "TARGET": 1,
+        "SIGNAL_FLIP": 6
+      },
+      "n_closed": 65,
+      "n_open": 7
     }
   ],
-  "overlap": {},
+  "overlap": {
+    "v5|v5_wide": [
+      "ADANIENSOL",
+      "ADANIPORTS",
+      "ADANIPOWER",
+      "BAJFINANCE",
+      "BEL",
+      "BHARATFORG",
+      "CGPOWER",
+      "CIPLA",
+      "DIVISLAB",
+      "GODFRYPHLP",
+      "GVT&D",
+      "HINDUNILVR",
+      "HUDCO",
+      "IDEA",
+      "MARICO",
+      "MOTHERSON",
+      "NHPC",
+      "OIL",
+      "PAYTM",
+      "PREMIERENE",
+      "RADICO",
+      "SWIGGY",
+      "TATAPOWER",
+      "TRENT"
+    ]
+  },
   "insights": [
     "Winner: <b>v5</b> with Rs +381 across 56 trades (58.9% win).",
+    "Laggard: <b>v5_wide</b> with Rs -2,239 across 65 trades (49.2% win).",
     "<b>v5</b>: STOPLOSS (16) >= TARGET (1). Consider widening SL or tightening entry filters.",
-    "<b>v5</b>: 58.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+    "<b>v5_wide</b>: STOPLOSS (24) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 58.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_wide</b>: 49.2% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
   ]
 }

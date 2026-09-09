@@ -1,0 +1,72 @@
+# Terminology guard -- banned promise-language in user-facing surfaces.
+#
+# Enforced by tests/test_terminology_guard.py. Every `banned` entry is a
+# case-insensitive regex matched on WORD BOUNDARIES (\b...\b), so `predict`
+# does not match `predictable` or `predictor`; add an explicit pattern if a
+# derivative should be caught too. Plurals are spelled out (predictions?,
+# guarantees?) because "no stale predictions" is the same promise as
+# "prediction".
+#
+# Comments are NOT exempt: a banned word in an HTML/JS/Dart comment is still a
+# hit, because comments get copy-pasted into copy. A comment that legitimately
+# names the concept (e.g. a disclaimer, or a note about script ordering that
+# "guarantees" something) gets an `allow` entry with a reason instead.
+#
+# allow entries: {file, line_contains, reason[, word]}
+#   file          -- repo-relative path, fnmatch globs accepted
+#   line_contains -- substring the offending line must contain
+#   word          -- optional; restrict the exemption to one banned pattern so
+#                    the rest of the line stays guarded
+version: 1
+
+banned:
+  - pattern: "predict"
+    replace_with: "score / rank / signal (say what the model actually does)"
+  - pattern: "predictions?"
+    replace_with: "signal(s) / historical outcome range, net of costs"
+  - pattern: "predictive"
+    replace_with: "historical / model-scored"
+  - pattern: "guarantees?"
+    replace_with: "past record (state the range; promise nothing)"
+  - pattern: "guaranteed"
+    replace_with: "historical outcome range, net of costs"
+  - pattern: "assured"
+    replace_with: "historical outcome range, net of costs"
+  - pattern: "expected profit"
+    replace_with: "historical outcome range, net of costs"
+  - pattern: "will earn"
+    replace_with: "has historically returned (with the range and the losses)"
+  - pattern: "sure-shot"
+    replace_with: "high-conviction (with the hit rate stated)"
+  - pattern: "sure shot"
+    replace_with: "high-conviction (with the hit rate stated)"
+  - pattern: "risk-free"
+    replace_with: "lower-risk / capital-at-risk stated"
+  - pattern: "risk free"
+    replace_with: "lower-risk / capital-at-risk stated"
+
+allow:
+  - file: prototype/templates/index.html
+    line_contains: "Past performance does not guarantee future results"
+    word: "guarantees?"
+    reason: "Regulatory disclaimer stating that we do NOT guarantee; the word names the concept being denied."
+  - file: prototype/templates/landing-classic.html
+    line_contains: "Past performance does not guarantee future results"
+    word: "guarantees?"
+    reason: "Regulatory disclaimer stating that we do NOT guarantee; the word names the concept being denied."
+  - file: prototype/templates/landing-pre-2026-05-07.html
+    line_contains: "Past performance does not guarantee future results"
+    word: "guarantees?"
+    reason: "Regulatory disclaimer stating that we do NOT guarantee; the word names the concept being denied."
+  - file: prototype/static/desk/router.js
+    line_contains: "Script order in desk.html guarantees this"
+    word: "guarantees?"
+    reason: "Code comment about script load order, not about returns; never rendered to a user."
+
+scan:
+  - "prototype/templates/*.html"
+  - "prototype/static/**/*.js"
+  - "prototype/static/app/*.js"
+  - "app/lib/**/*.dart"
+  - "docs/product/**/*.md"
+  - "docs/product/**/*.html"

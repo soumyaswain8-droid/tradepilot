@@ -22,6 +22,7 @@ ENGINES = list(L["engines"].keys())
 EJ = {e: json.load(open(ROOT / "docs/paper-trades" / e / f"{DATE}.json")) for e in ENGINES}
 GREEN, PURPLE, RED = "#16a34a", "#7c3aed", "#dc2626"
 NOTIONAL = 11000
+SHORT = {"FLAT_FORCE_EXIT": "FLAT", "SIGNAL_FLIP": "FLIP", "STOPLOSS": "STOP", "TIME_EXIT": "TIME", "TARGET": "TGT"}
 DAY = pd.Timestamp(DATE).strftime("%a %-d %b %Y")
 
 def fmt(x): return f"{'−' if x < 0 else '+' if x > 0 else ''}Rs {abs(x):,.0f}"
@@ -65,13 +66,34 @@ def score(e):
 <tr><td>Perfect-exit ceiling after our exits <span class="muted">(upper bound)</span></td><td>{fmt(v['best_case_after_exit'])}</td></tr>
 <tr><td>Max favourable excursion from entry</td><td>{fmt(v['mfe_total'])}</td></tr></table></div>"""
 
+
+# ── experiments section (2026-09-08): DAYGAIN baseline row, arm-band ledger, regime shadow ──
+def experiments_html():
+    parts = []
+    bf = ROOT / "docs/research/daygain/baseline" / f"{DATE}.json"
+    if bf.exists():
+        b = json.loads(bf.read_text()); e_ = b.get("eod") or {}
+        if e_:
+            row = "".join(f"<tr><td>{e}</td><td class='{cls(EJ[e]['summary']['total_pnl_net'])}'>{fmt(EJ[e]['summary']['total_pnl_net'])}</td></tr>" for e in ENGINES)
+            parts.append(f"<div><h3>DAYGAIN baseline (computed, no orders)</h3><table class='kv'><tr><td>Top-10 gainers 09:35 → 15:15, −3% stop</td><td class='{cls(e_['net'])}'>{fmt(e_['net'])} <span class='muted'>({e_['stops']} stops of {e_['priced']})</span></td></tr>{row}</table><p class='muted'>Did our scoring beat dumb? Positive engine minus baseline = yes.</p></div>")
+    af = ROOT / "docs/research/shadows/armband" / f"{DATE}.json"
+    if af.exists():
+        a = json.loads(af.read_text()); bands = list(a["bands"])
+        rows = "".join(f"<tr><td>{e}</td><td class='{cls(v['live_actual_net'])}'>{fmt(v['live_actual_net'])}</td>" + "".join(f"<td class='{cls(v['bands'][k]['net'])}'>{fmt(v['bands'][k]['net'])}</td>" for k in bands) + "</tr>" for e, v in a["engines"].items())
+        parts.append(f"<div><h3>Arm-band shadow (replayed)</h3><table class='t'><tr><th>Engine</th><th>Actual</th>{''.join(f'<th>{k}</th>' for k in bands)}</tr>{rows}</table><p class='muted'>Same entries, stops, targets; only the trailing arm differs. Compare bands to the replayed 'live' column, not to actual.</p></div>")
+    rf = ROOT / "docs/research/shadows/regime" / f"{DATE}.json"
+    if rf.exists():
+        r = json.loads(rf.read_text())
+        parts.append(f"<div><h3>Regime shadow (v5)</h3><table class='kv'><tr><td>Live regime {r['live_regime']} book</td><td class='{cls(r['live_book_net'])}'>{fmt(r['live_book_net'])}</td></tr><tr><td>Alternate {r['alt_regime']} book</td><td class='{cls(r['alt_book_net'])}'>{fmt(r['alt_book_net'])}</td></tr><tr><td>Alternate − live</td><td class='{cls(r['alt_minus_live'])}'>{fmt(r['alt_minus_live'])}</td></tr><tr><td>Snapshots · common trades · only-live · only-alt</td><td>{r['snapshots']} · {r['common_trades']} · {len(r['live_only'])} · {len(r['alt_only'])}</td></tr></table><p class='muted'>Gate after 10 sessions: alternate beats live by more than Rs 2,000 cumulative net → rebuild the classifier.</p></div>")
+    return f"<h2>5. Experiments (pre-registered 2026-09-08)</h2><div class='grid'>{''.join(parts)}</div>" if parts else ""
+
 rows_html, chart_html = {}, {}
 for e in ENGINES:
     tr = [t for t in L["engines"][e]["trades"] if "best_after_exit" in t]
     top = sorted(tr, key=lambda t: -t["best_after_exit"])[:4]
     cards = [f'<div class="card"><img src="charts/lot_{e}_{i}_{t["symbol"]}.png"></div>' for i, t in enumerate(top) if chart(t, CH / f"lot_{e}_{i}_{t['symbol']}.png")]
     chart_html[e] = "".join(cards)
-    rows_html[e] = "".join(f"<tr><td>{t['symbol']}</td><td>{t['dir']}</td><td>{t['reason']}</td><td>{'carried' if t.get('carried') else t['entry_time'][:5]}→{t['exit_time'][:5]}</td><td class='{cls(t['pnl'])}'>{fmt(t['pnl'])}</td><td class='{cls(t['hold_delta'])}'>{fmt(t['hold_delta'])}</td><td>{fmt(t['best_after_exit'])}</td></tr>" for t in sorted(tr, key=lambda t: -t['best_after_exit'])[:8])
+    rows_html[e] = "".join(f"<tr><td>{t['symbol']}</td><td>{t['dir']}</td><td>{SHORT.get(t['reason'], t['reason'])}</td><td>{'c/f' if t.get('carried') else t['entry_time'][:5]}→{t['exit_time'][:5]}</td><td class='{cls(t['pnl'])}'>{fmt(t['pnl'])}</td><td class='{cls(t['hold_delta'])}'>{fmt(t['hold_delta'])}</td><td>{fmt(t['best_after_exit'])}</td></tr>" for t in sorted(tr, key=lambda t: -t['best_after_exit'])[:8])
 
 # missed BUYs from missed-trades-report.py output
 missed, right, neutral, total_missed = [], 0, 0, 0
@@ -100,7 +122,7 @@ h1 {{ font-size:22pt; margin:0 0 2px; }} h2 {{ font-size:14pt; margin:14px 0 6px
 .hdr {{ background:linear-gradient(135deg,#1e1b4b,#4338ca); color:white; padding:18px 20px; border-radius:10px; margin-bottom:12px }} .hdr .sub {{ opacity:.85; font-size:10pt }}
 .grid {{ display:grid; grid-template-columns:1fr 1fr; gap:14px }} .grid3 {{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px }} .eng {{ border:1px solid #e0e7ff; border-radius:8px; padding:8px 10px; page-break-inside:avoid }}
 table {{ border-collapse:collapse; width:100%; font-size:9.5pt }} td,th {{ padding:3px 6px; border-bottom:1px solid #eef2ff; text-align:left; vertical-align:top }} th {{ background:#eef2ff; color:#312e81 }}
-.kv td:last-child {{ text-align:right; font-weight:600; white-space:nowrap }} .t td:not(:first-child) {{ text-align:right; white-space:nowrap }} .big {{ font-size:14pt }}
+.kv td:last-child {{ text-align:right; font-weight:600; white-space:nowrap }} .t td:not(:first-child) {{ text-align:right; white-space:nowrap }} .grid .t {{ font-size:8.5pt }} .big {{ font-size:14pt }}
 .pos {{ color:{GREEN} }} .neg {{ color:{RED} }} .muted {{ color:#6b7280; font-weight:400; font-size:9pt }}
 .cards {{ display:grid; grid-template-columns:1fr 1fr; gap:8px }} .card {{ page-break-inside:avoid }} .card img {{ width:100%; border:1px solid #e5e7eb; border-radius:6px }}
 .box {{ background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; margin:8px 0; page-break-inside:avoid }} .warn {{ background:#fff7ed; border-color:#fed7aa }}
@@ -121,6 +143,7 @@ Realistic money left on the table: <b>about {fmt(sl_rev)}</b> (stops) plus <b>ab
 <h2 style="margin-top:18px">4. The trades that hurt most — candlesticks</h2>
 <p class="legend"><span><span class="sq" style="background:{GREEN}"></span>green marker = our entry</span><span><span class="sq" style="background:{RED}"></span>red candle down</span><span><span class="sq" style="background:{PURPLE}"></span>purple marker = our exit</span><span>dashed lines = entry / exit price</span></p>
 {''.join(f'<h3>{e}</h3><div class="cards">{chart_html[e]}</div>' for e in ENGINES)}
+{experiments_html()}
 <p class="muted" style="margin-top:14px">Sources: docs/paper-trades/*/{DATE}.json · Kite historical 5-min · docs/reports/missed-trades-{DATE}.md. Paper trading only, no real orders.</p>
 </body></html>"""
 (OUT / "left-on-table.html").write_text(html)

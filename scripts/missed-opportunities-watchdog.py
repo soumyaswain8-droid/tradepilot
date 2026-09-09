@@ -75,6 +75,36 @@ def is_market_hours():
     return after_open and before_close
 
 
+
+# ── zero-coverage alert (2026-09-08) ─────────────────────────────────────────
+# Two sessions ran blind (DNS failure inside this process, 0/200 coverage) and nobody
+# was told. A monitor that fails silently is worse than no monitor: page once per hour.
+_last_cov_alert = 0.0
+def _alert_low_coverage(n: int, expected: int) -> None:
+    global _last_cov_alert
+    import time as _t, urllib.request as _u, urllib.parse as _p
+    if _t.time() - _last_cov_alert < 3600:
+        return
+    env = {}
+    try:
+        for ln in (Path(__file__).resolve().parent.parent / ".env").read_text().splitlines():
+            if "=" in ln and not ln.startswith("#"):
+                k, v = ln.split("=", 1); env[k.strip()] = v.strip().strip('"')
+    except Exception:
+        return
+    tok, chat = env.get("TELEGRAM_BOT_TOKEN"), env.get("TELEGRAM_CHAT_ID")
+    if not (tok and chat):
+        return
+    msg = (f"MISSED-OPPS WATCHDOG BLIND: universe coverage {n}/{expected} after retries. "
+           f"Snapshot NOT updated; experiments are being judged one-eyed. Check DNS in the watchdog process "
+           f"(logs/missed-opps-watchdog-*.log) and restart it.")
+    try:
+        _u.urlopen(_u.Request(f"https://api.telegram.org/bot{tok}/sendMessage",
+                              data=_p.urlencode({"chat_id": chat, "text": msg}).encode()), timeout=10)
+        _last_cov_alert = _t.time()
+    except Exception as e:
+        log(f"  (alert send failed: {type(e).__name__})")
+
 def load_our_positions():
     """Read all 7 engines' current positions. Returns {symbol: [{engine, direction}, ...]}"""
     today = datetime.now().strftime("%Y-%m-%d")
@@ -154,6 +184,30 @@ def fetch_movers():
     yf_str = " ".join(ACTIVE_SYMBOLS_YF)
     expected = len(ACTIVE_SYMBOLS_YF)
     movers = []
+
+    # KITE FIRST (2026-09-08): two sessions ran blind because yfinance inside this process
+    # could not resolve DNS / open its SQLite cache while a fresh Kite sweep on the same
+    # machine quoted 2,628/2,634 symbols. Kite quotes carry last_price + prev_close, which
+    # is all this watchdog needs. yfinance stays as the fallback when the token is dead.
+    try:
+        import sys as _sys
+        if str(ROOT) not in _sys.path: _sys.path.insert(0, str(ROOT))
+        from prototype.v4 import kite_data as _kd
+        _syms = [x.replace(".NS", "") for x in ACTIVE_SYMBOLS_YF]
+        _q = _kd.get_quotes(_syms)
+        for _sym in _syms:
+            _r = _q.get(_sym) or {}
+            _last, _prev = float(_r.get("last_price") or 0), float(_r.get("prev_close") or 0)
+            if _last > 0 and _prev > 0:
+                movers.append((_sym, _last, _prev, (_last - _prev) / _prev * 100))
+        if expected and len(movers) / expected >= MIN_COVERAGE_RATIO:
+            log(f"  universe via Kite: {len(movers)}/{expected}")
+            return movers, expected
+        log(f"  Kite coverage {len(movers)}/{expected} — falling back to yfinance")
+        movers = []
+    except Exception as _e:
+        log(f"  Kite path unavailable ({type(_e).__name__}) — falling back to yfinance")
+        movers = []
 
     for attempt in range(1, RETRY_ATTEMPTS + 1):
         try:
@@ -250,6 +304,7 @@ def snapshot():
         # rather than overwrite a good prior snapshot with a misleading one.
         log(f"⚠ universe coverage too low ({len(movers)}/{expected} = {coverage:.0%}) after retries "
             f"— skipping write, keeping last good snapshot")
+        _alert_low_coverage(len(movers), expected)
         return
 
     our_positions = load_our_positions()

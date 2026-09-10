@@ -1,0 +1,94 @@
+{
+  "date": "2026-09-10",
+  "generated_at": "2026-09-10T15:35:58.784063",
+  "summaries": [
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -1328.07,
+      "trades": 38,
+      "wins": 17,
+      "losses": 21,
+      "longs": 9,
+      "shorts": 29,
+      "win_rate": 44.7,
+      "open_positions": 1,
+      "best_trade": 202.5,
+      "worst_trade": -332.8,
+      "avg_win": 57.5,
+      "avg_loss": -109.79,
+      "exit_reasons": {
+        "STOPLOSS": 17,
+        "TIME_EXIT": 19,
+        "SIGNAL_FLIP": 2
+      },
+      "n_closed": 38,
+      "n_open": 1
+    },
+    {
+      "engine": "v5_swing",
+      "status": "ok",
+      "regime": "?",
+      "total_pnl": -2086.8,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "longs": 0,
+      "shorts": 0,
+      "win_rate": 0.0,
+      "open_positions": 0,
+      "best_trade": -2086.8,
+      "worst_trade": -2086.8,
+      "avg_win": 0.0,
+      "avg_loss": -2086.8,
+      "exit_reasons": {
+        "TIME_3D": 1
+      },
+      "n_closed": 1,
+      "n_open": 0
+    },
+    {
+      "engine": "v5_wide",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -287.09,
+      "trades": 11,
+      "wins": 3,
+      "losses": 8,
+      "longs": 5,
+      "shorts": 6,
+      "win_rate": 27.3,
+      "open_positions": 18,
+      "best_trade": 483.2,
+      "worst_trade": -243.1,
+      "avg_win": 252.74,
+      "avg_loss": -130.66,
+      "exit_reasons": {
+        "STOPLOSS": 10,
+        "TARGET": 1
+      },
+      "n_closed": 11,
+      "n_open": 18
+    }
+  ],
+  "overlap": {
+    "v5|v5_wide": [
+      "ADANIENSOL",
+      "ATGL",
+      "CGPOWER",
+      "HAL",
+      "MARICO",
+      "MAZDOCK",
+      "NHPC"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_wide</b> with Rs -287 across 11 trades (27.3% win).",
+    "Laggard: <b>v5_swing</b> with Rs -2,087 across 1 trades (0.0% win).",
+    "<b>v5</b>: STOPLOSS (17) >= TARGET (0). Consider widening SL or tightening entry filters.",
+    "<b>v5_wide</b>: STOPLOSS (10) >= TARGET (1). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 44.7% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_wide</b>: 27.3% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

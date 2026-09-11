@@ -218,12 +218,29 @@ def test_datalink_rows_kite_disabled_and_dead_token():
     assert rows[0]["state"] == "down" and "TokenException" in rows[0]["detail"]
 
 
+def test_datalink_rows_fallbacks_make_stale():
+    from prototype.operator_api import datalink_rows
+    rows = datalink_rows(
+        {"enabled": True, "kite_ok": 38, "kite_calls": 40, "fallbacks": 2, "last_error": None},
+        (True, "Soumya (AB1234)"), {})
+    assert rows[0]["state"] == "stale" and "2 fallbacks" in rows[0]["detail"]
+
+
 def test_datalinks_route(client, monkeypatch):
     import prototype.v4.kite_data as kd
+    import prototype.app as app_module
     monkeypatch.setattr(kd, "health", lambda: {"enabled": False})
     monkeypatch.setattr(kd, "token_alive", lambda: (False, "no token"))
+    monkeypatch.setattr(app_module, "get_market_indices",
+                        lambda: [{"name": "NIFTY 50", "value": 24861.15, "change": -57.0,
+                                  "change_pct": -0.23, "source": "nse", "stale": False}])
     r = client.get("/api/health/datalinks")
     assert r.status_code == 200
     body = r.get_json()
     assert body["links"][0]["name"] == "Kite" and body["links"][0]["state"] == "off"
     assert "generated_at" in body
+    # Verify index row came through
+    assert len(body["links"]) >= 2, f"Expected at least 2 links, got {len(body['links'])}"
+    nse_row = next((r for r in body["links"] if r["name"] == "nse"), None)
+    assert nse_row is not None, f"No nse row found. Links: {body['links']}"
+    assert nse_row["state"] == "ok"

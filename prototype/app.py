@@ -1091,6 +1091,9 @@ def api_scores():
 def api_model():
     """Get model metadata -- sanitized for public consumption."""
     try:
+        from prototype.operator_api import model_trained_at
+        _trained = model_trained_at()
+
         default_engine = "v4" if HAS_V4 else "v2"
         engine = request.args.get('engine', default_engine)
 
@@ -1100,7 +1103,8 @@ def api_model():
                 "accuracy": 0,
                 "version": "v4",
                 "trainingSamples": 0,
-                "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+                "lastTrained": (_trained or "")[:10] or "unknown",
+                "trained_at": _trained,
                 "features": [],
                 "backtest": [],
                 "model_type": "composite_scorer",
@@ -1119,7 +1123,8 @@ def api_model():
                     "accuracy": round(meta_v3.get("accuracy", 0) * 100, 1) if meta_v3.get("accuracy", 0) < 1 else meta_v3.get("accuracy", 0),
                     "version": "v3",
                     "trainingSamples": meta_v3.get("train_samples", 0) + meta_v3.get("test_samples", 0),
-                    "lastTrained": trained_at,
+                    "lastTrained": (_trained or "")[:10] or "unknown",
+                    "trained_at": _trained,
                     "features": [],  # populated below if available
                     "backtest": [],
                     "market_regime": meta_v3.get("market_regime", "unknown"),
@@ -1133,7 +1138,8 @@ def api_model():
             "accuracy": 0,
             "version": "v2",
             "trainingSamples": 0,
-            "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+            "lastTrained": (_trained or "")[:10] or "unknown",
+            "trained_at": _trained,
             "features": [],
             "backtest": [],
             "model_type": "ensemble",
@@ -3966,6 +3972,8 @@ def api_desk():
                             "engine": d.name, "symbol": c.get("symbol"),
                             "pnl": round(pnl, 0), "pnl_pct": c.get("pnl_pct"),
                             "reason": c.get("reason"), "exit_time": c.get("exit_time"),
+                            "entry_time": c.get("entry_time"),
+                            "duration_min": _opapi.duration_min(c.get("entry_time"), c.get("exit_time")),
                             "side": (c.get("position_type") or "LONG").upper()})
         pa = d / "positions_active.json"
         if pa.exists() and f.exists():   # only engines active in this session —

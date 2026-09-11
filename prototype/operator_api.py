@@ -279,3 +279,31 @@ def api_shadows():
         pass
     out["lab"] = lab
     return jsonify(out)
+
+
+def _hms(s):
+    for fmt in ("%H:%M:%S", "%H:%M"):
+        try:
+            t = datetime.strptime(str(s), fmt)
+            return t.hour * 60 + t.minute
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def duration_min(entry_time, exit_time):
+    a, b = _hms(entry_time), _hms(exit_time)
+    if a is None or b is None or b < a:
+        return None
+    return b - a
+
+
+def model_trained_at(models_dir: Path = MODELS_DIR):
+    try:
+        pkls = list(Path(models_dir).glob("*.pkl"))
+    except Exception:
+        return None
+    if not pkls:
+        return None
+    ts = max(p.stat().st_mtime for p in pkls)
+    return datetime.fromtimestamp(ts).isoformat(timespec="seconds")

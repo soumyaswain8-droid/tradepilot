@@ -1,6 +1,6 @@
 """Phase 1 cheap wins: pure functions against tmp_path fixtures, routes via client."""
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -301,3 +301,38 @@ def test_shadows_route(client, tmp_path, monkeypatch):
     assert body["regime"][0]["alt_regime"] == "SIDEWAYS"
     assert isinstance(body["lab"], list)
     assert client.get("/api/shadows?date=bad").status_code == 400
+
+
+def test_duration_min():
+    from prototype.operator_api import duration_min
+    assert duration_min("09:40:13", "09:50:14") == 10
+    assert duration_min("09:40", "10:45") == 65
+    assert duration_min(None, "09:50:14") is None
+    assert duration_min("garbage", "09:50:14") is None
+    assert duration_min("15:20:00", "09:10:00") is None
+
+
+def test_model_trained_at_uses_newest_pkl(tmp_path):
+    import os, time
+    from prototype.operator_api import model_trained_at
+    assert model_trained_at(tmp_path) is None
+    old, new = tmp_path / "a.pkl", tmp_path / "b.pkl"
+    old.write_bytes(b"x"); new.write_bytes(b"y")
+    os.utime(old, (1_700_000_000, 1_700_000_000))
+    os.utime(new, (1_750_000_000, 1_750_000_000))
+    assert model_trained_at(tmp_path) == datetime.fromtimestamp(1_750_000_000).isoformat(timespec="seconds")
+
+
+def test_desk_exits_have_duration(client, monkeypatch):
+    from prototype import operator_api
+    monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
+    data = _fresh_desk(client, monkeypatch)
+    for x in data["recent_exits"]:
+        assert "duration_min" in x
+
+
+def test_model_route_reports_trained_at_not_today(client):
+    body = client.get("/api/model").get_json()
+    assert "trained_at" in body
+    if body["trained_at"]:
+        assert body["lastTrained"] == body["trained_at"][:10]

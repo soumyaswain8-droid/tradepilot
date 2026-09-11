@@ -18,9 +18,9 @@ Sources verified by reading `prototype/app.py` routes, engine artifacts under `d
 | Per-engine capital | Reuse | `/api/engine-status` `engines[].capital` |
 | Regime picked | Reuse | engine `<date>.json` `regime`; also in `/api/live-trades` |
 | NaN count | Wire | `/api/system-health` `DATA_NAN` event carries it as text; expose as a number |
-| ML model last trained | Wire | mtime of `prototype/models/xgb_v3.pkl`; add `trained_at` to `model_meta_v3.json` |
-| Data link NSE / yfinance / Kite | Wire | `v4/kite_data.py::health()` exists, not routed; `/api/indices` has per-index `source`/`stale` |
-| Shadow experiment deltas | Wire | `docs/research/shadows/armband/<date>.json`, file only; `/api/lab` has `experiments[].delta` |
+| ML model last trained | Reuse | `/api/model` `trained_at` |
+| Data link NSE / yfinance / Kite | Reuse | `/api/health/datalinks` |
+| Shadow experiment deltas | Reuse | `/api/shadows` |
 | Launch fired on time | New | launchd writes only to logs; record scheduled vs actual fire time |
 | Price feed last tick time | New | only an indirect `STALE_SCAN` event today |
 | Cache cleared | New | in-process caches, nothing exposed |
@@ -36,7 +36,7 @@ Sources verified by reading `prototype/app.py` routes, engine artifacts under `d
 | Top movers we are not in | Reuse | `/api/missed-opportunities` (`top_movers[]`, `summary.on_table`) |
 | Regime | Reuse | engine `<date>.json` |
 | News impact tag | Wire | `docs/sarathi/knowledge/news_impact.jsonl` from `scripts/news-impact.py`, not joined to `/api/news` |
-| Reason we skipped a stock | Wire | `docs/paper-trades/<eng>/<date>_verdicts.json`: `verdict` approved/rejected + `reasons[]` (position size, pool cash, kill switch, score near threshold). No route reads it. Does not cover ASM, not-in-universe, regime-blocks-side |
+| Reason we skipped a stock | Reuse | `/api/verdicts/<date>` |
 | Sector moves | Partial | keyword sector labels only; no sector index % |
 | Breadth (advance/decline) | New | nothing in app.py |
 | FII / DII numbers | New | only a news keyword bucket |
@@ -50,10 +50,10 @@ Sources verified by reading `prototype/app.py` routes, engine artifacts under `d
 | Open positions: entry, qty, side, pool, entry time | Reuse | `/api/desk` `open_positions[]` |
 | Exits feed with reason | Reuse | `/api/desk` `recent_exits[]` |
 | Engine alive, last scan | Reuse | `/api/system-health`; `<date>.json` `last_rescore_time` |
-| Live price and unrealised P&L | Wire | `/api/positions-live` has marks; `/api/live-trades` reads a key that does not exist (`unrealized_pnl`), renders null today. Fix the join |
-| Distance to stop | Wire | `positions_active.json` stores `sl_price`, `target_price`, `peak_price`, `trailing_activated`; `/api/desk` drops them. Pass them through |
-| Time in trade, exit duration | Wire | derive from `entry_time` / `exit_time` |
-| Loss if every stop hits | Wire | sum of (`sl_price` − mark) × `qty` once stops are exposed |
+| Live price and unrealised P&L | Reuse | `/api/desk` (`open_positions[].mark/unrealized_pnl`) |
+| Distance to stop | Reuse | `/api/desk` (`open_positions[].to_stop_pct/risk_at_stop`) |
+| Time in trade, exit duration | Reuse | `/api/desk` (`recent_exits[].duration_min`) |
+| Loss if every stop hits | Reuse | `/api/desk` (`fleet.risk_at_stop`) |
 | Next scan time | New | no schedule field anywhere |
 | Trend at entry | New | positions store `score`, `direction`, `reasons[]`; `last_signals[]` has `trend` but only for the latest rescore, not at entry. Engine must stamp it on the position |
 

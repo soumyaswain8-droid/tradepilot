@@ -3868,6 +3868,7 @@ _TRADES_ROOT = Path(__file__).resolve().parent.parent / "docs" / "paper-trades"
 
 @app.route("/api/desk")
 def api_desk():
+    from prototype import operator_api as _opapi
     import glob as _glob
     import re as _re
     import statistics as _st
@@ -3955,14 +3956,7 @@ def api_desk():
                 for pool, lst in (pj.get("positions") or {}).items():
                     for pos in lst if isinstance(lst, list) else []:
                         row["open"] += 1
-                        ep, q = pos.get("entry_price"), pos.get("qty")
-                        open_positions.append({
-                            "engine": d.name, "symbol": pos.get("symbol"),
-                            "side": (pos.get("position_type") or "LONG").upper(),
-                            "qty": q, "entry": ep, "pool": pool,
-                            "value": round(float(ep) * int(q), 0) if ep and q else 0,
-                            "entry_date": pos.get("entry_date"),
-                            "entry_time": pos.get("entry_time")})
+                        open_positions.append(_opapi.position_row(d.name, pool, pos))
             except Exception:
                 pass
         if row["trades"] or row["open"]:

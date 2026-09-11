@@ -1,0 +1,84 @@
+{
+  "date": "2026-09-11",
+  "generated_at": "2026-09-11T15:35:59.508719",
+  "summaries": [
+    {
+      "engine": "v5",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": -536.17,
+      "trades": 49,
+      "wins": 22,
+      "losses": 27,
+      "longs": 11,
+      "shorts": 38,
+      "win_rate": 44.9,
+      "open_positions": 5,
+      "best_trade": 392.7,
+      "worst_trade": -236.3,
+      "avg_win": 55.16,
+      "avg_loss": -64.81,
+      "exit_reasons": {
+        "STOPLOSS": 17,
+        "TARGET": 2,
+        "FLAT_FORCE_EXIT": 10,
+        "TIME_EXIT": 15,
+        "SIGNAL_FLIP": 5
+      },
+      "n_closed": 49,
+      "n_open": 5
+    },
+    {
+      "engine": "v5_wide",
+      "status": "ok",
+      "regime": "BEAR",
+      "total_pnl": 1059.7,
+      "trades": 73,
+      "wins": 23,
+      "losses": 50,
+      "longs": 10,
+      "shorts": 63,
+      "win_rate": 31.5,
+      "open_positions": 2,
+      "best_trade": 899.3,
+      "worst_trade": -421.3,
+      "avg_win": 177.64,
+      "avg_loss": -64.38,
+      "exit_reasons": {
+        "TARGET": 6,
+        "STOPLOSS": 39,
+        "FLAT_FORCE_EXIT": 15,
+        "TIME_EXIT": 12,
+        "SIGNAL_FLIP": 1
+      },
+      "n_closed": 73,
+      "n_open": 2
+    }
+  ],
+  "overlap": {
+    "v5|v5_wide": [
+      "ADANIGREEN",
+      "ADANIPOWER",
+      "CIPLA",
+      "COALINDIA",
+      "COCHINSHIP",
+      "GRASIM",
+      "INDUSINDBK",
+      "JSWENERGY",
+      "KEI",
+      "LENSKART",
+      "ONGC",
+      "RELIANCE",
+      "SUPREMEIND"
+    ]
+  },
+  "insights": [
+    "Winner: <b>v5_wide</b> with Rs +1,060 across 73 trades (31.5% win).",
+    "Laggard: <b>v5</b> with Rs -536 across 49 trades (44.9% win).",
+    "High-volume engines (50+ trades) averaged Rs 1,060; low-volume averaged Rs -536. <b>More trades = more profit today.</b>",
+    "<b>v5</b>: STOPLOSS (17) >= TARGET (2). Consider widening SL or tightening entry filters.",
+    "<b>v5_wide</b>: STOPLOSS (39) >= TARGET (6). Consider widening SL or tightening entry filters.",
+    "<b>v5</b>: 44.9% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up.",
+    "<b>v5_wide</b>: 31.5% win rate (target 80%). Entry quality is the problem \u2014 tune ML score threshold up."
+  ]
+}

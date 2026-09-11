@@ -59,3 +59,77 @@ def test_desk_open_positions_carry_stop_fields(client, monkeypatch):
         for k in ("sl_price", "target_price", "peak_price", "trough_price",
                   "trailing_activated", "score"):
             assert k in row, f"{k} missing from open_positions row"
+
+
+def test_unrealized_signs():
+    from prototype.operator_api import unrealized
+    assert unrealized("LONG", 100.0, 10, 105.0) == 50.0
+    assert unrealized("SHORT", 100.0, 10, 105.0) == -50.0
+    assert unrealized("SHORT", 1757.4, 8, 1740.0) == pytest.approx(139.2)
+
+
+def test_enrich_with_marks_computes_pnl_and_stop_distance():
+    from prototype.operator_api import enrich_with_marks, position_row
+    long_row = position_row("v5", "SWING", POS)                     # LONG 1036.8, sl 1023.32
+    short_row = position_row("v5", "INTRADAY", {
+        "symbol": "ADANIPORTS", "entry_price": 1757.4, "qty": 8,
+        "sl_price": 1768.1, "position_type": "SHORT"})
+    rows = enrich_with_marks([long_row, short_row],
+                             {"MAXHEALTH": 1040.0, "ADANIPORTS": 1760.0})
+    assert rows[0]["mark"] == 1040.0
+    assert rows[0]["unrealized_pnl"] == pytest.approx(51.2)
+    assert rows[0]["to_stop_pct"] == pytest.approx((1040.0 - 1023.32) / 1040.0 * 100)
+    assert rows[0]["risk_at_stop"] == pytest.approx((1023.32 - 1036.8) * 16)
+    assert rows[1]["unrealized_pnl"] == pytest.approx(-20.8)
+    assert rows[1]["to_stop_pct"] == pytest.approx((1768.1 - 1760.0) / 1760.0 * 100)
+    assert rows[1]["risk_at_stop"] == pytest.approx((1757.4 - 1768.1) * 8)
+
+
+def test_enrich_with_marks_missing_mark_is_null_not_zero():
+    from prototype.operator_api import enrich_with_marks, position_row
+    row = position_row("v5", "SWING", POS)
+    rows = enrich_with_marks([row], {})
+    assert rows[0]["mark"] is None
+    assert rows[0]["unrealized_pnl"] is None
+    assert rows[0]["to_stop_pct"] is None
+    assert rows[0]["risk_at_stop"] == pytest.approx((1023.32 - 1036.8) * 16)  # needs no mark
+
+
+def test_marks_for_swallows_feed_failure(monkeypatch):
+    from prototype import operator_api
+    import prototype.v4.kite_data as kd
+
+    def boom(symbols):
+        raise RuntimeError("kite down")
+    monkeypatch.setattr(kd, "get_quotes", boom)
+    assert operator_api.marks_for(["INFY"]) == {}
+
+
+def test_marks_for_maps_last_price(monkeypatch):
+    from prototype import operator_api
+    import prototype.v4.kite_data as kd
+    monkeypatch.setattr(kd, "get_quotes",
+                        lambda symbols: {"INFY": {"last_price": 1489.5}, "TCS": {"last_price": None}})
+    assert operator_api.marks_for(["INFY", "TCS"]) == {"INFY": 1489.5}
+
+
+def test_desk_fleet_has_unrealized_and_risk(client, monkeypatch):
+    from prototype import operator_api
+    monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
+    data = _fresh_desk(client, monkeypatch)
+    f = data["fleet"]
+    assert "unrealized" in f and "risk_at_stop" in f and "deployed" in f and "unpriced" in f
+    assert f["unpriced"] == len(data["open_positions"])       # no marks => all unpriced
+    for row in data["open_positions"]:
+        assert row["mark"] is None and row["unrealized_pnl"] is None
+
+
+def test_live_trades_open_rows_do_not_fake_pnl(client, monkeypatch):
+    from prototype import operator_api
+    monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
+    r = client.get("/api/live-trades")
+    assert r.status_code == 200
+    for eng in r.get_json().get("engines", {}).values():
+        for t in eng.get("trades", []):
+            if t.get("status") == "open":
+                assert t["pnl"] is None

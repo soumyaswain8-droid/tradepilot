@@ -16,6 +16,9 @@ TRADES_ROOT = REPO_ROOT / "docs" / "paper-trades"
 SHADOWS_ROOT = REPO_ROOT / "docs" / "research" / "shadows"
 MODELS_DIR = Path(__file__).resolve().parent / "models"
 
+SHADOW_START = date(2026, 9, 8)   # pre-registration: docs/research/shadows/2026-09-08-preregistration.md
+SHADOW_DAYS = 10
+
 bp = Blueprint("operator_api", __name__, url_prefix="/api")
 
 
@@ -211,3 +214,68 @@ def api_datalinks():
         indices = {}
     return jsonify({"generated_at": datetime.now().strftime("%H:%M:%S"),
                     "links": datalink_rows(kh, alive, indices)})
+
+
+def shadow_day_index(day: date, start: date = SHADOW_START, total: int = SHADOW_DAYS) -> dict:
+    """Count weekdays from start to day inclusive, clamped to [0, total]."""
+    n = 0
+    d = start
+    while d <= day:
+        if d.weekday() < 5:
+            n += 1
+        d += timedelta(days=1)
+    return {"day": max(0, min(n, total)), "total": total}
+
+
+def _read_json(p: Path):
+    """Read JSON from path, return None if missing or invalid."""
+    try:
+        return json.loads(p.read_text()) if p.exists() else None
+    except Exception:
+        return None
+
+
+def load_shadows(root: Path, date_str: str) -> dict:
+    """Load armband and regime shadow data for a date."""
+    root = Path(root)
+    out = {"date": date_str, **shadow_day_index(date.fromisoformat(date_str)),
+           "armband": [], "regime": []}
+    arm = _read_json(root / "armband" / f"{date_str}.json") or {}
+    for eng, e in (arm.get("engines") or {}).items():
+        live_net = _f(e.get("live_actual_net"))
+        for band, b in (e.get("bands") or {}).items():
+            net = _f(b.get("net"))
+            out["armband"].append({
+                "engine": eng, "band": band, "net": net, "live_net": live_net,
+                "delta": (round(net - live_net, 2) if net is not None and live_net is not None else None),
+                "n": b.get("n"), "stops": b.get("stops"), "targets": b.get("targets"),
+                "worst_trade": _f(b.get("worst_trade"))})
+    reg = _read_json(root / "regime" / f"{date_str}.json")
+    if reg:
+        out["regime"].append({
+            "engine": reg.get("engine"), "live_regime": reg.get("live_regime"),
+            "alt_regime": reg.get("alt_regime"), "live_net": _f(reg.get("live_book_net")),
+            "alt_net": _f(reg.get("alt_book_net")), "delta": _f(reg.get("alt_minus_live")),
+            "common_trades": reg.get("common_trades")})
+    return out
+
+
+@bp.get("/shadows")
+def api_shadows():
+    """Serve armband and regime shadow deltas, plus lab experiments, for a date."""
+    date_str = request.args.get("date") or date.today().isoformat()
+    if not _is_date(date_str):
+        return jsonify({"error": "date must be YYYY-MM-DD"}), 400
+    out = load_shadows(SHADOWS_ROOT, date_str)
+    lab = []
+    try:
+        with current_app.test_request_context(f"/api/lab?date={date_str}"):
+            resp = current_app.view_functions["api_lab"]()
+        resp = resp[0] if isinstance(resp, tuple) else resp
+        for x in (resp.get_json() or {}).get("experiments") or []:
+            lab.append({"id": x.get("id"), "title": x.get("title"),
+                        "delta": x.get("delta"), "cum_delta": x.get("cum_delta")})
+    except Exception:
+        pass
+    out["lab"] = lab
+    return jsonify(out)

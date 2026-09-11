@@ -244,3 +244,60 @@ def test_datalinks_route(client, monkeypatch):
     nse_row = next((r for r in body["links"] if r["name"] == "nse"), None)
     assert nse_row is not None, f"No nse row found. Links: {body['links']}"
     assert nse_row["state"] == "ok"
+
+
+def _write_shadow_fixtures(tmp_path):
+    """Write armband and regime fixture JSON files for shadow tests."""
+    (tmp_path / "armband").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "regime").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "armband" / "2026-09-10.json").write_text(json.dumps({
+        "date": "2026-09-10", "bands": ["live", "arm0.5"],
+        "engines": {"v5": {"live_actual_gross": -1328.0, "live_actual_net": -2122.98,
+                           "bands": {"live": {"gross": -1328.0, "net": -2122.98, "n": 38, "stops": 20, "targets": 0, "worst_trade": -347.8},
+                                     "arm0.5": {"gross": -1001.1, "net": -1503.5, "n": 38, "stops": 20, "targets": 0, "worst_trade": -347.8}},
+                           "trades": []}}}))
+    (tmp_path / "regime" / "2026-09-10.json").write_text(json.dumps({
+        "date": "2026-09-10", "engine": "v5", "live_regime": "BEAR", "alt_regime": "SIDEWAYS",
+        "live_book_net": -2743.4, "alt_book_net": -3601.1, "common_trades": 40, "alt_minus_live": -857.7}))
+
+
+def test_shadow_day_index_counts_weekdays_inclusive():
+    from prototype.operator_api import shadow_day_index
+    assert shadow_day_index(date(2026, 9, 8)) == {"day": 1, "total": 10}    # Tue, start
+    assert shadow_day_index(date(2026, 9, 11)) == {"day": 4, "total": 10}   # Fri
+    assert shadow_day_index(date(2026, 9, 14)) == {"day": 5, "total": 10}   # Mon, weekend skipped
+    assert shadow_day_index(date(2026, 9, 7)) == {"day": 0, "total": 10}    # before start
+    assert shadow_day_index(date(2026, 10, 30)) == {"day": 10, "total": 10} # clamped
+
+
+def test_load_shadows_reads_armband_and_regime(tmp_path):
+    from prototype.operator_api import load_shadows
+    _write_shadow_fixtures(tmp_path)
+    out = load_shadows(tmp_path, "2026-09-10")
+    assert out["day"] == 3 and out["total"] == 10
+    arm = {(a["engine"], a["band"]): a for a in out["armband"]}
+    assert arm[("v5", "arm0.5")]["delta"] == pytest.approx(-1503.5 - (-2122.98))
+    assert arm[("v5", "live")]["delta"] == 0
+    assert out["regime"][0]["delta"] == pytest.approx(-857.7)
+    assert out["regime"][0]["alt_regime"] == "SIDEWAYS"
+
+
+def test_load_shadows_missing_day_is_empty_not_error(tmp_path):
+    from prototype.operator_api import load_shadows
+    out = load_shadows(tmp_path, "2026-09-11")
+    assert out["armband"] == [] and out["regime"] == []
+
+
+def test_shadows_route(client, tmp_path, monkeypatch):
+    from prototype import operator_api
+    _write_shadow_fixtures(tmp_path)
+    monkeypatch.setattr(operator_api, "SHADOWS_ROOT", tmp_path)
+    r = client.get("/api/shadows?date=2026-09-10")
+    assert r.status_code == 200
+    body = r.get_json()
+    assert set(body) >= {"date", "day", "total", "armband", "regime", "lab"}
+    assert body["day"] == 3
+    assert len(body["armband"]) == 2
+    assert body["regime"][0]["alt_regime"] == "SIDEWAYS"
+    assert isinstance(body["lab"], list)
+    assert client.get("/api/shadows?date=bad").status_code == 400

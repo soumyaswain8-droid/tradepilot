@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{--bg:#0a0d13;--panel:#10141c;--panel2:#0d1118;--line:#1c2330;--line2:#242d3d;--hover:#151b26;--ink:#e6ebf2;--mut:#8a94a6;--dim:#57627a;--green:#16c784;--green-bg:rgba(22,199,132,.09);--red:#ea3943;--red-bg:rgba(234,57,67,.09);--amber:#f0a93b;--amber-bg:rgba(240,169,59,.10);--acc:#6366f1;--acc-bg:rgba(99,102,241,.12);--mono:ui-monospace,"SF Mono",Menlo,monospace}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);font:13px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;width:1440px;min-height:960px}
+    a{color:var(--acc);text-decoration:none} a:hover{color:#8b8df5}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+    .pos{color:var(--green)} .neg{color:var(--red)} .flat{color:var(--mut)} .warn{color:var(--amber)}
+    .topbar{display:flex;align-items:center;gap:20px;height:46px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:8px;flex:none}.brand svg{width:20px;height:20px}
+    .brand b{font-size:12px;letter-spacing:2.5px;font-weight:700}.brand span{font-size:12px;letter-spacing:2.5px;color:var(--dim)}
+    .idxstrip{display:flex;gap:4px;flex:1}
+    .idx{display:flex;align-items:baseline;gap:7px;padding:4px 10px;border-radius:4px;white-space:nowrap}
+    .idx .n{font-size:10.5px;letter-spacing:.8px;color:var(--dim);text-transform:uppercase}.idx .v{font-size:12.5px;font-weight:600}.idx .c{font-size:11.5px}
+    .sess{display:flex;align-items:center;gap:10px;flex:none}
+    .pill{font-size:10.5px;font-weight:700;letter-spacing:1.2px;padding:3px 9px;border-radius:3px;text-transform:uppercase}
+    .pill.live{color:var(--green);background:var(--green-bg);border:1px solid rgba(22,199,132,.3)}
+    .pill.pre{color:var(--amber);background:var(--amber-bg);border:1px solid rgba(240,169,59,.3)}
+    .pill.closed{color:var(--dim);background:var(--panel);border:1px solid var(--line)}
+    .clock{font-family:var(--mono);font-size:12.5px;color:var(--mut)}
+    .nav{display:flex;gap:2px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line);align-items:center}
+    .nav a{padding:9px 14px 8px;font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.3px;border-bottom:2px solid transparent}
+    .nav a.on{color:var(--ink);border-bottom-color:var(--acc)}
+    .nav .sp{flex:1}.nav a.legacy{color:var(--dim);font-weight:500}
+    .main{padding:14px 16px 24px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+    .card h3{font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .card h3 .r{margin-left:auto;font-weight:500;letter-spacing:.3px;text-transform:none;color:var(--dim)}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+    .kpi .big{font-size:24px;font-weight:700;letter-spacing:-.4px}.kpi .sub{font-size:11.5px;color:var(--mut);margin-top:3px}
+    .chip{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+    .chip.ok{color:var(--green);background:var(--green-bg)}.chip.bad{color:var(--red);background:var(--red-bg)}.chip.warn{color:var(--amber);background:var(--amber-bg)}.chip.acc{color:var(--acc);background:var(--acc-bg)}.chip.dim{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+    .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+    .tbl th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+    .tbl th.r,.tbl td.r{text-align:right}
+    .tbl td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+    .tbl tr.sel td{background:var(--acc-bg)}
+    .tbl .sym{font-weight:650}.tbl .eng{color:var(--mut);font-size:11.5px}
+    .btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:4px;font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--panel2);color:var(--ink)}
+    .btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+    .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--amber)}.dot.dim{background:var(--dim)}
+    .bar-wrap{background:var(--panel2);border-radius:3px;height:5px;overflow:hidden;margin-top:7px}.bar{height:100%}
+    .muted{color:var(--mut)}.dimt{color:var(--dim)}.small{font-size:11.5px}
+  </style>
+</helmet>
+<header class="topbar">
+  <div class="brand"><svg viewBox="0 0 72 72" aria-label="TradePilot"><defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4338CA"></stop><stop offset="100%" stop-color="#7C7FF3"></stop></linearGradient></defs><g><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg)"></rect><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><b>TRADEPILOT</b><span>TERMINAL</span></div>
+  <div class="idxstrip"><div class="idx"><span class="n">NIFTY 50</span><span class="v num">24,861.15</span><span class="c num neg">-0.23%</span></div><div class="idx"><span class="n">SENSEX</span><span class="v num">81,205.30</span><span class="c num neg">-0.29%</span></div><div class="idx"><span class="n">BANK NIFTY</span><span class="v num">54,388.90</span><span class="c num pos">+0.33%</span></div><div class="idx"><span class="n">INDIA VIX</span><span class="v num">13.91</span><span class="c num warn">+3.6%</span></div></div>
+  <div class="sess"><span class="pill live">Live</span><span class="clock">10:42:18</span></div>
+</header>
+<nav class="nav"><a class="">Ready</a><a class="on">Market</a><a class="">Book</a><a class="">Review</a><span class="sp"></span><a class="legacy">Legacy ▾</a><a class="legacy">Client app ↗</a></nav>
+
+<div class="main" style="display:grid;grid-template-columns:minmax(0,5fr) minmax(0,3fr) minmax(0,5fr);gap:12px">
+  <div class="card">
+    <h3>World, filtered for India <span class="r">only items that can move our stocks</span></h3>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">10:31</span>
+      <div style="flex:1;min-width:0"><div>Brent crude +3.1% after OPEC+ holds output cut</div><div class="small dimt">Reuters</div></div>
+      <span class="chip bad" style="align-self:flex-start">Hurts OMCs, paints</span></div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">10:05</span>
+      <div style="flex:1;min-width:0"><div>US 10-yr yield 4.41%, dollar index 104.8</div><div class="small dimt">Bloomberg</div></div>
+      <span class="chip warn" style="align-self:flex-start">FII outflow risk</span></div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">09:48</span>
+      <div style="flex:1;min-width:0"><div>RBI keeps repo at 6.25%, stance neutral</div><div class="small dimt">ET Markets</div></div>
+      <span class="chip dim" style="align-self:flex-start">Neutral banks</span></div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">09:20</span>
+      <div style="flex:1;min-width:0"><div>Nikkei -1.2%, Hang Seng -0.9% on China data</div><div class="small dimt">Nikkei</div></div>
+      <span class="chip bad" style="align-self:flex-start">Weak Asia open</span></div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">08:55</span>
+      <div style="flex:1;min-width:0"><div>Adani Ports Q1 volumes +8%, guidance raised</div><div class="small dimt">Mint</div></div>
+      <span class="chip ok" style="align-self:flex-start">Helps ADANIPORTS</span></div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="num dimt small" style="width:44px;flex:none">08:30</span>
+      <div style="flex:1;min-width:0"><div>Nasdaq futures flat ahead of CPI print at 18:00 IST</div><div class="small dimt">CNBC</div></div>
+      <span class="chip warn" style="align-self:flex-start">Watch IT at close</span></div>
+    <div class="small dimt" style="margin-top:8px">Impact tags are set by the news agent. Untagged items are hidden.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="card">
+      <h3>Mood</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div><div class="small dimt" style="letter-spacing:.8px;text-transform:uppercase">NIFTY 50</div><div><span class="num" style="font-size:16px;font-weight:600">24,861</span> <span class="num neg small">-0.23%</span></div></div><svg viewBox="0 0 120 28" width="120" height="28" style="display:block"><polyline fill="none" stroke="#ea3943" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="0,10 20,12 40,9 60,14 80,17 100,16 120,19"></polyline></svg></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div><div class="small dimt" style="letter-spacing:.8px;text-transform:uppercase">BANK NIFTY</div><div><span class="num" style="font-size:16px;font-weight:600">54,389</span> <span class="num pos small">+0.33%</span></div></div><svg viewBox="0 0 120 28" width="120" height="28" style="display:block"><polyline fill="none" stroke="#16c784" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="0,18 20,16 40,17 60,12 80,10 100,11 120,8"></polyline></svg></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div><div class="small dimt" style="letter-spacing:.8px;text-transform:uppercase">INDIA VIX</div><div><span class="num" style="font-size:16px;font-weight:600">13.91</span> <span class="num warn small">+3.6%</span></div></div><svg viewBox="0 0 120 28" width="120" height="28" style="display:block"><polyline fill="none" stroke="#f0a93b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="0,20 20,19 40,17 60,15 80,12 100,10 120,8"></polyline></svg></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px" class="small">
+        <div style="display:flex;justify-content:space-between"><span class="muted">Breadth</span><span class="num">612 up · 1,204 down</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="muted">FII / DII (prov.)</span><span class="num"><span class="neg">-412 Cr</span> / <span class="pos">+988 Cr</span></span></div>
+        <div style="display:flex;justify-content:space-between"><span class="muted">Regime (09:06)</span><span class="chip dim">Trending down</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Sectors now</h3>
+      <div class="small" style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;justify-content:space-between"><span>Bank</span><span class="num pos">+0.4%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Pharma</span><span class="num pos">+0.3%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>IT</span><span class="num neg">-0.8%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Oil &amp; gas</span><span class="num neg">-1.1%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Metals</span><span class="num neg">-1.6%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Running today, and we are not in <span class="r">top movers vs our book</span></h3>
+    <table class="tbl">
+      <thead><tr><th>Stock</th><th class="r">Move</th><th class="r">Volume</th><th>Why we skipped it</th></tr></thead>
+      <tbody>
+        <tr><td class="sym">HINDALCO</td><td class="r num neg">-3.4%</td><td class="r num">2.1×</td><td class="small muted">Short score 21, below the 25 gate</td></tr>
+        <tr><td class="sym">ICICIBANK</td><td class="r num pos">+2.2%</td><td class="r num">1.8×</td><td class="small muted">Regime blocks longs today</td></tr>
+        <tr><td class="sym">TATASTEEL</td><td class="r num neg">-2.9%</td><td class="r num">2.4×</td><td class="small muted">ASM list, excluded</td></tr>
+        <tr><td class="sym">SUNPHARMA</td><td class="r num pos">+1.9%</td><td class="r num">1.3×</td><td class="small muted">Regime blocks longs today</td></tr>
+        <tr><td class="sym">IRFC</td><td class="r num pos">+4.1%</td><td class="r num">3.2×</td><td class="small warn">Not in the 451 universe</td></tr>
+        <tr><td class="sym">BPCL</td><td class="r num neg">-2.6%</td><td class="r num">1.6×</td><td class="small muted">Scored 31 at 09:36, slot full</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;padding:10px 12px;border:1px solid var(--line2);border-radius:4px" class="small">
+      <b>Pattern so far:</b> the regime gate blocked 2 longs that would have paid. Both are in sectors that are green while the index is red. Tonight's Review will score this.
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

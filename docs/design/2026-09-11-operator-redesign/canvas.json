@@ -1,0 +1,13 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",   "title": "1 · Ready (08:45)",  "x": 0,    "y": 0,    "w": 1440, "h": 960 },
+    { "file": "Market.dc.html", "title": "2 · Market (hours)", "x": 1540, "y": 0,    "w": 1440, "h": 960 },
+    { "file": "Book.dc.html",   "title": "3 · Book (hours)",   "x": 0,    "y": 1100, "w": 1440, "h": 960 },
+    { "file": "Review.dc.html", "title": "4 · Review (close)", "x": 1540, "y": 1100, "w": 1440, "h": 960 }
+  ],
+  "annotations": [
+    { "id": "day-note", "x": 3080, "y": 0, "w": 320, "text": "One page per moment of your day.\n\nReady: do I need to fix something before open. One verdict on top, reasons below, a button per fix.\n\nMarket: world news filtered to what moves our stocks, the mood, and what is running that we are not in, with the reason we skipped it.\n\nBook: what we hold, how far each is from its stop, and whether every engine is alive and picking. Trend-at-entry is shown on every row.\n\nReview: every trade on candles with entry and exit arrows, losses grouped by cause, learnings recorded, and whether the ML has used them.\n\nNav is four tabs. Old pages live under Legacy." },
+    { "id": "data-note", "x": 3080, "y": 520, "w": 320, "text": "Numbers are shaped like the real files: the ADANIPORTS trade, engine names, 10 Sep results, and the scorer's reasons are lifted from docs/paper-trades. The rest are sample values.\n\nThree fields do not exist in the data yet and would be new engine work: trend-at-entry, loss cause, and candle-at-entry." }
+  ],
+  "launch": { "view": "canvas" }
+}

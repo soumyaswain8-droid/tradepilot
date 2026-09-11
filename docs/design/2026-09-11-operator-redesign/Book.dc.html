@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{--bg:#0a0d13;--panel:#10141c;--panel2:#0d1118;--line:#1c2330;--line2:#242d3d;--hover:#151b26;--ink:#e6ebf2;--mut:#8a94a6;--dim:#57627a;--green:#16c784;--green-bg:rgba(22,199,132,.09);--red:#ea3943;--red-bg:rgba(234,57,67,.09);--amber:#f0a93b;--amber-bg:rgba(240,169,59,.10);--acc:#6366f1;--acc-bg:rgba(99,102,241,.12);--mono:ui-monospace,"SF Mono",Menlo,monospace}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);font:13px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;width:1440px;min-height:960px}
+    a{color:var(--acc);text-decoration:none} a:hover{color:#8b8df5}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+    .pos{color:var(--green)} .neg{color:var(--red)} .flat{color:var(--mut)} .warn{color:var(--amber)}
+    .topbar{display:flex;align-items:center;gap:20px;height:46px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:8px;flex:none}.brand svg{width:20px;height:20px}
+    .brand b{font-size:12px;letter-spacing:2.5px;font-weight:700}.brand span{font-size:12px;letter-spacing:2.5px;color:var(--dim)}
+    .idxstrip{display:flex;gap:4px;flex:1}
+    .idx{display:flex;align-items:baseline;gap:7px;padding:4px 10px;border-radius:4px;white-space:nowrap}
+    .idx .n{font-size:10.5px;letter-spacing:.8px;color:var(--dim);text-transform:uppercase}.idx .v{font-size:12.5px;font-weight:600}.idx .c{font-size:11.5px}
+    .sess{display:flex;align-items:center;gap:10px;flex:none}
+    .pill{font-size:10.5px;font-weight:700;letter-spacing:1.2px;padding:3px 9px;border-radius:3px;text-transform:uppercase}
+    .pill.live{color:var(--green);background:var(--green-bg);border:1px solid rgba(22,199,132,.3)}
+    .pill.pre{color:var(--amber);background:var(--amber-bg);border:1px solid rgba(240,169,59,.3)}
+    .pill.closed{color:var(--dim);background:var(--panel);border:1px solid var(--line)}
+    .clock{font-family:var(--mono);font-size:12.5px;color:var(--mut)}
+    .nav{display:flex;gap:2px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line);align-items:center}
+    .nav a{padding:9px 14px 8px;font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.3px;border-bottom:2px solid transparent}
+    .nav a.on{color:var(--ink);border-bottom-color:var(--acc)}
+    .nav .sp{flex:1}.nav a.legacy{color:var(--dim);font-weight:500}
+    .main{padding:14px 16px 24px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+    .card h3{font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .card h3 .r{margin-left:auto;font-weight:500;letter-spacing:.3px;text-transform:none;color:var(--dim)}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+    .kpi .big{font-size:24px;font-weight:700;letter-spacing:-.4px}.kpi .sub{font-size:11.5px;color:var(--mut);margin-top:3px}
+    .chip{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+    .chip.ok{color:var(--green);background:var(--green-bg)}.chip.bad{color:var(--red);background:var(--red-bg)}.chip.warn{color:var(--amber);background:var(--amber-bg)}.chip.acc{color:var(--acc);background:var(--acc-bg)}.chip.dim{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+    .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+    .tbl th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+    .tbl th.r,.tbl td.r{text-align:right}
+    .tbl td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+    .tbl tr.sel td{background:var(--acc-bg)}
+    .tbl .sym{font-weight:650}.tbl .eng{color:var(--mut);font-size:11.5px}
+    .btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:4px;font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--panel2);color:var(--ink)}
+    .btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+    .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--amber)}.dot.dim{background:var(--dim)}
+    .bar-wrap{background:var(--panel2);border-radius:3px;height:5px;overflow:hidden;margin-top:7px}.bar{height:100%}
+    .muted{color:var(--mut)}.dimt{color:var(--dim)}.small{font-size:11.5px}
+  </style>
+</helmet>
+<header class="topbar">
+  <div class="brand"><svg viewBox="0 0 72 72" aria-label="TradePilot"><defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4338CA"></stop><stop offset="100%" stop-color="#7C7FF3"></stop></linearGradient></defs><g><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg)"></rect><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><b>TRADEPILOT</b><span>TERMINAL</span></div>
+  <div class="idxstrip"><div class="idx"><span class="n">NIFTY 50</span><span class="v num">24,861.15</span><span class="c num neg">-0.23%</span></div><div class="idx"><span class="n">SENSEX</span><span class="v num">81,205.30</span><span class="c num neg">-0.29%</span></div><div class="idx"><span class="n">BANK NIFTY</span><span class="v num">54,388.90</span><span class="c num pos">+0.33%</span></div><div class="idx"><span class="n">INDIA VIX</span><span class="v num">13.91</span><span class="c num warn">+3.6%</span></div></div>
+  <div class="sess"><span class="pill live">Live</span><span class="clock">10:42:18</span></div>
+</header>
+<nav class="nav"><a class="">Ready</a><a class="">Market</a><a class="on">Book</a><a class="">Review</a><span class="sp"></span><a class="legacy">Legacy ▾</a><a class="legacy">Client app ↗</a></nav>
+
+<div class="main">
+  <div class="kpis">
+    <div class="card kpi"><h3>Net today</h3><div class="big num neg">₹-1,224</div><div class="sub">₹-812 before costs of ₹412 · 14 trades</div></div>
+    <div class="card kpi"><h3>Open now</h3><div class="big num">7</div><div class="sub">₹4.2L deployed of ₹41L</div></div>
+    <div class="card kpi"><h3>At risk if every stop hits</h3><div class="big num warn">₹-3,860</div><div class="sub">2 positions within 0.3% of stop</div></div>
+    <div class="card kpi"><h3>Hit rate today</h3><div class="big num">6 / 14</div><div class="sub">43% counting 3 open winners · floor is 60%</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px">
+    <div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot ok"></span><b>v5</b><span class="chip dim" style="margin-left:auto">picking</span></div>
+      <div class="small muted">scan 10:40 · next 10:45</div>
+      <div style="display:flex;justify-content:space-between" class="small"><span class="muted">9 trades</span><span class="num neg">₹-514</span></div></div>
+    <div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot ok"></span><b>v5_wide</b><span class="chip dim" style="margin-left:auto">picking</span></div>
+      <div class="small muted">scan 10:40 · next 10:45</div>
+      <div style="display:flex;justify-content:space-between" class="small"><span class="muted">3 trades</span><span class="num pos">₹+862</span></div></div>
+    <div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot ok"></span><b>v5_swing</b><span class="chip dim" style="margin-left:auto">holding</span></div>
+      <div class="small muted">rescore 13:30</div>
+      <div style="display:flex;justify-content:space-between" class="small"><span class="muted">1 open</span><span class="num neg">₹-610</span></div></div>
+    <div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot ok"></span><b>DAYGAIN</b><span class="chip dim" style="margin-left:auto">recording</span></div>
+      <div class="small muted">scan 10:40</div>
+      <div style="display:flex;justify-content:space-between" class="small"><span class="muted">1 trade</span><span class="num neg">₹-550</span></div></div>
+    <div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="dot bad"></span><b>v6</b><span class="chip dim" style="margin-left:auto">down</span></div>
+      <div class="small muted">no scan since 08:45</div>
+      <div style="display:flex;justify-content:space-between" class="small"><span class="muted">0 trades</span><span class="num flat">—</span></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:12px">
+    <div class="card">
+      <h3>Open positions <span class="r">sorted by distance to stop</span></h3>
+      <table class="tbl">
+        <thead><tr><th>Stock</th><th>Side</th><th class="r">Entry</th><th class="r">Now</th><th class="r">P&amp;L</th><th class="r">To stop</th><th class="r">In trade</th><th>Trend at entry</th></tr></thead>
+        <tbody>
+          <tr class="sel"><td class="sym">HINDALCO<div class="eng">v5</div></td><td><span class="chip dim">SHORT</span></td><td class="r num">612.40</td><td class="r num">617.10</td><td class="r num neg">₹-376</td><td class="r num">0.2%</td><td class="r num muted">18 min</td><td><span class="chip warn">Against</span></td></tr>
+          <tr class=""><td class="sym">INFY<div class="eng">v5</div></td><td><span class="chip dim">SHORT</span></td><td class="r num">1,482.00</td><td class="r num">1,489.50</td><td class="r num neg">₹-300</td><td class="r num">0.3%</td><td class="r num muted">32 min</td><td><span class="chip warn">Against</span></td></tr>
+          <tr class=""><td class="sym">GRASIM<div class="eng">v5_wide</div></td><td><span class="chip dim">SHORT</span></td><td class="r num">2,741.20</td><td class="r num">2,731.80</td><td class="r num pos">₹+282</td><td class="r num">1.4%</td><td class="r num muted">41 min</td><td><span class="chip dim">With</span></td></tr>
+          <tr class=""><td class="sym">TATAMOTORS<div class="eng">v5</div></td><td><span class="chip dim">SHORT</span></td><td class="r num">688.90</td><td class="r num">684.10</td><td class="r num pos">₹+192</td><td class="r num">1.1%</td><td class="r num muted">55 min</td><td><span class="chip dim">With</span></td></tr>
+          <tr class=""><td class="sym">SBIN<div class="eng">v5_swing</div></td><td><span class="chip dim">LONG</span></td><td class="r num">812.30</td><td class="r num">806.20</td><td class="r num neg">₹-610</td><td class="r num">0.9%</td><td class="r num muted">2 days</td><td><span class="chip dim">Flat</span></td></tr>
+          <tr class=""><td class="sym">JSWSTEEL<div class="eng">DAYGAIN</div></td><td><span class="chip dim">LONG</span></td><td class="r num">918.00</td><td class="r num">912.50</td><td class="r num neg">₹-550</td><td class="r num">0.8%</td><td class="r num muted">1h 05</td><td><span class="chip warn">Against</span></td></tr>
+          <tr class=""><td class="sym">AXISBANK<div class="eng">v5_wide</div></td><td><span class="chip dim">SHORT</span></td><td class="r num">1,102.60</td><td class="r num">1,098.40</td><td class="r num pos">₹+168</td><td class="r num">1.3%</td><td class="r num muted">12 min</td><td><span class="chip dim">With</span></td></tr>
+        </tbody>
+      </table>
+      <div class="small" style="margin-top:10px;padding:10px 12px;background:var(--red-bg);border-radius:4px;border:1px solid rgba(234,57,67,.25)">
+        <b class="neg">Bleeding:</b> 3 of 7 open trades were entered against the 15-min trend, and all 3 are losing. Combined <span class="num neg">₹-1,226</span>. This is the pattern from yesterday.
+      </div>
+    </div>
+    <div class="card">
+      <h3>Exits today <span class="r">newest first</span></h3>
+      <div class="small" style="display:flex;flex-direction:column">
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">10:38</span><b style="width:96px">BAJFINANCE</b><span class="muted" style="flex:1">target</span><span class="num pos">₹+412</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">10:21</span><b style="width:96px">TECHM</b><span class="muted" style="flex:1">stop</span><span class="num neg">₹-288</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">10:04</span><b style="width:96px">LTIM</b><span class="muted" style="flex:1">stop</span><span class="num neg">₹-301</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">09:58</span><b style="width:96px">EICHERMOT</b><span class="muted" style="flex:1">target</span><span class="num pos">₹+520</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">09:50</span><b style="width:96px">COALINDIA</b><span class="muted" style="flex:1">stop, 10 min</span><span class="num neg">₹-103</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="num dimt">09:44</span><b style="width:96px">POWERGRID</b><span class="muted" style="flex:1">stop, 6 min</span><span class="num neg">₹-96</span></div>
+        <div style="display:flex;gap:10px;padding:7px 0"><span class="num dimt">09:41</span><b style="width:96px">ONGC</b><span class="muted" style="flex:1">target</span><span class="num pos">₹+238</span></div>
+      </div>
+      <div class="small dimt" style="margin-top:10px">4 stops so far. 2 of them lasted 10 minutes or less.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

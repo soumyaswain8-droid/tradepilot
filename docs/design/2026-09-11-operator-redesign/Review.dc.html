@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{--bg:#0a0d13;--panel:#10141c;--panel2:#0d1118;--line:#1c2330;--line2:#242d3d;--hover:#151b26;--ink:#e6ebf2;--mut:#8a94a6;--dim:#57627a;--green:#16c784;--green-bg:rgba(22,199,132,.09);--red:#ea3943;--red-bg:rgba(234,57,67,.09);--amber:#f0a93b;--amber-bg:rgba(240,169,59,.10);--acc:#6366f1;--acc-bg:rgba(99,102,241,.12);--mono:ui-monospace,"SF Mono",Menlo,monospace}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);font:13px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;width:1440px;min-height:960px}
+    a{color:var(--acc);text-decoration:none} a:hover{color:#8b8df5}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+    .pos{color:var(--green)} .neg{color:var(--red)} .flat{color:var(--mut)} .warn{color:var(--amber)}
+    .topbar{display:flex;align-items:center;gap:20px;height:46px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:8px;flex:none}.brand svg{width:20px;height:20px}
+    .brand b{font-size:12px;letter-spacing:2.5px;font-weight:700}.brand span{font-size:12px;letter-spacing:2.5px;color:var(--dim)}
+    .idxstrip{display:flex;gap:4px;flex:1}
+    .idx{display:flex;align-items:baseline;gap:7px;padding:4px 10px;border-radius:4px;white-space:nowrap}
+    .idx .n{font-size:10.5px;letter-spacing:.8px;color:var(--dim);text-transform:uppercase}.idx .v{font-size:12.5px;font-weight:600}.idx .c{font-size:11.5px}
+    .sess{display:flex;align-items:center;gap:10px;flex:none}
+    .pill{font-size:10.5px;font-weight:700;letter-spacing:1.2px;padding:3px 9px;border-radius:3px;text-transform:uppercase}
+    .pill.live{color:var(--green);background:var(--green-bg);border:1px solid rgba(22,199,132,.3)}
+    .pill.pre{color:var(--amber);background:var(--amber-bg);border:1px solid rgba(240,169,59,.3)}
+    .pill.closed{color:var(--dim);background:var(--panel);border:1px solid var(--line)}
+    .clock{font-family:var(--mono);font-size:12.5px;color:var(--mut)}
+    .nav{display:flex;gap:2px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line);align-items:center}
+    .nav a{padding:9px 14px 8px;font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.3px;border-bottom:2px solid transparent}
+    .nav a.on{color:var(--ink);border-bottom-color:var(--acc)}
+    .nav .sp{flex:1}.nav a.legacy{color:var(--dim);font-weight:500}
+    .main{padding:14px 16px 24px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+    .card h3{font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .card h3 .r{margin-left:auto;font-weight:500;letter-spacing:.3px;text-transform:none;color:var(--dim)}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+    .kpi .big{font-size:24px;font-weight:700;letter-spacing:-.4px}.kpi .sub{font-size:11.5px;color:var(--mut);margin-top:3px}
+    .chip{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+    .chip.ok{color:var(--green);background:var(--green-bg)}.chip.bad{color:var(--red);background:var(--red-bg)}.chip.warn{color:var(--amber);background:var(--amber-bg)}.chip.acc{color:var(--acc);background:var(--acc-bg)}.chip.dim{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+    .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+    .tbl th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+    .tbl th.r,.tbl td.r{text-align:right}
+    .tbl td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+    .tbl tr.sel td{background:var(--acc-bg)}
+    .tbl .sym{font-weight:650}.tbl .eng{color:var(--mut);font-size:11.5px}
+    .btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:4px;font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--panel2);color:var(--ink)}
+    .btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+    .dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.warn{background:var(--amber)}.dot.dim{background:var(--dim)}
+    .bar-wrap{background:var(--panel2);border-radius:3px;height:5px;overflow:hidden;margin-top:7px}.bar{height:100%}
+    .muted{color:var(--mut)}.dimt{color:var(--dim)}.small{font-size:11.5px}
+  </style>
+</helmet>
+<header class="topbar">
+  <div class="brand"><svg viewBox="0 0 72 72" aria-label="TradePilot"><defs><linearGradient id="tpg" x1="0" y1="72" x2="72" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4338CA"></stop><stop offset="100%" stop-color="#7C7FF3"></stop></linearGradient></defs><g><rect x="9.25" y="45" width="11.5" height="15" rx="1.8" fill="url(#tpg)"></rect><rect x="28.25" y="34" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><rect x="47.25" y="23" width="11.5" height="17" rx="1.8" fill="url(#tpg)"></rect><path d="M9 54 L27 41 L45 30 L60 15" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M47 13 L62 13 L62 28" fill="none" stroke="url(#tpg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><b>TRADEPILOT</b><span>TERMINAL</span></div>
+  <div class="idxstrip"><div class="idx"><span class="n">NIFTY 50</span><span class="v num">24,796.70</span><span class="c num neg">-0.49%</span></div><div class="idx"><span class="n">SENSEX</span><span class="v num">80,988.45</span><span class="c num neg">-0.56%</span></div><div class="idx"><span class="n">BANK NIFTY</span><span class="v num">54,120.10</span><span class="c num neg">-0.17%</span></div><div class="idx"><span class="n">INDIA VIX</span><span class="v num">14.20</span><span class="c num warn">+5.8%</span></div></div>
+  <div class="sess"><span class="pill closed">Closed</span><span class="clock">16:10:44</span></div>
+</header>
+<nav class="nav"><a class="">Ready</a><a class="">Market</a><a class="">Book</a><a class="on">Review</a><span class="sp"></span><a class="legacy">Legacy ▾</a><a class="legacy">Client app ↗</a></nav>
+
+<div class="main" style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,6fr) minmax(0,3fr);gap:12px">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="card">
+      <h3>Day by engine <span class="r">Wed 10 Sep</span></h3>
+      <table class="tbl">
+        <thead><tr><th>Engine</th><th class="r">Net</th><th class="r">Hit</th></tr></thead>
+        <tbody>
+          <tr><td class="sym">v5</td><td class="r num neg">₹-2,123</td><td class="r num">17/38</td></tr>
+          <tr><td class="sym">v5_wide</td><td class="r num neg">₹-287</td><td class="r num">3/11</td></tr>
+          <tr><td class="sym">v5_swing</td><td class="r num neg">₹-2,087</td><td class="r num">0/1</td></tr>
+          <tr><td class="sym">DAYGAIN</td><td class="r num pos">₹+412</td><td class="r num">2/3</td></tr>
+          <tr><td class="sym" style="color:var(--mut)">Fleet</td><td class="r num neg" style="font-weight:700">₹-4,085</td><td class="r num">22/53</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="flex:1">
+      <h3>Trades <span class="r">losers first</span></h3>
+      <table class="tbl">
+        <thead><tr><th>Stock</th><th>In → out</th><th class="r">Net</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr class=""><td class="sym">SBIN<div class="eng">v5_swing · long</div></td><td class="num small muted">Mon → 15:20</td><td class="r num neg">₹-2,087</td><td><span class="chip warn">Held through drop</span></td></tr>
+          <tr class=""><td class="sym">HINDALCO<div class="eng">v5 · short</div></td><td class="num small muted">10:24 → 11:10</td><td class="r num neg">₹-540</td><td><span class="chip warn">Against trend</span></td></tr>
+          <tr class=""><td class="sym">HCLTECH<div class="eng">v5 · short</div></td><td class="num small muted">09:52 → 10:04</td><td class="r num neg">₹-301</td><td><span class="chip warn">Against trend</span></td></tr>
+          <tr class=""><td class="sym">WIPRO<div class="eng">v5 · short</div></td><td class="num small muted">10:02 → 10:21</td><td class="r num neg">₹-288</td><td><span class="chip warn">Late entry</span></td></tr>
+          <tr class="sel"><td class="sym">ADANIPORTS<div class="eng">v5 · short</div></td><td class="num small muted">09:40 → 09:50</td><td class="r num neg">₹-103</td><td><span class="chip warn">Against trend</span></td></tr>
+          <tr class=""><td class="sym">NTPC<div class="eng">v5 · short</div></td><td class="num small muted">09:38 → 09:44</td><td class="r num neg">₹-96</td><td><span class="chip warn">Against trend</span></td></tr>
+          <tr class=""><td class="sym">BAJFINANCE<div class="eng">v5_wide · short</div></td><td class="num small muted">10:10 → 10:38</td><td class="r num pos">₹+412</td><td><span class="chip dim">With trend</span></td></tr>
+          <tr class=""><td class="sym">MARUTI<div class="eng">v5 · short</div></td><td class="num small muted">09:31 → 09:58</td><td class="r num pos">₹+520</td><td><span class="chip dim">With trend</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="card">
+      <h3>ADANIPORTS · v5 · short <span class="r">5-min candles · 09:15 to 10:15</span></h3>
+      <svg viewBox="0 0 656 300" width="100%" style="display:block"><line x1="48" y1="232.7" x2="640" y2="232.7" stroke="#1c2330"></line><text x="42" y="236.7" text-anchor="end" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">1755</text><line x1="48" y1="189.3" x2="640" y2="189.3" stroke="#1c2330"></line><text x="42" y="193.3" text-anchor="end" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">1760</text><line x1="48" y1="146.0" x2="640" y2="146.0" stroke="#1c2330"></line><text x="42" y="150.0" text-anchor="end" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">1765</text><line x1="48" y1="102.7" x2="640" y2="102.7" stroke="#1c2330"></line><text x="42" y="106.7" text-anchor="end" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">1770</text><line x1="48" y1="59.3" x2="640" y2="59.3" stroke="#1c2330"></line><text x="42" y="63.3" text-anchor="end" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">1775</text><line x1="72" y1="50.7" x2="72" y2="137.3" stroke="#ea3943" stroke-width="1.5"></line><rect x="65" y="85.3" width="14" height="34.7" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="120" y1="102.7" x2="120" y2="180.7" stroke="#ea3943" stroke-width="1.5"></line><rect x="113" y="120.0" width="14" height="43.3" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="168" y1="146.0" x2="168" y2="215.3" stroke="#ea3943" stroke-width="1.5"></line><rect x="161" y="163.3" width="14" height="34.7" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="216" y1="172.0" x2="216" y2="241.3" stroke="#ea3943" stroke-width="1.5"></line><rect x="209" y="198.0" width="14" height="26.0" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="264" y1="189.3" x2="264" y2="250.0" stroke="#16c784" stroke-width="1.5"></line><rect x="257" y="206.7" width="14" height="17.3" rx="1.5" fill="#10141c" stroke="#16c784" stroke-width="1.5"></rect><line x1="312" y1="154.7" x2="312" y2="215.3" stroke="#16c784" stroke-width="1.5"></line><rect x="305" y="163.3" width="14" height="43.3" rx="1.5" fill="#10141c" stroke="#16c784" stroke-width="1.5"></rect><line x1="360" y1="102.7" x2="360" y2="172.0" stroke="#16c784" stroke-width="1.5"></line><rect x="353" y="111.3" width="14" height="52.0" rx="1.5" fill="#10141c" stroke="#16c784" stroke-width="1.5"></rect><line x1="408" y1="68.0" x2="408" y2="128.7" stroke="#16c784" stroke-width="1.5"></line><rect x="401" y="85.3" width="14" height="26.0" rx="1.5" fill="#10141c" stroke="#16c784" stroke-width="1.5"></rect><line x1="456" y1="59.3" x2="456" y2="111.3" stroke="#ea3943" stroke-width="1.5"></line><rect x="449" y="85.3" width="14" height="8.7" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="504" y1="76.7" x2="504" y2="137.3" stroke="#ea3943" stroke-width="1.5"></line><rect x="497" y="94.0" width="14" height="26.0" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="552" y1="102.7" x2="552" y2="154.7" stroke="#ea3943" stroke-width="1.5"></line><rect x="545" y="120.0" width="14" height="17.3" rx="1.5" fill="#ea3943" stroke="#ea3943" stroke-width="1.5"></rect><line x1="600" y1="111.3" x2="600" y2="163.3" stroke="#16c784" stroke-width="1.5"></line><rect x="593" y="128.7" width="14" height="8.7" rx="1.5" fill="#10141c" stroke="#16c784" stroke-width="1.5"></rect><line x1="48" y1="211.9" x2="640" y2="211.9" stroke="#16c784" stroke-dasharray="3 4" opacity=".6"></line>
+    <line x1="48" y1="119.1" x2="640" y2="119.1" stroke="#ea3943" stroke-dasharray="3 4" opacity=".6"></line>
+    <path d="M312 237.9 l-7 10 h14 z" fill="#16c784"></path><text x="312" y="261.9" text-anchor="middle" fill="#16c784" font-size="10" font-weight="700">SELL 09:40 · 1757.4</text>
+    <path d="M408 93.1 l-7 -10 h14 z" fill="#6366f1"></path><text x="408" y="77.1" text-anchor="middle" fill="#8b8df5" font-size="10" font-weight="700">STOP 09:50 · 1768.1</text>
+    <rect x="148" y="16" width="192" height="260" fill="#ea3943" opacity=".06"></rect>
+    <text x="244" y="28" text-anchor="middle" fill="#ea3943" font-size="10" font-weight="700" opacity=".9">15-min trend: DOWN then TURNING</text><text x="72" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">09:15</text><text x="120" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text><text x="168" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">09:25</text><text x="216" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text><text x="264" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">09:35</text><text x="312" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text><text x="360" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">09:45</text><text x="408" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text><text x="456" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">09:55</text><text x="504" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text><text x="552" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace">10:05</text><text x="600" y="292" text-anchor="middle" fill="#57627a" font-size="10" font-family="ui-monospace,Menlo,monospace"></text></svg>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:8px" class="small">
+        <div><div class="dimt">Entered</div><div class="num">09:40:13 · 1,757.40</div></div>
+        <div><div class="dimt">Exited</div><div class="num">09:50:14 · 1,768.10 · stop</div></div>
+        <div><div class="dimt">Net</div><div class="num neg">₹-102.52 · cost ₹16.92</div></div>
+        <div><div class="dimt">Candle at entry</div><div>Hammer after 4 red, 2.1× volume</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>What the engine saw at 09:40 <span class="r">score 29.3, gate was 25</span></h3>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px" class="small">
+        <div><span class="neg">−</span> ORB breakdown below 1760</div>
+        <div><span class="neg">−</span> Price 0.39% below VWAP (1764)</div>
+        <div><span class="neg">−</span> FII selling, -583 Cr</div>
+        <div><span class="pos">+</span> DII buying, +1509 Cr</div>
+        <div><span class="neg">−</span> Negative intraday momentum</div>
+        <div><span class="warn">!</span> Not checked: last candle was a hammer on volume</div>
+      </div>
+      <div class="small" style="margin-top:10px;padding:10px 12px;background:var(--amber-bg);border:1px solid rgba(240,169,59,.3);border-radius:4px">
+        <b class="warn">Verdict:</b> shorted the bottom. The 09:35 candle was a reversal signal the scorer does not read. Same shape on NTPC and HCLTECH today. Three trades, <span class="num neg">₹-500</span>, one cause.
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="card">
+      <h3>Losses by cause <span class="r">31 losing trades</span></h3>
+      <div class="small" style="display:flex;flex-direction:column;gap:9px">
+        <div><div style="display:flex;justify-content:space-between"><span>Entered against 15-min trend</span><span class="num neg">₹-1,040</span></div><div class="bar-wrap"><div class="bar" style="width:50%;background:var(--red)"></div></div><div class="dimt">9 trades · 0 won</div></div>
+        <div><div style="display:flex;justify-content:space-between"><span>Swing held through a drop</span><span class="num neg">₹-2,087</span></div><div class="bar-wrap"><div class="bar" style="width:100%;background:var(--red)"></div></div><div class="dimt">1 trade · no intraday stop</div></div>
+        <div><div style="display:flex;justify-content:space-between"><span>Late entry, move was done</span><span class="num neg">₹-612</span></div><div class="bar-wrap"><div class="bar" style="width:29%;background:var(--red)"></div></div><div class="dimt">4 trades · 0 won</div></div>
+        <div><div style="display:flex;justify-content:space-between"><span>Normal stop, good entry</span><span class="num neg">₹-346</span></div><div class="bar-wrap"><div class="bar" style="width:17%;background:var(--dim)"></div></div><div class="dimt">17 trades · acceptable</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Learnings recorded <span class="r">3 today</span></h3>
+      <div class="small" style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px"><span class="chip acc">new</span><span>Reversal candle on 2× volume after 5 red: do not short for 2 bars.</span></div>
+        <div style="display:flex;gap:8px"><span class="chip acc">new</span><span>Swing pool needs an intraday stop on down-regime days.</span></div>
+        <div style="display:flex;gap:8px"><span class="chip dim">repeat</span><span>Regime gate blocked 3 winning longs in green sectors. 4th day running.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>ML loop</h3>
+      <div class="small" style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between"><span class="muted">Last trained</span><span class="num">10 Sep 21:30</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="muted">Learnings used</span><span class="num">41 of 44</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="muted">Not yet used</span><span class="num warn">3, from today</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="muted">Next retrain</span><span class="num">tonight 21:30</span></div>
+      </div>
+      <a class="btn acc" style="margin-top:10px">Retrain now with today's learnings</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

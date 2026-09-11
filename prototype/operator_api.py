@@ -164,3 +164,50 @@ def api_verdicts(date_str):
     only = request.args.get("only") or None
     syms = {s.strip().upper() for s in (request.args.get("symbols") or "").split(",") if s.strip()} or None
     return jsonify(load_verdicts(TRADES_ROOT, date_str, engines=engines, only=only, symbols=syms))
+
+
+def datalink_rows(kite_health: dict, kite_alive: tuple, indices: dict) -> list:
+    """One row per data link. Kite first, then every distinct index source."""
+    rows = []
+    kh = kite_health or {}
+    if not kh.get("enabled"):
+        rows.append({"name": "Kite", "state": "off", "detail": "paper mode, feed disabled"})
+    else:
+        ok, detail = (kite_alive or (False, "unknown"))
+        if ok:
+            state = "ok"
+            if kh.get("fallbacks"):
+                state, detail = "stale", f"{detail} · {kh['fallbacks']} fallbacks"
+        else:
+            state = "down"
+            detail = str(kh.get("last_error") or detail)
+        rows.append({"name": "Kite", "state": state, "detail": detail})
+    seen = {}
+    for key, idx in (indices or {}).items():
+        src = str((idx or {}).get("source") or "unknown")
+        stale = bool((idx or {}).get("stale"))
+        cur = seen.setdefault(src, {"name": src, "state": "ok", "detail": []})
+        cur["detail"].append(key.upper())
+        if stale:
+            cur["state"] = "stale"
+    for src, cur in seen.items():
+        cur["detail"] = "serves " + ", ".join(cur["detail"])
+        rows.append(cur)
+    return rows
+
+
+@bp.get("/health/datalinks")
+def api_datalinks():
+    try:
+        from prototype.v4 import kite_data as kd
+        kh = kd.health()
+        alive = kd.token_alive() if kh.get("enabled") else (False, "disabled")
+    except Exception as e:  # the feed module itself failing is a 'down' row, not a 500
+        kh, alive = {"enabled": True, "last_error": str(e)}, (False, str(e))
+    try:
+        resp = current_app.view_functions["api_indices"]()
+        indices = resp.get_json() if hasattr(resp, "get_json") else {}
+    except Exception:
+        indices = {}
+    return jsonify({"generated_at": datetime.now().strftime("%H:%M:%S"),
+                    "links": datalink_rows(kh, alive, indices)})

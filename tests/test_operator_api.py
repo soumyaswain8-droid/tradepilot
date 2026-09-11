@@ -191,3 +191,39 @@ def test_verdicts_route(client, tmp_path, monkeypatch):
 
 def test_verdicts_route_rejects_bad_date(client):
     assert client.get("/api/verdicts/not-a-date").status_code == 400
+
+
+def test_datalink_rows_kite_ok_and_index_sources():
+    from prototype.operator_api import datalink_rows
+    rows = datalink_rows(
+        {"enabled": True, "kite_calls": 40, "kite_ok": 40, "fallbacks": 0,
+         "token_failures": 0, "last_error": None, "last_fallback_at": None},
+        (True, "Soumya (AB1234)"),
+        {"nifty": {"price": 24861.15, "source": "nse", "stale": False},
+         "sensex": {"price": 81205.3, "source": "bse", "stale": False},
+         "vix": {"price": 13.9, "source": "csv", "stale": True}})
+    byname = {r["name"]: r for r in rows}
+    assert byname["Kite"]["state"] == "ok" and "AB1234" in byname["Kite"]["detail"]
+    assert byname["nse"]["state"] == "ok"
+    assert byname["bse"]["state"] == "ok"
+    assert byname["csv"]["state"] == "stale"
+
+
+def test_datalink_rows_kite_disabled_and_dead_token():
+    from prototype.operator_api import datalink_rows
+    rows = datalink_rows({"enabled": False}, (False, "no token"), {})
+    assert rows[0] == {"name": "Kite", "state": "off", "detail": "paper mode, feed disabled"}
+    rows = datalink_rows({"enabled": True, "kite_ok": 0, "kite_calls": 3,
+                          "last_error": "TokenException"}, (False, "TokenException"), {})
+    assert rows[0]["state"] == "down" and "TokenException" in rows[0]["detail"]
+
+
+def test_datalinks_route(client, monkeypatch):
+    import prototype.v4.kite_data as kd
+    monkeypatch.setattr(kd, "health", lambda: {"enabled": False})
+    monkeypatch.setattr(kd, "token_alive", lambda: (False, "no token"))
+    r = client.get("/api/health/datalinks")
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["links"][0]["name"] == "Kite" and body["links"][0]["state"] == "off"
+    assert "generated_at" in body

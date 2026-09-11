@@ -160,7 +160,7 @@ def load_verdicts(root: Path, date_str: str, engines=None, only=None, symbols=No
 def api_verdicts(date_str):
     if not _is_date(date_str):
         return jsonify({"error": "date must be YYYY-MM-DD"}), 400
-    engines = [e for e in (request.args.get("engine") or "").split(",") if e] or None
+    engines = [e.strip() for e in (request.args.get("engine") or "").split(",") if e.strip()] or None
     only = request.args.get("only") or None
     syms = {s.strip().upper() for s in (request.args.get("symbols") or "").split(",") if s.strip()} or None
     return jsonify(load_verdicts(TRADES_ROOT, date_str, engines=engines, only=only, symbols=syms))

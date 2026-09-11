@@ -176,12 +176,17 @@ def test_load_verdicts_filters(tmp_path):
     assert load_verdicts(tmp_path, "2026-09-11")["engines"] == []
 
 
-def test_verdicts_route(client):
+def test_verdicts_route(client, tmp_path, monkeypatch):
+    from prototype import operator_api
+    _write_verdicts(tmp_path, "v5", "2026-09-10", [V_OK, V_REJ])
+    monkeypatch.setattr(operator_api, "TRADES_ROOT", tmp_path)
     r = client.get("/api/verdicts/2026-09-10?only=rejected")
     assert r.status_code == 200
     body = r.get_json()
     assert set(body) >= {"date", "engines", "count", "verdicts", "by_symbol"}
-    assert all(v["verdict"] == "rejected" for v in body["verdicts"])
+    assert body["engines"] == ["v5"]
+    assert body["count"] == 1
+    assert body["verdicts"][0]["symbol"] == "HINDALCO"
 
 
 def test_verdicts_route_rejects_bad_date(client):

@@ -66,6 +66,8 @@ from prototype import app_store; app_store.init_db(app_store.get_db())  # noqa: 
 app.register_blueprint(_client_api_bp)
 from prototype.accounts_web import bp as _accounts_web_bp  # noqa: E402
 app.register_blueprint(_accounts_web_bp)
+from prototype.operator_api import bp as _operator_api_bp  # noqa: E402
+app.register_blueprint(_operator_api_bp)
 client_auth.install_guard(app)
 
 def get_model_meta():
@@ -498,6 +500,21 @@ def api_live_trades():
             "pnl_pct": pnlpct, "status": status, "reason": reason or "—", "pool": pool or "—",
         }
 
+    from prototype import operator_api as _opapi
+    _open_syms = []
+    for _eng in ENGINES:
+        _f = BASE / _eng / f"{TODAY}.json"
+        if _f.exists():
+            try:
+                _d = json.loads(_f.read_text())
+                for _pool in (_d.get("pools") or {}).values():
+                    _open_syms += [p.get("symbol") for p in (_pool.get("positions") or [])]
+            except Exception:
+                pass
+    # A historical day-file's open positions must not be marked against
+    # today's prices -- only fetch live quotes when TODAY really is today.
+    _marks = _opapi.marks_for(_open_syms) if TODAY == date.today().isoformat() else {}
+
     for eng in ENGINES:
         f = BASE / eng / f"{TODAY}.json"
         trades, regime = [], "—"
@@ -539,10 +556,15 @@ def api_live_trades():
                             p.get("pnl_pct"), "closed", p.get("reason"), pool))
                     for p in pdata.get("positions", []):
                         openn += 1
+                        sym = p.get("symbol")
+                        mark = _marks.get(str(sym or "").upper())
+                        upnl = (_opapi.unrealized(p.get("position_type") or "LONG",
+                                                  float(p["entry_price"]), int(p["qty"]), mark)
+                                if mark and p.get("entry_price") and p.get("qty") else None)
                         trades.append(_trade(
-                            p.get("symbol"), p.get("position_type") or p.get("direction"),
+                            sym, p.get("position_type") or p.get("direction"),
                             p.get("qty"), p.get("entry_price"), p.get("entry_time"),
-                            None, None, p.get("unrealized_pnl"), None, "open",
+                            None, None, upnl, None, "open",
                             p.get("reason"), pool))
         # newest-first by exit_time then entry_time
         trades.sort(key=lambda t: (t["exit_time"] or "", t["entry_time"] or ""), reverse=True)
@@ -1071,6 +1093,9 @@ def api_scores():
 def api_model():
     """Get model metadata -- sanitized for public consumption."""
     try:
+        from prototype.operator_api import model_trained_at
+        _trained, _trained_src = model_trained_at()
+
         default_engine = "v4" if HAS_V4 else "v2"
         engine = request.args.get('engine', default_engine)
 
@@ -1080,7 +1105,9 @@ def api_model():
                 "accuracy": 0,
                 "version": "v4",
                 "trainingSamples": 0,
-                "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+                "lastTrained": (_trained or "")[:10] or "unknown",
+                "trained_at": _trained,
+                "trained_at_source": _trained_src,
                 "features": [],
                 "backtest": [],
                 "model_type": "composite_scorer",
@@ -1092,14 +1119,13 @@ def api_model():
         if engine == "v3" and HAS_V3:
             meta_v3 = get_model_meta_v3()
             if meta_v3:
-                trained_at = meta_v3.get("trained_at", "Unknown")
-                if "T" in trained_at:
-                    trained_at = trained_at.split("T")[0]
                 return jsonify({
                     "accuracy": round(meta_v3.get("accuracy", 0) * 100, 1) if meta_v3.get("accuracy", 0) < 1 else meta_v3.get("accuracy", 0),
                     "version": "v3",
                     "trainingSamples": meta_v3.get("train_samples", 0) + meta_v3.get("test_samples", 0),
-                    "lastTrained": trained_at,
+                    "lastTrained": (_trained or "")[:10] or "unknown",
+                    "trained_at": _trained,
+                    "trained_at_source": _trained_src,
                     "features": [],  # populated below if available
                     "backtest": [],
                     "market_regime": meta_v3.get("market_regime", "unknown"),
@@ -1113,7 +1139,9 @@ def api_model():
             "accuracy": 0,
             "version": "v2",
             "trainingSamples": 0,
-            "lastTrained": datetime.now().strftime("%Y-%m-%d"),
+            "lastTrained": (_trained or "")[:10] or "unknown",
+            "trained_at": _trained,
+            "trained_at_source": _trained_src,
             "features": [],
             "backtest": [],
             "model_type": "ensemble",
@@ -3866,6 +3894,7 @@ _TRADES_ROOT = Path(__file__).resolve().parent.parent / "docs" / "paper-trades"
 
 @app.route("/api/desk")
 def api_desk():
+    from prototype import operator_api as _opapi
     import glob as _glob
     import re as _re
     import statistics as _st
@@ -3912,7 +3941,9 @@ def api_desk():
         session = max(dates)
 
     engines, fleet = [], {"gross": 0.0, "fees": 0.0, "net": 0.0, "trades": 0,
-                          "wins": 0, "turnover": 0.0}
+                          "wins": 0, "turnover": 0.0,
+                          "unrealized": None, "risk_at_stop": 0.0, "deployed": 0.0,
+                          "unpriced": 0, "unstopped": 0}
     open_positions, recent_exits = [], []
     for d in sorted(_TRADES_ROOT.iterdir()):
         if not d.is_dir():
@@ -3944,6 +3975,10 @@ def api_desk():
                             "engine": d.name, "symbol": c.get("symbol"),
                             "pnl": round(pnl, 0), "pnl_pct": c.get("pnl_pct"),
                             "reason": c.get("reason"), "exit_time": c.get("exit_time"),
+                            "entry_time": c.get("entry_time"),
+                            "duration_min": _opapi.duration_min(
+                                c.get("entry_time"), c.get("exit_time"),
+                                entry_date=c.get("entry_date"), exit_date=session),
                             "side": (c.get("position_type") or "LONG").upper()})
         pa = d / "positions_active.json"
         if pa.exists() and f.exists():   # only engines active in this session —
@@ -3953,14 +3988,7 @@ def api_desk():
                 for pool, lst in (pj.get("positions") or {}).items():
                     for pos in lst if isinstance(lst, list) else []:
                         row["open"] += 1
-                        ep, q = pos.get("entry_price"), pos.get("qty")
-                        open_positions.append({
-                            "engine": d.name, "symbol": pos.get("symbol"),
-                            "side": (pos.get("position_type") or "LONG").upper(),
-                            "qty": q, "entry": ep, "pool": pool,
-                            "value": round(float(ep) * int(q), 0) if ep and q else 0,
-                            "entry_date": pos.get("entry_date"),
-                            "entry_time": pos.get("entry_time")})
+                        open_positions.append(_opapi.position_row(d.name, pool, pos))
             except Exception:
                 pass
         if row["trades"] or row["open"]:
@@ -4009,6 +4037,15 @@ def api_desk():
         guards["telegram_entries_muted"] = not tg.get("alert_entries", True)
     except Exception:
         pass
+
+    marks = _opapi.marks_for([p["symbol"] for p in open_positions]) if open_positions else {}
+    _opapi.enrich_with_marks(open_positions, marks)
+    priced = [p["unrealized_pnl"] for p in open_positions if p["unrealized_pnl"] is not None]
+    fleet["unrealized"] = round(sum(priced), 0) if priced else None
+    fleet["risk_at_stop"] = round(sum(p["risk_at_stop"] or 0.0 for p in open_positions), 0)
+    fleet["deployed"] = round(sum(p["value"] or 0.0 for p in open_positions), 0)
+    fleet["unpriced"] = sum(1 for p in open_positions if p["mark"] is None)
+    fleet["unstopped"] = sum(1 for p in open_positions if p["sl_price"] is None)
 
     data = {"session": session,
             "is_live_session": session == datetime.now().strftime("%Y-%m-%d"),

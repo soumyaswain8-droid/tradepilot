@@ -66,6 +66,8 @@ from prototype import app_store; app_store.init_db(app_store.get_db())  # noqa: 
 app.register_blueprint(_client_api_bp)
 from prototype.accounts_web import bp as _accounts_web_bp  # noqa: E402
 app.register_blueprint(_accounts_web_bp)
+from prototype.operator_api import bp as _operator_api_bp  # noqa: E402
+app.register_blueprint(_operator_api_bp)
 client_auth.install_guard(app)
 
 def get_model_meta():

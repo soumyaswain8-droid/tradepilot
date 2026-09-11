@@ -97,3 +97,70 @@ def enrich_with_marks(rows: list, marks: dict) -> list:
         r["risk_at_stop"] = (round((sl - entry) * int(qty) * sign, 2)
                              if sl and entry is not None and qty else None)
     return rows
+
+
+def _is_date(s: str) -> bool:
+    try:
+        date.fromisoformat(s)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def _failed_reasons(reasons) -> list:
+    out = []
+    for r in reasons or []:
+        s = str(r)
+        if s.endswith(": OK") or ": clear" in s:
+            continue
+        out.append(s)
+    return out
+
+
+def load_verdicts(root: Path, date_str: str, engines=None, only=None, symbols=None) -> dict:
+    """Every pick each engine judged on `date_str`, with the reasons that failed.
+    This is the 'why we skipped it' column. File per engine per day; engines
+    without a file are simply absent."""
+    found, items = [], []
+    for d in sorted(p for p in Path(root).iterdir() if p.is_dir()):
+        if engines and d.name not in engines:
+            continue
+        f = d / f"{date_str}_verdicts.json"
+        if not f.exists():
+            continue
+        try:
+            doc = json.loads(f.read_text())
+        except Exception:
+            continue
+        found.append(d.name)
+        for v in doc.get("verdicts") or []:
+            sym = str(v.get("symbol") or "").upper()
+            if only and v.get("verdict") != only:
+                continue
+            if symbols and sym not in symbols:
+                continue
+            plan = dict(v.get("plan") or {})
+            plan.pop("rationale", None)
+            item = dict(v)
+            item["engine"] = item.get("engine") or d.name
+            item["plan"] = plan
+            item["failed"] = _failed_reasons(v.get("reasons"))
+            items.append(item)
+    by_symbol = {}
+    for v in items:
+        by_symbol.setdefault(v["symbol"], []).append({
+            "engine": v["engine"], "verdict": v.get("verdict"), "failed": v["failed"],
+            "score": _f(v["plan"].get("score")), "side": v["plan"].get("side"),
+            "pool": v["plan"].get("pool"), "checked_at": v.get("checked_at")})
+    return {"date": date_str, "engines": found, "count": len(items),
+            "verdicts": items, "by_symbol": by_symbol}
+
+
+@bp.get("/verdicts/<date_str>")
+def api_verdicts(date_str):
+    if not _is_date(date_str):
+        return jsonify({"error": "date must be YYYY-MM-DD"}), 400
+    engines = [e for e in (request.args.get("engine") or "").split(",") if e] or None
+    only = request.args.get("only") or None
+    syms = {s.strip().upper() for s in (request.args.get("symbols") or "").split(",") if s.strip()} or None
+    return jsonify(load_verdicts(TRADES_ROOT, date_str, engines=engines, only=only, symbols=syms))

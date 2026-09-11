@@ -133,3 +133,56 @@ def test_live_trades_open_rows_do_not_fake_pnl(client, monkeypatch):
         for t in eng.get("trades", []):
             if t.get("status") == "open":
                 assert t["pnl"] is None
+
+
+def _write_verdicts(root: Path, engine: str, day: str, items: list):
+    d = root / engine
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{day}_verdicts.json").write_text(json.dumps(
+        {"date": day, "engine": engine, "verdicts": items, "updated_at": f"{day} 15:08:11"}))
+
+
+V_OK = {"symbol": "ADANIPOWER", "verdict": "approved", "checked_at": "2026-09-10T09:06:07",
+        "plan": {"side": "SHORT", "entry": 100.0, "target": 97.0, "stop": 102.0, "pool": "INTRADAY",
+                 "score": 31.2, "rationale": "long prose"},
+        "reasons": ["check_can_trade: OK", "pool_cash: OK", "soft:score_near_threshold: clear (31.2)"]}
+V_REJ = {"symbol": "HINDALCO", "verdict": "rejected", "checked_at": "2026-09-10T09:36:00",
+         "plan": {"side": "SHORT", "entry": 612.4, "target": 600.0, "stop": 618.0, "pool": "INTRADAY",
+                  "score": 21.0, "rationale": "x"},
+         "reasons": ["check_can_trade: OK", "check_position_size: FAIL size 0", "pool_cash: OK"]}
+
+
+def test_load_verdicts_marks_failed_reasons_and_drops_rationale(tmp_path):
+    from prototype.operator_api import load_verdicts
+    _write_verdicts(tmp_path, "v5", "2026-09-10", [V_OK, V_REJ])
+    out = load_verdicts(tmp_path, "2026-09-10")
+    assert out["engines"] == ["v5"] and out["count"] == 2
+    rej = next(v for v in out["verdicts"] if v["symbol"] == "HINDALCO")
+    assert rej["failed"] == ["check_position_size: FAIL size 0"]
+    assert "rationale" not in rej["plan"]
+    ok = next(v for v in out["verdicts"] if v["symbol"] == "ADANIPOWER")
+    assert ok["failed"] == []
+    assert out["by_symbol"]["HINDALCO"][0]["engine"] == "v5"
+    assert out["by_symbol"]["HINDALCO"][0]["score"] == 21.0
+
+
+def test_load_verdicts_filters(tmp_path):
+    from prototype.operator_api import load_verdicts
+    _write_verdicts(tmp_path, "v5", "2026-09-10", [V_OK, V_REJ])
+    _write_verdicts(tmp_path, "v5_wide", "2026-09-10", [V_OK])
+    assert load_verdicts(tmp_path, "2026-09-10", only="rejected")["count"] == 1
+    assert load_verdicts(tmp_path, "2026-09-10", engines=["v5_wide"])["count"] == 1
+    assert load_verdicts(tmp_path, "2026-09-10", symbols={"HINDALCO"})["count"] == 1
+    assert load_verdicts(tmp_path, "2026-09-11")["engines"] == []
+
+
+def test_verdicts_route(client):
+    r = client.get("/api/verdicts/2026-09-10?only=rejected")
+    assert r.status_code == 200
+    body = r.get_json()
+    assert set(body) >= {"date", "engines", "count", "verdicts", "by_symbol"}
+    assert all(v["verdict"] == "rejected" for v in body["verdicts"])
+
+
+def test_verdicts_route_rejects_bad_date(client):
+    assert client.get("/api/verdicts/not-a-date").status_code == 400

@@ -511,7 +511,9 @@ def api_live_trades():
                     _open_syms += [p.get("symbol") for p in (_pool.get("positions") or [])]
             except Exception:
                 pass
-    _marks = _opapi.marks_for(_open_syms)
+    # A historical day-file's open positions must not be marked against
+    # today's prices -- only fetch live quotes when TODAY really is today.
+    _marks = _opapi.marks_for(_open_syms) if TODAY == date.today().isoformat() else {}
 
     for eng in ENGINES:
         f = BASE / eng / f"{TODAY}.json"
@@ -1092,7 +1094,7 @@ def api_model():
     """Get model metadata -- sanitized for public consumption."""
     try:
         from prototype.operator_api import model_trained_at
-        _trained = model_trained_at()
+        _trained, _trained_src = model_trained_at()
 
         default_engine = "v4" if HAS_V4 else "v2"
         engine = request.args.get('engine', default_engine)
@@ -1105,6 +1107,7 @@ def api_model():
                 "trainingSamples": 0,
                 "lastTrained": (_trained or "")[:10] or "unknown",
                 "trained_at": _trained,
+                "trained_at_source": _trained_src,
                 "features": [],
                 "backtest": [],
                 "model_type": "composite_scorer",
@@ -1116,15 +1119,13 @@ def api_model():
         if engine == "v3" and HAS_V3:
             meta_v3 = get_model_meta_v3()
             if meta_v3:
-                trained_at = meta_v3.get("trained_at", "Unknown")
-                if "T" in trained_at:
-                    trained_at = trained_at.split("T")[0]
                 return jsonify({
                     "accuracy": round(meta_v3.get("accuracy", 0) * 100, 1) if meta_v3.get("accuracy", 0) < 1 else meta_v3.get("accuracy", 0),
                     "version": "v3",
                     "trainingSamples": meta_v3.get("train_samples", 0) + meta_v3.get("test_samples", 0),
                     "lastTrained": (_trained or "")[:10] or "unknown",
                     "trained_at": _trained,
+                    "trained_at_source": _trained_src,
                     "features": [],  # populated below if available
                     "backtest": [],
                     "market_regime": meta_v3.get("market_regime", "unknown"),
@@ -1140,6 +1141,7 @@ def api_model():
             "trainingSamples": 0,
             "lastTrained": (_trained or "")[:10] or "unknown",
             "trained_at": _trained,
+            "trained_at_source": _trained_src,
             "features": [],
             "backtest": [],
             "model_type": "ensemble",
@@ -3940,7 +3942,8 @@ def api_desk():
 
     engines, fleet = [], {"gross": 0.0, "fees": 0.0, "net": 0.0, "trades": 0,
                           "wins": 0, "turnover": 0.0,
-                          "unrealized": None, "risk_at_stop": 0.0, "deployed": 0.0, "unpriced": 0}
+                          "unrealized": None, "risk_at_stop": 0.0, "deployed": 0.0,
+                          "unpriced": 0, "unstopped": 0}
     open_positions, recent_exits = [], []
     for d in sorted(_TRADES_ROOT.iterdir()):
         if not d.is_dir():
@@ -3973,7 +3976,9 @@ def api_desk():
                             "pnl": round(pnl, 0), "pnl_pct": c.get("pnl_pct"),
                             "reason": c.get("reason"), "exit_time": c.get("exit_time"),
                             "entry_time": c.get("entry_time"),
-                            "duration_min": _opapi.duration_min(c.get("entry_time"), c.get("exit_time")),
+                            "duration_min": _opapi.duration_min(
+                                c.get("entry_time"), c.get("exit_time"),
+                                entry_date=c.get("entry_date"), exit_date=session),
                             "side": (c.get("position_type") or "LONG").upper()})
         pa = d / "positions_active.json"
         if pa.exists() and f.exists():   # only engines active in this session —
@@ -4040,6 +4045,7 @@ def api_desk():
     fleet["risk_at_stop"] = round(sum(p["risk_at_stop"] or 0.0 for p in open_positions), 0)
     fleet["deployed"] = round(sum(p["value"] or 0.0 for p in open_positions), 0)
     fleet["unpriced"] = sum(1 for p in open_positions if p["mark"] is None)
+    fleet["unstopped"] = sum(1 for p in open_positions if p["sl_price"] is None)
 
     data = {"session": session,
             "is_live_session": session == datetime.now().strftime("%Y-%m-%d"),

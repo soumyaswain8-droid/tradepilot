@@ -176,14 +176,16 @@ def datalink_rows(kite_health: dict, kite_alive: tuple, indices: dict) -> list:
     if not kh.get("enabled"):
         rows.append({"name": "Kite", "state": "off", "detail": "paper mode, feed disabled"})
     else:
-        ok, detail = (kite_alive or (False, "unknown"))
+        ok, alive_detail = (kite_alive or (False, "unknown"))
         if ok:
-            state = "ok"
+            # alive_detail carries the Kite account identity ("<name> (<id>)")
+            # -- this route is unauthenticated, so never pass it through.
+            state, detail = "ok", "token ok"
             if kh.get("fallbacks"):
-                state, detail = "stale", f"{detail} · {kh['fallbacks']} fallbacks"
+                state, detail = "stale", f"token ok · {kh['fallbacks']} fallbacks"
         else:
             state = "down"
-            detail = str(kh.get("last_error") or detail)
+            detail = str(kh.get("last_error") or alive_detail)
         rows.append({"name": "Kite", "state": state, "detail": detail})
     seen = {}
     for key, idx in (indices or {}).items():
@@ -209,6 +211,7 @@ def api_datalinks():
         kh, alive = {"enabled": True, "last_error": str(e)}, (False, str(e))
     try:
         resp = current_app.view_functions["api_indices"]()
+        resp = resp[0] if isinstance(resp, tuple) else resp
         indices = resp.get_json() if hasattr(resp, "get_json") else {}
     except Exception:
         indices = {}
@@ -291,7 +294,13 @@ def _hms(s):
     return None
 
 
-def duration_min(entry_time, exit_time):
+def duration_min(entry_time, exit_time, entry_date=None, exit_date=None):
+    """Minutes held, clock-time only unless dates disagree.
+    A multi-day SWING hold (entry_date != exit_date) has no honest clock-time
+    duration -- returning the same-day delta silently understates it by a day
+    or more, so callers get None instead of a wrong number."""
+    if entry_date and exit_date and entry_date != exit_date:
+        return None
     a, b = _hms(entry_time), _hms(exit_time)
     if a is None or b is None or b < a:
         return None
@@ -299,11 +308,20 @@ def duration_min(entry_time, exit_time):
 
 
 def model_trained_at(models_dir: Path = MODELS_DIR):
+    """(timestamp, source). Meta files carry the real training timestamp;
+    .pkl mtime is only checkout time once the file is git-tracked, so it is
+    the fallback, not the primary source."""
+    models_dir = Path(models_dir)
+    for name in ("model_meta_v3.json", "model_meta_v2.json", "model_meta.json"):
+        meta = _read_json(models_dir / name)
+        trained_at = (meta or {}).get("trained_at")
+        if trained_at:
+            return trained_at, "meta"
     try:
-        pkls = list(Path(models_dir).glob("*.pkl"))
+        pkls = list(models_dir.glob("*.pkl"))
     except Exception:
-        return None
+        return None, None
     if not pkls:
-        return None
+        return None, None
     ts = max(p.stat().st_mtime for p in pkls)
-    return datetime.fromtimestamp(ts).isoformat(timespec="seconds")
+    return datetime.fromtimestamp(ts).isoformat(timespec="seconds"), "file-mtime"

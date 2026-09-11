@@ -45,7 +45,7 @@ def test_position_row_missing_stop_is_none_not_zero():
     assert row["value"] == 10
 
 
-def _fresh_desk(client, monkeypatch):
+def _fresh_desk(client):
     """api_desk caches for 30 s; reset so each test sees its own patching."""
     import prototype.app as app_module
     app_module._desk_cache["time"] = 0
@@ -54,7 +54,9 @@ def _fresh_desk(client, monkeypatch):
 
 
 def test_desk_open_positions_carry_stop_fields(client, monkeypatch):
-    data = _fresh_desk(client, monkeypatch)
+    from prototype import operator_api
+    monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
+    data = _fresh_desk(client)
     for row in data["open_positions"]:
         for k in ("sl_price", "target_price", "peak_price", "trough_price",
                   "trailing_activated", "score"):
@@ -116,9 +118,10 @@ def test_marks_for_maps_last_price(monkeypatch):
 def test_desk_fleet_has_unrealized_and_risk(client, monkeypatch):
     from prototype import operator_api
     monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
-    data = _fresh_desk(client, monkeypatch)
+    data = _fresh_desk(client)
     f = data["fleet"]
     assert "unrealized" in f and "risk_at_stop" in f and "deployed" in f and "unpriced" in f
+    assert "unstopped" in f
     assert f["unpriced"] == len(data["open_positions"])       # no marks => all unpriced
     for row in data["open_positions"]:
         assert row["mark"] is None and row["unrealized_pnl"] is None
@@ -133,6 +136,24 @@ def test_live_trades_open_rows_do_not_fake_pnl(client, monkeypatch):
         for t in eng.get("trades", []):
             if t.get("status") == "open":
                 assert t["pnl"] is None
+
+
+def test_live_trades_historical_date_never_fetches_live_marks(client, monkeypatch):
+    """?date=<past session> must not price open positions against today's
+    quotes. marks_for is stubbed to return a NON-empty dict on purpose --
+    if the route wrongly calls it for a historical date, an open row would
+    get a fake pnl instead of staying None."""
+    from prototype import operator_api
+    monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {"KOTAKBANK": 1000.0})
+    r = client.get("/api/live-trades?date=2026-09-10")
+    assert r.status_code == 200
+    saw_open = False
+    for eng in r.get_json().get("engines", {}).values():
+        for t in eng.get("trades", []):
+            if t.get("status") == "open":
+                saw_open = True
+                assert t["pnl"] is None
+    assert saw_open, "fixture must contain at least one open position on 2026-09-10"
 
 
 def _write_verdicts(root: Path, engine: str, day: str, items: list):
@@ -203,7 +224,9 @@ def test_datalink_rows_kite_ok_and_index_sources():
          "sensex": {"price": 81205.3, "source": "bse", "stale": False},
          "vix": {"price": 13.9, "source": "csv", "stale": True}})
     byname = {r["name"]: r for r in rows}
-    assert byname["Kite"]["state"] == "ok" and "AB1234" in byname["Kite"]["detail"]
+    # Unauthenticated route -- must never leak the Kite account identity
+    # ("Soumya (AB1234)") that token_alive() returns.
+    assert byname["Kite"]["state"] == "ok" and byname["Kite"]["detail"] == "token ok"
     assert byname["nse"]["state"] == "ok"
     assert byname["bse"]["state"] == "ok"
     assert byname["csv"]["state"] == "stale"
@@ -224,6 +247,7 @@ def test_datalink_rows_fallbacks_make_stale():
         {"enabled": True, "kite_ok": 38, "kite_calls": 40, "fallbacks": 2, "last_error": None},
         (True, "Soumya (AB1234)"), {})
     assert rows[0]["state"] == "stale" and "2 fallbacks" in rows[0]["detail"]
+    assert "AB1234" not in rows[0]["detail"]
 
 
 def test_datalinks_route(client, monkeypatch):
@@ -312,21 +336,51 @@ def test_duration_min():
     assert duration_min("15:20:00", "09:10:00") is None
 
 
+def test_duration_min_multi_day_swing_is_none():
+    """A KOTAKBANK-shaped SWING exit: entered 09-08, exited 09-10. Clock-time
+    subtraction alone would report 325 min -- honest answer is 'unknown'."""
+    from prototype.operator_api import duration_min
+    assert duration_min("09:40:27", "15:05:18", "2026-09-08", "2026-09-10") is None
+
+
+def test_duration_min_same_day_dates_still_computes():
+    from prototype.operator_api import duration_min
+    assert duration_min("09:40:27", "15:05:18", "2026-09-10", "2026-09-10") == 325
+
+
+def test_duration_min_dates_omitted_behaviour_unchanged():
+    from prototype.operator_api import duration_min
+    assert duration_min("09:40:27", "15:05:18") == 325
+    assert duration_min("09:40:27", "15:05:18", None, None) == 325
+
+
 def test_model_trained_at_uses_newest_pkl(tmp_path):
     import os, time
     from prototype.operator_api import model_trained_at
-    assert model_trained_at(tmp_path) is None
+    assert model_trained_at(tmp_path) == (None, None)
     old, new = tmp_path / "a.pkl", tmp_path / "b.pkl"
     old.write_bytes(b"x"); new.write_bytes(b"y")
     os.utime(old, (1_700_000_000, 1_700_000_000))
     os.utime(new, (1_750_000_000, 1_750_000_000))
-    assert model_trained_at(tmp_path) == datetime.fromtimestamp(1_750_000_000).isoformat(timespec="seconds")
+    assert model_trained_at(tmp_path) == (
+        datetime.fromtimestamp(1_750_000_000).isoformat(timespec="seconds"), "file-mtime")
+
+
+def test_model_trained_at_prefers_meta_over_pkl_mtime(tmp_path):
+    import os
+    from prototype.operator_api import model_trained_at
+    (tmp_path / "model_meta_v3.json").write_text(
+        json.dumps({"trained_at": "2026-04-07T13:14:39"}))
+    newer = tmp_path / "z.pkl"
+    newer.write_bytes(b"y")
+    os.utime(newer, (1_750_000_000, 1_750_000_000))   # newer than the meta timestamp
+    assert model_trained_at(tmp_path) == ("2026-04-07T13:14:39", "meta")
 
 
 def test_desk_exits_have_duration(client, monkeypatch):
     from prototype import operator_api
     monkeypatch.setattr(operator_api, "marks_for", lambda symbols: {})
-    data = _fresh_desk(client, monkeypatch)
+    data = _fresh_desk(client)
     for x in data["recent_exits"]:
         assert "duration_min" in x
 
@@ -336,3 +390,9 @@ def test_model_route_reports_trained_at_not_today(client):
     assert "trained_at" in body
     if body["trained_at"]:
         assert body["lastTrained"] == body["trained_at"][:10]
+
+
+def test_model_route_reports_trained_at_source(client):
+    body = client.get("/api/model").get_json()
+    assert body["trained_at_source"] in ("meta", "file-mtime")
+    assert body["lastTrained"] == body["trained_at"][:10]

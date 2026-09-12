@@ -47,7 +47,7 @@ Run:
 """
 from __future__ import annotations
 
-import json, math, re, sys, time, warnings
+import json, math, os, re, sys, time, warnings
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -56,21 +56,18 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 CTX_CACHE = ROOT / "prototype" / "data" / "scout_ctx"
-# SWITCHED to the full NSE cash universe on 2026-09-04 at Soumya's request, so the
-# agents see every option with the same paper money. 2,634 names against the 1,058 in
-# universe_screened.txt.
-#
-# Why this is safe: the liquidity screen (passes_liquidity, below) runs INSIDE the
-# sweep on every name every tick, so widening the input does not widen what an agent
-# can be assigned. Measured offline on 2026-08-31: 810 of the 2,634 pass the floor's
-# own screen (Rs80-800, >=Rs2cr run-rate), of which 350 were never in the old list.
-# Those 350 are the actual gain. The other ~1,800 are screened out as before — mostly
-# names where a Rs3,000 slot cannot get a fair fill, or circuit-locked names with no
-# counterparty.
-#
-# Cost: six quote() batches per sweep instead of three, ~2s. Rebuild the file with
+# History: the full NSE cash universe (universe_full.txt, 2,634 names) was the default
+# from 2026-09-04 to 2026-09-12 — the point was breadth, and the liquidity screen
+# (passes_liquidity, below) runs inside the sweep on every name anyway, so widening the
+# input never widened what an agent could be assigned. Rebuild that file with
 # `python3 quant/build_universe_full.py`; it drops delisted and unquotable symbols.
-UNIVERSE_F = ROOT / "quant" / "universe_full.txt"
+# 2026-09-12: the Floor watches the ENGINE universe by default, so its escalations land
+# on stocks the engines trade (docs/research/floor/2026-09-11-floor-assessment.md §2).
+# Override with FLOOR_UNIVERSE=<path or quant/ filename>; falls back to the full universe.
+_uni = os.environ.get("FLOOR_UNIVERSE", "universe_engine.txt")
+UNIVERSE_F = Path(_uni) if os.path.isabs(_uni) else ROOT / "quant" / _uni
+if not UNIVERSE_F.exists():
+    UNIVERSE_F = ROOT / "quant" / "universe_full.txt"
 
 SWEEP_BATCH = 500            # Kite quote() accepts 500 instruments per call
 CTX_TOP_N = 320              # daily history is pulled for the top-N by turnover
@@ -435,6 +432,8 @@ class ScoutTeam:
         self.last_error = None      # last sweep batch failure, for callers to surface
         raw = [l.strip().replace(".NS", "")
                for l in UNIVERSE_F.read_text().splitlines() if l.strip()]
+        if self.verbose:
+            print(f"scouts: universe {UNIVERSE_F.name} ({len(raw)} symbols)")
         names = self._instrument_names()
         self.universe = [s for s in raw
                          if not ETF_PAT.search(names.get(s, "") or "")]

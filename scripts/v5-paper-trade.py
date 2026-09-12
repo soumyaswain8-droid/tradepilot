@@ -16,6 +16,7 @@ from dp_creds import devpilot_db_password
 import json, os, sys, time, warnings, importlib
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore")
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -583,20 +584,143 @@ def _build_trade_plan(sig, pool_budget_rs, score_threshold, rm=None):
     )
 
 
+IST = ZoneInfo("Asia/Kolkata")
+
+
+def _ist_index(df):
+    """df.index as an IST DatetimeIndex. Kite hands back a tz-aware IST index; a naive
+    index is assumed to be IST already (that is what every intraday source here means)."""
+    import pandas as pd
+    idx = pd.DatetimeIndex(df.index)
+    return idx.tz_localize(IST) if idx.tz is None else idx.tz_convert(IST)
+
+
+def _today_only(df, today=None):
+    """Rows dated today in IST only. get_candles(days=1) reaches back 24h, so Tue-Fri it
+    spans TWO sessions and yesterday's bars would drag the reference session low back a
+    day -- a swept low that was never swept today. Returns None when nothing is left."""
+    if df is None or not len(df):
+        return None
+    try:
+        idx = _ist_index(df)
+    except Exception:
+        return None
+    if today is None:
+        today = datetime.now(IST).date()
+    elif isinstance(today, datetime):
+        today = (today.astimezone(IST) if today.tzinfo else today.replace(tzinfo=IST)).date()
+    out = df[idx.date == today]
+    return out if len(out) else None
+
+
+def _completed_only(df, now=None):
+    """Drop a still-forming final bar. A 5-minute bar stamped at its START is complete
+    only once start+5min has passed; keeping it would make the live window one bar later
+    than the EOD path, where the entry bar is explicitly NOT counted as completed. With
+    this, `i = len(bars)` in reclaim_flags is the same i tag_from_bars uses."""
+    if df is None or not len(df):
+        return None
+    try:
+        idx = _ist_index(df)
+    except Exception:
+        return None
+    if now is None:
+        now = datetime.now(IST)
+    elif now.tzinfo is None:
+        now = now.replace(tzinfo=IST)
+    else:
+        now = now.astimezone(IST)
+    if idx[-1] + timedelta(minutes=5) > now:
+        df = df.iloc[:-1]
+    return df if len(df) else None
+
+
+def _fetch_today_5m(symbol):
+    """Today's COMPLETED 5-minute bars for one symbol, from Kite only. None on any
+    failure. The yfinance fallback was removed on 2026-09-12: its per-symbol timeout is
+    ~15s and this runs inside the synchronous scan, so one dead feed stalled the engine."""
+    try:
+        from prototype.v4 import kite_data as kd
+    except Exception:
+        return None
+    try:
+        df = kd.get_candles(symbol, "5minute", days=1)
+    except Exception as e:
+        try:
+            kd.note_fallback(f"reclaim flag {symbol}", f"{type(e).__name__}: {e} (no fallback; flag = None)")
+        except Exception:
+            pass
+        return None
+    return _completed_only(_today_only(df))
+
+
+def reclaim_flags(symbols, sides, fetch=None, budget_s=15.0, now=None):
+    """{symbol: True|False|None} -- swept-level reclaim flag per candidate, for the
+    note: reason string. None means not evaluable (no bars, <4 bars, or fetch error).
+    Observation only until 2026-09-19; the gate never acts on it.
+
+    `budget_s` caps the wall-clock the whole loop may spend fetching: once it is spent,
+    every remaining symbol is None WITHOUT calling `fetch`, so a slow or dead feed can
+    never stall the scan. `now` is the clock (a callable returning seconds), injectable
+    for tests; defaults to time.monotonic."""
+    from prototype.v5.reclaim import swept_level_reclaimed
+    fetch = fetch or _fetch_today_5m
+    clock = now or time.monotonic
+    t0 = clock()
+    out = {}
+    budget_hit = False
+    for sym, side in zip(symbols, sides):
+        if sym in out:
+            continue
+        if clock() - t0 >= budget_s:
+            budget_hit = True
+            out[sym] = None
+            continue
+        try:
+            df = fetch(sym)
+        except Exception:
+            out[sym] = None; continue
+        if df is None or len(df) < 4:
+            out[sym] = None; continue
+        try:
+            o = df["Open"].astype(float).tolist(); h = df["High"].astype(float).tolist()
+            l = df["Low"].astype(float).tolist(); c = df["Close"].astype(float).tolist()
+            out[sym] = bool(swept_level_reclaimed(o, h, l, c, len(o), side))
+        except Exception:
+            out[sym] = None
+    n_ok = sum(1 for v in out.values() if v is not None)
+    log(f"  reclaim flags: kite={n_ok} none={len(out) - n_ok} budget_hit={budget_hit} "
+        f"elapsed={clock() - t0:.1f}s")
+    return out
+
+
 def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult,
-                             drive_mode=False, promoted=None):
+                             drive_mode=False, promoted=None, data_guard_blocked=False):
     """Evaluate every candidate through RiskGate and append rows to the daily
     verdicts artifact. Log-only w.r.t. THIS function -- it never touches
     execution itself. Caller wraps this in its own try/except too (belt and
     suspenders) so a bug here can never affect deployments. When called from
     a RISK_GATE_DRIVE=1 scan, `drive_mode`/`promoted` (spec S5 Phase 1)
     annotate each row with whether the gate was actually steering that scan's
-    deployments and whether this symbol was promoted off the watchlist."""
+    deployments and whether this symbol was promoted off the watchlist.
+
+    `data_guard_blocked`: this scan's DATA-GUARD vetoed all entries, i.e. the tape is
+    dead or stale. Nothing was deployed, so there is nothing to observe -- and fetching
+    bars off a tape we have just declared untrustworthy is the worst moment to spend the
+    scan's wall-clock on it. Every note reads "not evaluable" in that case."""
     if not candidates or rm is None or RiskGate is None or TradePlan is None:
         return
     promoted = promoted or set()
     score_threshold = min(float(s.get("score", 0) or 0) for s in candidates)
     gate = RiskGate(rm, score_threshold=score_threshold)
+    _syms = [c.get("symbol") for c in candidates]
+    _sides = [c.get("position_type") or ("LONG" if c.get("direction") == "BUY" else "SHORT")
+              for c in candidates]
+    if data_guard_blocked:
+        _flags = {}
+        log("  reclaim flags: skipped (DATA-GUARD blocked this scan)")
+    else:
+        _flags = reclaim_flags(_syms, _sides)
     rows = []
     for sig in candidates:
         pool_name = sig.get("pool", "INTRADAY")
@@ -606,7 +730,7 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
             budget = 0.0
         plan = _build_trade_plan(sig, budget, score_threshold, rm=rm)
         pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
-        result = gate.evaluate(plan, position_type=pos_type)
+        result = gate.evaluate(plan, position_type=pos_type, reclaim=_flags.get(plan.symbol))
         rows.append({
             "symbol": plan.symbol,
             "plan": {
@@ -906,7 +1030,8 @@ def deploy_signals(state, pm, rm, signals):
     if os.environ.get("RISK_GATE_LOG", "1") == "1":
         try:
             _log_risk_gate_verdicts(state, pm, rm, all_candidates, held - initial_held, _alloc_mult,
-                                     drive_mode=_drive_on, promoted=_gate_promoted)
+                                     drive_mode=_drive_on, promoted=_gate_promoted,
+                                     data_guard_blocked=_data_guard_blocked)
         except Exception as e:
             log(f"  [RISK_GATE_LOG] failed: {e}")
 

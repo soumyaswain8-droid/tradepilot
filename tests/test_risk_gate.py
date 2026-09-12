@@ -259,5 +259,49 @@ class TestNeverRaises(unittest.TestCase):
         self.assertIsInstance(result, GateResult)
 
 
+# ─────────────────────────── swept-level reclaim note (observation only) ───────────────────────────
+
+class TestReclaimNote(unittest.TestCase):
+    def test_reclaim_note_is_appended_and_never_changes_verdict(self):
+        rm = _StubRiskManager()
+        gate = RiskGate(rm, score_threshold=50.0, soft_band=5.0)
+        base = gate.evaluate(_plan(score=90.0), position_type="SHORT")
+        fired = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=True)
+        clear = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=False)
+        unknown = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=None)
+        self.assertEqual(fired.verdict, base.verdict)
+        self.assertEqual(clear.verdict, base.verdict)
+        self.assertEqual(unknown.verdict, base.verdict)
+        self.assertIn("note:swept_level_reclaimed: fired", fired.reasons)
+        self.assertIn("note:swept_level_reclaimed: clear", clear.reasons)
+        self.assertIn("note:swept_level_reclaimed: not evaluable", unknown.reasons)
+        self.assertEqual(
+            sum(1 for r in fired.reasons if r.startswith("note:swept_level_reclaimed")), 1)
+
+    def test_reclaim_note_does_not_touch_soft_verdict(self):
+        # a soft check that fires (score inside the band) gives WATCHLIST; the
+        # note must not add to or remove that.
+        rm = _StubRiskManager()
+        gate = RiskGate(rm, score_threshold=50.0, soft_band=5.0)
+        a = gate.evaluate(_plan(score=52.0), position_type="LONG")
+        b = gate.evaluate(_plan(score=52.0), position_type="LONG", reclaim=True)
+        self.assertEqual(a.verdict, b.verdict)
+        self.assertEqual(a.verdict, Verdict.WATCHLIST)
+
+    def test_reclaim_note_does_not_touch_rejected_verdict(self):
+        # a hard-check failure gives REJECTED; the note must not touch that.
+        rm = _StubRiskManager(can_trade=(False, "blocked"))
+        gate = RiskGate(rm, score_threshold=50.0, soft_band=5.0)
+        fired = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=True)
+        clear = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=False)
+        unknown = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=None)
+        self.assertEqual(fired.verdict, Verdict.REJECTED)
+        self.assertEqual(clear.verdict, Verdict.REJECTED)
+        self.assertEqual(unknown.verdict, Verdict.REJECTED)
+        for result in (fired, clear, unknown):
+            self.assertEqual(
+                sum(1 for r in result.reasons if r.startswith("note:swept_level_reclaimed")), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

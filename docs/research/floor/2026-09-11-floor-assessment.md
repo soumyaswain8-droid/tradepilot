@@ -48,3 +48,10 @@ Per engine-day the reclaim bucket was negative on 7 of 8 (the exception is one t
 1. `scripts/eod-veto-shadow.py <date>`: the section-3 detector, run from `eod-experiments.sh`, writing `docs/research/shadows/veto/<date>.json` with per-trade tags and the three-bucket totals. Adds a line to the EOD commit body.
 2. Engine-side tag only (no block): in the v5 family entry path, compute the reclaim flag from the last three 5-min bars and append `soft:swept_low_reclaimed: fired` to the verdict reasons. Visible on Market's "why we skipped it" and Review's cause chips. Flip to a hard block after 2026-09-19 if the shadow holds.
 3. Floor: set the scout universe to the engine universe file and keep `ENTRY_MODE = "shadow"`; leave the trade rule alone until step 1 shows whether a wider stop fixes it.
+
+## Status 2026-09-12
+- Detector: `prototype/v5/reclaim.py` (tests `tests/test_reclaim.py`).
+- Nightly shadow: `scripts/eod-veto-shadow.py`, step 6 of `scripts/eod-experiments.sh`, output `docs/research/shadows/veto/`, ledger `veto-ledger.csv`. Backfilled 08 to 11 Sep.
+- Live tag: `note:swept_level_reclaimed: fired|clear|not evaluable` in every verdict's `reasons[]`; verdict unchanged. Visible via `/api/verdicts/<date>`.
+- Floor: scouts default to `quant/universe_engine.txt` (env `FLOOR_UNIVERSE` overrides); `ENTRY_MODE` still `shadow`.
+- Decision point: after 2026-09-19, if the ledger's reclaim bucket stays negative, promote the note to a hard check in `risk_gate.py` (one block, `soft_hit` semantics decided then).

@@ -583,6 +583,49 @@ def _build_trade_plan(sig, pool_budget_rs, score_threshold, rm=None):
     )
 
 
+def _fetch_today_5m(symbol):
+    """Today's completed 5-minute bars for one symbol: Kite first, yfinance cache second.
+    Returns a DataFrame with Open/High/Low/Close or None."""
+    try:
+        from prototype.v4 import kite_data as kd
+        df = kd.get_candles(symbol, "5minute", days=1)
+        if df is not None and len(df):
+            return df
+    except Exception:
+        pass
+    try:
+        from prototype.v4 import data_nse
+        df = data_nse.get_intraday_candles(symbol, interval="5m")
+        return df if df is not None and len(df) else None
+    except Exception:
+        return None
+
+
+def reclaim_flags(symbols, sides, fetch=None):
+    """{symbol: True|False|None} -- swept-level reclaim flag per candidate, for the
+    note: reason string. None means not evaluable (no bars, <4 bars, or fetch error).
+    Observation only until 2026-09-19; the gate never acts on it."""
+    from prototype.v5.reclaim import swept_level_reclaimed
+    fetch = fetch or _fetch_today_5m
+    out = {}
+    for sym, side in zip(symbols, sides):
+        if sym in out:
+            continue
+        try:
+            df = fetch(sym)
+        except Exception:
+            out[sym] = None; continue
+        if df is None or len(df) < 4:
+            out[sym] = None; continue
+        try:
+            o = df["Open"].astype(float).tolist(); h = df["High"].astype(float).tolist()
+            l = df["Low"].astype(float).tolist(); c = df["Close"].astype(float).tolist()
+            out[sym] = bool(swept_level_reclaimed(o, h, l, c, len(o), side))
+        except Exception:
+            out[sym] = None
+    return out
+
+
 def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult,
                              drive_mode=False, promoted=None):
     """Evaluate every candidate through RiskGate and append rows to the daily
@@ -597,6 +640,10 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
     promoted = promoted or set()
     score_threshold = min(float(s.get("score", 0) or 0) for s in candidates)
     gate = RiskGate(rm, score_threshold=score_threshold)
+    _syms = [c.get("symbol") for c in candidates]
+    _sides = [c.get("position_type") or ("LONG" if c.get("direction") == "BUY" else "SHORT")
+              for c in candidates]
+    _flags = reclaim_flags(_syms, _sides)
     rows = []
     for sig in candidates:
         pool_name = sig.get("pool", "INTRADAY")
@@ -606,7 +653,7 @@ def _log_risk_gate_verdicts(state, pm, rm, candidates, deployed_syms, alloc_mult
             budget = 0.0
         plan = _build_trade_plan(sig, budget, score_threshold, rm=rm)
         pos_type = sig.get("position_type") or ("LONG" if sig.get("direction") == "BUY" else "SHORT")
-        result = gate.evaluate(plan, position_type=pos_type)
+        result = gate.evaluate(plan, position_type=pos_type, reclaim=_flags.get(plan.symbol))
         rows.append({
             "symbol": plan.symbol,
             "plan": {

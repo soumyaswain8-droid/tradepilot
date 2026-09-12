@@ -288,6 +288,20 @@ class TestReclaimNote(unittest.TestCase):
         self.assertEqual(a.verdict, b.verdict)
         self.assertEqual(a.verdict, Verdict.WATCHLIST)
 
+    def test_reclaim_note_does_not_touch_rejected_verdict(self):
+        # a hard-check failure gives REJECTED; the note must not touch that.
+        rm = _StubRiskManager(can_trade=(False, "blocked"))
+        gate = RiskGate(rm, score_threshold=50.0, soft_band=5.0)
+        fired = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=True)
+        clear = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=False)
+        unknown = gate.evaluate(_plan(score=90.0), position_type="SHORT", reclaim=None)
+        self.assertEqual(fired.verdict, Verdict.REJECTED)
+        self.assertEqual(clear.verdict, Verdict.REJECTED)
+        self.assertEqual(unknown.verdict, Verdict.REJECTED)
+        for result in (fired, clear, unknown):
+            self.assertEqual(
+                sum(1 for r in result.reasons if r.startswith("note:swept_level_reclaimed")), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

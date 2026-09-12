@@ -47,7 +47,7 @@ Run:
 """
 from __future__ import annotations
 
-import json, math, re, sys, time, warnings
+import json, math, os, re, sys, time, warnings
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -70,7 +70,13 @@ CTX_CACHE = ROOT / "prototype" / "data" / "scout_ctx"
 #
 # Cost: six quote() batches per sweep instead of three, ~2s. Rebuild the file with
 # `python3 quant/build_universe_full.py`; it drops delisted and unquotable symbols.
-UNIVERSE_F = ROOT / "quant" / "universe_full.txt"
+# 2026-09-12: the Floor watches the ENGINE universe by default, so its escalations land
+# on stocks the engines trade (docs/research/floor/2026-09-11-floor-assessment.md §2).
+# Override with FLOOR_UNIVERSE=<path or quant/ filename>; falls back to the full universe.
+_uni = os.environ.get("FLOOR_UNIVERSE", "universe_engine.txt")
+UNIVERSE_F = Path(_uni) if os.path.isabs(_uni) else ROOT / "quant" / _uni
+if not UNIVERSE_F.exists():
+    UNIVERSE_F = ROOT / "quant" / "universe_full.txt"
 
 SWEEP_BATCH = 500            # Kite quote() accepts 500 instruments per call
 CTX_TOP_N = 320              # daily history is pulled for the top-N by turnover
@@ -435,6 +441,8 @@ class ScoutTeam:
         self.last_error = None      # last sweep batch failure, for callers to surface
         raw = [l.strip().replace(".NS", "")
                for l in UNIVERSE_F.read_text().splitlines() if l.strip()]
+        if self.verbose:
+            print(f"scouts: universe {UNIVERSE_F.name} ({len(raw)} symbols)")
         names = self._instrument_names()
         self.universe = [s for s in raw
                          if not ETF_PAT.search(names.get(s, "") or "")]

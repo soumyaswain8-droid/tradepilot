@@ -118,13 +118,14 @@ class RiskGate:
 
     def evaluate(self, plan: TradePlan, *, position_type: Optional[str] = None,
                  cost_or_margin: Optional[float] = None,
-                 data_guard_ok: bool = True) -> GateResult:
+                 data_guard_ok: bool = True,
+                 reclaim: Optional[bool] = None) -> GateResult:
         """Never raises. Returns a GateResult even if the wrapped
         RiskManager throws."""
         reasons: List[str] = []
         try:
             hard_fail = self._run_hard_checks(plan, position_type, cost_or_margin, reasons)
-            soft_hit = self._run_soft_checks(plan, data_guard_ok, reasons)
+            soft_hit = self._run_soft_checks(plan, data_guard_ok, reasons, reclaim)
 
             if hard_fail:
                 verdict = Verdict.REJECTED
@@ -207,7 +208,8 @@ class RiskGate:
 
     # --- soft checks (any fire -> WATCHLIST, unless a hard check already failed) ---
 
-    def _run_soft_checks(self, plan: TradePlan, data_guard_ok: bool, reasons: List[str]) -> bool:
+    def _run_soft_checks(self, plan: TradePlan, data_guard_ok: bool, reasons: List[str],
+                          reclaim: Optional[bool] = None) -> bool:
         soft_hit = False
 
         near_threshold = abs(float(plan.score) - self.score_threshold) <= self.soft_band
@@ -237,5 +239,14 @@ class RiskGate:
             soft_hit = True
         else:
             reasons.append("soft:data_guard_degraded: clear")
+
+        # note: swept-level reclaim. Observation only until 2026-09-19 (shadow window):
+        # this string never sets soft_hit and never changes the verdict.
+        if reclaim is None:
+            reasons.append("note:swept_level_reclaimed: not evaluable")
+        elif reclaim:
+            reasons.append("note:swept_level_reclaimed: fired")
+        else:
+            reasons.append("note:swept_level_reclaimed: clear")
 
         return soft_hit

@@ -37,6 +37,21 @@ def test_score_replay_buckets():
     assert out["fleet"]["reclaim"]["n"] == 1
 
 
+def test_buckets_split_short_from_long():
+    """SHORT is the evidenced side; the LONG rule is its untested mirror. A combined
+    bucket would let LONG P&L move the number the veto decision is read off."""
+    m = _load()
+    out = m.score_replay(REPLAY, ["v5"])
+    by_side = out["engines"]["v5"]["buckets_by_side"]
+    assert by_side["SHORT"]["reclaim"] == {"n": 1, "pnl": -85.6, "win": 0}   # AAA 09:36 SHORT
+    assert by_side["SHORT"]["clean"]["n"] == 0                               # no clean SHORT
+    assert by_side["SHORT"]["untagged"]["n"] == 2                            # BBB + ZZZ
+    assert by_side["LONG"]["clean"] == {"n": 1, "pnl": 10.0, "win": 100}     # AAA 09:41 LONG
+    assert by_side["LONG"]["reclaim"]["n"] == 0
+    fs = out["fleet_by_side"]
+    assert fs["SHORT"]["reclaim"]["pnl"] == -85.6 and fs["LONG"]["clean"]["pnl"] == 10.0
+
+
 def test_ledger_replaces_rows_for_same_date(tmp_path):
     m = _load()
     led = tmp_path / "veto-ledger.csv"
@@ -44,5 +59,7 @@ def test_ledger_replaces_rows_for_same_date(tmp_path):
     m.write_ledger(led, out)
     m.write_ledger(led, out)
     rows = led.read_text().strip().splitlines()
-    assert rows[0] == "date,engine,tag,n,pnl,win_pct"
-    assert len(rows) == 1 + 3            # header + 3 tags for one engine, no duplicates
+    assert rows[0] == "date,engine,side,tag,n,pnl,win_pct"
+    assert len(rows) == 1 + 2 * 3        # header + 2 sides x 3 tags for one engine, no duplicates
+    assert "2026-09-11,v5,SHORT,reclaim,1,-85.6,0" in rows
+    assert "2026-09-11,v5,LONG,clean,1,10.0,100" in rows
